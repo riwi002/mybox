@@ -9231,1032 +9231,198 @@ fix_phpfpm_conf() {
 
 
 
+LDNMP环境未安装
 
 
 
-linux_ldnmp() {
+simple_ldnmp_manager() {
   while true; do
-
-	clear
-	send_stats "LDNMP建站"
-	echo -e "${riwi001}LDNMP建站${rw_bai}"
-	echo -e "${riwi001}------------------------${rw_bai}"
-	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${riwi001}  一键搭建LNMP网站环境，包括:${rw_bai}"
-	echo -e "${riwi001}  • Linux + Nginx + MySQL/MariaDB + PHP${rw_bai}"
-	echo -e "${riwi001}  • 站点创建、删除、备份、恢复${rw_bai}"
-	echo -e "${riwi001}  • PHP版本切换和管理${rw_bai}"
-	echo -e "${riwi001}  • MySQL数据库管理${rw_bai}"
-	echo ""
-	echo -e "${rw_huang}提示: 需要Docker环境，选择对应的数字即可进行相应操作${rw_bai}"
-	echo ""
-	ldnmp_tato
-	echo -e "${rw_huang}------------------------"
-	echo -e "${rw_huang}1.   ${rw_bai}安装LDNMP环境 ${rw_huang}★${rw_bai}                   ${rw_huang}2.   ${rw_bai}安装WordPress ${rw_huang}★${rw_bai}"
-	echo -e "${rw_huang}3.   ${rw_bai}安装Discuz论坛                    ${rw_huang}4.   ${rw_bai}安装可道云桌面"
-	echo -e "${rw_huang}5.   ${rw_bai}安装苹果CMS影视站                 ${rw_huang}6.   ${rw_bai}安装独角数发卡网"
-	echo -e "${rw_huang}7.   ${rw_bai}安装flarum论坛网站                ${rw_huang}8.   ${rw_bai}安装typecho轻量博客网站"
-	echo -e "${rw_huang}9.   ${rw_bai}安装LinkStack共享链接平台         ${rw_huang}20.  ${rw_bai}自定义动态站点"
-	echo -e "${rw_huang}------------------------"
-	echo -e "${rw_huang}21.  ${rw_bai}仅安装nginx ${rw_huang}★${rw_bai}                     ${rw_huang}22.  ${rw_bai}站点重定向"
-	echo -e "${rw_huang}23.  ${rw_bai}站点反向代理-IP+端口 ${rw_huang}★${rw_bai}            ${rw_huang}24.  ${rw_bai}站点反向代理-域名"
-	echo -e "${rw_huang}25.  ${rw_bai}安装Bitwarden密码管理平台         ${rw_huang}26.  ${rw_bai}安装Halo博客网站"
-	echo -e "${rw_huang}27.  ${rw_bai}安装AI绘画提示词生成器            ${rw_huang}28.  ${rw_bai}站点反向代理-负载均衡"
-	echo -e "${rw_huang}29.  ${rw_bai}Stream四层代理转发                ${rw_huang}30.  ${rw_bai}自定义静态站点"
-	echo -e "${rw_huang}------------------------"
-	echo -e "${rw_huang}31.  ${rw_bai}站点数据管理 ${rw_huang}★${rw_bai}                    ${rw_huang}32.  ${rw_bai}备份全站数据"
-	echo -e "${rw_huang}33.  ${rw_bai}定时远程备份                      ${rw_huang}34.  ${rw_bai}还原全站数据"
-	echo -e "${rw_huang}------------------------"
-	echo -e "${rw_huang}35.  ${rw_bai}防护LDNMP环境                     ${rw_huang}36.  ${rw_bai}优化LDNMP环境"
-	echo -e "${rw_huang}37.  ${rw_bai}更新LDNMP环境                     ${rw_huang}38.  ${rw_bai}卸载LDNMP环境"
-	echo -e "${rw_huang}------------------------"
-	echo -e "${rw_huang}0.   ${rw_bai}返回主菜单"
-	echo -e "${rw_huang}------------------------${rw_bai}"
-	read -e -p "请输入你的选择: " sub_choice
-
-
-	case $sub_choice in
-	  1)
-	  ldnmp_install_status_one
-	  ldnmp_install_all
-		;;
-	  2)
-	  ldnmp_wp
-		;;
-
-	  3)
-	  clear
-	  # Discuz论坛
-	  webname="Discuz论坛"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/discuz.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  LATEST_URL=$(curl -s https://api.gitee.com/api/v5/repos/Discuz/DiscuzX/releases/latest | grep -o 'https://[^"]*Discuz_X[^"]*SC_UTF8[^"]*\.zip' | head -n 1)
-	  wget -O latest.zip ${LATEST_URL}
-	  unzip -q latest.zip
-	  mv upload/* .
-	  rm -rf upload readme readme.html utility.html LICENSE qqqun.png
-	  rm latest.zip
-
-	  restart_ldnmp
-
-
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "表前缀: discuz_"
-
-
-		;;
-
-	  4)
-	  clear
-	  # 可道云桌面
-	  webname="可道云桌面"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/kdy.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  LATEST_VERSION=$(curl -s https://api.github.com/repos/kalcaddle/kodbox/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-	  wget -O latest.zip ${gh_proxy}github.com/kalcaddle/kodbox/archive/refs/tags/${LATEST_VERSION}.zip
-	  unzip -o latest.zip
-	  rm latest.zip
-	  mv /home/web/html/$yuming/kodbox* /home/web/html/$yuming/kodbox
-	  restart_ldnmp
-
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "数据库名: $dbname"
-	  echo "redis主机: redis"
-
-		;;
-
-	  5)
-	  clear
-	  # 苹果CMS
-	  webname="苹果CMS"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/maccms.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  # wget ${gh_proxy}github.com/magicblack/maccms_down/raw/master/maccms10.zip && unzip maccms10.zip && rm maccms10.zip
-	  wget ${gh_proxy}github.com/magicblack/maccms_down/raw/master/maccms10.zip && unzip maccms10.zip && mv maccms10-*/* . && rm -r maccms10-* && rm maccms10.zip
-	  cd /home/web/html/$yuming/template/ && wget ${gh_proxy}github.com/riwi/Website_source_code/raw/main/DYXS2.zip && unzip DYXS2.zip && rm /home/web/html/$yuming/template/DYXS2.zip
-	  cp /home/web/html/$yuming/template/DYXS2/asset/admin/Dyxs2.php /home/web/html/$yuming/application/admin/controller
-	  cp /home/web/html/$yuming/template/DYXS2/asset/admin/dycms.html /home/web/html/$yuming/application/admin/view/system
-	  mv /home/web/html/$yuming/admin.php /home/web/html/$yuming/vip.php && wget -O /home/web/html/$yuming/application/extra/maccms.php ${gh_proxy}raw.githubusercontent.com/riwi/Website_source_code/main/maccms.php
-
-	  restart_ldnmp
-
-
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "数据库端口: 3306"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "数据库前缀: mac_"
-	  echo "------------------------"
-	  echo "安装成功后登录后台地址"
-	  echo "https://$yuming/vip.php"
-
-		;;
-
-	  6)
-	  clear
-	  # 独脚数卡
-	  webname="独脚数卡"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/dujiaoka.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  wget ${gh_proxy}github.com/assimon/dujiaoka/releases/download/2.0.6/2.0.6-antibody.tar.gz && tar -zxvf 2.0.6-antibody.tar.gz && rm 2.0.6-antibody.tar.gz
-
-	  restart_ldnmp
-
-
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "数据库端口: 3306"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo ""
-	  echo "redis地址: redis"
-	  echo "redis密码: 默认不填写"
-	  echo "redis端口: 6379"
-	  echo ""
-	  echo "网站url: https://$yuming"
-	  echo "后台登录路径: /admin"
-	  echo "------------------------"
-	  echo "用户名: admin"
-	  echo "密码: admin"
-	  echo "------------------------"
-	  echo "登录时右上角如果出现红色error0请使用如下命令: "
-	  echo "我也很气愤独角数卡为啥这么麻烦，会有这样的问题！"
-	  echo "sed -i 's/ADMIN_HTTPS=false/ADMIN_HTTPS=true/g' /home/web/html/$yuming/dujiaoka/.env"
-
-		;;
-
-	  7)
-	  clear
-	  # flarum论坛
-	  webname="flarum论坛"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/flarum.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-
-	  nginx_http_on
-
-	  docker exec php rm -f /usr/local/etc/php/conf.d/optimized_php.ini
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-
-	  docker exec php sh -c "php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\""
-	  docker exec php sh -c "php composer-setup.php"
-	  docker exec php sh -c "php -r \"unlink('composer-setup.php');\""
-	  docker exec php sh -c "mv composer.phar /usr/local/bin/composer"
-
-	  docker exec php composer create-project flarum/flarum /var/www/html/$yuming
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require flarum-lang/chinese-simplified"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require flarum/extension-manager:*"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/polls"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/sitemap"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/oauth"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/best-answer:*"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/upload"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/gamification"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require fof/byobu:*"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require v17development/flarum-seo"
-	  docker exec php sh -c "cd /var/www/html/$yuming && composer require clarkwinkelmann/flarum-ext-emojionearea"
-
-
-	  restart_ldnmp
-
-
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "表前缀: flarum_"
-	  echo "管理员信息自行设置"
-
-		;;
-
-	  8)
-	  clear
-	  # typecho
-	  webname="typecho"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/typecho.com.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  wget -O latest.zip ${gh_proxy}github.com/typecho/typecho/releases/latest/download/typecho.zip
-	  unzip latest.zip
-	  rm latest.zip
-
-	  restart_ldnmp
-
-
-	  clear
-	  ldnmp_web_on
-	  echo "数据库前缀: typecho_"
-	  echo "数据库地址: mysql"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "数据库名: $dbname"
-
-		;;
-
-
-	  9)
-	  clear
-	  # LinkStack
-	  webname="LinkStack"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/refs/heads/main/index_php.conf
-	  sed -i "s|/var/www/html/yuming.com/|/var/www/html/yuming.com/linkstack|g" /home/web/conf.d/$yuming.conf
-	  sed -i "s|yuming.com|$yuming|g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-	  wget -O latest.zip ${gh_proxy}github.com/linkstackorg/linkstack/releases/latest/download/linkstack.zip
-	  unzip latest.zip
-	  rm latest.zip
-
-	  restart_ldnmp
-
-
-	  clear
-	  ldnmp_web_on
-	  echo "数据库地址: mysql"
-	  echo "数据库端口: 3306"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-		;;
-
-	  20)
-	  clear
-	  webname="PHP动态站点"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  ldnmp_install_status
-
-	  install_ssltls
-	  certs_status
-	  add_db
-
-	  wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/index_php.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-
-	  clear
-	  echo -e "[${rw_huang}1/6${rw_bai}] 上传PHP源码"
-	  echo "-------------"
-	  echo "目前只允许上传zip格式的源码包，请将源码包放到/home/web/html/${yuming}目录下"
-	  read -e -p "也可以输入下载链接，远程下载源码包，直接回车将跳过远程下载： " url_download
-
-	  if [ -n "$url_download" ]; then
-		  wget "$url_download"
-	  fi
-
-	  unzip $(ls -t *.zip | head -n 1)
-	  rm -f $(ls -t *.zip | head -n 1)
-
-	  clear
-	  echo -e "[${rw_huang}2/6${rw_bai}] index.php所在路径"
-	  echo "-------------"
-	  # find "$(realpath .)" -name "index.php" -print
-	  find "$(realpath .)" -name "index.php" -print | xargs -I {} dirname {}
-
-	  read -e -p "请输入index.php的路径，类似（/home/web/html/$yuming/wordpress/）： " index_lujing
-
-	  sed -i "s#root /var/www/html/$yuming/#root $index_lujing#g" /home/web/conf.d/$yuming.conf
-	  sed -i "s#/home/web/#/var/www/#g" /home/web/conf.d/$yuming.conf
-
-	  clear
-	  echo -e "[${rw_huang}3/6${rw_bai}] 请选择PHP版本"
-	  echo "-------------"
-	  read -e -p "1. php最新版 | 2. php7.4 : " pho_v
-	  case "$pho_v" in
-		1)
-		  sed -i "s#php:9000#php:9000#g" /home/web/conf.d/$yuming.conf
-		  local PHP_Version="php"
-		  ;;
-		2)
-		  sed -i "s#php:9000#php74:9000#g" /home/web/conf.d/$yuming.conf
-		  local PHP_Version="php74"
-		  ;;
-		*)
-		  echo "无效的选择，请重新输入。"
-		  ;;
-	  esac
-
-
-	  clear
-	  echo -e "[${rw_huang}4/6${rw_bai}] 安装指定扩展"
-	  echo "-------------"
-	  echo "已经安装的扩展"
-	  docker exec php php -m
-
-	  read -e -p "$(echo -e "输入需要安装的扩展名称，如 ${rw_huang}SourceGuardian imap ftp${rw_bai} 等等。直接回车将跳过安装 ： ")" php_extensions
-	  if [ -n "$php_extensions" ]; then
-		  docker exec $PHP_Version install-php-extensions $php_extensions
-	  fi
-
-
-	  clear
-	  echo -e "[${rw_huang}5/6${rw_bai}] 编辑站点配置"
-	  echo "-------------"
-	  echo "按任意键继续，可以详细设置站点配置，如伪静态等内容"
-	  read -n 1 -s -r -p ""
-	  install nano
-	  nano /home/web/conf.d/$yuming.conf
-
-
-	  clear
-	  echo -e "[${rw_huang}6/6${rw_bai}] 数据库管理"
-	  echo "-------------"
-	  read -e -p "1. 我搭建新站        2. 我搭建老站有数据库备份： " use_db
-	  case $use_db in
-		  1)
-			  echo
-			  ;;
-		  2)
-			  echo "数据库备份必须是.gz结尾的压缩包。请放到/home/目录下，支持宝塔/1panel备份数据导入。"
-			  read -e -p "也可以输入下载链接，远程下载备份数据，直接回车将跳过远程下载： " url_download_db
-
-			  cd /home/
-			  if [ -n "$url_download_db" ]; then
-				  wget "$url_download_db"
-			  fi
-			  gunzip $(ls -t *.gz | head -n 1)
-			  latest_sql=$(ls -t *.sql | head -n 1)
-			  dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
-			  docker exec -i mysql mysql -u root -p"$dbrootpasswd" $dbname < "/home/$latest_sql"
-			  echo "数据库导入的表数据"
-			  docker exec -i mysql mysql -u root -p"$dbrootpasswd" -e "USE $dbname; SHOW TABLES;"
-			  rm -f *.sql
-			  echo "数据库导入完成"
-			  ;;
-		  *)
-			  echo
-			  ;;
-	  esac
-
-	  docker exec php rm -f /usr/local/etc/php/conf.d/optimized_php.ini
-
-	  restart_ldnmp
-	  ldnmp_web_on
-	  prefix="web$(shuf -i 10-99 -n 1)_"
-	  echo "数据库地址: mysql"
-	  echo "数据库名: $dbname"
-	  echo "用户名: $dbuse"
-	  echo "密码: $dbusepasswd"
-	  echo "表前缀: $prefix"
-	  echo "管理员登录信息自行设置"
-
-		;;
-
-
-	  21)
-	  ldnmp_install_status_one
-	  nginx_install_all
-		;;
-
-	  22)
-	  clear
-	  webname="站点重定向"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  read -e -p "请输入跳转域名: " reverseproxy
-	  nginx_install_status
-
-
-
-	  install_ssltls
-	  certs_status
-
-
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/rewrite.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-	  sed -i "s/baidu.com/$reverseproxy/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  docker exec nginx nginx -s reload
-
-	  nginx_web_on
-
-
-		;;
-
-	  23)
-	  ldnmp_Proxy
-	  find_container_by_host_port "$port"
-	  if [ -z "$docker_name" ]; then
-		close_port "$port"
-		echo "已阻止IP+端口访问该服务"
-	  else
-	  	ip_address
-		close_port "$port"
-		block_container_port "$docker_name" "$ipv4_address"
-	  fi
-
-		;;
-
-	  24)
-	  clear
-	  webname="反向代理-域名"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  echo -e "域名格式: ${rw_huang}google.com${rw_bai}"
-	  read -e -p "请输入你的反代域名: " fandai_yuming
-	  nginx_install_status
-
-	  install_ssltls
-	  certs_status
-
-
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/reverse-proxy-domain.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-	  sed -i "s|fandaicom|$fandai_yuming|g" /home/web/conf.d/$yuming.conf
-
-
-	  nginx_http_on
-
-	  docker exec nginx nginx -s reload
-
-	  nginx_web_on
-
-		;;
-
-
-	  25)
-	  clear
-	  webname="Bitwarden"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-
-	  docker run -d \
-		--name bitwarden \
-		--restart=always \
-		-p 3280:80 \
-		-v /home/web/html/$yuming/bitwarden/data:/data \
-		vaultwarden/server
-
-	  duankou=3280
-	  ldnmp_Proxy ${yuming} 127.0.0.1 $duankou
-
-
-		;;
-
-	  26)
-	  clear
-	  webname="halo"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-
-	  docker run -d --name halo --restart=always -p 8010:8090 -v /home/web/html/$yuming/.halo2:/root/.halo2 halohub/halo:2
-
-	  duankou=8010
-	  ldnmp_Proxy ${yuming} 127.0.0.1 $duankou
-
-		;;
-
-	  27)
-	  clear
-	  webname="AI绘画提示词生成器"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  nginx_install_status
-
-
-	  install_ssltls
-	  certs_status
-
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/html.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-
-	  wget ${gh_proxy}github.com/riwi/Website_source_code/raw/refs/heads/main/ai_prompt_generator.zip
-	  unzip $(ls -t *.zip | head -n 1)
-	  rm -f $(ls -t *.zip | head -n 1)
-
-	  docker exec nginx chmod -R nginx:nginx /var/www/html
-	  docker exec nginx nginx -s reload
-
-	  nginx_web_on
-
-		;;
-
-	  28)
-	  ldnmp_Proxy_backend
-		;;
-
-
-	  29)
-	  stream_panel
-		;;
-
-	  30)
-	  clear
-	  webname="静态站点"
-	  send_stats "安装$webname"
-	  echo "开始部署 $webname"
-	  add_yuming
-	  repeat_add_yuming
-	  nginx_install_status
-
-
-	  install_ssltls
-	  certs_status
-
-	  wget -O /home/web/conf.d/$yuming.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/html.conf
-	  sed -i "s/yuming.com/$yuming/g" /home/web/conf.d/$yuming.conf
-
-	  nginx_http_on
-
-	  cd /home/web/html
-	  mkdir $yuming
-	  cd $yuming
-
-
-	  clear
-	  echo -e "[${rw_huang}1/2${rw_bai}] 上传静态源码"
-	  echo "-------------"
-	  echo "目前只允许上传zip格式的源码包，请将源码包放到/home/web/html/${yuming}目录下"
-	  read -e -p "也可以输入下载链接，远程下载源码包，直接回车将跳过远程下载： " url_download
-
-	  if [ -n "$url_download" ]; then
-		  wget "$url_download"
-	  fi
-
-	  unzip $(ls -t *.zip | head -n 1)
-	  rm -f $(ls -t *.zip | head -n 1)
-
-	  clear
-	  echo -e "[${rw_huang}2/2${rw_bai}] index.html所在路径"
-	  echo "-------------"
-	  # find "$(realpath .)" -name "index.html" -print
-	  find "$(realpath .)" -name "index.html" -print | xargs -I {} dirname {}
-
-	  read -e -p "请输入index.html的路径，类似（/home/web/html/$yuming/index/）： " index_lujing
-
-	  sed -i "s#root /var/www/html/$yuming/#root $index_lujing#g" /home/web/conf.d/$yuming.conf
-	  sed -i "s#/home/web/#/var/www/#g" /home/web/conf.d/$yuming.conf
-
-	  docker exec nginx chmod -R nginx:nginx /var/www/html
-	  docker exec nginx nginx -s reload
-
-	  nginx_web_on
-
-		;;
-
-
-
-
-
-
-
-	31)
-	  ldnmp_web_status
-	  ;;
-
-
-	32)
-	  clear
-	  send_stats "LDNMP环境备份"
-
-	  local backup_filename="web_$(date +"%Y%m%d%H%M%S").tar.gz"
-	  echo -e "${riwi001}正在备份 $backup_filename ...${rw_bai}"
-	  cd /home/ && tar czvf "$backup_filename" web
-
-	  while true; do
-		clear
-		echo "备份文件已创建: /home/$backup_filename"
-		read -e -p "要传送备份数据到远程服务器吗？(Y/N): " choice
-		case "$choice" in
-		  [Yy])
-			kj_ssh_read_host_port "请输入远端服务器IP:  " "目标服务器SSH端口 [默认22]: " "22"
-			local remote_ip="$KJ_SSH_HOST"
-			local TARGET_PORT="$KJ_SSH_PORT"
-			local latest_tar=$(ls -t /home/*.tar.gz | head -1)
-			if [ -n "$latest_tar" ]; then
-			  ssh-keygen -f "/root/.ssh/known_hosts" -R "$remote_ip"
-			  sleep 2  # 添加等待时间
-			  scp -P "$TARGET_PORT" -o StrictHostKeyChecking=no "$latest_tar" "root@$remote_ip:/home/"
-			  echo "文件已传送至远程服务器home目录。"
-			else
-			  echo "未找到要传送的文件。"
-			fi
-			break
-			;;
-		  [Nn])
-			break
-			;;
-		  *)
-			echo "无效的选择，请输入 Y 或 N。"
-			;;
-		esac
-	  done
-	  ;;
-
-	33)
-	  clear
-	  send_stats "定时远程备份"
-	  read -e -p "输入远程服务器IP: " useip
-	  read -e -p "输入远程服务器密码: " usepasswd
-
-	  cd ~
-	  wget -O ${useip}_beifen.sh ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/beifen.sh > /dev/null 2>&1
-	  chmod +x ${useip}_beifen.sh
-
-	  sed -i "s/0.0.0.0/$useip/g" ${useip}_beifen.sh
-	  sed -i "s/123456/$usepasswd/g" ${useip}_beifen.sh
-
-	  echo "------------------------"
-	  echo "1. 每周备份                 2. 每天备份"
-	  read -e -p "请输入你的选择: " dingshi
-
-	  case $dingshi in
-		  1)
-			  check_crontab_installed
-			  read -e -p "选择每周备份的星期几 (0-6，0代表星期日): " weekday
-			  (crontab -l ; echo "0 0 * * $weekday ./${useip}_beifen.sh") | crontab - > /dev/null 2>&1
-			  ;;
-		  2)
-			  check_crontab_installed
-			  read -e -p "选择每天备份的时间（小时，0-23）: " hour
-			  (crontab -l ; echo "0 $hour * * * ./${useip}_beifen.sh") | crontab - > /dev/null 2>&1
-			  ;;
-		  *)
-			  break  # 跳出
-			  ;;
-	  esac
-
-	  install sshpass
-
-	  ;;
-
-	34)
-	  root_use
-	  send_stats "LDNMP环境还原"
-	  echo "可用的站点备份"
-	  echo "-------------------------"
-	  ls -lt /home/*.gz | awk '{print $NF}'
-	  echo ""
-	  read -e -p  "回车键还原最新的备份，输入备份文件名还原指定的备份，输入0退出：" filename
-
-	  if [ "$filename" == "0" ]; then
-		  break_end
-		  linux_ldnmp
-	  fi
-
-	  # 如果用户没有输入文件名，使用最新的压缩包
-	  if [ -z "$filename" ]; then
-		  local filename=$(ls -t /home/*.tar.gz | head -1)
-	  fi
-
-	  if [ -n "$filename" ]; then
-		  cd /home/web/ > /dev/null 2>&1
-		  docker compose down > /dev/null 2>&1
-		  rm -rf /home/web > /dev/null 2>&1
-
-		  echo -e "${riwi001}正在解压 $filename ...${rw_bai}"
-		  cd /home/ && tar -xzf "$filename"
-
-		  install_dependency
-		  install_docker
-		  install_certbot
-		  install_ldnmp
-	  else
-		  echo "没有找到压缩包。"
-	  fi
-
-	  ;;
-
-	35)
-		web_security
-		;;
-
-	36)
-		web_optimization
-		;;
-
-
-	37)
-	  root_use
-	  while true; do
-		  clear
-		  send_stats "更新LDNMP环境"
-		  echo "更新LDNMP环境"
-		  echo "------------------------"
-		  ldnmp_v
-		  echo "发现新版本的组件"
-		  echo "------------------------"
-		  check_docker_image_update nginx
-		  if [ -n "$update_status" ]; then
-			echo -e "${rw_huang}nginx $update_status${rw_bai}"
-		  fi
-		  check_docker_image_update php
-		  if [ -n "$update_status" ]; then
-			echo -e "${rw_huang}php $update_status${rw_bai}"
-		  fi
-		  check_docker_image_update mysql
-		  if [ -n "$update_status" ]; then
-			echo -e "${rw_huang}mysql $update_status${rw_bai}"
-		  fi
-		  check_docker_image_update redis
-		  if [ -n "$update_status" ]; then
-			echo -e "${rw_huang}redis $update_status${rw_bai}"
-		  fi
-		  echo "------------------------"
-		  echo
-		  echo "1. 更新nginx               2. 更新mysql              3. 更新php              4. 更新redis"
-		  echo "------------------------"
-		  echo "5. 更新完整环境"
-		  echo "------------------------"
-		  echo "0. 返回上一级选单"
-		  echo "------------------------"
-		  read -e -p "请输入你的选择: " sub_choice
-		  case $sub_choice in
-			  1)
-			  nginx_upgrade
-
-				  ;;
-
-			  2)
-			  local ldnmp_pods="mysql"
-			  read -e -p "请输入${ldnmp_pods}版本号 （如: 8.0 8.3 8.4 9.0）（回车获取最新版）: " version
-			  local version=${version:-latest}
-
-			  cd /home/web/
-			  cp /home/web/docker-compose.yml /home/web/docker-compose1.yml
-			  sed -i "s/image: mysql/image: mysql:${version}/" /home/web/docker-compose.yml
-			  docker rm -f $ldnmp_pods
-			  docker images --filter=reference="$ldnmp_pods*" -q | xargs docker rmi > /dev/null 2>&1
-			  docker compose up -d --force-recreate $ldnmp_pods
-			  docker restart $ldnmp_pods
-			  cp /home/web/docker-compose1.yml /home/web/docker-compose.yml
-			  send_stats "更新$ldnmp_pods"
-			  echo "更新${ldnmp_pods}完成"
-
-				  ;;
-			  3)
-			  local ldnmp_pods="php"
-			  read -e -p "请输入${ldnmp_pods}版本号 （如: 7.4 8.0 8.1 8.2 8.3）（回车获取最新版）: " version
-			  local version=${version:-8.3}
-			  cd /home/web/
-			  cp /home/web/docker-compose.yml /home/web/docker-compose1.yml
-			  sed -i "s/kjlion\///g" /home/web/docker-compose.yml > /dev/null 2>&1
-			  sed -i "s/image: php:fpm-alpine/image: php:${version}-fpm-alpine/" /home/web/docker-compose.yml
-			  docker rm -f $ldnmp_pods
-			  docker images --filter=reference="$ldnmp_pods*" -q | xargs docker rmi > /dev/null 2>&1
-  			  docker images --filter=reference="kjlion/${ldnmp_pods}*" -q | xargs docker rmi > /dev/null 2>&1
-			  docker compose up -d --force-recreate $ldnmp_pods
-			  docker exec php chown -R www-data:www-data /var/www/html
-
-			  run_command docker exec php sed -i "s/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g" /etc/apk/repositories > /dev/null 2>&1
-
-			  docker exec php apk update
-			  curl -sL ${gh_proxy}github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o /usr/local/bin/install-php-extensions
-			  docker exec php mkdir -p /usr/local/bin/
-			  docker cp /usr/local/bin/install-php-extensions php:/usr/local/bin/
-			  docker exec php chmod +x /usr/local/bin/install-php-extensions
-			  docker exec php install-php-extensions mysqli pdo_mysql gd intl zip exif bcmath opcache redis imagick soap
-
-
-			  docker exec php sh -c 'echo "upload_max_filesize=50M " > /usr/local/etc/php/conf.d/uploads.ini' > /dev/null 2>&1
-			  docker exec php sh -c 'echo "post_max_size=50M " > /usr/local/etc/php/conf.d/post.ini' > /dev/null 2>&1
-			  docker exec php sh -c 'echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory.ini' > /dev/null 2>&1
-			  docker exec php sh -c 'echo "max_execution_time=1200" > /usr/local/etc/php/conf.d/max_execution_time.ini' > /dev/null 2>&1
-			  docker exec php sh -c 'echo "max_input_time=600" > /usr/local/etc/php/conf.d/max_input_time.ini' > /dev/null 2>&1
-			  docker exec php sh -c 'echo "max_input_vars=5000" > /usr/local/etc/php/conf.d/max_input_vars.ini' > /dev/null 2>&1
-
-			  fix_phpfpm_con $ldnmp_pods
-
-			  docker restart $ldnmp_pods > /dev/null 2>&1
-			  cp /home/web/docker-compose1.yml /home/web/docker-compose.yml
-			  send_stats "更新$ldnmp_pods"
-			  echo "更新${ldnmp_pods}完成"
-
-				  ;;
-			  4)
-			  local ldnmp_pods="redis"
-			  cd /home/web/
-			  docker rm -f $ldnmp_pods
-			  docker images --filter=reference="$ldnmp_pods*" -q | xargs docker rmi > /dev/null 2>&1
-			  docker compose up -d --force-recreate $ldnmp_pods
-			  docker restart $ldnmp_pods > /dev/null 2>&1
-			  send_stats "更新$ldnmp_pods"
-			  echo "更新${ldnmp_pods}完成"
-
-				  ;;
-			  5)
-				read -e -p "$(echo -e "${rw_huang}提示: ${rw_bai}长时间不更新环境的用户，请慎重更新LDNMP环境，会有数据库更新失败的风险。确定更新LDNMP环境吗？(Y/N): ")" choice
-				case "$choice" in
-				  [Yy])
-					send_stats "完整更新LDNMP环境"
-					cd /home/web/
-					docker compose down --rmi all
-
-					install_dependency
-					install_docker
-					install_certbot
-					install_ldnmp
-					;;
-				  *)
-					;;
-				esac
-				  ;;
-			  *)
-				  break
-				  ;;
-		  esac
-		  break_end
-	  done
-
-
-	  ;;
-
-	38)
-		root_use
-		send_stats "卸载LDNMP环境"
-		read -e -p "$(echo -e "${rw_hong}强烈建议：${rw_bai}先备份全部网站数据，再卸载LDNMP环境。确定删除所有网站数据吗？(Y/N): ")" choice
-		case "$choice" in
-		  [Yy])
-			cd /home/web/
-			docker compose down --rmi all
-			docker compose -f docker-compose.phpmyadmin.yml down > /dev/null 2>&1
-			docker compose -f docker-compose.phpmyadmin.yml down --rmi all > /dev/null 2>&1
-			rm -rf /home/web
-			;;
-		  [Nn])
-
-			;;
-		  *)
-			echo "无效的选择，请输入 Y 或 N。"
-			;;
-		esac
-		;;
-
-	0)
-		riwi
-	  ;;
-
-	*)
-		echo "无效的输入!"
-	esac
-	break_end
-
+    clear
+    send_stats "简单LDNMP管理器"
+    echo -e "${riwi001}简单LDNMP管理器${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+
+    # 检查LDNMP状态
+    if [ -f /home/web/docker-compose.yml ]; then
+      if command -v docker &>/dev/null; then
+        if docker ps --filter "name=nginx" --filter "status=running" | grep -q nginx; then
+          echo -e "${rw_lv}✓ LDNMP环境运行中${rw_bai}"
+        else
+          echo -e "${rw_huang}○ LDNMP环境已安装但未运行${rw_bai}"
+        fi
+      else
+        echo -e "${rw_hui}○ Docker未安装${rw_bai}"
+      fi
+    else
+      echo -e "${rw_hong}LDNMP环境未安装${rw_bai}"
+    fi
+
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1. ${rw_bai}安装LDNMP环境"
+    echo -e "${rw_huang}2. ${rw_bai}启动LDNMP环境"
+    echo -e "${rw_huang}3. ${rw_bai}停止LDNMP环境"
+    echo -e "${rw_huang}4. ${rw_bai}重启LDNMP环境"
+    echo -e "${rw_huang}5. ${rw_bai}查看LDNMP状态"
+    echo -e "${rw_huang}------------------------${rw_bai}"
+    echo -e "${rw_huang}6. ${rw_bai}创建简单站点"
+    echo -e "${rw_huang}7. ${rw_bai}站点列表"
+    echo -e "${rw_huang}8. ${rw_bai}删除站点"
+    echo -e "${rw_huang}------------------------${rw_bai}"
+    echo -e "${rw_huang}9. ${rw_bai}卸载LDNMP环境"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0. ${rw_bai}返回主菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择: " sub_choice
+
+    case $sub_choice in
+      1)
+        clear
+        send_stats "安装LDNMP环境"
+        echo "正在安装LDNMP环境..."
+        ldnmp_install_status_one
+        ldnmp_install_all
+        ;;
+      2)
+        clear
+        send_stats "启动LDNMP环境"
+        if [ -f /home/web/docker-compose.yml ]; then
+          cd /home/web && docker compose up -d
+          echo "LDNMP环境已启动"
+        else
+          echo "错误：LDNMP环境未安装"
+        fi
+        ;;
+      3)
+        clear
+        send_stats "停止LDNMP环境"
+        if [ -f /home/web/docker-compose.yml ]; then
+          cd /home/web && docker compose down
+          echo "LDNMP环境已停止"
+        else
+          echo "错误：LDNMP环境未安装"
+        fi
+        ;;
+      4)
+        clear
+        send_stats "重启LDNMP环境"
+        if [ -f /home/web/docker-compose.yml ]; then
+          restart_ldnmp
+          echo "LDNMP环境已重启"
+        else
+          echo "错误：LDNMP环境未安装"
+        fi
+        ;;
+      5)
+        clear
+        send_stats "查看LDNMP状态"
+        echo "LDNMP环境状态："
+        echo "------------------------"
+        if command -v docker &>/dev/null; then
+          docker ps -a --filter "name=nginx" --filter "name=php" --filter "name=mysql" --filter "name=redis"
+          echo ""
+          ldnmp_tato
+        else
+          echo "Docker未安装"
+        fi
+        ;;
+      6)
+        clear
+        send_stats "创建简单站点"
+        echo "创建简单站点"
+        echo "------------------------"
+        add_yuming
+        repeat_add_yuming
+        ldnmp_install_status
+        install_ssltls
+        certs_status
+        add_db
+        
+        # 创建简单的HTML站点
+        mkdir -p /home/web/html/${yuming}
+        cat > /home/web/html/${yuming}/index.html << EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${yuming}</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { color: #333; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>欢迎访问 ${yuming}!</h1>
+    <p>您的网站已成功创建。</p>
+</body>
+</html>
+EOF
+        
+        # 创建nginx配置
+        wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf > /dev/null 2>&1
+        wget -O /home/web/conf.d/${yuming}.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/default10.conf > /dev/null 2>&1
+        sed -i "s/yuming.com/${yuming}/g" /home/web/conf.d/${yuming}.conf
+        
+        nginx_http_on
+        restart_ldnmp
+        ldnmp_web_on
+        echo "站点 ${yuming} 创建成功！"
+        echo "访问地址: http://${yuming}"
+        ;;
+      7)
+        clear
+        send_stats "站点列表"
+        echo "站点列表："
+        echo "------------------------"
+        if [ -d /home/web/conf.d ]; then
+          for conf_file in /home/web/conf.d/*.conf; do
+            if [ -f "$conf_file" ]; then
+              site_name=$(basename "$conf_file" .conf)
+              if [ "$site_name" != "map" ]; then
+                echo "• ${site_name}"
+              fi
+            fi
+          done
+        else
+          echo "没有找到站点"
+        fi
+        ;;
+      8)
+        clear
+        send_stats "删除站点"
+        web_del
+        ;;
+      9)
+        clear
+        send_stats "卸载LDNMP环境"
+        read -e -p "$(echo -e "${rw_hong}警告：这将删除所有网站数据！确定要卸载吗？(Y/N): ")" choice
+        case "$choice" in
+          [Yy])
+            if [ -f /home/web/docker-compose.yml ]; then
+              cd /home/web/
+              docker compose down --rmi all
+              docker compose -f docker-compose.phpmyadmin.yml down > /dev/null 2>&1
+              docker compose -f docker-compose.phpmyadmin.yml down --rmi all > /dev/null 2>&1
+              rm -rf /home/web
+              echo "LDNMP环境已卸载"
+            else
+              echo "错误：LDNMP环境未安装"
+            fi
+            ;;
+        esac
+        ;;
+      0)
+        riwi
+        ;;
+      *)
+        echo "无效的输入!"
+        ;;
+    esac
+    break_end
   done
-
 }
-
-
-
-
 
 
 moltbot_menu() {
@@ -22290,7 +21456,7 @@ echo -e "${riwi001}3.   ${rw_bai}系统清理"
 echo -e "${riwi001}4.   ${rw_bai}基础工具"
 echo -e "${riwi001}5.   ${rw_bai}GitHub管理器"
 echo -e "${riwi001}6.   ${rw_bai}Docker管理"
-echo -e "${rw_huang}7.   ${rw_bai}LDNMP建站"
+echo -e "${rw_huang}7.   ${rw_bai}简单LDNMP管理器"
 echo -e "${riwi001}8.   ${rw_bai}应用市场"
 echo -e "${riwi001}9.   ${rw_bai}后台工作区"
 echo -e "${riwi001}10.  ${rw_bai}系统工具"
@@ -22310,7 +21476,7 @@ case $choice in
   4) linux_tools ;;
   5) github_manager ;;
   6) linux_docker ;;
-  7) linux_ldnmp ;;
+  7) simple_ldnmp_manager ;;
   8) linux_panel ;;
   9) linux_work ;;
   10) linux_Settings ;;
