@@ -1843,7 +1843,7 @@ certs_status() {
 		echo -e "2. DNS解析问题 ➠ 确认域名已正确解析到本服务器IP"
 		echo -e "3. 网络配置问题 ➠ 如使用Cloudflare Warp等虚拟网络请暂时关闭"
 		echo -e "4. 防火墙限制 ➠ 检查80/443端口是否开放，确保验证可访问"
-		echo -e "5. 申请次数超限 ➠ Let's Encrypt有每周限额(5次/域名/周)"
+		echo -e "5. 申请次数超限 ➠ Let's Encrypt 有每周限额（5次/域名/周）"
 		echo -e "6. 国内备案限制 ➠ 中国大陆环境请确认域名是否备案"
 		echo "------------------------"
 		echo "1. 重新申请        2. 导入已有证书        0. 退出"
@@ -1868,7 +1868,7 @@ certs_status() {
 			mkdir -p /home/web/certs
 
 			# 1. 输入证书 (ECC 和 RSA 证书开头都是 BEGIN CERTIFICATE)
-			echo "请粘贴 证书 (CRT/PEM) 内容 (按两次回车结束)："
+			echo "请粘贴证书（CRT/PEM 格式）内容（按两次回车结束）："
 			local cert_content=""
 			while IFS= read -r line; do
 				[[ -z "$line" && "$cert_content" == *"-----BEGIN"* ]] && break
@@ -1876,7 +1876,7 @@ certs_status() {
 			done
 
 			# 2. 输入私钥 (兼容 RSA, ECC, PKCS#8)
-			echo "请粘贴 证书私钥 (Private Key) 内容 (按两次回车结束)："
+			echo "请粘贴证书私钥（Private Key/私钥）内容（按两次回车结束）："
 			local key_content=""
 			while IFS= read -r line; do
 				[[ -z "$line" && "$key_content" == *"-----BEGIN"* ]] && break
@@ -1894,7 +1894,7 @@ certs_status() {
 
 				# 识别当前证书类型并显示
 				if [[ "$key_content" == *"EC PRIVATE KEY"* ]]; then
-					echo "检测到 ECC 证书已成功保存。"
+					echo "检测到 ECC（椭圆曲线）证书已成功保存。"
 				else
 					echo "检测到 RSA 证书已成功保存。"
 				fi
@@ -9235,195 +9235,894 @@ LDNMP环境未安装
 
 
 
-simple_ldnmp_manager() {
+
+
+
+
+# ================================================================
+# LDNMP建站管理器
+# ================================================================
+
+ldnmp_builder_menu() {
   while true; do
     clear
-    send_stats "简单LDNMP管理器"
-    echo -e "${riwi001}简单LDNMP管理器${rw_bai}"
+    send_stats "LDNMP建站"
+    echo -e "${riwi001}LDNMP建站${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo ""
-
-    # 检查LDNMP状态
-    if [ -f /home/web/docker-compose.yml ]; then
-      if command -v docker &>/dev/null; then
-        if docker ps --filter "name=nginx" --filter "status=running" | grep -q nginx; then
-          echo -e "${rw_lv}✓ LDNMP环境运行中${rw_bai}"
-        else
-          echo -e "${rw_huang}○ LDNMP环境已安装但未运行${rw_bai}"
-        fi
-      else
-        echo -e "${rw_hui}○ Docker未安装${rw_bai}"
-      fi
-    else
-      echo -e "${rw_hong}LDNMP环境未安装${rw_bai}"
-    fi
-
     echo ""
     echo -e "${rw_huang}请选择操作：${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${rw_huang}1. ${rw_bai}安装LDNMP环境"
-    echo -e "${rw_huang}2. ${rw_bai}启动LDNMP环境"
-    echo -e "${rw_huang}3. ${rw_bai}停止LDNMP环境"
-    echo -e "${rw_huang}4. ${rw_bai}重启LDNMP环境"
-    echo -e "${rw_huang}5. ${rw_bai}查看LDNMP状态"
-    echo -e "${rw_huang}------------------------${rw_bai}"
-    echo -e "${rw_huang}6. ${rw_bai}创建简单站点"
-    echo -e "${rw_huang}7. ${rw_bai}站点列表"
-    echo -e "${rw_huang}8. ${rw_bai}删除站点"
-    echo -e "${rw_huang}------------------------${rw_bai}"
-    echo -e "${rw_huang}9. ${rw_bai}卸载LDNMP环境"
+    echo -e "${rw_huang}1.  ${rw_bai}安装LDNMP环境"
+    echo -e "${rw_huang}2.  ${rw_bai}安装Typecho轻量博客"
+    echo -e "${rw_huang}3.  ${rw_bai}仅安装Nginx"
+    echo -e "${rw_huang}4.  ${rw_bai}Nginx管理"
+    echo -e "${rw_huang}5.  ${rw_bai}站点数据管理"
+    echo -e "${rw_huang}6.  ${rw_bai}定时远程备份"
+    echo -e "${rw_huang}7.  ${rw_bai}防护LDNMP环境"
+    echo -e "${rw_huang}8.  ${rw_bai}更新LDNMP环境"
+    echo -e "${rw_huang}9.  ${rw_bai}优化LDNMP环境"
+    echo -e "${rw_huang}10. ${rw_bai}还原全站数据"
+    echo -e "${rw_huang}11. ${rw_bai}自定义静态站点"
+    echo -e "${rw_huang}12. ${rw_bai}站点反向代理-负载均衡"
+    echo -e "${rw_huang}13. ${rw_bai}站点反向代理+域名"
+    echo -e "${rw_huang}14. ${rw_bai}站点重定向"
+    echo -e "${rw_huang}15. ${rw_bai}站点反向代理+IP+端口"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${rw_huang}0. ${rw_bai}返回主菜单"
+    echo -e "${rw_huang}0.  ${rw_bai}返回主菜单"
     echo -e "${riwi001}------------------------${rw_bai}"
-    read -e -p "请输入你的选择: " sub_choice
-
-    case $sub_choice in
-      1)
-        clear
-        send_stats "安装LDNMP环境"
-        echo "正在安装LDNMP环境..."
-        ldnmp_install_status_one
-        ldnmp_install_all
-        ;;
-      2)
-        clear
-        send_stats "启动LDNMP环境"
-        if [ -f /home/web/docker-compose.yml ]; then
-          cd /home/web && docker compose up -d
-          echo "LDNMP环境已启动"
-        else
-          echo "错误：LDNMP环境未安装"
-        fi
-        ;;
-      3)
-        clear
-        send_stats "停止LDNMP环境"
-        if [ -f /home/web/docker-compose.yml ]; then
-          cd /home/web && docker compose down
-          echo "LDNMP环境已停止"
-        else
-          echo "错误：LDNMP环境未安装"
-        fi
-        ;;
-      4)
-        clear
-        send_stats "重启LDNMP环境"
-        if [ -f /home/web/docker-compose.yml ]; then
-          restart_ldnmp
-          echo "LDNMP环境已重启"
-        else
-          echo "错误：LDNMP环境未安装"
-        fi
-        ;;
-      5)
-        clear
-        send_stats "查看LDNMP状态"
-        echo "LDNMP环境状态："
-        echo "------------------------"
-        if command -v docker &>/dev/null; then
-          docker ps -a --filter "name=nginx" --filter "name=php" --filter "name=mysql" --filter "name=redis"
-          echo ""
-          ldnmp_tato
-        else
-          echo "Docker未安装"
-        fi
-        ;;
-      6)
-        clear
-        send_stats "创建简单站点"
-        echo "创建简单站点"
-        echo "------------------------"
-        add_yuming
-        repeat_add_yuming
-        ldnmp_install_status
-        install_ssltls
-        certs_status
-        add_db
-        
-        # 创建简单的HTML站点
-        mkdir -p /home/web/html/${yuming}
-        cat > /home/web/html/${yuming}/index.html << EOF
-<!DOCTYPE html>
-<html>
-<head>
-    <title>${yuming}</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        h1 { color: #333; }
-        p { color: #666; }
-    </style>
-</head>
-<body>
-    <h1>欢迎访问 ${yuming}!</h1>
-    <p>您的网站已成功创建。</p>
-</body>
-</html>
-EOF
-        
-        # 创建nginx配置
-        wget -O /home/web/conf.d/map.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf > /dev/null 2>&1
-        wget -O /home/web/conf.d/${yuming}.conf ${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/default10.conf > /dev/null 2>&1
-        sed -i "s/yuming.com/${yuming}/g" /home/web/conf.d/${yuming}.conf
-        
-        nginx_http_on
-        restart_ldnmp
-        ldnmp_web_on
-        echo "站点 ${yuming} 创建成功！"
-        echo "访问地址: http://${yuming}"
-        ;;
-      7)
-        clear
-        send_stats "站点列表"
-        echo "站点列表："
-        echo "------------------------"
-        if [ -d /home/web/conf.d ]; then
-          for conf_file in /home/web/conf.d/*.conf; do
-            if [ -f "$conf_file" ]; then
-              site_name=$(basename "$conf_file" .conf)
-              if [ "$site_name" != "map" ]; then
-                echo "• ${site_name}"
-              fi
-            fi
-          done
-        else
-          echo "没有找到站点"
-        fi
-        ;;
-      8)
-        clear
-        send_stats "删除站点"
-        web_del
-        ;;
-      9)
-        clear
-        send_stats "卸载LDNMP环境"
-        read -e -p "$(echo -e "${rw_hong}警告：这将删除所有网站数据！确定要卸载吗？(Y/N): ")" choice
-        case "$choice" in
-          [Yy])
-            if [ -f /home/web/docker-compose.yml ]; then
-              cd /home/web/
-              docker compose down --rmi all
-              docker compose -f docker-compose.phpmyadmin.yml down > /dev/null 2>&1
-              docker compose -f docker-compose.phpmyadmin.yml down --rmi all > /dev/null 2>&1
-              rm -rf /home/web
-              echo "LDNMP环境已卸载"
-            else
-              echo "错误：LDNMP环境未安装"
-            fi
-            ;;
-        esac
-        ;;
-      0)
-        riwi
-        ;;
-      *)
-        echo "无效的输入!"
-        ;;
+    read -e -p "请输入你的选择（回车默认0返回）：" choice
+    choice=${choice:-0}
+    case $choice in
+      1) ldnmp_install_env ;;
+      2) ldnmp_install_typecho ;;
+      3) ldnmp_install_nginx_only ;;
+      4) ldnmp_nginx_manage ;;
+      5) ldnmp_site_data_manage ;;
+      6) ldnmp_scheduled_backup ;;
+      7) ldnmp_protect_env ;;
+      8) ldnmp_update_env ;;
+      9) ldnmp_optimize_env ;;
+      10) ldnmp_restore_full ;;
+      11) ldnmp_custom_static ;;
+      12) ldnmp_proxy_load_balance ;;
+      13) ldnmp_proxy_domain ;;
+      14) ldnmp_site_redirect ;;
+      15) ldnmp_proxy_ip_port ;;
+      0) break ;;
+      *) echo "无效的输入！" ;;
     esac
     break_end
   done
 }
 
+ldnmp_install_env() {
+  clear
+  send_stats "安装LDNMP环境"
+  echo -e "${rw_huang}正在安装LDNMP环境...${rw_bai}"
+  echo "------------------------"
+  ldnmp_install_status_one
+  ldnmp_install_all
+  echo -e "${rw_lv}LDNMP环境安装完成！${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_install_typecho() {
+  clear
+  send_stats "安装Typecho轻量博客网站"
+  echo -e "${rw_huang}安装Typecho轻量博客网站${rw_bai}"
+  echo "------------------------"
+  echo -e "示例域名：blog.example.com（请先将域名解析到本机IP）"
+  echo ""
+  add_yuming
+  if [ -z "$yuming" ]; then return; fi
+  repeat_add_yuming
+  ldnmp_install_status
+  install_ssltls
+  certs_status
+  add_db
+  mkdir -p /home/web/html/${yuming}
+  cd /home/web/html/${yuming}
+  echo -e "${rw_huang}正在下载Typecho...${rw_bai}"
+  curl -sSL "https://github.com/typecho/typecho/releases/latest/download/typecho.zip" -o typecho.zip 2>/dev/null ||     wget -q "https://github.com/typecho/typecho/releases/latest/download/typecho.zip" -O typecho.zip 2>/dev/null
+  if [ -f typecho.zip ]; then
+    unzip -o typecho.zip >/dev/null 2>&1
+    mv typecho/* . 2>/dev/null
+    rm -rf typecho typecho.zip
+    chmod -R 755 /home/web/html/${yuming}
+  else
+    echo -e "${rw_hong}下载失败，请手动下载Typecho${rw_bai}"
+  fi
+  wget -q -O /home/web/conf.d/map.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf" 2>/dev/null
+  wget -q -O /home/web/conf.d/${yuming}.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/default10.conf" 2>/dev/null
+  sed -i "s/yuming.com/${yuming}/g" /home/web/conf.d/${yuming}.conf
+  nginx_http_on
+  restart_ldnmp
+  ldnmp_web_on
+  echo -e "${rw_lv}Typecho站点 ${yuming} 创建成功！${rw_bai}"
+  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_install_nginx_only() {
+  clear
+  send_stats "仅安装Nginx"
+  echo -e "${rw_huang}正在安装Nginx...${rw_bai}"
+  echo "------------------------"
+  nginx_install_all
+  echo -e "${rw_lv}Nginx安装完成！${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_proxy_ip_port() {
+  clear
+  send_stats "站点反向代理+IP+端口"
+  echo -e "${rw_huang}站点反向代理+IP+端口${rw_bai}"
+  echo "------------------------"
+  echo -e "示例：域名 blog.example.com，反向代理到后端 192.168.1.10:8080"
+  echo ""
+  read -e -p "请输入域名或IP（回车默认本机IP）: " proxy_domain
+  proxy_domain=${proxy_domain:-$(curl -s --max-time 5 ifconfig.me 2>/dev/null || echo "localhost")}
+  read -e -p "请输入后端IP（回车默认127.0.0.1）: " target_ip
+  target_ip=${target_ip:-127.0.0.1}
+  read -e -p "请输入后端端口（回车默认80）: " target_port
+  target_port=${target_port:-80}
+  # 创建nginx配置
+  mkdir -p /home/web/conf.d
+  cat > /home/web/conf.d/${proxy_domain}.conf << 'PROXYEOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name DOMAIN_PLACEHOLDER;
+    location / {
+        proxy_pass http://TARGET_IP:TARGET_PORT;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+PROXYEOF
+  sed -i "s/DOMAIN_PLACEHOLDER/${proxy_domain}/g" /home/web/conf.d/${proxy_domain}.conf
+  sed -i "s/TARGET_IP:TARGET_PORT/${target_ip}:${target_port}/g" /home/web/conf.d/${proxy_domain}.conf
+  nginx_upgrade
+  echo -e "${rw_lv}反向代理站点 ${proxy_domain} 创建成功！${rw_bai}"
+  echo -e "代理地址: ${rw_huang}http://${proxy_domain} -> http://${target_ip}:${target_port}${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_site_data_manage() {
+  while true; do
+    clear
+    send_stats "站点数据管理"
+    echo -e "${riwi001}站点数据管理${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.  ${rw_bai}查看所有站点"
+    echo -e "${rw_huang}2.  ${rw_bai}查看站点配置"
+    echo -e "${rw_huang}3.  ${rw_bai}删除站点"
+    echo -e "${rw_huang}4.  ${rw_bai}备份站点数据"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0.  ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}所有站点列表：${rw_bai}"
+        echo "------------------------"
+        if [ -d /home/web/conf.d ]; then
+          for conf in /home/web/conf.d/*.conf; do
+            [ -f "$conf" ] || continue
+            sname=$(basename "$conf" .conf)
+            [ "$sname" = "map" ] && continue
+            echo "  • $sname"
+          done
+        else
+          echo "  暂无站点"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      2)
+        clear
+        read -e -p "请输入要查看的站点域名: " view_domain
+        if [ -f "/home/web/conf.d/${view_domain}.conf" ]; then
+          echo -e "${rw_huang}${view_domain} 配置文件内容：${rw_bai}"
+          echo "------------------------"
+          cat "/home/web/conf.d/${view_domain}.conf"
+          echo ""
+          read -e -p "按回车继续..."
+        else
+          echo -e "${rw_hong}站点配置文件不存在${rw_bai}"
+          sleep 1
+        fi
+        ;;
+      3)
+        clear
+        web_del
+        ;;
+      4)
+        clear
+        read -e -p "请输入要备份的站点域名（回车备份所有站点）: " backup_domain
+        backup_domain=${backup_domain:-ALL}
+        backup_path="/home/web_backup_$(date +%Y%m%d_%H%M%S)"
+        echo -e "${rw_huang}正在备份到 ${backup_path} ...${rw_bai}"
+        if [ "$backup_domain" = "ALL" ]; then
+          cp -r /home/web "$backup_path" 2>/dev/null
+        else
+          mkdir -p "$backup_path/conf.d" "$backup_path/html"
+          cp "/home/web/conf.d/${backup_domain}.conf" "$backup_path/conf.d/" 2>/dev/null
+          cp -r "/home/web/html/${backup_domain}" "$backup_path/html/" 2>/dev/null
+        fi
+        if [ $? -eq 0 ]; then
+          echo -e "${rw_lv}备份完成：$backup_path${rw_bai}"
+        else
+          echo -e "${rw_hong}备份失败${rw_bai}"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
+ldnmp_scheduled_backup() {
+  while true; do
+    clear
+    send_stats "定时远程备份"
+    echo -e "${riwi001}定时远程备份${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.  ${rw_bai}配置rclone远程存储"
+    echo -e "${rw_huang}2.  ${rw_bai}设置定时备份任务"
+    echo -e "${rw_huang}3.  ${rw_bai}查看当前备份任务"
+    echo -e "${rw_huang}4.  ${rw_bai}立即执行一次备份"
+    echo -e "${rw_huang}5.  ${rw_bai}删除备份任务"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0.  ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}配置rclone远程存储${rw_bai}"
+        echo "------------------------"
+        if ! command -v rclone &>/dev/null; then
+          echo "正在安装rclone..."
+          curl -sSL https://rclone.org/install.sh | bash 2>/dev/null || echo "rclone安装失败，请手动安装"
+        fi
+        echo -e "${rw_huang}请按提示配置远程存储，配置完成后按回车继续${rw_bai}"
+        rclone config
+        ;;
+      2)
+        clear
+        echo -e "${rw_huang}设置定时备份任务${rw_bai}"
+        echo "------------------------"
+        read -e -p "请输入rclone远程路径（如 gdrive:backup）: " remote_path
+        read -e -p "请输入备份频率Cron表达式（回车默认每天2点: 0 2 * * *）: " cron_expr
+        cron_expr=${cron_expr:-"0 2 * * *"}
+        cron_job="$cron_expr rclone sync /home/web $remote_path >> /var/log/ldnmp_backup.log 2>&1"
+        (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
+        echo -e "${rw_lv}备份任务已设置${rw_bai}"
+        echo "  Cron: $cron_expr"
+        echo "  远程: $remote_path"
+        sleep 1
+        ;;
+      3)
+        clear
+        echo -e "${rw_huang}当前备份任务：${rw_bai}"
+        echo "------------------------"
+        crontab -l 2>/dev/null | grep "rclone.*sync.*backup" || echo "  暂无备份任务"
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      4)
+        clear
+        read -e -p "请输入rclone远程路径（如 gdrive:backup）: " remote_path
+        if [ -n "$remote_path" ]; then
+          echo -e "${rw_huang}正在执行备份...${rw_bai}"
+          rclone sync /home/web "$remote_path" -P 2>&1 | tail -5
+          echo -e "${rw_lv}备份执行完毕${rw_bai}"
+        fi
+        sleep 1
+        ;;
+      5)
+        clear
+        echo -e "${rw_huang}删除备份任务${rw_bai}"
+        echo "------------------------"
+        crontab -l 2>/dev/null | grep -n "rclone.*sync.*backup" || echo "  暂无备份任务"
+        read -e -p "确认删除所有备份任务？(Y/N，回车默认N): " confirm
+        confirm=${confirm:-N}
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+          crontab -l 2>/dev/null | grep -v "rclone.*sync.*backup" | crontab -
+          echo "备份任务已删除"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
+ldnmp_protect_env() {
+  while true; do
+    clear
+    send_stats "防护LDNMP环境"
+    echo -e "${riwi001}防护LDNMP环境${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.  ${rw_bai}安装fail2ban登录防护"
+    echo -e "${rw_huang}2.  ${rw_bai}配置防火墙（开放80/443端口）"
+    echo -e "${rw_huang}3.  ${rw_bai}隐藏Nginx版本号"
+    echo -e "${rw_huang}4.  ${rw_bai}禁用不安全HTTP方法"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0.  ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}安装fail2ban登录防护${rw_bai}"
+        echo "------------------------"
+        if command -v dnf &>/dev/null; then
+          dnf install -y fail2ban 2>/dev/null
+        elif command -v yum &>/dev/null; then
+          yum install -y fail2ban 2>/dev/null
+        elif command -v apt &>/dev/null || command -v apt-get &>/dev/null; then
+          apt-get update -qq && apt-get install -y fail2ban 2>/dev/null
+        fi
+        systemctl enable fail2ban 2>/dev/null
+        systemctl start fail2ban 2>/dev/null
+        echo -e "${rw_lv}fail2ban安装完成${rw_bai}"
+        sleep 1
+        ;;
+      2)
+        clear
+        echo -e "${rw_huang}配置防火墙（开放80/443端口）${rw_bai}"
+        echo "------------------------"
+        if command -v firewall-cmd &>/dev/null; then
+          firewall-cmd --permanent --add-port=80/tcp 2>/dev/null
+          firewall-cmd --permanent --add-port=443/tcp 2>/dev/null
+          firewall-cmd --reload 2>/dev/null
+          echo "firewalld: 已开放80/443端口"
+        elif command -v ufw &>/dev/null; then
+          ufw allow 80/tcp 2>/dev/null
+          ufw allow 443/tcp 2>/dev/null
+          echo "ufw: 已开放80/443端口"
+        elif command -v iptables &>/dev/null; then
+          iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null
+          iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null
+          echo "iptables: 已开放80/443端口"
+        else
+          echo "未检测到支持的防火墙工具"
+        fi
+        sleep 1
+        ;;
+      3)
+        clear
+        echo -e "${rw_huang}隐藏Nginx版本号${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/^server_tokens .*/server_tokens off;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/^server_names_hash_bucket_size.*/server_names_hash_bucket_size 512;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已隐藏Nginx版本号${rw_bai}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      4)
+        clear
+        echo -e "${rw_huang}禁用不安全HTTP方法${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/nginx.conf ]; then
+          if ! grep -q "if (\$request_method !~" /home/web/nginx.conf; then
+            sed -i '/http {/a\    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) { return 444; }' /home/web/nginx.conf
+          fi
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已禁用不安全HTTP方法${rw_bai}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
+ldnmp_update_env() {
+  clear
+  send_stats "更新LDNMP环境"
+  echo -e "${rw_huang}更新LDNMP环境${rw_bai}"
+  echo "------------------------"
+  if [ ! -f /home/web/docker-compose.yml ]; then
+    echo -e "${rw_hong}LDNMP环境未安装，请先安装${rw_bai}"
+    sleep 1
+    return
+  fi
+  cd /home/web
+  echo -e "${rw_huang}正在更新LDNMP环境...${rw_bai}"
+  docker compose pull 2>/dev/null
+  docker compose up -d 2>/dev/null
+  echo -e "${rw_lv}LDNMP环境更新完成${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_optimize_env() {
+  while true; do
+    clear
+    send_stats "优化LDNMP环境"
+    echo -e "${riwi001}优化LDNMP环境${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.  ${rw_bai}开启Gzip压缩"
+    echo -e "${rw_huang}2.  ${rw_bai}开启Brotli压缩"
+    echo -e "${rw_huang}3.  ${rw_bai}配置缓存策略"
+    echo -e "${rw_huang}4.  ${rw_bai}优化PHP配置"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0.  ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}开启Gzip压缩${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# gzip on;/gzip on;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/# gzip_vary on;/gzip_vary on;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/# gzip_proxied any;/gzip_proxied any;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已开启Gzip压缩${rw_bai}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      2)
+        clear
+        echo -e "${rw_huang}开启Brotli压缩${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# brotli on;/brotli on;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已开启Brotli压缩${rw_bai}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      3)
+        clear
+        echo -e "${rw_huang}配置缓存策略${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# proxy_cache_path/proxy_cache_path/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已配置缓存策略${rw_bai}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      4)
+        clear
+        echo -e "${rw_huang}优化PHP配置${rw_bai}"
+        echo "------------------------"
+        if docker ps --filter "name=php" --filter "status=running" | grep -q php; then
+          docker exec php sed -i 's/memory_limit = .*/memory_limit = 256M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null ||             docker exec php bash -c 'echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/zzz-custom.ini'
+          docker exec php sed -i 's/upload_max_filesize = .*/upload_max_filesize = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
+          docker exec php sed -i 's/post_max_size = .*/post_max_size = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
+          docker exec php php-fpm 2>/dev/null
+          echo -e "${rw_lv}已优化PHP配置${rw_bai}"
+        else
+          echo "PHP容器未运行"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
+ldnmp_restore_full() {
+  clear
+  send_stats "还原全站数据"
+  echo -e "${rw_huang}还原全站数据${rw_bai}"
+  echo "------------------------"
+  echo -e "${rw_hong}警告：这将覆盖当前 /home/web 数据！${rw_bai}"
+  echo ""
+  echo -e "可用的备份列表："
+  ls -d /home/web_backup_* 2>/dev/null | head -10
+  echo ""
+  read -e -p "请输入要恢复的备份目录路径（如 /home/web_backup_20240101_120000）: " restore_path
+  if [ -d "$restore_path" ]; then
+    read -e -p "$(echo -e "${rw_hong}确认恢复？(Y/N，回车默认N): ${rw_bai}")" confirm
+    confirm=${confirm:-N}
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      rm -rf /home/web 2>/dev/null
+      cp -r "$restore_path" /home/web 2>/dev/null
+      if [ $? -eq 0 ]; then
+        echo -e "${rw_lv}恢复完成！${rw_bai}"
+        echo -e "正在重启LDNMP环境..."
+        cd /home/web && docker compose restart 2>/dev/null
+      else
+        echo -e "${rw_hong}恢复失败${rw_bai}"
+      fi
+    fi
+  else
+    echo -e "${rw_hong}错误：备份目录不存在${rw_bai}"
+  fi
+  sleep 1
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_custom_static() {
+  clear
+  send_stats "自定义静态站点"
+  echo -e "${rw_huang}自定义静态站点${rw_bai}"
+  echo "------------------------"
+  echo -e "示例域名：static.example.com"
+  echo ""
+  add_yuming
+  if [ -z "$yuming" ]; then return; fi
+  repeat_add_yuming
+  mkdir -p /home/web/html/${yuming}
+  echo -e "${rw_huang}请输入静态页面内容（输入空行结束）：${rw_bai}"
+  static_content=""
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && break
+    static_content+="${line}"$'
+'
+  done
+  if [ -z "$static_content" ]; then
+    # 使用默认页面
+    cat > /home/web/html/${yuming}/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+        h1 { color: #333; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to ${yuming}</h1>
+    <p>您的静态站点已创建。</p>
+</body>
+</html>
+HTMLEOF
+  else
+    echo "$static_content" > /home/web/html/${yuming}/index.html
+  fi
+  wget -q -O /home/web/conf.d/map.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf" 2>/dev/null
+  wget -q -O /home/web/conf.d/${yuming}.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/default10.conf" 2>/dev/null
+  sed -i "s/yuming.com/${yuming}/g" /home/web/conf.d/${yuming}.conf
+  nginx_http_on
+  nginx_upgrade
+  echo -e "${rw_lv}静态站点 ${yuming} 创建成功！${rw_bai}"
+  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_proxy_load_balance() {
+  clear
+  send_stats "站点反向代理-负载均衡"
+  echo -e "${rw_huang}站点反向代理-负载均衡${rw_bai}"
+  echo "------------------------"
+  echo -e "示例：域名 app.example.com，后端服务器 192.168.1.10:80 和 192.168.1.11:80"
+  echo ""
+  read -e -p "请输入域名: " lb_domain
+  if [ -z "$lb_domain" ]; then return; fi
+  read -e -p "请输入后端服务器1（IP:端口，如 192.168.1.10:80）: " backend1
+  read -e -p "请输入后端服务器2（IP:端口，如 192.168.1.11:80）: " backend2
+  read -e -p "请输入更多后端服务器（可选，空格分隔）: " backends_more
+  mkdir -p /home/web/conf.d
+  cat > /home/web/conf.d/${lb_domain}.conf << 'LBEOF'
+upstream BACKEND_PLACEHOLDER {
+    server BACKEND1_PLACEHOLDER;
+    server BACKEND2_PLACEHOLDER;
+    # 可添加更多后端服务器
+}
+server {
+    listen 80;
+    listen [::]:80;
+    server_name DOMAIN_PLACEHOLDER;
+    location / {
+        proxy_pass http://BACKEND_PLACEHOLDER;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+LBEOF
+  sed -i "s/DOMAIN_PLACEHOLDER/${lb_domain}/g" /home/web/conf.d/${lb_domain}.conf
+  sed -i "s/BACKEND1_PLACEHOLDER/${backend1}/g" /home/web/conf.d/${lb_domain}.conf
+  sed -i "s/BACKEND2_PLACEHOLDER/${backend2}/g" /home/web/conf.d/${lb_domain}.conf
+  sed -i "s/BACKEND_PLACEHOLDER/BACKEND_PLACEHOLDER/g" /home/web/conf.d/${lb_domain}.conf
+  nginx_upgrade
+  echo -e "${rw_lv}负载均衡站点 ${lb_domain} 创建成功！${rw_bai}"
+  echo -e "访问地址: ${rw_huang}http://${lb_domain}${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_proxy_domain() {
+  clear
+  send_stats "站点反向代理+域名"
+  echo -e "${rw_huang}站点反向代理+域名${rw_bai}"
+  echo "------------------------"
+  echo -e "示例：域名 api.example.com，反向代理到 https://api.backend.com"
+  echo ""
+  read -e -p "请输入域名: " proxy_domain
+  if [ -z "$proxy_domain" ]; then return; fi
+  read -e -p "请输入后端域名（如 api.backend.com）: " target_domain
+  read -e -p "请输入后端端口（回车默认443）: " target_port
+  target_port=${target_port:-443}
+  mkdir -p /home/web/conf.d
+  proto="https"
+  if [ "$target_port" = "80" ]; then proto="http"; fi
+  cat > /home/web/conf.d/${proxy_domain}.conf << 'PDEOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name DOMAIN_PLACEHOLDER;
+    location / {
+        proxy_pass PROTO_PLACEHOLDER://TARGET_PLACEHOLDER:TARGET_PORT_PLACEHOLDER;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+PDEOF
+  sed -i "s/DOMAIN_PLACEHOLDER/${proxy_domain}/g" /home/web/conf.d/${proxy_domain}.conf
+  sed -i "s/PROTO_PLACEHOLDER/${proto}/g" /home/web/conf.d/${proxy_domain}.conf
+  sed -i "s/TARGET_PLACEHOLDER/${target_domain}/g" /home/web/conf.d/${proxy_domain}.conf
+  sed -i "s/TARGET_PORT_PLACEHOLDER/${target_port}/g" /home/web/conf.d/${proxy_domain}.conf
+  nginx_upgrade
+  echo -e "${rw_lv}反向代理站点 ${proxy_domain} -> ${proto}://${target_domain}:${target_port} 创建成功！${rw_bai}"
+  echo -e "访问地址: ${rw_huang}http://${proxy_domain}${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_site_redirect() {
+  clear
+  send_stats "站点重定向"
+  echo -e "${rw_huang}站点重定向${rw_bai}"
+  echo "------------------------"
+  echo -e "示例：旧域名 old.example.com 重定向到新域名 new.example.com"
+  echo ""
+  read -e -p "请输入源域名（重定向来源）: " src_domain
+  if [ -z "$src_domain" ]; then return; fi
+  read -e -p "请输入目标域名（重定向目标）: " dst_domain
+  if [ -z "$dst_domain" ]; then return; fi
+  read -e -p "请输入重定向类型（301永久/302临时，回车默认301）: " redirect_type
+  redirect_type=${redirect_type:-301}
+  mkdir -p /home/web/conf.d
+  cat > /home/web/conf.d/${src_domain}.conf << 'REOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name SRC_PLACEHOLDER;
+    return REDIRECT_TYPE_PLACEHOLDER https://DST_PLACEHOLDER$request_uri;
+}
+REOF
+  sed -i "s/SRC_PLACEHOLDER/${src_domain}/g" /home/web/conf.d/${src_domain}.conf
+  sed -i "s/DST_PLACEHOLDER/${dst_domain}/g" /home/web/conf.d/${src_domain}.conf
+  sed -i "s/REDIRECT_TYPE_PLACEHOLDER/${redirect_type}/g" /home/web/conf.d/${src_domain}.conf
+  nginx_upgrade
+  echo -e "${rw_lv}重定向规则已创建：${src_domain} -> ${dst_domain} (${redirect_type})${rw_bai}"
+  read -e -p "按回车返回菜单: "
+}
+
+ldnmp_nginx_manage() {
+  while true; do
+    clear
+    send_stats "Nginx管理"
+    echo -e "${riwi001}Nginx管理${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.  ${rw_bai}查看Nginx状态"
+    echo -e "${rw_huang}2.  ${rw_bai}启动Nginx"
+    echo -e "${rw_huang}3.  ${rw_bai}停止Nginx"
+    echo -e "${rw_huang}4.  ${rw_bai}重启Nginx"
+    echo -e "${rw_huang}5.  ${rw_bai}重新加载Nginx配置"
+    echo -e "${rw_huang}6.  ${rw_bai}测试Nginx配置语法"
+    echo -e "${rw_huang}7.  ${rw_bai}查看Nginx错误日志"
+    echo -e "${rw_huang}8.  ${rw_bai}查看Nginx访问日志"
+    echo -e "${rw_huang}9.  ${rw_bai}查看Nginx进程"
+    echo -e "${rw_huang}10. ${rw_bai}查看Nginx监听端口"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}0.  ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择（回车默认0返回）：" sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        send_stats "查看Nginx状态"
+        echo -e "${rw_huang} Nginx状态 ${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          if pgrep -x "nginx" >/dev/null 2>&1; then
+            echo -e "${rw_lv}Nginx 正在运行${rw_bai}"
+            nginx -v 2>&1
+          else
+            echo -e "${rw_hong}Nginx 未运行${rw_bai}"
+          fi
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      2)
+        clear
+        send_stats "启动Nginx"
+        echo -e "${rw_huang}启动Nginx${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          nginx_start
+          echo -e "${rw_lv}Nginx 启动完成${rw_bai}"
+        else
+          echo -e "${rw_hong}Nginx 未安装，请先安装${rw_bai}"
+        fi
+        read -e -p "按回车返回菜单: "
+        ;;
+      3)
+        clear
+        send_stats "停止Nginx"
+        echo -e "${rw_huang}停止Nginx${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          nginx_stop
+          echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
+        read -e -p "按回车返回菜单: "
+        ;;
+      4)
+        clear
+        send_stats "重启Nginx"
+        echo -e "${rw_huang}重启Nginx${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          nginx_stop
+          sleep 1
+          nginx_start
+          echo -e "${rw_lv}Nginx 重启完成${rw_bai}"
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
+        read -e -p "按回车返回菜单: "
+        ;;
+      5)
+        clear
+        send_stats "重新加载Nginx配置"
+        echo -e "${rw_huang}重新加载Nginx配置${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          nginx -s reload 2>&1
+          if [ $? -eq 0 ]; then
+            echo -e "${rw_lv}Nginx 配置已重新加载${rw_bai}"
+          else
+            echo -e "${rw_hong}重新加载失败，请检查配置${rw_bai}"
+          fi
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
+        read -e -p "按回车返回菜单: "
+        ;;
+      6)
+        clear
+        send_stats "测试Nginx配置语法"
+        echo -e "${rw_huang}测试Nginx配置语法${rw_bai}"
+        echo "------------------------"
+        if command -v nginx &>/dev/null; then
+          nginx -t 2>&1
+          if [ $? -eq 0 ]; then
+            echo -e "${rw_lv}配置文件语法正确${rw_bai}"
+          else
+            echo -e "${rw_hong}配置文件有错误${rw_bai}"
+          fi
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
+        read -e -p "按回车返回菜单: "
+        ;;
+      7)
+        clear
+        send_stats "查看Nginx错误日志"
+        echo -e "${rw_huang}Nginx错误日志（最后50行）${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/logs/error.log ]; then
+          tail -n 50 /home/web/logs/error.log
+        elif [ -f /var/log/nginx/error.log ]; then
+          tail -n 50 /var/log/nginx/error.log
+        else
+          echo -e "${rw_hong}未找到Nginx错误日志文件${rw_bai}"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      8)
+        clear
+        send_stats "查看Nginx访问日志"
+        echo -e "${rw_huang}Nginx访问日志（最后50行）${rw_bai}"
+        echo "------------------------"
+        if [ -f /home/web/logs/access.log ]; then
+          tail -n 50 /home/web/logs/access.log
+        elif [ -f /var/log/nginx/access.log ]; then
+          tail -n 50 /var/log/nginx/access.log
+        else
+          echo -e "${rw_hong}未找到Nginx访问日志文件${rw_bai}"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      9)
+        clear
+        send_stats "查看Nginx进程"
+        echo -e "${rw_huang}Nginx进程列表${rw_bai}"
+        echo "------------------------"
+        if pgrep -x "nginx" >/dev/null 2>&1; then
+          ps aux | grep nginx | grep -v grep
+        else
+          echo -e "${rw_hong}Nginx 未运行${rw_bai}"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      10)
+        clear
+        send_stats "查看Nginx监听端口"
+        echo -e "${rw_huang}Nginx监听端口${rw_bai}"
+        echo "------------------------"
+        if command -v ss &>/dev/null; then
+          ss -tlnp | grep nginx
+        elif command -v netstat &>/dev/null; then
+          netstat -tlnp | grep nginx
+        else
+          echo -e "${rw_hong}未找到 ss 或 netstat 命令${rw_bai}"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      0) break ;;
+      *) echo "无效的输入！" ;;
+    esac
+    break_end
+  done
+}
 
 moltbot_menu() {
 	local app_id="114"
@@ -21479,6 +22178,29 @@ done
 
 
 
+update_clean_menu() {
+while true; do
+  clear
+  echo -e "${riwi001}"
+  echo -e "更新清理"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${riwi001}1.   ${rw_bai}系统更新"
+  echo -e "${riwi001}2.   ${rw_bai}系统清理"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${riwi001}0.   ${rw_bai}返回主菜单"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  read -e -p "请输入你的选择: " choice
+  case $choice in
+    1) clear ; send_stats "系统更新" ; linux_update ;;
+    2) clear ; send_stats "系统清理" ; linux_clean ;;
+    0) break ;;
+    *) echo "无效的输入!" ;;
+  esac
+  break_end
+done
+}
+
+
 riwi_sh() {
 while true; do
 clear
@@ -21487,18 +22209,17 @@ echo -e "Riou脚本工具箱 v$sh_v"
 echo -e "命令行输入${rw_huang}r${riwi001}可快速启动脚本${rw_bai}"
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}1.   ${rw_bai}系统查询"
-echo -e "${riwi001}2.   ${rw_bai}系统更新"
-echo -e "${riwi001}3.   ${rw_bai}系统清理"
-echo -e "${riwi001}4.   ${rw_bai}基础工具"
-echo -e "${riwi001}5.   ${rw_bai}GitHub管理器"
-echo -e "${riwi001}6.   ${rw_bai}Docker管理"
-echo -e "${rw_huang}7.   ${rw_bai}简单LDNMP管理器"
-echo -e "${riwi001}8.   ${rw_bai}应用市场"
-echo -e "${riwi001}9.   ${rw_bai}后台工作区"
-echo -e "${riwi001}10.  ${rw_bai}系统工具"
-echo -e "${riwi001}11.  ${rw_bai}服务器集群控制"
-echo -e "${riwi001}12.  ${rw_bai}安全优化"
-echo -e "${riwi001}13.  ${rw_bai}广告专栏"
+echo -e "${riwi001}2.   ${rw_bai}更新清理"
+echo -e "${riwi001}3.   ${rw_bai}基础工具"
+echo -e "${riwi001}4.   ${rw_bai}GitHub管理器"
+echo -e "${riwi001}5.   ${rw_bai}Docker管理"
+echo -e "${rw_huang}6.   ${rw_bai}LDNMP建站"
+echo -e "${riwi001}7.   ${rw_bai}应用市场"
+echo -e "${riwi001}8.   ${rw_bai}后台工作区"
+echo -e "${riwi001}9.   ${rw_bai}系统工具"
+echo -e "${riwi001}10.  ${rw_bai}服务器集群控制"
+echo -e "${riwi001}11.  ${rw_bai}安全优化"
+echo -e "${riwi001}12.  ${rw_bai}广告专栏"
 
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}0.   ${rw_bai}退出脚本"
@@ -21507,18 +22228,17 @@ read -e -p "请输入你的选择: " choice
 
 case $choice in
   1) linux_info ;;
-  2) clear ; send_stats "系统更新" ; linux_update ;;
-  3) clear ; send_stats "系统清理" ; linux_clean ;;
-  4) linux_tools ;;
-  5) github_manager ;;
-  6) linux_docker ;;
-  7) simple_ldnmp_manager ;;
-  8) linux_panel ;;
-  9) linux_work ;;
-  10) linux_Settings ;;
-  11) linux_cluster ;;
-  12) linux_security ;;
-  13) riwi_Affiliates ;;
+  2) update_clean_menu ;;
+  3) linux_tools ;;
+  4) github_manager ;;
+  5) linux_docker ;;
+  6) ldnmp_builder_menu ;;
+  7) linux_panel ;;
+  8) linux_work ;;
+  9) linux_Settings ;;
+  10) linux_cluster ;;
+  11) linux_security ;;
+  12) riwi_Affiliates ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
