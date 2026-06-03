@@ -22011,14 +22011,12 @@ done
 riwi_Affiliates() {
 
 clear
-send_stats "广告专栏"
-echo -e "${riwi001}广告专栏${rw_bai}"
+send_stats "热门专栏"
+echo -e "${riwi001}热门专栏${rw_bai}"
 echo -e "${riwi001}------------------------${rw_bai}"
 echo ""
-echo -e "${rw_huang}欢迎访问我的个人网站!${rw_bai}"
-echo -e "${riwi001}  • 网站地址: https://wxh168.vip${rw_bai}"
-echo -e "${riwi001}  • 分享技术文章和实用工具${rw_bai}"
-echo -e "${riwi001}  • 提供优质的资源和教程${rw_bai}"
+echo -e "${rw_huang}欢迎访问我的仓库!${rw_bai}"
+echo -e "${riwi001}  • 网站地址: https://github.com/riwi002/mybox${rw_bai}"
 echo ""
 echo -e "${rw_huang}提示: 按任意键返回主菜单${rw_bai}"
 echo ""
@@ -22219,7 +22217,7 @@ echo -e "${riwi001}8.   ${rw_bai}后台工作区"
 echo -e "${riwi001}9.   ${rw_bai}系统工具"
 echo -e "${riwi001}10.  ${rw_bai}服务器集群控制"
 echo -e "${riwi001}11.  ${rw_bai}安全优化"
-echo -e "${riwi001}12.  ${rw_bai}广告专栏"
+echo -e "${riwi001}12.  ${rw_bai}热门专栏"
 
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}0.   ${rw_bai}退出脚本"

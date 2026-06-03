@@ -89,8 +89,7 @@ riwi-scripts/
 
 1. **下载脚本**
    ```bash
-   git clone https://github.com/yourusername/riwi-scripts.git
-   cd riwi-scripts
+   git clone https://github.com/riwi002/mybox.git
    ```
 
 2. **赋予执行权限**
@@ -100,7 +99,7 @@ riwi-scripts/
 
 3. **运行脚本**
    ```bash
-   ./riwi.sh
+   bash riwi.sh
    ```
    
    或者创建快捷命令：
