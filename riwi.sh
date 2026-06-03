@@ -19506,31 +19506,29 @@ linux_Settings() {
 	  echo -e "${rw_huang}提示: 选择对应的数字即可进行相应操作${rw_bai}"
 	  echo ""
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}1.   ${rw_bai}设置脚本启动快捷键                 ${riwi001}2.   ${rw_bai}修改登录密码"
-	  echo -e "${riwi001}3.   ${rw_bai}用户密码登录模式                   ${riwi001}4.   ${rw_bai}安装Python指定版本"
-	  echo -e "${riwi001}5.   ${rw_bai}开放所有端口                       ${riwi001}6.   ${rw_bai}修改SSH连接端口"
-	  echo -e "${riwi001}7.   ${rw_bai}优化DNS地址                        ${riwi001}8.   ${rw_bai}一键重装系统 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}9.   ${rw_bai}禁用ROOT账户创建新账户             ${riwi001}10.  ${rw_bai}切换优先ipv4/ipv6"
+	  echo -e "${riwi001}1.   ${rw_bai}基础设置 ${rw_huang}(快捷键|密码|端口等)${rw_bai}    ${riwi001}2.   ${rw_bai}修改SSH连接端口"
+	  echo -e "${riwi001}3.   ${rw_bai}优化DNS地址                        ${riwi001}4.   ${rw_bai}一键重装系统 ${rw_huang}★${rw_bai}"
+	  echo -e "${riwi001}5.   ${rw_bai}禁用ROOT账户创建新账户             ${riwi001}6.   ${rw_bai}切换优先ipv4/ipv6"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}11.  ${rw_bai}查看端口占用状态                   ${riwi001}12.  ${rw_bai}修改虚拟内存大小"
-	  echo -e "${riwi001}13.  ${rw_bai}用户管理                           ${riwi001}14.  ${rw_bai}用户/密码生成器"
-	  echo -e "${riwi001}15.  ${rw_bai}系统时区调整                       ${riwi001}16.  ${rw_bai}设置BBR3加速"
-	  echo -e "${riwi001}17.  ${rw_bai}防火墙高级管理器                   ${riwi001}18.  ${rw_bai}修改主机名"
-	  echo -e "${riwi001}19.  ${rw_bai}切换系统更新源                     ${riwi001}20.  ${rw_bai}定时任务管理"
+	  echo -e "${riwi001}7.   ${rw_bai}查看端口占用状态                   ${riwi001}8.   ${rw_bai}修改虚拟内存大小"
+	  echo -e "${riwi001}9.   ${rw_bai}用户管理                           ${riwi001}10.  ${rw_bai}用户/密码生成器"
+	  echo -e "${riwi001}11.  ${rw_bai}系统时区调整                       ${riwi001}12.  ${rw_bai}设置BBR3加速"
+	  echo -e "${riwi001}13.  ${rw_bai}防火墙高级管理器                   ${riwi001}14.  ${rw_bai}修改主机名"
+	  echo -e "${riwi001}15.  ${rw_bai}切换系统更新源                     ${riwi001}16.  ${rw_bai}定时任务管理"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}21.  ${rw_bai}本机host解析                       ${riwi001}22.  ${rw_bai}SSH防御程序"
-	  echo -e "${riwi001}23.  ${rw_bai}限流自动关机                       ${riwi001}24.  ${rw_bai}用户密钥登录模式"
-	  echo -e "${riwi001}25.  ${rw_bai}TG-bot系统监控预警                 ${riwi001}26.  ${rw_bai}修复OpenSSH高危漏洞"
-	  echo -e "${riwi001}27.  ${rw_bai}红帽系Linux内核升级                ${riwi001}28.  ${rw_bai}Linux系统内核参数优化 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}29.  ${rw_bai}病毒扫描工具 ${rw_huang}★${rw_bai}                     ${riwi001}30.  ${rw_bai}文件管理器"
+	  echo -e "${riwi001}17.  ${rw_bai}本机host解析                       ${riwi001}18.  ${rw_bai}SSH防御程序"
+	  echo -e "${riwi001}19.  ${rw_bai}限流自动关机                       ${riwi001}20.  ${rw_bai}用户密钥登录模式"
+	  echo -e "${riwi001}21.  ${rw_bai}TG-bot系统监控预警                 ${riwi001}22.  ${rw_bai}修复OpenSSH高危漏洞"
+	  echo -e "${riwi001}23.  ${rw_bai}红帽系Linux内核升级                ${riwi001}24.  ${rw_bai}Linux系统内核参数优化 ${rw_huang}★${rw_bai}"
+	  echo -e "${riwi001}25.  ${rw_bai}病毒扫描工具 ${rw_huang}★${rw_bai}                     ${riwi001}26.  ${rw_bai}文件管理器"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}31.  ${rw_bai}切换系统语言                       ${riwi001}32.  ${rw_bai}命令行美化工具 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}33.  ${rw_bai}设置系统回收站                     ${riwi001}34.  ${rw_bai}系统备份与恢复"
-	  echo -e "${riwi001}35.  ${rw_bai}ssh远程连接工具                    ${riwi001}36.  ${rw_bai}硬盘分区管理工具"
-	  echo -e "${riwi001}37.  ${rw_bai}命令行历史记录                     ${riwi001}38.  ${rw_bai}rsync远程同步工具"
-	  echo -e "${riwi001}39.  ${rw_bai}命令收藏夹 ${rw_huang}★${rw_bai}                       ${riwi001}40.  ${rw_bai}网卡管理工具"
+	  echo -e "${riwi001}27.  ${rw_bai}切换系统语言                       ${riwi001}28.  ${rw_bai}命令行美化工具 ${rw_huang}★${rw_bai}"
+	  echo -e "${riwi001}29.  ${rw_bai}设置系统回收站                     ${riwi001}30.  ${rw_bai}系统备份与恢复"
+	  echo -e "${riwi001}31.  ${rw_bai}ssh远程连接工具                    ${riwi001}32.  ${rw_bai}硬盘分区管理工具"
+	  echo -e "${riwi001}33.  ${rw_bai}命令行历史记录                     ${riwi001}34.  ${rw_bai}rsync远程同步工具"
+	  echo -e "${riwi001}35.  ${rw_bai}命令收藏夹 ${rw_huang}★${rw_bai}                       ${riwi001}36.  ${rw_bai}网卡管理工具"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}41.  ${rw_bai}系统日志管理工具 ${rw_huang}★${rw_bai}                 ${riwi001}42.  ${rw_bai}系统变量管理工具"
+	  echo -e "${riwi001}37.  ${rw_bai}系统日志管理工具 ${rw_huang}★${rw_bai}                 ${riwi001}38.  ${rw_bai}系统变量管理工具"
 	  echo -e "${riwi001}------------------------"
 	  echo -e "${riwi001}61.  ${rw_bai}留言板                             ${riwi001}66.  ${rw_bai}一条龙系统调优 ${rw_huang}★${rw_bai}"
 	  echo -e "${riwi001}99.  ${rw_bai}重启服务器                         ${riwi001}100. ${rw_bai}隐私与安全"
@@ -19542,129 +19540,10 @@ linux_Settings() {
 
 	  case $sub_choice in
 		  1)
-			  while true; do
-				  clear
-				  read -e -p "请输入你的快捷按键（输入0退出）: " kuaijiejian
-				  if [ "$kuaijiejian" == "0" ]; then
-					   break_end
-					   linux_Settings
-				  fi
-				  find /usr/local/bin/ -type l -exec bash -c 'test "$(readlink -f {})" = "/usr/local/bin/r" && rm -f {}' \;
-				  if [ "$kuaijiejian" != "k" ]; then
-					  ln -sf /usr/local/bin/r /usr/local/bin/$kuaijiejian
-				  fi
-				  ln -sf /usr/local/bin/r /usr/bin/$kuaijiejian > /dev/null 2>&1
-				  echo "快捷键已设置"
-				  send_stats "脚本快捷键已设置"
-				  break_end
-				  linux_Settings
-			  done
+			  basic_settings_menu
 			  ;;
 
 		  2)
-			  clear
-			  send_stats "设置你的登录密码"
-			  echo "设置你的登录密码"
-			  passwd
-			  ;;
-		  3)
-			  clear
-			  add_sshpasswd
-			  ;;
-
-		  4)
-			root_use
-			send_stats "py版本管理"
-			echo "python版本管理"
-			echo "视频介绍: https://www.bilibili.com/video/BV1Pm42157cK?t=0.1"
-			echo "---------------------------------------"
-			echo "该功能可无缝安装python官方支持的任何版本！"
-			local VERSION=$(python3 -V 2>&1 | awk '{print $2}')
-			echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
-			echo "------------"
-			echo "推荐版本:  3.12    3.11    3.10    3.9    3.8    2.7"
-			echo "查询更多版本: https://www.python.org/downloads/"
-			echo "------------"
-			read -e -p "输入你要安装的python版本号（输入0退出）: " py_new_v
-
-
-			if [[ "$py_new_v" == "0" ]]; then
-				send_stats "脚本PY管理"
-				break_end
-				linux_Settings
-			fi
-
-
-			if ! grep -q 'export PYENV_ROOT="\$HOME/.pyenv"' ~/.bashrc; then
-				if command -v yum &>/dev/null; then
-					yum update -y && yum install git -y
-					yum groupinstall "Development Tools" -y
-					yum install openssl-devel bzip2-devel libffi-devel ncurses-devel zlib-devel readline-devel sqlite-devel xz-devel findutils -y
-
-					curl -O https://www.openssl.org/source/openssl-1.1.1u.tar.gz
-					tar -xzf openssl-1.1.1u.tar.gz
-					cd openssl-1.1.1u
-					./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib
-					make
-					make install
-					echo "/usr/local/openssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1u.conf
-					ldconfig -v
-					cd ..
-
-					export LDFLAGS="-L/usr/local/openssl/lib"
-					export CPPFLAGS="-I/usr/local/openssl/include"
-					export PKG_CONFIG_PATH="/usr/local/openssl/lib/pkgconfig"
-
-				elif command -v apt &>/dev/null; then
-					apt update -y && apt install git -y
-					apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev libgdbm-dev libnss3-dev libedit-dev -y
-				elif command -v apk &>/dev/null; then
-					apk update && apk add git
-					apk add --no-cache bash gcc musl-dev libffi-dev openssl-dev bzip2-dev zlib-dev readline-dev sqlite-dev libc6-compat linux-headers make xz-dev build-base  ncurses-dev
-				else
-					echo "未知的包管理器!"
-					return
-				fi
-
-				curl https://pyenv.run | bash
-				cat << EOF >> ~/.bashrc
-
-export PYENV_ROOT="\$HOME/.pyenv"
-if [[ -d "\$PYENV_ROOT/bin" ]]; then
-  export PATH="\$PYENV_ROOT/bin:\$PATH"
-fi
-eval "\$(pyenv init --path)"
-eval "\$(pyenv init -)"
-eval "\$(pyenv virtualenv-init -)"
-
-EOF
-
-			fi
-
-			sleep 1
-			source ~/.bashrc
-			sleep 1
-			pyenv install $py_new_v
-			pyenv global $py_new_v
-
-			rm -rf /tmp/python-build.*
-			rm -rf $(pyenv root)/cache/*
-
-			local VERSION=$(python -V 2>&1 | awk '{print $2}')
-			echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
-			send_stats "脚本PY版本切换"
-
-			  ;;
-
-		  5)
-			  root_use
-			  send_stats "开放端口"
-			  iptables_open
-			  remove iptables-persistent ufw firewalld iptables-services > /dev/null 2>&1
-			  echo "端口已全部开放"
-
-			  ;;
-		  6)
 			root_use
 			send_stats "修改SSH端口"
 
@@ -20013,22 +19892,22 @@ EOF
 					4) set_timedate Asia/Seoul ;;
 					5) set_timedate Asia/Singapore ;;
 					6) set_timedate Asia/Kolkata ;;
-					7) set_timedate Asia/Dubai ;;
-					8) set_timedate Australia/Sydney ;;
-					9) set_timedate Asia/Bangkok ;;
-					11) set_timedate Europe/London ;;
-					12) set_timedate Europe/Paris ;;
-					13) set_timedate Europe/Berlin ;;
-					14) set_timedate Europe/Moscow ;;
-					15) set_timedate Europe/Amsterdam ;;
-					16) set_timedate Europe/Madrid ;;
-					21) set_timedate America/Los_Angeles ;;
-					22) set_timedate America/New_York ;;
-					23) set_timedate America/Vancouver ;;
-					24) set_timedate America/Mexico_City ;;
-					25) set_timedate America/Sao_Paulo ;;
-					26) set_timedate America/Argentina/Buenos_Aires ;;
-					31) set_timedate UTC ;;
+					3) set_timedate Asia/Dubai ;;
+					4) set_timedate Australia/Sydney ;;
+					5) set_timedate Asia/Bangkok ;;
+					7) set_timedate Europe/London ;;
+					8) set_timedate Europe/Paris ;;
+					9) set_timedate Europe/Berlin ;;
+					10) set_timedate Europe/Moscow ;;
+					11) set_timedate Europe/Amsterdam ;;
+					12) set_timedate Europe/Madrid ;;
+					17) set_timedate America/Los_Angeles ;;
+					18) set_timedate America/New_York ;;
+					19) set_timedate America/Vancouver ;;
+					20) set_timedate America/Mexico_City ;;
+					21) set_timedate America/Sao_Paulo ;;
+					22) set_timedate America/Argentina/Buenos_Aires ;;
+					27) set_timedate UTC ;;
 					*) break ;;
 				esac
 			done
@@ -20905,6 +20784,163 @@ run_commands_on_servers() {
 
 }
 
+
+
+basic_settings_menu() {
+  while true; do
+    clear
+    send_stats "基础设置"
+    echo -e "${riwi001}基础设置${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}请选择操作:${rw_bai}"
+    echo -e "${riwi001}1. ${rw_bai}设置脚本启动快捷键"
+    echo -e "${riwi001}2. ${rw_bai}修改登录密码"
+    echo -e "${riwi001}3. ${rw_bai}用户密码登录模式"
+    echo -e "${riwi001}4. ${rw_bai}安装Python指定版本"
+    echo -e "${riwi001}5. ${rw_bai}开放所有端口"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${riwi001}0. ${rw_bai}返回上级菜单"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择: " basic_choice
+
+    case $basic_choice in
+      1)
+        while true; do
+          clear
+          read -e -p "请输入你的快捷按键（输入0退出）: " kuaijiejian
+          if [ "$kuaijiejian" == "0" ]; then
+            break
+          fi
+          find /usr/local/bin/ -type l -exec bash -c 'test "$(readlink -f {})" = "/usr/local/bin/r" && rm -f {}' \;
+          if [ "$kuaijiejian" != "k" ]; then
+            ln -sf /usr/local/bin/r /usr/local/bin/$kuaijiejian
+          fi
+          ln -sf /usr/local/bin/r /usr/bin/$kuaijiejian > /dev/null 2>&1
+          echo "快捷键已设置"
+          send_stats "脚本快捷键已设置"
+          break
+        done
+        break_end
+        ;;
+
+      2)
+        clear
+        send_stats "设置你的登录密码"
+        echo "设置你的登录密码"
+        passwd
+        break_end
+        ;;
+
+      3)
+        clear
+        add_sshpasswd
+        break_end
+        ;;
+
+      4)
+        clear
+        send_stats "py版本管理"
+        echo "python版本管理"
+        echo "视频介绍: https://www.bilibili.com/video/BV1Pm42157cK?t=0.1"
+        echo "---------------------------------------"
+        echo "该功能可无缝安装python官方支持的任何版本！"
+        local VERSION=$(python3 -V 2>&1 | awk '{print $2}')
+        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
+        echo "------------"
+        echo "推荐版本:  3.12    3.11    3.10    3.9    3.8    2.7"
+        echo "查询更多版本: https://www.python.org/downloads/"
+        echo "------------"
+        read -e -p "输入你要安装的python版本号（输入0退出）: " py_new_v
+
+        if [[ "$py_new_v" == "0" ]]; then
+          send_stats "脚本PY管理"
+          break_end
+          continue
+        fi
+
+        if ! grep -q 'export PYENV_ROOT="\$HOME/.pyenv"' ~/.bashrc; then
+          if command -v yum &>/dev/null; then
+            yum update -y && yum install git -y
+            yum groupinstall "Development Tools" -y
+            yum install openssl-devel bzip2-devel libffi-devel ncurses-devel zlib-devel readline-devel sqlite-devel xz-devel findutils -y
+
+            curl -O https://www.openssl.org/source/openssl-1.1.1u.tar.gz
+            tar -xzf openssl-1.1.1u.tar.gz
+            cd openssl-1.1.1u
+            ./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib
+            make
+            make install
+            echo "/usr/local/openssl/lib" > /etc/ld.so.conf.d/openssl-1.1.1u.conf
+            ldconfig -v
+            cd ..
+
+            export LDFLAGS="-L/usr/local/openssl/lib"
+            export CPPFLAGS="-I/usr/local/openssl/include"
+            export PKG_CONFIG_PATH="/usr/local/openssl/lib/pkgconfig"
+
+          elif command -v apt &>/dev/null; then
+            apt update -y && apt install git -y
+            apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev libgdbm-dev libnss3-dev libedit-dev -y
+          elif command -v apk &>/dev/null; then
+            apk update && apk add git
+            apk add --no-cache bash gcc musl-dev libffi-dev openssl-dev bzip2-dev zlib-dev readline-dev sqlite-dev libc6-compat linux-headers make xz-dev build-base  ncurses-dev
+          else
+            echo "未知的包管理器!"
+            break_end
+            continue
+          fi
+
+          curl https://pyenv.run | bash
+          cat >> ~/.bashrc << EOF
+
+export PYENV_ROOT="\$HOME/.pyenv"
+if [[ -d "\$PYENV_ROOT/bin" ]]; then
+  export PATH="\$PYENV_ROOT/bin:\$PATH"
+fi
+eval "\$(pyenv init --path)"
+eval "\$(pyenv init -)"
+eval "\$(pyenv virtualenv-init -)"
+
+EOF
+
+        fi
+
+        sleep 1
+        source ~/.bashrc
+        sleep 1
+        pyenv install $py_new_v
+        pyenv global $py_new_v
+
+        rm -rf /tmp/python-build.*
+        rm -rf $(pyenv root)/cache/*
+
+        local VERSION=$(python -V 2>&1 | awk '{print $2}')
+        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
+        send_stats "脚本PY版本切换"
+        break_end
+        ;;
+
+      5)
+        clear
+        root_use
+        send_stats "开放端口"
+        iptables_open
+        remove iptables-persistent ufw firewalld iptables-services > /dev/null 2>&1
+        echo "端口已全部开放"
+        break_end
+        ;;
+
+      0)
+        break
+        ;;
+
+      *)
+        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        ;;
+    esac
+  done
+}
 
 # ================================================================
 # 安全优化函数
@@ -22220,19 +22256,109 @@ github_manager() {
         clear
         echo -e "${riwi001}拉取远程更新${rw_bai}"
         if [ -d ".git" ]; then
+          echo "远程仓库列表:"
           git remote -v
           echo ""
           echo -e "远程仓库名称示例: ${rw_hong}origin${rw_bai}, upstream"
           echo ""
+          echo -e "${rw_huang}请选择操作:${rw_bai}"
+          echo -e "${riwi001}1. ${rw_bai}拉取当前分支"
+          echo -e "${riwi001}2. ${rw_bai}拉取指定分支"
+          echo -e "${riwi001}3. ${rw_bai}拉取所有分支"
+          echo ""
           echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
           echo ""
-          read -e -p "请输入远程仓库名称（默认 origin）: " remote_name
-          if [ "$remote_name" = "0" ]; then continue; fi
-          if [ -z "$remote_name" ]; then
-            remote_name="origin"
-          fi
-          git pull "$remote_name"
-          echo -e "${rw_lv}拉取成功${rw_bai}"
+          read -e -p "请输入你的选择（默认1）: " pull_choice
+          
+          if [ "$pull_choice" = "0" ]; then continue; fi
+          if [ -z "$pull_choice" ]; then pull_choice="1"; fi
+          
+          case $pull_choice in
+            1)
+              echo -e "${rw_huang}正在拉取当前分支...${rw_bai}"
+              # 获取当前分支名称
+              current_branch=$(git branch --show-current 2>/dev/null)
+              if [ -z "$current_branch" ]; then
+                # 如果 git branch --show-current 失败，尝试其他方法
+                current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+              fi
+              
+              if [ -n "$current_branch" ]; then
+                echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_bai}"
+                # 尝试直接 git pull（如果已设置上游）
+                if git pull origin "$current_branch" 2>/dev/null; then
+                  echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                elif git pull 2>/dev/null; then
+                  echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                else
+                  echo -e "${rw_huang}提示: 当前分支未设置上游跟踪${rw_bai}"
+                  echo -e "${rw_huang}建议: 输入 2 手动指定分支和远程仓库${rw_bai}"
+                  # 自动设置上游分支
+                  echo -e "${rw_huang}是否自动设置上游分支？(Y/N)${rw_bai}"
+                  read -e -p "请输入你的选择: " set_upstream
+                  if [ "$set_upstream" = "Y" ] || [ "$set_upstream" = "y" ]; then
+                    if git branch --set-upstream-to=origin/"$current_branch" 2>/dev/null; then
+                      echo -e "${rw_lv}✓ 已设置上游分支为 origin/$current_branch${rw_bai}"
+                      echo -e "${rw_huang}正在重新拉取...${rw_bai}"
+                      if git pull; then
+                        echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                      else
+                        echo -e "${rw_hong}✗ 拉取失败${rw_bai}"
+                      fi
+                    else
+                      echo -e "${rw_hong}✗ 设置上游分支失败，可能远程不存在该分支${rw_bai}"
+                    fi
+                  else
+                    echo -e "${rw_huang}已取消，可输入 2 手动指定分支${rw_bai}"
+                  fi
+                fi
+              else
+                echo -e "${rw_hong}✗ 无法获取当前分支名称${rw_bai}"
+                echo -e "${rw_huang}提示: 请手动切换到分支后再拉取${rw_bai}"
+              fi
+              ;;
+            2)
+              echo -e "${rw_huang}当前分支: $(git branch --show-current)${rw_bai}"
+              echo -e "${rw_huang}可用的远程分支:${rw_bai}"
+              git branch -r | head -10
+              echo ""
+              read -e -p "请输入要拉取的分支名称（如 master 或 main）: " branch_name
+              if [ -n "$branch_name" ]; then
+                echo -e "${rw_huang}请输入远程仓库名称（默认 origin）: ${rw_bai}"
+                read -e -p "请输入远程仓库名称: " remote_name
+                if [ -z "$remote_name" ]; then remote_name="origin"; fi
+                
+                echo -e "${rw_huang}正在拉取 $remote_name/$branch_name ...${rw_bai}"
+                git pull "$remote_name" "$branch_name"
+                if [ $? -eq 0 ]; then
+                  echo -e "${rw_lv}拉取成功${rw_bai}"
+                else
+                  echo -e "${rw_hong}拉取失败，请检查分支名称和仓库状态${rw_bai}"
+                fi
+              else
+                echo -e "${rw_hong}分支名称不能为空${rw_bai}"
+              fi
+              ;;
+            3)
+              echo -e "${rw_huang}正在拉取所有分支...${rw_bai}"
+              git fetch --all
+              if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}获取所有分支成功${rw_bai}"
+                echo -e "${rw_huang}提示: 使用 'git checkout' 切换到其他分支${rw_bai}"
+              else
+                echo -e "${rw_hong}获取失败${rw_bai}"
+              fi
+              ;;
+            *)
+              echo -e "${rw_huang}无效选择，正在拉取当前分支...${rw_bai}"
+              git pull
+              if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}拉取成功${rw_bai}"
+              else
+                echo -e "${rw_hong}拉取失败${rw_bai}"
+              fi
+              ;;
+          esac
         else
           echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
         fi
