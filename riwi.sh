@@ -121,20 +121,20 @@ send_stats() {
 		return
 	fi
 
-	local country=$(curl -s ipinfo.io/country)
-	local os_info=""
-	if [ -f /etc/os-release ]; then
-		os_info=$(grep PRETTY_NAME /etc/os-release | cut -d '=' -f2 | tr -d '"')
-	else
-		os_info=$(sw_vers -productName 2>/dev/null || echo "Unknown")
-	fi
-	local cpu_arch=$(uname -m)
-
 	(
+		local country=$(curl -s --max-time 3 ipinfo.io/country 2>/dev/null || echo "Unknown")
+		local os_info=""
+		if [ -f /etc/os-release ]; then
+			os_info=$(grep PRETTY_NAME /etc/os-release | cut -d '=' -f2 | tr -d '"')
+		else
+			os_info=$(sw_vers -productName 2>/dev/null || echo "Unknown")
+		fi
+		local cpu_arch=$(uname -m)
+
 		curl -s -X POST "https://api.riwi.pro/api/log" \
 			-H "Content-Type: application/json" \
 			-d "{\"action\":\"$1\",\"timestamp\":\"$(date -u '+%Y-%m-%d %H:%M:%S')\",\"country\":\"$country\",\"os_info\":\"$os_info\",\"cpu_arch\":\"$cpu_arch\",\"version\":\"$sh_v\"}" \
-		&>/dev/null
+			&>/dev/null
 	) &
 
 }
@@ -21651,14 +21651,36 @@ linux_security() {
     echo -e "${riwi001}安全优化${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
     echo ""
-    echo -e "${rw_huang}功能说明:${rw_bai}"
-    echo -e "${riwi001}  服务器用户安全管理功能，包括:${rw_bai}"
-    echo -e "${riwi001}  • 普通用户密码管理: 设置/修改普通用户密码${rw_bai}"
-    echo -e "${riwi001}  • 权限管理: 给普通用户添加sudo权限${rw_bai}"
-    echo -e "${riwi001}  • 用户管理: 查看系统中所有用户${rw_bai}"
-    echo ""
-    echo -e "${rw_huang}提示: ${rw_bai}选择对应的数字即可进行相应操作${rw_bai}"
-    echo ""
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${riwi001}1.   ${rw_bai}用户权限${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${riwi001}0.   ${rw_bai}返回主菜单${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    read -e -p "请输入你的选择: " sub_choice
+
+    case $sub_choice in
+      1)
+        user_permissions_menu
+        ;;
+
+      0)
+        riwi
+        ;;
+
+      *)
+        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        ;;
+    esac
+  done
+}
+user_permissions_menu() {
+  while true; do
+    clear
+    send_stats "用户权限"
+    echo -e "${riwi001}用户权限${rw_bai}"
+    echo -e "${riwi001}------------------------${rw_bai}"
+    echo -e "${rw_huang}📌 功能说明:${rw_bai}"
+    echo -e "${riwi001}  管理服务器用户权限，包括设置密码、添加sudo权限、查看用户、创建/删除用户${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
     echo -e "${riwi001}1.   ${rw_bai}设置普通用户密码 ${rw_huang}★${rw_bai}"
     echo -e "${riwi001}2.   ${rw_bai}添加sudo权限 ${rw_huang}★${rw_bai}"
@@ -21666,7 +21688,7 @@ linux_security() {
     echo -e "${riwi001}4.   ${rw_bai}创建新用户"
     echo -e "${riwi001}5.   ${rw_bai}删除用户"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}0.   ${rw_bai}返回主菜单${rw_bai}"
+    echo -e "${riwi001}0.   ${rw_bai}返回安全优化${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
     read -e -p "请输入你的选择: " sub_choice
 
@@ -21680,13 +21702,8 @@ linux_security() {
         echo -e "${rw_huang}📌 功能说明:${rw_bai}"
         echo -e "${riwi001}  为服务器上的普通用户设置或修改密码${rw_bai}"
         echo -e "${riwi001}  注意: 无法修改root用户密码${rw_bai}"
-        echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_bai}"
-        echo -e "${riwi001}  输入用户名: admin${rw_bai}"
-        echo -e "${riwi001}  输入新密码: *******${rw_bai}"
-        echo -e "${riwi001}  确认密码: *******${rw_bai}"
-        echo ""
-        echo -e "${rw_huang}当前系统用户列表:${rw_bai}"
+		echo ""
+        echo -e "${rw_huang}  当前系统用户列表:${rw_bai}"
         awk -F: '$3 >= 1000 && $3 < 65534 {print "  用户名: "$1"  UID: "$3"  主目录: "$6}' /etc/passwd
         echo ""
         read -e -p "请输入要设置密码的用户名 [示例:owen]: " username
@@ -21868,14 +21885,16 @@ linux_security() {
         ;;
 
       0)
-        riwi
+        break
         ;;
+
       *)
         echo -e "${rw_hong}无效的输入!${rw_bai}"
         ;;
     esac
   done
 }
+
 
 
 linux_cluster() {
