@@ -23285,7 +23285,9 @@ github_manager() {
         install git
         echo -e "${riwi001}克隆仓库${rw_bai}"
         echo "示例: https://github.com/username/repo.git"
-        echo "或: git@github.com:username/repo.git"
+		echo "示例: git@github.com:username/repo.git"
+        echo ""
+        echo -e "${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_bai}"
         echo ""
         echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
         echo ""
@@ -23293,6 +23295,12 @@ github_manager() {
         if [ "$repo_url" = "0" ]; then continue; fi
         read -e -p "请输入目标目录（回车使用默认）: " target_dir
         if [ "$target_dir" = "0" ]; then continue; fi
+        
+        # 临时取消所有 git 镜像源设置（避免镜像不可用导致克隆失败）
+        git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
+          git config --global --unset "$key" 2>/dev/null
+        done
+        
         if [ -z "$target_dir" ]; then
           git clone "$repo_url"
         else
@@ -23532,9 +23540,15 @@ EOF
           echo -e "                  ${rw_hong}chore: 构建/工具更新${rw_bai}"
           echo ""
           echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+		  echo ""
+          echo -e "${rw_lv}(默认:commit - ${rw_huang}提交${rw_bai} ${rw_lv}+ ${rw_lv}git add . - ${rw_huang}全部添加到“暂存区”${rw_bai}${rw_lv})${rw_bai}"
           echo ""
           read -e -p "请输入提交信息: " commit_msg
           if [ "$commit_msg" = "0" ]; then continue; fi
+          # 如果提交信息为空，使用默认时间戳
+          if [ -z "$commit_msg" ]; then
+            commit_msg=$(date "+%Y年%m月%d日%H:%M")
+          fi
           git commit -m "$commit_msg"
           if [ $? -ne 0 ]; then
             echo -e "${rw_hong}提交失败${rw_bai}"
@@ -23656,6 +23670,11 @@ EOF
         clear
         echo -e "${riwi001}拉取远程更新${rw_bai}"
         if [ -d ".git" ]; then
+          # 临时取消所有 git 镜像源设置（避免镜像不可用导致拉取失败）
+          git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
+            git config --global --unset "$key" 2>/dev/null
+          done
+          
           echo "远程仓库列表:"
           git remote -v
           echo ""
