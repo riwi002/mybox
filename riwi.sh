@@ -195,7 +195,7 @@ UserLicenseAgreement() {
 	clear
 	echo -e "${riwi001}欢迎使用Riou脚本工具箱${rw_bai}"
 	echo "首次使用脚本，请先阅读并同意用户许可协议。"
-	echo "用户许可协议: https://blog.riwi.pro/user-license-agreement/"
+	echo "用户许可协议: https://github.com/riwi002/mybox"
 	echo -e "----------------------"
 	read -e -p "是否同意以上条款？(y/n): " user_input
 
@@ -23566,6 +23566,13 @@ EOF
         echo -e "${riwi001}推送到远程${rw_bai}"
         if [ -d ".git" ]; then
           git remote -v
+          echo ""
+          # 获取当前远程仓库名称
+          current_remote=$(git remote | head -n 1)
+          if [ -z "$current_remote" ]; then
+            current_remote="（无远程）"
+          fi
+          echo -e "${rw_huang}当前远程: ${rw_lv}$current_remote${rw_bai}"
           echo ""
           # 获取当前分支
           current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
