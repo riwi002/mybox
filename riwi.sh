@@ -7990,28 +7990,28 @@ linux_info() {
 	clear
 	echo -e "系统信息查询"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}主机名:         ${rw_bai}$hostname"
-	echo -e "${riwi001}系统版本:       ${rw_bai}$os_info"
-	echo -e "${riwi001}Linux版本:      ${rw_bai}$kernel_version"
+	echo -e "${riwi001}${rw_huang}主机名${riwi001}:         ${rw_bai}$hostname"
+	echo -e "${riwi001}${rw_huang}系统版本${riwi001}:       ${rw_bai}$os_info"
+	echo -e "${riwi001}${rw_huang}Linux版本${riwi001}:      ${rw_bai}$kernel_version"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}CPU架构:        ${rw_bai}$cpu_arch"
-	echo -e "${riwi001}CPU型号:        ${rw_bai}$cpu_info"
-	echo -e "${riwi001}CPU核心数:      ${rw_bai}$cpu_cores"
-	echo -e "${riwi001}CPU频率:        ${rw_bai}$cpu_freq"
+	echo -e "${riwi001}${rw_huang}CPU架构${riwi001}:        ${rw_bai}$cpu_arch"
+	echo -e "${riwi001}${rw_huang}CPU型号${riwi001}:        ${rw_bai}$cpu_info"
+	echo -e "${riwi001}${rw_huang}CPU核心数${riwi001}:      ${rw_bai}$cpu_cores"
+	echo -e "${riwi001}${rw_huang}CPU频率${riwi001}:        ${rw_bai}$cpu_freq"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}CPU占用:        ${rw_bai}$cpu_usage_percent%"
-	echo -e "${riwi001}系统负载:       ${rw_bai}$load"
-	echo -e "${riwi001}TCP|UDP连接数:  ${rw_bai}$tcp_count|$udp_count"
-	echo -e "${riwi001}物理内存:       ${rw_bai}$mem_info"
-	echo -e "${riwi001}虚拟内存:       ${rw_bai}$swap_info"
-	echo -e "${riwi001}硬盘占用:       ${rw_bai}$disk_info"
+	echo -e "${riwi001}${rw_huang}CPU占用${riwi001}:        ${rw_bai}$cpu_usage_percent%"
+	echo -e "${riwi001}${rw_huang}系统负载${riwi001}:       ${rw_bai}$load"
+	echo -e "${riwi001}${rw_huang}TCP|UDP连接数${riwi001}:  ${rw_bai}$tcp_count|$udp_count"
+	echo -e "${riwi001}${rw_huang}物理内存${riwi001}:       ${rw_bai}$mem_info"
+	echo -e "${riwi001}${rw_huang}虚拟内存${riwi001}:       ${rw_bai}$swap_info"
+	echo -e "${riwi001}${rw_huang}硬盘占用${riwi001}:       ${rw_bai}$disk_info"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}总接收:         ${rw_bai}$rx"
-	echo -e "${riwi001}总发送:         ${rw_bai}$tx"
+	echo -e "${riwi001}${rw_huang}总接收${riwi001}:         ${rw_bai}$rx"
+	echo -e "${riwi001}${rw_huang}总发送${riwi001}:         ${rw_bai}$tx"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}网络算法:       ${rw_bai}$congestion_algorithm $queue_algorithm"
+	echo -e "${riwi001}${rw_huang}网络算法${riwi001}:       ${rw_bai}$congestion_algorithm $queue_algorithm"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}运营商:         ${rw_bai}$isp_info"
+	echo -e "${riwi001}${rw_huang}运营商${riwi001}:         ${rw_bai}$isp_info"
 	if [ -n "$ipv4_address" ]; then
 		echo -e "${riwi001}IPv4地址:       ${rw_bai}$ipv4_address"
 	fi
@@ -8019,11 +8019,11 @@ linux_info() {
 	if [ -n "$ipv6_address" ]; then
 		echo -e "${riwi001}IPv6地址:       ${rw_bai}$ipv6_address"
 	fi
-	echo -e "${riwi001}DNS地址:        ${rw_bai}$dns_addresses"
-	echo -e "${riwi001}地理位置:       ${rw_bai}$country $city"
-	echo -e "${riwi001}系统时间:       ${rw_bai}$timezone $current_time"
+	echo -e "${riwi001}${rw_huang}DNS地址${riwi001}:        ${rw_bai}$dns_addresses"
+	echo -e "${riwi001}${rw_huang}地理位置${riwi001}:       ${rw_bai}$country $city"
+	echo -e "${riwi001}${rw_huang}系统时间${riwi001}:       ${rw_bai}$timezone $current_time"
 	echo -e "${riwi001}-------------"
-	echo -e "${riwi001}运行时长:       ${rw_bai}$runtime"
+	echo -e "${riwi001}${rw_huang}运行时长${riwi001}:       ${rw_bai}$runtime"
 	echo
 
 
@@ -20822,8 +20822,8 @@ EOF
 				echo "------------------------------------------------"
 				echo "当前流量使用情况，重启服务器流量计算会清零！"
 				output_status
-				echo -e "${riwi001}总接收: ${rw_bai}$rx"
-				echo -e "${riwi001}总发送: ${rw_bai}$tx"
+				echo -e "${riwi001}${rw_huang}总接收${riwi001}: ${rw_bai}$rx"
+				echo -e "${riwi001}${rw_huang}总发送${riwi001}: ${rw_bai}$tx"
 
 				# 检查是否存在 Limiting_Shut_down.sh 文件
 				if [ -f ~/Limiting_Shut_down.sh ]; then
@@ -22628,33 +22628,33 @@ github_manager() {
     echo -e "${riwi001}╚════════════════════════════════════════╝${riwi001}"
     echo ""
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}仓库操作${rw_bai}"
+    echo -e "${riwi001}${rw_huang}仓库操作${rw_bai}"
     echo -e "${riwi001}1.  ${rw_bai}克隆仓库"
     echo -e "${riwi001}2.  ${rw_bai}初始化本地仓库"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}分支管理${rw_bai}"
+    echo -e "${riwi001}${rw_huang}分支管理${rw_bai}"
     echo -e "${riwi001}3.  ${rw_bai}列出本地分支"
     echo -e "${riwi001}4.  ${rw_bai}创建新分支"
     echo -e "${riwi001}5.  ${rw_bai}切换分支"
     echo -e "${riwi001}6.  ${rw_bai}删除分支"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}文件操作${rw_bai}"
+    echo -e "${riwi001}${rw_huang}文件操作${rw_bai}"
     echo -e "${riwi001}7.  ${rw_bai}查看状态 (git status)"
     echo -e "${riwi001}8.  ${rw_bai}暂存所有文件"
     echo -e "${riwi001}9.  ${rw_bai}暂存指定文件"
     echo -e "${riwi001}10. ${rw_bai}取消暂存文件"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}提交与推送${rw_bai}"
+    echo -e "${riwi001}${rw_huang}提交与推送${rw_bai}"
     echo -e "${riwi001}11. ${rw_bai}提交全部文件 (git add . + commit)"
     echo -e "${riwi001}12. ${rw_bai}推送到远程"
     echo -e "${riwi001}13. ${rw_bai}拉取远程更新"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}远程仓库${rw_bai}"
+    echo -e "${riwi001}${rw_huang}远程仓库${rw_bai}"
     echo -e "${riwi001}14. ${rw_bai}查看远程仓库"
     echo -e "${riwi001}15. ${rw_bai}添加远程仓库"
     echo -e "${riwi001}16. ${rw_bai}移除远程仓库"
     echo -e "${riwi001}------------------------${rw_bai}"
-    echo -e "${riwi001}17. ${rw_bai}切换源"
+    echo -e "${riwi001}17. ${rw_hong}切换源${rw_bai}"
     echo -e "${riwi001}------------------------${rw_bai}"
     echo -e "${riwi001}0.  ${rw_bai}返回主菜单"
     echo -e "${riwi001}------------------------${rw_bai}"
@@ -22851,17 +22851,56 @@ github_manager() {
         echo -e "${riwi001}提交全部文件${rw_bai}"
         if [ -d ".git" ]; then
           # 显示当前分支
-          local current_branch=$(git rev-parse --abbrev-ref HEAD)
+          local current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无提交）")
           echo -e "${rw_huang}位于分支 ${current_branch}${rw_bai}"
           echo ""
           
+          # 确保 .gitignore 存在，排除 macOS 系统目录，避免 git add 产生权限警告
+          if [ ! -f ".gitignore" ]; then
+            echo -e "${rw_lv}检测到新仓库，自动创建 .gitignore 排除系统目录...${rw_bai}"
+            cat > .gitignore << 'EOF'
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# User Directories (macOS)
+Music/
+Pictures/
+Movies/
+Library/
+Documents/
+Desktop/
+Downloads/
+EOF
+            echo -e "${rw_lv}.gitignore 已创建${rw_bai}"
+            echo ""
+          fi
+          
           # 检查是否有可提交的内容
           git add .
-          if git diff --cached --quiet 2>/dev/null; then
-            echo -e "${rw_lv}没有可提交的内容，工作区是干净的${rw_bai}"
-            echo ""
-            read -e -p "按回车继续..."
-            continue
+          
+          # 检查是否有提交历史
+          has_head=0
+          git rev-parse --verify HEAD >/dev/null 2>&1 && has_head=1
+          
+          if [ $has_head -eq 1 ]; then
+            # 有提交历史，用 git diff --cached --quiet 检查
+            if git diff --cached --quiet 2>/dev/null; then
+              echo -e "${rw_lv}没有可提交的内容，工作区是干净的${rw_bai}"
+              echo ""
+              read -e -p "按回车继续..."
+              continue
+            fi
+          else
+            # 空仓库（无提交历史），检查暂存区是否真的为空
+            if [ -z "$(git diff --cached --name-only 2>/dev/null)" ]; then
+              echo -e "${rw_lv}没有可提交的内容${rw_bai}"
+              echo ""
+              read -e -p "按回车继续..."
+              continue
+            fi
           fi
           
           echo -e "${rw_lv}所有文件已暂存${rw_bai}"

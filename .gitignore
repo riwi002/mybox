@@ -1,0 +1,14 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# User Directories (macOS)
+Music/
+Pictures/
+Movies/
+Library/
+Documents/
+Desktop/
+Downloads/
