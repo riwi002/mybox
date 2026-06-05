@@ -1,0 +1,68 @@
+MIT License
+
+Copyright (c) 2026 Riou
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## 免责声明 (Disclaimer)
+
+**⚠️ 重要说明**：此脚本为个人使用而创建，主要用于方便自己日常服务器管理工作，避免重复编写代码。脚本功能根据个人需求定制，可能存在未完善之处，请谨慎用于生产环境。
+
+### 使用风险
+
+1. **个人使用**: 本脚本为个人学习和工作需要而创建，主要用于提高个人工作效率。
+
+2. **风险自负**: 使用本脚本前请做好数据备份，因使用本脚本导致的任何数据丢失、系统损坏等问题，作者不承担任何责任。
+
+3. **生产环境**: 不建议直接用于生产环境，使用前请充分测试。
+
+4. **代码质量**: 脚本代码主要为实现功能而编写，可能存在优化空间，欢迎提出建议。
+
+### 额外免责条款
+
+1. **"按原样"提供**：本工具按"原样"提供，不提供任何明示或暗示的担保，包括但不限于适销性、适用于特定用途的担保。
+
+2. **数据丢失风险**：开发者不对使用本工具导致的任何数据丢失、系统损坏、服务中断或其他损失承担责任。
+
+3. **备份义务**：使用本工具前，请务必备份重要数据和配置文件。
+
+4. **系统级操作风险**：本工具包含系统级操作（如删除文件、修改配置、重启服务等），请谨慎使用，确保您理解每个操作的影响。
+
+5. **第三方依赖**：本工具可能依赖第三方软件或服务，因第三方问题导致的任何损失，开发者不承担责任。
+
+### 使用限制
+
+1. 不得将本工具用于任何违法用途。
+2. 分发或修改本工具时，请尽量保留原始版权信息，但不是强制要求。
+
+### 隐私条款
+
+本工具不会收集、存储或传输您的任何个人数据。所有操作均在本地执行，不会向任何第三方发送信息。
+
+### 联系信息
+
+如有任何疑问或建议，请通过以下方式联系：
+- **GitHub Issues**: https://github.com/riwi002/mybox/issues
+- **Email**: riwi001@pm.me
+
+---
+
+本许可证文件最后更新：2026-06-06
