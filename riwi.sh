@@ -638,6 +638,51 @@ break_end() {
 	  clear
 }
 
+# 跨平台超时执行函数（兼容 Linux 和 macOS）
+# 用法: run_with_timeout 60 command arg1 arg2 ...
+run_with_timeout() {
+	  local timeout_sec=$1
+	  shift
+
+	  if command -v timeout &>/dev/null; then
+	    # Linux: 先用 SIGTERM，10 秒后未退出再发 SIGKILL
+	    timeout --kill-after=10s "$timeout_sec" "$@"
+	    return $?
+	  fi
+
+	  # macOS / BSD 兼容方案：子 shell + set -m 创建独立进程组，确保能终止所有子进程
+	  (
+	    set -m
+	    "$@" &
+	    local cmd_pid=$!
+
+	    # 计时器进程：超时后向整个进程组发送信号
+	    (
+	      sleep "$timeout_sec"
+	      # 先发送 SIGTERM 给整个进程组（包括主进程和所有子进程）
+	      kill -TERM -"$cmd_pid" 2>/dev/null
+	      # 再等 3 秒仍不退出则强制 SIGKILL
+	      sleep 3
+	      kill -KILL -"$cmd_pid" 2>/dev/null
+	    ) &
+	    local timer_pid=$!
+
+	    # 等待主进程退出
+	    wait "$cmd_pid" 2>/dev/null
+	    local exit_code=$?
+
+	    # 清理计时器
+	    kill "$timer_pid" 2>/dev/null
+	    wait "$timer_pid" 2>/dev/null
+
+	    # 映射退出码：143=SIGTERM, 137=SIGKILL 均视为超时
+	    [ "$exit_code" -eq 143 ] && exit 124
+	    [ "$exit_code" -eq 137 ] && exit 124
+	    exit $exit_code
+	  )
+	  return $?
+}
+
 riwi() {
 			cd ~
 			riwi_sh
@@ -22229,14 +22274,15 @@ echo -e "${riwi001}1.   ${rw_bai}系统查询"
 echo -e "${riwi001}2.   ${rw_bai}更新清理"
 echo -e "${riwi001}3.   ${rw_bai}基础工具"
 echo -e "${riwi001}4.   ${rw_bai}GitHub管理器"
-echo -e "${riwi001}5.   ${rw_bai}Docker管理"
-echo -e "${rw_huang}6.   ${rw_bai}LDNMP建站"
-echo -e "${riwi001}7.   ${rw_bai}应用市场"
-echo -e "${riwi001}8.   ${rw_bai}后台工作区"
-echo -e "${riwi001}9.   ${rw_bai}系统工具"
-echo -e "${riwi001}10.  ${rw_bai}服务器集群控制"
-echo -e "${riwi001}11.  ${rw_bai}安全优化"
-echo -e "${riwi001}12.  ${rw_bai}热门专栏"
+echo -e "${riwi001}5.   ${rw_bai}GitHooks部署"
+echo -e "${riwi001}6.   ${rw_bai}Docker管理"
+echo -e "${rw_huang}7.   ${rw_bai}LDNMP建站"
+echo -e "${riwi001}8.   ${rw_bai}应用市场"
+echo -e "${riwi001}9.   ${rw_bai}后台工作区"
+echo -e "${riwi001}10.  ${rw_bai}系统工具"
+echo -e "${riwi001}11.  ${rw_bai}服务器集群控制"
+echo -e "${riwi001}12.  ${rw_bai}安全优化"
+echo -e "${riwi001}13.  ${rw_bai}热门专栏"
 
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}0.   ${rw_bai}退出脚本"
@@ -22248,14 +22294,15 @@ case $choice in
   2) update_clean_menu ;;
   3) linux_tools ;;
   4) github_manager ;;
-  5) linux_docker ;;
-  6) ldnmp_builder_menu ;;
-  7) linux_panel ;;
-  8) linux_work ;;
-  9) linux_Settings ;;
-  10) linux_cluster ;;
-  11) linux_security ;;
-  12) riwi_Affiliates ;;
+  5) git_hooks_deploy ;;
+  6) linux_docker ;;
+  7) ldnmp_builder_menu ;;
+  8) linux_panel ;;
+  9) linux_work ;;
+  10) linux_Settings ;;
+  11) linux_cluster ;;
+  12) linux_security ;;
+  13) riwi_Affiliates ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
@@ -22620,6 +22667,566 @@ auto_switch_fastest_mirror() {
   read -e -p "按回车继续..."
 }
 
+# ================================================================
+# Git Hooks 自动部署函数
+# ================================================================
+# 功能: 自动部署常用 Git Hooks 到指定仓库
+# 支持: pre-commit, post-merge, pre-push, post-receive 等
+# ================================================================
+git_hooks_deploy() {
+  while true; do
+    clear
+    echo -e "${riwi001}╔════════════════════════════════════════╗${riwi001}"
+    echo -e "${riwi001}║         Git Hooks 自动部署             ║${riwi001}"
+    echo -e "${riwi001}╚════════════════════════════════════════╝${riwi001}"
+    echo ""
+
+    # 路径选择
+    echo -e "${rw_huang}当前路径: $(pwd)${rw_bai}"
+    echo ""
+    read -e -p "请输入 git 仓库路径 (回车使用当前路径): " repo_path
+    if [ "$repo_path" = "0" ]; then return; fi
+    if [ -z "$repo_path" ]; then
+      repo_path="."
+    fi
+
+    # 展开路径
+    repo_path="$(cd "$repo_path" 2>/dev/null && pwd || echo "$repo_path")"
+
+    # 检查是否是 git 仓库
+    if [ ! -d "$repo_path/.git" ]; then
+      echo ""
+      echo -e "${rw_hong}错误: $repo_path 不是有效的 git 仓库${rw_bai}"
+      echo -e "${rw_huang}提示: 请先在该目录执行 git init 或克隆一个仓库${rw_bai}"
+      echo ""
+      read -e -p "按回车继续..."
+      continue
+    fi
+
+    local hooks_dir="$repo_path/.git/hooks"
+
+    while true; do
+      clear
+      echo -e "${riwi001}╔════════════════════════════════════════╗${riwi001}"
+      echo -e "${riwi001}║         Git Hooks 自动部署             ║${riwi001}"
+      echo -e "${riwi001}╚════════════════════════════════════════╝${riwi001}"
+      echo ""
+      echo -e "${rw_huang}当前仓库: $repo_path${rw_bai}"
+      echo -e "${rw_lv}Hooks 目录: $hooks_dir ${rw_huang}[默认]${rw_bai}"
+      echo ""
+      echo -e "${riwi001}${rw_huang}常用 Hooks${rw_bai}"
+      echo -e "${riwi001}1.  ${rw_bai}pre-commit      ${rw_huang}- 提交前自动检查${rw_bai}"
+      echo -e "${riwi001}2.  ${rw_bai}post-merge      ${rw_huang}- 合并后自动更新依赖${rw_bai}"
+      echo -e "${riwi001}3.  ${rw_bai}pre-push        ${rw_huang}- 推送前运行测试${rw_bai}"
+      echo -e "${riwi001}4.  ${rw_bai}post-receive    ${rw_huang}- 接收推送后自动部署${rw_bai}"
+      echo -e "${riwi001}5.  ${rw_bai}commit-msg      ${rw_huang}- 提交信息格式检查${rw_bai}"
+      echo ""
+      echo -e "${riwi001}------------------------${rw_bai}"
+      echo -e "${riwi001}6.  ${rw_lv}一键安装所有 Hooks${rw_bai}"
+      echo -e "${riwi001}7.  ${rw_bai}查看已安装的 Hooks"
+      echo -e "${riwi001}8.  ${rw_bai}删除指定 Hook"
+      echo ""
+      echo -e "${riwi001}------------------------${rw_bai}"
+      echo -e "${riwi001}9.  ${rw_bai}切换仓库路径"
+      echo -e "${riwi001}0.  返回主菜单"
+      echo -e "${riwi001}------------------------${rw_bai}"
+      read -e -p "请输入你的选择: " hook_choice
+
+      case $hook_choice in
+        1)
+          echo ""
+          echo -e "${rw_lv}正在部署 pre-commit hook...${rw_bai}"
+          cat > "$hooks_dir/pre-commit" << 'HOOK_EOF'
+#!/bin/bash
+# pre-commit hook - 提交前自动检查
+# 自动部署生成
+
+echo "========================================"
+echo "  pre-commit: 提交前检查"
+echo "========================================"
+
+# 检查是否有尾随空格
+echo "[1/3] 检查尾随空格..."
+if git diff --cached --check -- '*.py' '*.js' '*.ts' '*.sh' '*.md' '*.txt' 2>/dev/null; then
+  echo "  通过"
+else
+  echo "  发现尾随空格，请修复后再提交"
+  exit 1
+fi
+
+# 检查文件大小（超过 10MB 警告）
+echo "[2/3] 检查大文件..."
+large_files=$(git diff --cached --numstat | awk '$1 > 10000 || $2 > 10000 {print $3}')
+if [ -n "$large_files" ]; then
+  echo "  警告: 以下文件改动较大，请确认是否需要提交:"
+  echo "$large_files" | sed 's/^/    /'
+fi
+
+# 检查是否有控制台输出遗留（针对 JS/TS 文件）
+echo "[3/3] 检查 console.log..."
+console_logs=$(git diff --cached --name-only | grep -E '\.(js|ts|jsx|tsx)$' | xargs git diff --cached -U0 -- 2>/dev/null | grep -E '^\+.*console\.(log|debug|warn|error)' || true)
+if [ -n "$console_logs" ]; then
+  echo "  警告: 发现 console.log 等调试语句:"
+  echo "$console_logs" | sed 's/^/    /'
+  echo "  建议清理后再提交"
+fi
+
+echo "========================================"
+echo "  pre-commit 检查完成"
+echo "========================================"
+HOOK_EOF
+          chmod +x "$hooks_dir/pre-commit"
+          echo -e "${rw_lv}pre-commit hook 部署成功${rw_bai}"
+          echo -e "${rw_huang}功能: 检查尾随空格、大文件警告、console.log 检查${rw_bai}"
+          ;;
+
+        2)
+          echo ""
+          echo -e "${rw_lv}正在部署 post-merge hook...${rw_bai}"
+          cat > "$hooks_dir/post-merge" << 'HOOK_EOF'
+#!/bin/bash
+# post-merge hook - 合并后自动更新依赖
+# 自动部署生成
+
+echo "========================================"
+echo "  post-merge: 合并后自动更新"
+echo "========================================"
+
+# 检测包管理器并自动安装依赖
+if [ -f "package.json" ] && [ -f "package-lock.json" ]; then
+  echo "[npm] 检测到 package-lock.json，正在执行 npm ci..."
+  npm ci
+elif [ -f "package.json" ] && [ -f "yarn.lock" ]; then
+  echo "[yarn] 检测到 yarn.lock，正在执行 yarn install --frozen-lockfile..."
+  yarn install --frozen-lockfile
+elif [ -f "package.json" ]; then
+  echo "[npm] 检测到 package.json，正在执行 npm install..."
+  npm install
+elif [ -f "requirements.txt" ]; then
+  echo "[pip] 检测到 requirements.txt，正在执行 pip install -r requirements.txt..."
+  pip install -r requirements.txt
+elif [ -f "Pipfile" ]; then
+  echo "[pipenv] 检测到 Pipfile，正在执行 pipenv install..."
+  pipenv install
+elif [ -f "composer.json" ]; then
+  echo "[composer] 检测到 composer.json，正在执行 composer install..."
+  composer install --no-dev --optimize-autoloader
+elif [ -f "go.mod" ]; then
+  echo "[go] 检测到 go.mod，正在执行 go mod download..."
+  go mod download
+elif [ -f "Cargo.toml" ]; then
+  echo "[cargo] 检测到 Cargo.toml，正在执行 cargo build..."
+  cargo build
+else
+  echo "未检测到已知依赖文件，跳过自动安装"
+fi
+
+echo "========================================"
+echo "  post-merge 更新完成"
+echo "========================================"
+HOOK_EOF
+          chmod +x "$hooks_dir/post-merge"
+          echo -e "${rw_lv}post-merge hook 部署成功${rw_bai}"
+          echo -e "${rw_huang}功能: 自动检测并安装 npm/yarn/pip/composer/go/cargo 依赖${rw_bai}"
+          ;;
+
+        3)
+          echo ""
+          echo -e "${rw_lv}正在部署 pre-push hook...${rw_bai}"
+          cat > "$hooks_dir/pre-push" << 'HOOK_EOF'
+#!/bin/bash
+# pre-push hook - 推送前运行测试
+# 自动部署生成
+
+echo "========================================"
+echo "  pre-push: 推送前测试"
+echo "========================================"
+
+# 检测测试框架并自动运行
+if [ -f "package.json" ]; then
+  if grep -q '"test"' package.json 2>/dev/null; then
+    echo "[npm] 正在运行 npm test..."
+    npm test
+    if [ $? -ne 0 ]; then
+      echo "测试失败，推送已取消"
+      exit 1
+    fi
+  fi
+elif [ -f "pytest.ini" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+  echo "[pytest] 正在运行 pytest..."
+  pytest -q
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+elif [ -f "go.mod" ]; then
+  echo "[go] 正在运行 go test ./..."
+  go test ./...
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+elif [ -f "Cargo.toml" ]; then
+  echo "[cargo] 正在运行 cargo test..."
+  cargo test
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+else
+  echo "未检测到测试配置，跳过测试"
+fi
+
+echo "========================================"
+echo "  pre-push 测试通过"
+echo "========================================"
+HOOK_EOF
+          chmod +x "$hooks_dir/pre-push"
+          echo -e "${rw_lv}pre-push hook 部署成功${rw_bai}"
+          echo -e "${rw_huang}功能: 推送前自动运行 npm/pytest/go/cargo 测试${rw_bai}"
+          ;;
+
+        4)
+          echo ""
+          echo -e "${rw_lv}正在部署 post-receive hook...${rw_bai}"
+          cat > "$hooks_dir/post-receive" << 'HOOK_EOF'
+#!/bin/bash
+# post-receive hook - 接收推送后自动部署
+# 自动部署生成
+# 此 hook 用于服务器端的裸仓库
+
+read oldrev newrev refname
+branch=$(echo "$refname" | sed 's|refs/heads/||')
+
+echo "========================================"
+echo "  post-receive: 自动部署"
+echo "========================================"
+echo "分支: $branch"
+echo "提交: $newrev"
+echo "========================================"
+
+# 设置部署目录（修改为你的实际部署路径）
+DEPLOY_DIR="/var/www/html"
+GIT_DIR=$(pwd)
+
+if [ -d "$DEPLOY_DIR" ]; then
+  echo "正在部署到 $DEPLOY_DIR ..."
+  git --work-tree="$DEPLOY_DIR" --git-dir="$GIT_DIR" checkout -f "$branch"
+  if [ $? -eq 0 ]; then
+    echo "部署成功"
+    # 可以在这里添加额外的部署后操作
+    # 例如: 重启服务、清理缓存等
+    # systemctl restart nginx
+  else
+    echo "部署失败"
+    exit 1
+  fi
+else
+  echo "部署目录 $DEPLOY_DIR 不存在"
+  echo "请修改此 hook 中的 DEPLOY_DIR 变量"
+fi
+
+echo "========================================"
+HOOK_EOF
+          chmod +x "$hooks_dir/post-receive"
+          echo -e "${rw_lv}post-receive hook 部署成功${rw_bai}"
+          echo -e "${rw_huang}功能: 接收推送后自动部署到指定目录${rw_bai}"
+          echo -e "${rw_huang}注意: 此 hook 用于服务器端裸仓库，需修改 DEPLOY_DIR${rw_bai}"
+          ;;
+
+        5)
+          echo ""
+          echo -e "${rw_lv}正在部署 commit-msg hook...${rw_bai}"
+          cat > "$hooks_dir/commit-msg" << 'HOOK_EOF'
+#!/bin/bash
+# commit-msg hook - 提交信息格式检查
+# 自动部署生成
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
+
+echo "========================================"
+echo "  commit-msg: 提交信息检查"
+echo "========================================"
+
+# 检查提交信息长度
+if [ ${#COMMIT_MSG} -lt 5 ]; then
+  echo "错误: 提交信息太短（至少5个字符）"
+  exit 1
+fi
+
+# 检查提交信息是否以特定前缀开头（可选）
+# 支持的类型: feat, fix, docs, style, refactor, test, chore
+if echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf)(\(.+\))?:'; then
+  echo "提交信息格式正确"
+else
+  echo "警告: 提交信息建议遵循约定式提交格式"
+  echo "  例如: feat: 添加新功能"
+  echo "        fix: 修复某个bug"
+  echo "        docs: 更新文档"
+  echo "  可选前缀: feat, fix, docs, style, refactor, test, chore, ci, build, perf"
+  echo ""
+  echo "是否继续提交? (y/n)"
+  read -n 1 -r < /dev/tty
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+echo "========================================"
+HOOK_EOF
+          chmod +x "$hooks_dir/commit-msg"
+          echo -e "${rw_lv}commit-msg hook 部署成功${rw_bai}"
+          echo -e "${rw_huang}功能: 检查提交信息长度和格式（约定式提交）${rw_bai}"
+          ;;
+
+        6)
+          echo ""
+          echo -e "${rw_lv}正在一键安装所有常用 Hooks...${rw_bai}"
+          # 依次安装所有 hooks
+          for hook_name in pre-commit post-merge pre-push commit-msg; do
+            echo ""
+            echo -e "${rw_huang}安装 $hook_name...${rw_bai}"
+            case $hook_name in
+              pre-commit)
+                cat > "$hooks_dir/pre-commit" << 'HOOK_EOF'
+#!/bin/bash
+# pre-commit hook - 提交前自动检查
+# 自动部署生成
+
+echo "========================================"
+echo "  pre-commit: 提交前检查"
+echo "========================================"
+
+# 检查是否有尾随空格
+echo "[1/3] 检查尾随空格..."
+if git diff --cached --check -- '*.py' '*.js' '*.ts' '*.sh' '*.md' '*.txt' 2>/dev/null; then
+  echo "  通过"
+else
+  echo "  发现尾随空格，请修复后再提交"
+  exit 1
+fi
+
+# 检查文件大小（超过 10MB 警告）
+echo "[2/3] 检查大文件..."
+large_files=$(git diff --cached --numstat | awk '$1 > 10000 || $2 > 10000 {print $3}')
+if [ -n "$large_files" ]; then
+  echo "  警告: 以下文件改动较大，请确认是否需要提交:"
+  echo "$large_files" | sed 's/^/    /'
+fi
+
+# 检查是否有控制台输出遗留（针对 JS/TS 文件）
+echo "[3/3] 检查 console.log..."
+console_logs=$(git diff --cached --name-only | grep -E '\.(js|ts|jsx|tsx)$' | xargs git diff --cached -U0 -- 2>/dev/null | grep -E '^\+.*console\.(log|debug|warn|error)' || true)
+if [ -n "$console_logs" ]; then
+  echo "  警告: 发现 console.log 等调试语句:"
+  echo "$console_logs" | sed 's/^/    /'
+  echo "  建议清理后再提交"
+fi
+
+echo "========================================"
+echo "  pre-commit 检查完成"
+echo "========================================"
+HOOK_EOF
+                ;;
+              post-merge)
+                cat > "$hooks_dir/post-merge" << 'HOOK_EOF'
+#!/bin/bash
+# post-merge hook - 合并后自动更新依赖
+# 自动部署生成
+
+echo "========================================"
+echo "  post-merge: 合并后自动更新"
+echo "========================================"
+
+if [ -f "package.json" ] && [ -f "package-lock.json" ]; then
+  echo "[npm] 正在执行 npm ci..."
+  npm ci
+elif [ -f "package.json" ] && [ -f "yarn.lock" ]; then
+  echo "[yarn] 正在执行 yarn install --frozen-lockfile..."
+  yarn install --frozen-lockfile
+elif [ -f "package.json" ]; then
+  echo "[npm] 正在执行 npm install..."
+  npm install
+elif [ -f "requirements.txt" ]; then
+  echo "[pip] 正在执行 pip install -r requirements.txt..."
+  pip install -r requirements.txt
+elif [ -f "Pipfile" ]; then
+  echo "[pipenv] 正在执行 pipenv install..."
+  pipenv install
+elif [ -f "composer.json" ]; then
+  echo "[composer] 正在执行 composer install..."
+  composer install --no-dev --optimize-autoloader
+elif [ -f "go.mod" ]; then
+  echo "[go] 正在执行 go mod download..."
+  go mod download
+elif [ -f "Cargo.toml" ]; then
+  echo "[cargo] 正在执行 cargo build..."
+  cargo build
+fi
+
+echo "========================================"
+echo "  post-merge 更新完成"
+echo "========================================"
+HOOK_EOF
+                ;;
+              pre-push)
+                cat > "$hooks_dir/pre-push" << 'HOOK_EOF'
+#!/bin/bash
+# pre-push hook - 推送前运行测试
+# 自动部署生成
+
+echo "========================================"
+echo "  pre-push: 推送前测试"
+echo "========================================"
+
+if [ -f "package.json" ] && grep -q '"test"' package.json 2>/dev/null; then
+  echo "[npm] 正在运行 npm test..."
+  npm test
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+elif [ -f "pytest.ini" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+  echo "[pytest] 正在运行 pytest..."
+  pytest -q
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+elif [ -f "go.mod" ]; then
+  echo "[go] 正在运行 go test ./..."
+  go test ./...
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+elif [ -f "Cargo.toml" ]; then
+  echo "[cargo] 正在运行 cargo test..."
+  cargo test
+  if [ $? -ne 0 ]; then
+    echo "测试失败，推送已取消"
+    exit 1
+  fi
+fi
+
+echo "========================================"
+echo "  pre-push 测试通过"
+echo "========================================"
+HOOK_EOF
+                ;;
+              commit-msg)
+                cat > "$hooks_dir/commit-msg" << 'HOOK_EOF'
+#!/bin/bash
+# commit-msg hook - 提交信息格式检查
+# 自动部署生成
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
+
+echo "========================================"
+echo "  commit-msg: 提交信息检查"
+echo "========================================"
+
+if [ ${#COMMIT_MSG} -lt 5 ]; then
+  echo "错误: 提交信息太短（至少5个字符）"
+  exit 1
+fi
+
+if echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf)(\(.+\))?:'; then
+  echo "提交信息格式正确"
+else
+  echo "警告: 提交信息建议遵循约定式提交格式"
+  echo "  例如: feat: 添加新功能"
+  echo "        fix: 修复某个bug"
+  echo ""
+  read -n 1 -r < /dev/tty
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+echo "========================================"
+HOOK_EOF
+                ;;
+            esac
+            chmod +x "$hooks_dir/$hook_name"
+            echo -e "${rw_lv}$hook_name 安装完成${rw_bai}"
+          done
+          echo ""
+          echo -e "${rw_lv}所有常用 Hooks 一键安装完成！${rw_bai}"
+          ;;
+
+        7)
+          echo ""
+          echo -e "${rw_huang}已安装的 Hooks:${rw_bai}"
+          if [ -d "$hooks_dir" ]; then
+            local found=0
+            for hook in "$hooks_dir"/*; do
+              if [ -f "$hook" ] && [ -x "$hook" ]; then
+                local name=$(basename "$hook")
+                # 跳过 sample 文件
+                if [[ "$name" == *.sample ]]; then continue; fi
+                found=1
+                echo -e "${riwi001}  ${rw_lv}$name${rw_bai}"
+              fi
+            done
+            if [ $found -eq 0 ]; then
+              echo -e "${rw_hong}  尚未安装任何自定义 hooks${rw_bai}"
+            fi
+          else
+            echo -e "${rw_hong}  Hooks 目录不存在${rw_bai}"
+          fi
+          ;;
+
+        8)
+          echo ""
+          echo -e "${rw_huang}已安装的 Hooks:${rw_bai}"
+          local hooks_list=()
+          local idx=1
+          for hook in "$hooks_dir"/*; do
+            if [ -f "$hook" ] && [ -x "$hook" ]; then
+              local name=$(basename "$hook")
+              if [[ "$name" == *.sample ]]; then continue; fi
+              hooks_list+=("$name")
+              echo -e "${riwi001}$idx. $name"
+              ((idx++))
+            fi
+          done
+          if [ ${#hooks_list[@]} -eq 0 ]; then
+            echo -e "${rw_hong}  没有可删除的 hooks${rw_bai}"
+          else
+            echo ""
+            read -e -p "请输入要删除的 Hook 编号 (0 取消): " del_idx
+            if [ "$del_idx" != "0" ] && [ "$del_idx" -ge 1 ] && [ "$del_idx" -le ${#hooks_list[@]} ] 2>/dev/null; then
+              local del_name="${hooks_list[$((del_idx-1))]}"
+              rm -f "$hooks_dir/$del_name"
+              echo -e "${rw_lv}已删除 $del_name${rw_bai}"
+            fi
+          fi
+          ;;
+
+        9)
+          break
+          ;;
+
+        0)
+          return
+          ;;
+
+        *)
+          echo -e "${rw_hong}无效的输入!${rw_bai}"
+          ;;
+      esac
+
+      echo ""
+      read -e -p "按回车继续..."
+    done
+  done
+}
+
 github_manager() {
   while true; do
     clear
@@ -22948,12 +23555,17 @@ EOF
           read -e -p "请输入分支名称（默认当前分支）: " branch_name
           if [ "$branch_name" = "0" ]; then continue; fi
           if [ -z "$branch_name" ]; then
-            branch_name=$(git rev-parse --abbrev-ref HEAD)
+            branch_name=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无分支）")
           fi
           
-          git push "$remote_name" "$branch_name"
+          echo -e "${rw_lv}正在推送到 ${remote_name}/${branch_name}...${rw_bai}"
+          run_with_timeout 60 git push "$remote_name" "$branch_name"
+          push_result=$?
           
-          if [ $? -ne 0 ]; then
+          if [ $push_result -eq 124 ]; then
+            echo -e "${rw_hong}推送超时（60秒）${rw_bai}"
+            echo -e "${rw_huang}提示: 请检查网络连接或远程仓库地址${rw_bai}"
+          elif [ $push_result -ne 0 ]; then
             echo -e "${rw_hong}推送失败${rw_bai}"
             echo ""
             echo -e "${rw_huang}错误原因: 本地分支落后于远程分支 (non-fast-forward)${rw_bai}"
@@ -22963,18 +23575,16 @@ EOF
             echo -e "${riwi001}2. ${rw_bai}拉取并变基 (git pull --rebase) - 保持线性历史"
             echo -e "${riwi001}3. ${rw_bai}强制推送 (git push --force) - 会覆盖远程分支，有风险"
             echo ""
-            echo -e "${rw_huang}提示: 选择解决方案后按回车继续，输入 0 返回上一级${rw_bai}"
-            echo ""
             read -e -p "请选择解决方案 (1/2/3): " solution_choice
             if [ "$solution_choice" = "0" ]; then continue; fi
             
             case $solution_choice in
               1)
                 echo -e "${rw_lv}正在拉取远程更新...${rw_bai}"
-                git pull "$remote_name" "$branch_name"
+                run_with_timeout 60 git pull "$remote_name" "$branch_name"
                 if [ $? -eq 0 ]; then
                   echo -e "${rw_lv}拉取成功，重新推送...${rw_bai}"
-                  git push "$remote_name" "$branch_name"
+                  run_with_timeout 60 git push "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
                     echo -e "${rw_lv}推送成功${rw_bai}"
                   else
@@ -22986,10 +23596,10 @@ EOF
                 ;;
               2)
                 echo -e "${rw_lv}正在拉取并变基...${rw_bai}"
-                git pull --rebase "$remote_name" "$branch_name"
+                run_with_timeout 60 git pull --rebase "$remote_name" "$branch_name"
                 if [ $? -eq 0 ]; then
                   echo -e "${rw_lv}变基成功，重新推送...${rw_bai}"
-                  git push "$remote_name" "$branch_name"
+                  run_with_timeout 60 git push "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
                     echo -e "${rw_lv}推送成功${rw_bai}"
                   else
@@ -23000,13 +23610,11 @@ EOF
                 fi
                 ;;
               3)
-                echo -e "${rw_huang}提示: 输入 y 确认，输入 n 或 0 返回上一级${rw_bai}"
-                echo ""
                 read -e -p "$(echo -e "${rw_hong}警告: ${rw_bai}强制推送会覆盖远程分支，请确认是否继续? (y/N): ")" force_confirm
                 if [ "$force_confirm" = "0" ]; then continue; fi
                 if [ "$force_confirm" = "y" ] || [ "$force_confirm" = "Y" ]; then
                   echo -e "${rw_lv}正在强制推送...${rw_bai}"
-                  git push --force "$remote_name" "$branch_name"
+                  run_with_timeout 60 git push --force "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
                     echo -e "${rw_lv}强制推送成功${rw_bai}"
                   else
