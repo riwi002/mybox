@@ -23541,7 +23541,7 @@ EOF
           echo ""
           echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
 		  echo ""
-          echo -e "${rw_lv}(默认:commit - ${rw_huang}提交${rw_bai} ${rw_lv}+ ${rw_lv}git add . - ${rw_huang}全部添加到“暂存区”${rw_bai}${rw_lv})${rw_bai}"
+          echo -e "${rw_huang}默认不填写:${rw_bai}${rw_lv}自带时间提交${rw_bai}"
           echo ""
           read -e -p "请输入提交信息: " commit_msg
           if [ "$commit_msg" = "0" ]; then continue; fi
