@@ -8082,7 +8082,7 @@ linux_tools() {
   while true; do
 	  clear
 	  send_stats "基础工具"
-	  echo -e "${riwi001}基础工具${rw_bai}"
+	  echo -e "${rw_huang}安装环境${rw_bai}"
 	  echo -e "${riwi001}------------------------${rw_bai}"
 	  echo ""
 	  echo -e "${rw_huang}功能说明:${rw_bai}"
@@ -22244,7 +22244,7 @@ update_clean_menu() {
 while true; do
   clear
   echo -e "${riwi001}"
-  echo -e "更新清理"
+  echo -e "${rw_huang}日常维护${rw_bai}"
   echo -e "${riwi001}------------------------${rw_bai}"
   echo -e "${riwi001}1.   ${rw_bai}系统更新"
   echo -e "${riwi001}2.   ${rw_bai}系统清理"
@@ -22271,12 +22271,12 @@ echo -e "Riou脚本工具箱 v$sh_v"
 echo -e "命令行输入${rw_huang}r${riwi001}可快速启动脚本${rw_bai}"
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}1.   ${rw_bai}系统查询"
-echo -e "${riwi001}2.   ${rw_bai}更新清理"
-echo -e "${riwi001}3.   ${rw_bai}基础工具"
-echo -e "${riwi001}4.   ${rw_bai}GitHub管理器"
+echo -e "${riwi001}2.   ${rw_bai}日常维护"
+echo -e "${riwi001}3.   ${rw_bai}安装环境"
+echo -e "${riwi001}${rw_huang}4.${rw_bai}   ${rw_bai}GitHub管理器"
 echo -e "${riwi001}5.   ${rw_bai}GitHooks部署"
 echo -e "${riwi001}6.   ${rw_bai}Docker管理"
-echo -e "${rw_huang}7.   ${rw_bai}LDNMP建站"
+echo -e "${riwi001}7.   ${rw_bai}LDNMP建站"
 echo -e "${riwi001}8.   ${rw_bai}应用市场"
 echo -e "${riwi001}9.   ${rw_bai}后台工作区"
 echo -e "${riwi001}10.  ${rw_bai}系统工具"
@@ -22682,9 +22682,14 @@ git_hooks_deploy() {
     echo ""
 
     # 路径选择
-    echo -e "${rw_huang}当前路径: $(pwd)${rw_bai}"
+    echo -e "${rw_huang}当前路径: ${rw_lv}$(pwd)${rw_bai}"
     echo ""
-    read -e -p "请输入 git 仓库路径 (回车使用当前路径): " repo_path
+    echo -e "${rw_lan}操作实例: ${rw_hong}/home/user/my-project ${rw_lan}或 ${rw_hong}/var/www/html${rw_bai}"
+    echo ""
+    echo -e "${rw_huang}提示: 输入 0 返回上一级${rw_bai}"
+    echo ""
+    echo -e "请输入 git 仓库路径 (回车默认): \c"
+    read -e repo_path
     if [ "$repo_path" = "0" ]; then return; fi
     if [ -z "$repo_path" ]; then
       repo_path="."
@@ -23234,6 +23239,13 @@ github_manager() {
     echo -e "${riwi001}║         GitHub 管理器                  ║${riwi001}"
     echo -e "${riwi001}╚════════════════════════════════════════╝${riwi001}"
     echo ""
+    # 获取当前分支名称
+    current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
+    if [ "$current_branch" = "未知" ]; then
+      branch_display="${rw_hong}未知分支${rw_bai}"
+    else
+      branch_display="${rw_huang}[当前分支: $current_branch]${rw_bai}"
+    fi
     echo -e "${riwi001}------------------------${rw_bai}"
     echo -e "${riwi001}${rw_huang}仓库操作${rw_bai}"
     echo -e "${riwi001}1.  ${rw_bai}克隆仓库"
@@ -23541,11 +23553,15 @@ EOF
         if [ -d ".git" ]; then
           git remote -v
           echo ""
+          # 获取当前分支
+          current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
+          echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_bai}"
+          echo ""
           echo -e "远程仓库名称示例: ${rw_hong}origin${rw_bai}, upstream, myrepo"
           echo ""
           echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
           echo ""
-          read -e -p "请输入远程仓库名称（默认 origin）: " remote_name
+          read -e -p "请输入远程仓库名称: " remote_name
           if [ "$remote_name" = "0" ]; then continue; fi
           if [ -z "$remote_name" ]; then
             remote_name="origin"
