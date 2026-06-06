@@ -20250,29 +20250,20 @@ linux_Settings() {
 	  echo -e "${rw_huang}提示: 选择对应的数字即可进行相应操作${rw_bai}"
 	  echo ""
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}1.   ${rw_bai}基础设置 ${rw_huang}(快捷键|密码|端口等)${rw_bai}    ${riwi001}2.   ${rw_bai}修改SSH连接端口"
-	  echo -e "${riwi001}3.   ${rw_bai}优化DNS地址                        ${riwi001}4.   ${rw_bai}一键重装系统 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}5.   ${rw_bai}禁用ROOT账户创建新账户             ${riwi001}6.   ${rw_bai}切换优先ipv4/ipv6"
+	  echo -e "${riwi001}1.   ${rw_bai}基础设置 ${rw_huang}(快捷键|密码|端口等)${rw_bai}    ${riwi001}2.   ${rw_bai}优化DNS地址"
+	  echo -e "${riwi001}3.   ${rw_bai}一键重装系统 ${rw_huang}★${rw_bai}                     ${riwi001}4.   ${rw_bai}切换优先ipv4/ipv6"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}7.   ${rw_bai}查看端口占用状态                   ${riwi001}8.   ${rw_bai}修改虚拟内存大小"
-	  echo -e "${riwi001}9.   ${rw_bai}用户管理                           ${riwi001}10.  ${rw_bai}用户/密码生成器"
-	  echo -e "${riwi001}11.  ${rw_bai}系统时区调整                       ${riwi001}12.  ${rw_bai}设置BBR3加速"
-	  echo -e "${riwi001}13.  ${rw_bai}防火墙高级管理器                   ${riwi001}14.  ${rw_bai}修改主机名"
-	  echo -e "${riwi001}15.  ${rw_bai}切换系统更新源                     ${riwi001}16.  ${rw_bai}定时任务管理"
+	  echo -e "${riwi001}5.   ${rw_bai}用户管理                           ${riwi001}6.   ${rw_bai}用户/密码生成器"
+	  echo -e "${riwi001}7.   ${rw_bai}系统时区调整                       ${riwi001}8.   ${rw_bai}防火墙高级管理器"
+	  echo -e "${riwi001}9.   ${rw_bai}修改主机名                         ${riwi001}10.  ${rw_bai}切换系统更新源"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}17.  ${rw_bai}本机host解析                       ${riwi001}18.  ${rw_bai}SSH防御程序"
-	  echo -e "${riwi001}19.  ${rw_bai}限流自动关机                       ${riwi001}20.  ${rw_bai}用户密钥登录模式"
-	  echo -e "${riwi001}21.  ${rw_bai}TG-bot系统监控预警                 ${riwi001}22.  ${rw_bai}修复OpenSSH高危漏洞"
-	  echo -e "${riwi001}23.  ${rw_bai}红帽系Linux内核升级                ${riwi001}24.  ${rw_bai}Linux系统内核参数优化 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}25.  ${rw_bai}病毒扫描工具 ${rw_huang}★${rw_bai}                     ${riwi001}26.  ${rw_bai}文件管理器"
+	  echo -e "${riwi001}11.  ${rw_bai}本机host解析                       ${riwi001}12.  ${rw_bai}限流自动关机"
+	  echo -e "${riwi001}13.  ${rw_bai}修复OpenSSH高危漏洞                ${riwi001}14.  ${rw_bai}红帽系Linux内核升级"
+	  echo -e "${riwi001}15.  ${rw_bai}病毒扫描工具 ${rw_huang}★${rw_bai}                     ${riwi001}16.  ${rw_bai}切换系统语言"
 	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}27.  ${rw_bai}切换系统语言                       ${riwi001}28.  ${rw_bai}命令行美化工具 ${rw_huang}★${rw_bai}"
-	  echo -e "${riwi001}29.  ${rw_bai}设置系统回收站                     ${riwi001}30.  ${rw_bai}系统备份与恢复"
-	  echo -e "${riwi001}31.  ${rw_bai}ssh远程连接工具                    ${riwi001}32.  ${rw_bai}硬盘分区管理工具"
-	  echo -e "${riwi001}33.  ${rw_bai}命令行历史记录                     ${riwi001}34.  ${rw_bai}rsync远程同步工具"
-	  echo -e "${riwi001}35.  ${rw_bai}命令收藏夹 ${rw_huang}★${rw_bai}                       ${riwi001}36.  ${rw_bai}网卡管理工具"
-	  echo -e "${riwi001}------------------------"
-	  echo -e "${riwi001}37.  ${rw_bai}系统日志管理工具 ${rw_huang}★${rw_bai}                 ${riwi001}38.  ${rw_bai}系统变量管理工具"
+	  echo -e "${riwi001}17.  ${rw_bai}命令行美化工具 ${rw_huang}★${rw_bai}                   ${riwi001}18.  ${rw_bai}设置系统回收站"
+	  echo -e "${riwi001}19.  ${rw_bai}ssh远程连接工具                    ${riwi001}20.  ${rw_bai}命令行历史记录"
+	  echo -e "${riwi001}21.  ${rw_bai}命令收藏夹 ${rw_huang}★${rw_bai}                       ${riwi001}22.  ${rw_bai}系统变量管理工具"
 	  echo -e "${riwi001}------------------------"
 	  echo -e "${riwi001}61.  ${rw_bai}留言板                             ${riwi001}66.  ${rw_bai}一条龙系统调优 ${rw_huang}★${rw_bai}"
 	  echo -e "${riwi001}99.  ${rw_bai}重启服务器                         ${riwi001}100. ${rw_bai}隐私与安全"
@@ -20288,77 +20279,14 @@ linux_Settings() {
 			  ;;
 
 		  2)
-			root_use
-			send_stats "修改SSH端口"
-
-			while true; do
-				clear
-				sed -i 's/^\s*#\?\s*Port/Port/' /etc/ssh/sshd_config
-
-				# 读取当前的 SSH 端口号
-				local current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
-
-				# 打印当前的 SSH 端口号
-				echo -e "当前的 SSH 端口号是:  ${rw_huang}$current_port ${rw_bai}"
-
-				echo "------------------------"
-				echo "端口号范围1到65535之间的数字。（输入0退出）"
-
-				# 提示用户输入新的 SSH 端口号
-				read -e -p "请输入新的 SSH 端口号: " new_port
-
-				# 判断端口号是否在有效范围内
-				if [[ $new_port =~ ^[0-9]+$ ]]; then  # 检查输入是否为数字
-					if [[ $new_port -ge 1 && $new_port -le 65535 ]]; then
-						send_stats "SSH端口已修改"
-						new_ssh_port $new_port
-					elif [[ $new_port -eq 0 ]]; then
-						send_stats "退出SSH端口修改"
-						break
-					else
-						echo "端口号无效，请输入1到65535之间的数字。"
-						send_stats "输入无效SSH端口"
-						break_end
-					fi
-				else
-					echo "输入无效，请输入数字。"
-					send_stats "输入无效SSH端口"
-					break_end
-				fi
-			done
-
-
-			  ;;
-
-
-		  7)
 			set_dns_ui
 			  ;;
 
-		  8)
+		  3)
 
 			dd_xitong
 			  ;;
-		  9)
-			root_use
-			send_stats "新用户禁用root"
-			read -e -p "请输入新用户名（输入0退出）: " new_username
-			if [ "$new_username" == "0" ]; then
-				break_end
-				linux_Settings
-			fi
-
-			create_user_with_sshkey $new_username true
-
-			ssh-keygen -l -f /home/$new_username/.ssh/authorized_keys &>/dev/null && {
-				passwd -l root &>/dev/null
-				sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-			}
-
-			;;
-
-
-		  10)
+		  4)
 			root_use
 			send_stats "设置v4/v6优先级"
 			while true; do
@@ -20406,60 +20334,7 @@ linux_Settings() {
 			done
 			;;
 
-		  11)
-			clear
-			ss -tulnape
-			;;
-
-		  12)
-			root_use
-			send_stats "设置虚拟内存"
-			while true; do
-				clear
-				echo "设置虚拟内存"
-				local swap_used=$(free -m | awk 'NR==3{print $3}')
-				local swap_total=$(free -m | awk 'NR==3{print $2}')
-				local swap_info=$(free -m | awk 'NR==3{used=$3; total=$2; if (total == 0) {percentage=0} else {percentage=used*100/total}; printf "%dM/%dM (%d%%)", used, total, percentage}')
-
-				echo -e "当前虚拟内存: ${rw_huang}$swap_info${rw_bai}"
-				echo "------------------------"
-				echo "1. 分配1024M         2. 分配2048M         3. 分配4096M         4. 自定义大小"
-				echo "------------------------"
-				echo "0. 返回上一级选单"
-				echo "------------------------"
-				read -e -p "请输入你的选择: " choice
-
-				case "$choice" in
-				  1)
-					send_stats "已设置1G虚拟内存"
-					add_swap 1024
-
-					;;
-				  2)
-					send_stats "已设置2G虚拟内存"
-					add_swap 2048
-
-					;;
-				  3)
-					send_stats "已设置4G虚拟内存"
-					add_swap 4096
-
-					;;
-
-				  4)
-					read -e -p "请输入虚拟内存大小（单位M）: " new_swap
-					add_swap "$new_swap"
-					send_stats "已设置自定义虚拟内存"
-					;;
-
-				  *)
-					break
-					;;
-				esac
-			done
-			;;
-
-		  13)
+		  5)
 			  while true; do
 				root_use
 				send_stats "用户管理"
@@ -20534,7 +20409,7 @@ EOF
 			  done
 			  ;;
 
-		  14)
+		  6)
 			clear
 			send_stats "用户信息生成器"
 			echo "随机用户名"
@@ -20585,7 +20460,7 @@ EOF
 
 			  ;;
 
-		  15)
+		  7)
 			root_use
 			send_stats "换时区"
 			while true; do
@@ -20657,17 +20532,12 @@ EOF
 			done
 			  ;;
 
-		  16)
-
-			bbrv3
-			  ;;
-
-		  17)
+		  8)
 			  iptables_panel
 
 			  ;;
 
-		  18)
+		  9)
 		  root_use
 		  send_stats "修改主机名"
 
@@ -20711,7 +20581,7 @@ EOF
 		  done
 			  ;;
 
-		  19)
+		  10)
 		  root_use
 		  send_stats "换系统更新源"
 		  clear
@@ -20750,73 +20620,7 @@ EOF
 
 			  ;;
 
-		  20)
-		  send_stats "定时任务管理"
-			  while true; do
-				  clear
-				  check_crontab_installed
-				  clear
-				  echo "定时任务列表"
-				  crontab -l
-				  echo ""
-				  echo "操作"
-				  echo "------------------------"
-				  echo "1. 添加定时任务              2. 删除定时任务              3. 编辑定时任务"
-				  echo "------------------------"
-				  echo "0. 返回上一级选单"
-				  echo "------------------------"
-				  read -e -p "请输入你的选择: " sub_choice
-
-				  case $sub_choice in
-					  1)
-						  read -e -p "请输入新任务的执行命令: " newquest
-						  echo "------------------------"
-						  echo "1. 每月任务                 2. 每周任务"
-						  echo "3. 每天任务                 4. 每小时任务"
-						  echo "------------------------"
-						  read -e -p "请输入你的选择: " dingshi
-
-						  case $dingshi in
-							  1)
-								  read -e -p "选择每月的几号执行任务？ (1-30): " day
-								  (crontab -l ; echo "0 0 $day * * $newquest") | crontab - > /dev/null 2>&1
-								  ;;
-							  2)
-								  read -e -p "选择周几执行任务？ (0-6，0代表星期日): " weekday
-								  (crontab -l ; echo "0 0 * * $weekday $newquest") | crontab - > /dev/null 2>&1
-								  ;;
-							  3)
-								  read -e -p "选择每天几点执行任务？（小时，0-23）: " hour
-								  (crontab -l ; echo "0 $hour * * * $newquest") | crontab - > /dev/null 2>&1
-								  ;;
-							  4)
-								  read -e -p "输入每小时的第几分钟执行任务？（分钟，0-60）: " minute
-								  (crontab -l ; echo "$minute * * * * $newquest") | crontab - > /dev/null 2>&1
-								  ;;
-							  *)
-								  break  # 跳出
-								  ;;
-						  esac
-						  send_stats "添加定时任务"
-						  ;;
-					  2)
-						  read -e -p "请输入需要删除任务的关键字: " kquest
-						  crontab -l | grep -v "$kquest" | crontab -
-						  send_stats "删除定时任务"
-						  ;;
-					  3)
-						  crontab -e
-						  send_stats "编辑定时任务"
-						  ;;
-					  *)
-						  break  # 跳出循环，退出菜单
-						  ;;
-				  esac
-			  done
-
-			  ;;
-
-		  21)
+		  11)
 			  root_use
 			  send_stats "本地host解析"
 			  while true; do
@@ -20852,12 +20656,7 @@ EOF
 			  done
 			  ;;
 
-		  22)
-			fail2ban_panel
-			  ;;
-
-
-		  23)
+		  12)
 			root_use
 			send_stats "限流关机功能"
 			while true; do
@@ -20930,69 +20729,7 @@ EOF
 			  ;;
 
 
-		  24)
-			sshkey_panel
-			  ;;
-
-		  25)
-			  root_use
-			  send_stats "电报预警"
-			  echo "TG-bot监控预警功能"
-			  echo "视频介绍: https://youtu.be/vLL-eb3Z_TY"
-			  echo "------------------------------------------------"
-			  echo "您需要配置tg机器人API和接收预警的用户ID，即可实现本机CPU，内存，硬盘，流量，SSH登录的实时监控预警"
-			  echo "到达阈值后会向用户发预警消息"
-			  echo -e "${rw_hui}-关于流量，重启服务器将重新计算-${rw_bai}"
-			  read -e -p "确定继续吗？(Y/N): " choice
-
-			  case "$choice" in
-				[Yy])
-				  send_stats "电报预警启用"
-				  cd ~
-				  install nano tmux bc jq
-				  check_crontab_installed
-				  if [ -f ~/TG-check-notify.sh ]; then
-					  chmod +x ~/TG-check-notify.sh
-					  nano ~/TG-check-notify.sh
-				  else
-					  curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/TG-check-notify.sh
-					  chmod +x ~/TG-check-notify.sh
-					  nano ~/TG-check-notify.sh
-				  fi
-				  tmux kill-session -t TG-check-notify > /dev/null 2>&1
-				  tmux new -d -s TG-check-notify "~/TG-check-notify.sh"
-				  crontab -l | grep -v '~/TG-check-notify.sh' | crontab - > /dev/null 2>&1
-				  (crontab -l ; echo "@reboot tmux new -d -s TG-check-notify '~/TG-check-notify.sh'") | crontab - > /dev/null 2>&1
-
-				  curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/TG-SSH-check-notify.sh > /dev/null 2>&1
-				  sed -i "3i$(grep '^TELEGRAM_BOT_TOKEN=' ~/TG-check-notify.sh)" TG-SSH-check-notify.sh > /dev/null 2>&1
-				  sed -i "4i$(grep '^CHAT_ID=' ~/TG-check-notify.sh)" TG-SSH-check-notify.sh
-				  chmod +x ~/TG-SSH-check-notify.sh
-
-				  # 添加到 ~/.profile 文件中
-				  if ! grep -q 'bash ~/TG-SSH-check-notify.sh' ~/.profile > /dev/null 2>&1; then
-					  echo 'bash ~/TG-SSH-check-notify.sh' >> ~/.profile
-					  if command -v dnf &>/dev/null || command -v yum &>/dev/null; then
-						 echo 'source ~/.profile' >> ~/.bashrc
-					  fi
-				  fi
-
-				  source ~/.profile
-
-				  clear
-				  echo "TG-bot预警系统已启动"
-				  echo -e "${rw_hui}你还可以将root目录中的TG-check-notify.sh预警文件放到其他机器上直接使用！${rw_bai}"
-				  ;;
-				[Nn])
-				  echo "已取消"
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-			  ;;
-
-		  26)
+		  13)
 			  root_use
 			  send_stats "修复SSH高危漏洞"
 			  cd ~
@@ -21002,41 +20739,28 @@ EOF
 			  rm -f ~/upgrade_openssh9.8p1.sh
 			  ;;
 
-		  27)
+		  14)
 			  elrepo
 			  ;;
-		  28)
-			  Kernel_optimize
-			  ;;
 
-		  29)
+		  15)
 			  clamav
 			  ;;
 
-		  30)
-			  linux_file
-			  ;;
-
-		  31)
+		  16)
 			  linux_language
 			  ;;
 
-		  32)
+		  17)
 			  shell_bianse
 			  ;;
-		  33)
+		  18)
 			  linux_trash
 			  ;;
-		  34)
-			  linux_backup
-			  ;;
-		  35)
+		  19)
 			  ssh_manager
 			  ;;
-		  36)
-			  disk_manager
-			  ;;
-		  37)
+		  20)
 			  clear
 			  send_stats "命令行历史记录"
 			  get_history_file() {
@@ -21049,27 +20773,12 @@ EOF
 			  history_file=$(get_history_file) && cat -n "$history_file"
 			  ;;
 
-		  38)
-			  rsync_manager
-			  ;;
-
-
-		  39)
+		  21)
 			  clear
 			  linux_fav
 			  ;;
 
-		  40)
-			  clear
-			  net_menu
-			  ;;
-
-		  41)
-			  clear
-			  log_menu
-			  ;;
-
-		  42)
+		  22)
 			  clear
 			  env_menu
 			  ;;
@@ -22243,18 +21952,235 @@ done
 update_clean_menu() {
 while true; do
   clear
+  send_stats "日常维护"
   echo -e "${riwi001}"
   echo -e "${rw_huang}日常维护${rw_bai}"
   echo -e "${riwi001}------------------------${rw_bai}"
-  echo -e "${riwi001}1.   ${rw_bai}系统更新"
-  echo -e "${riwi001}2.   ${rw_bai}系统清理"
+  echo -e "${rw_huang}🔒安全加固（新机首选）${rw_bai}"
+  echo -e "${riwi001}1.   ${rw_bai}修改SSH端口"
+  echo -e "${riwi001}2.   ${rw_bai}禁用ROOT创建"
+  echo -e "${riwi001}3.   ${rw_bai}用户密钥登录"
+  echo -e "${riwi001}4.   ${rw_bai}SSH防御程序"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${rw_huang}⚙️ 性能优化${rw_bai}"
+  echo -e "${riwi001}5.   ${rw_bai}设置BBR3加速"
+  echo -e "${riwi001}6.   ${rw_bai}内核参数优化"
+  echo -e "${riwi001}7.   ${rw_bai}修改虚拟内存大小"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${rw_huang}📊监控排查${rw_bai}"
+  echo -e "${riwi001}8.   ${rw_bai}查看端口"
+  echo -e "${riwi001}9.   ${rw_bai}网卡管理"
+  echo -e "${riwi001}10.  ${rw_bai}系统日志"
+  echo -e "${riwi001}11.  ${rw_bai}TG-bot预警"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${rw_huang}🛠️ 数据管理${rw_bai}"
+  echo -e "${riwi001}12.  ${rw_bai}文件管理器"
+  echo -e "${riwi001}13.  ${rw_bai}rsync同步"
+  echo -e "${riwi001}14.  ${rw_bai}备份与恢复"
+  echo -e "${riwi001}15.  ${rw_bai}定时任务管理"
+  echo -e "${riwi001}------------------------${rw_bai}"
+  echo -e "${rw_huang}🔄基础系统维护${rw_bai}"
+  echo -e "${riwi001}16.  ${rw_bai}硬盘分区"
+  echo -e "${riwi001}17.  ${rw_bai}系统更新"
+  echo -e "${riwi001}18.  ${rw_bai}系统清理"
   echo -e "${riwi001}------------------------${rw_bai}"
   echo -e "${riwi001}0.   ${rw_bai}返回主菜单"
   echo -e "${riwi001}------------------------${rw_bai}"
   read -e -p "请输入你的选择: " choice
   case $choice in
-    1) clear ; send_stats "系统更新" ; linux_update ;;
-    2) clear ; send_stats "系统清理" ; linux_clean ;;
+    1)
+      root_use
+      send_stats "修改SSH端口"
+      while true; do
+        clear
+        sed -i 's/^\s*#\?\s*Port/Port/' /etc/ssh/sshd_config
+        local current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
+        echo -e "当前的 SSH 端口号是:  ${rw_huang}$current_port ${rw_bai}"
+        echo "------------------------"
+        echo "端口号范围1到65535之间的数字。（输入0退出）"
+        read -e -p "请输入新的 SSH 端口号: " new_port
+        if [[ $new_port =~ ^[0-9]+$ ]]; then
+          if [[ $new_port -ge 1 && $new_port -le 65535 ]]; then
+            send_stats "SSH端口已修改"
+            new_ssh_port $new_port
+          elif [[ $new_port -eq 0 ]]; then
+            send_stats "退出SSH端口修改"
+            break
+          else
+            echo "端口号无效，请输入1到65535之间的数字。"
+            send_stats "输入无效SSH端口"
+            break_end
+          fi
+        else
+          echo "输入无效，请输入数字。"
+          send_stats "输入无效SSH端口"
+          break_end
+        fi
+      done
+      ;;
+    2)
+      root_use
+      send_stats "新用户禁用root"
+      read -e -p "请输入新用户名（输入0退出）: " new_username
+      if [ "$new_username" == "0" ]; then
+        break_end
+        update_clean_menu
+      fi
+      create_user_with_sshkey $new_username true
+      ssh-keygen -l -f /home/$new_username/.ssh/authorized_keys &>/dev/null && {
+        passwd -l root &>/dev/null
+        sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+      }
+      ;;
+    3)
+      sshkey_panel
+      ;;
+    4)
+      fail2ban_panel
+      ;;
+    5)
+      bbrv3
+      ;;
+    6)
+      Kernel_optimize
+      ;;
+    7)
+      root_use
+      send_stats "设置虚拟内存"
+      while true; do
+        clear
+        echo "设置虚拟内存"
+        local swap_used=$(free -m | awk 'NR==3{print $3}')
+        local swap_total=$(free -m | awk 'NR==3{print $2}')
+        local swap_info=$(free -m | awk 'NR==3{used=$3; total=$2; if (total == 0) {percentage=0} else {percentage=used*100/total}; printf "%dM/%dM (%d%%)", used, total, percentage}')
+        echo -e "当前虚拟内存: ${rw_huang}$swap_info${rw_bai}"
+        echo "------------------------"
+        echo "1. 分配1024M         2. 分配2048M         3. 分配4096M         4. 自定义大小"
+        echo "------------------------"
+        echo "0. 返回上一级选单"
+        echo "------------------------"
+        read -e -p "请输入你的选择: " vm_choice
+        case "$vm_choice" in
+          1) send_stats "已设置1G虚拟内存" ; add_swap 1024 ;;
+          2) send_stats "已设置2G虚拟内存" ; add_swap 2048 ;;
+          3) send_stats "已设置4G虚拟内存" ; add_swap 4096 ;;
+          4) read -e -p "请输入虚拟内存大小（单位M）: " new_swap ; add_swap "$new_swap" ; send_stats "已设置自定义虚拟内存" ;;
+          *) break ;;
+        esac
+      done
+      ;;
+    8)
+      clear
+      ss -tulnape
+      ;;
+    9)
+      clear
+      net_menu
+      ;;
+    10)
+      clear
+      log_menu
+      ;;
+    11)
+      root_use
+      send_stats "电报预警"
+      echo "TG-bot监控预警功能"
+      echo "视频介绍: https://youtu.be/vLL-eb3Z_TY"
+      echo "------------------------------------------------"
+      echo "您需要配置tg机器人API和接收预警的用户ID，即可实现本机CPU，内存，硬盘，流量，SSH登录的实时监控预警"
+      echo "到达阈值后会向用户发预警消息"
+      echo -e "${rw_hui}-关于流量，重启服务器将重新计算-${rw_bai}"
+      read -e -p "确定继续吗？(Y/N): " tg_choice
+      case "$tg_choice" in
+        [Yy])
+          send_stats "电报预警启用"
+          cd ~
+          install nano tmux bc jq
+          check_crontab_installed
+          if [ -f ~/TG-check-notify.sh ]; then
+            chmod +x ~/TG-check-notify.sh
+            nano ~/TG-check-notify.sh
+          else
+            curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/TG-check-notify.sh
+            chmod +x ~/TG-check-notify.sh
+            nano ~/TG-check-notify.sh
+          fi
+          tmux kill-session -t TG-check-notify > /dev/null 2>&1
+          tmux new -d -s TG-check-notify "~/TG-check-notify.sh"
+          crontab -l | grep -v '~/TG-check-notify.sh' | crontab - > /dev/null 2>&1
+          (crontab -l ; echo "@reboot tmux new -d -s TG-check-notify '~/TG-check-notify.sh'") | crontab - > /dev/null 2>&1
+          curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/TG-SSH-check-notify.sh > /dev/null 2>&1
+          sed -i "3i$(grep '^TELEGRAM_BOT_TOKEN=' ~/TG-check-notify.sh)" TG-SSH-check-notify.sh > /dev/null 2>&1
+          sed -i "4i$(grep '^CHAT_ID=' ~/TG-check-notify.sh)" TG-SSH-check-notify.sh
+          chmod +x ~/TG-SSH-check-notify.sh
+          if ! grep -q 'bash ~/TG-SSH-check-notify.sh' ~/.profile > /dev/null 2>&1; then
+            echo 'bash ~/TG-SSH-check-notify.sh' >> ~/.profile
+            if command -v dnf &>/dev/null || command -v yum &>/dev/null; then
+              echo 'source ~/.profile' >> ~/.bashrc
+            fi
+          fi
+          source ~/.profile
+          clear
+          echo "TG-bot预警系统已启动"
+          echo -e "${rw_hui}你还可以将root目录中的TG-check-notify.sh预警文件放到其他机器上直接使用！${rw_bai}"
+          ;;
+        [Nn]) echo "已取消" ;;
+        *) echo "无效的选择，请输入 Y 或 N。" ;;
+      esac
+      ;;
+    12)
+      linux_file
+      ;;
+    13)
+      rsync_manager
+      ;;
+    14)
+      linux_backup
+      ;;
+    15)
+      send_stats "定时任务管理"
+      while true; do
+        clear
+        check_crontab_installed
+        clear
+        echo "定时任务列表"
+        crontab -l
+        echo ""
+        echo "操作"
+        echo "------------------------"
+        echo "1. 添加定时任务              2. 删除定时任务              3. 编辑定时任务"
+        echo "------------------------"
+        echo "0. 返回上一级选单"
+        echo "------------------------"
+        read -e -p "请输入你的选择: " cron_sub_choice
+        case $cron_sub_choice in
+          1)
+            read -e -p "请输入新任务的执行命令: " newquest
+            echo "------------------------"
+            echo "1. 每月任务                 2. 每周任务"
+            echo "3. 每天任务                 4. 每小时任务"
+            echo "------------------------"
+            read -e -p "请输入你的选择: " dingshi
+            case $dingshi in
+              1) read -e -p "选择每月的几号执行任务？ (1-30): " day ; (crontab -l ; echo "0 0 $day * * $newquest") | crontab - > /dev/null 2>&1 ;;
+              2) read -e -p "选择周几执行任务？ (0-6，0代表星期日): " weekday ; (crontab -l ; echo "0 0 * * $weekday $newquest") | crontab - > /dev/null 2>&1 ;;
+              3) read -e -p "选择每天几点执行任务？（小时，0-23）: " hour ; (crontab -l ; echo "0 $hour * * * $newquest") | crontab - > /dev/null 2>&1 ;;
+              4) read -e -p "输入每小时的第几分钟执行任务？（分钟，0-60）: " minute ; (crontab -l ; echo "$minute * * * * $newquest") | crontab - > /dev/null 2>&1 ;;
+              *) break ;;
+            esac
+            send_stats "添加定时任务"
+            ;;
+          2) read -e -p "请输入需要删除任务的关键字: " kquest ; crontab -l | grep -v "$kquest" | crontab - ; send_stats "删除定时任务" ;;
+          3) crontab -e ; send_stats "编辑定时任务" ;;
+          *) break ;;
+        esac
+      done
+      ;;
+    16)
+      disk_manager
+      ;;
+    17) clear ; send_stats "系统更新" ; linux_update ;;
+    18) clear ; send_stats "系统清理" ; linux_clean ;;
     0) break ;;
     *) echo "无效的输入!" ;;
   esac
