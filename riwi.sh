@@ -8804,9 +8804,11 @@ linux_docker() {
 	  echo -e "${riwi001}------------------------"
 	  echo -e "${riwi001}8.   ${rw_bai}更换Docker源"
 	  echo -e "${riwi001}9.   ${rw_bai}编辑daemon.json文件"
+	  echo -e "${riwi001}10.  ${rw_bai}关闭Docker服务"
 	  echo -e "${riwi001}------------------------"
 	  echo -e "${riwi001}11.  ${rw_bai}开启Docker-ipv6访问"
 	  echo -e "${riwi001}12.  ${rw_bai}关闭Docker-ipv6访问"
+	  echo -e "${riwi001}13.  ${rw_bai}重启Docker服务"
 	  echo -e "${riwi001}------------------------"
 	  echo -e "${riwi001}19.  ${rw_bai}备份/迁移/还原Docker环境"
 	  echo -e "${riwi001}20.  ${rw_bai}卸载Docker环境"
@@ -9015,7 +9017,12 @@ linux_docker() {
 			  mkdir -p /etc/docker && nano /etc/docker/daemon.json
 			  restart docker
 			  ;;
-
+		  10)
+			  clear
+			  send_stats "关闭Docker服务"
+			  echo -e "${rw_huang}正在关闭Docker服务...${rw_bai}"
+			  systemctl stop docker 2>/dev/null || service docker stop 2>/dev/null || echo "关闭Docker服务失败，请检查Docker是否已安装"
+			  ;;
 
 
 
@@ -9029,6 +9036,12 @@ linux_docker() {
 			  clear
 			  send_stats "Docker v6 关"
 			  docker_ipv6_off
+			  ;;
+		  13)
+		  clear
+		  send_stats "重启Docker服务"
+		  echo -e "${rw_huang}正在重启Docker服务...${rw_bai}"
+		  systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || echo "重启Docker服务失败，请检查Docker是否已安装"
 			  ;;
 
 		  19)
@@ -22209,6 +22222,7 @@ echo -e "${riwi001}10.  ${rw_bai}系统工具"
 echo -e "${riwi001}11.  ${rw_bai}服务器集群控制"
 echo -e "${riwi001}12.  ${rw_bai}安全优化"
 echo -e "${riwi001}13.  ${rw_bai}热门专栏"
+echo -e "${riwi001}14.  ${rw_bai}ngxing管理器"
 
 echo -e "${riwi001}------------------------${rw_bai}"
 echo -e "${riwi001}0.   ${rw_bai}退出脚本"
@@ -22229,9 +22243,84 @@ case $choice in
   11) linux_cluster ;;
   12) linux_security ;;
   13) riwi_Affiliates ;;
+ 14) ngxing_manager ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
+	break_end
+done
+}
+
+# ================================================================
+# ngxing管理器函数
+# ================================================================
+# 功能: 提供Nginx服务管理功能
+# 包含: 状态查看、启动/停止/重启、配置管理、日志查看等
+# ================================================================
+
+ngxing_manager() {
+while true; do
+	clear
+	echo -e "${riwi001}╔════════════════════════════════════════╗${rw_bai}"
+	echo -e "${riwi001}║            ngxing管理器                ║${rw_bai}"
+	echo -e "${riwi001}╚════════════════════════════════════════╝${rw_bai}"
+	echo ""
+	echo -e "${riwi001}1.   ${rw_bai}查看Nginx状态"
+	echo -e "${riwi001}2.   ${rw_bai}启动Nginx"
+	echo -e "${riwi001}3.   ${rw_bai}停止Nginx"
+	echo -e "${riwi001}4.   ${rw_bai}重启Nginx"
+	echo -e "${riwi001}5.   ${rw_bai}查看Nginx配置"
+	echo -e "${riwi001}6.   ${rw_bai}测试Nginx配置"
+	echo -e "${riwi001}7.   ${rw_bai}查看Nginx日志"
+	echo -e "${riwi001}8.   ${rw_bai}重载Nginx配置"
+	echo -e "${riwi001}------------------------${rw_bai}"
+	echo -e "${riwi001}0.   ${rw_bai}返回主菜单"
+	echo -e "${riwi001}------------------------${rw_bai}"
+	read -e -p "请输入你的选择: " ngx_choice
+
+	case $ngx_choice in
+	  1) 
+		echo -e "${rw_huang}Nginx服务状态:${rw_bai}"
+		systemctl status nginx 2>/dev/null || service nginx status 2>/dev/null || echo "Nginx未安装或无法查看状态"
+		;;
+	  2) 
+		echo -e "${rw_huang}正在启动Nginx...${rw_bai}"
+		systemctl start nginx 2>/dev/null || service nginx start 2>/dev/null || echo "启动失败，请检查Nginx是否已安装"
+		;;
+	  3) 
+		echo -e "${rw_huang}正在停止Nginx...${rw_bai}"
+		systemctl stop nginx 2>/dev/null || service nginx stop 2>/dev/null || echo "停止失败"
+		;;
+	  4) 
+		echo -e "${rw_huang}正在重启Nginx...${rw_bai}"
+		systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || echo "重启失败"
+		;;
+	  5) 
+		echo -e "${rw_huang}Nginx配置文件:${rw_bai}"
+		nginx -V 2>&1 | grep "configure arguments" || echo "无法获取Nginx配置"
+		echo ""
+		echo -e "${rw_huang}配置文件通常位于:${rw_bai}"
+		echo "/etc/nginx/nginx.conf"
+		echo "/etc/nginx/conf.d/"
+		;;
+	  6) 
+		echo -e "${rw_huang}测试Nginx配置文件...${rw_bai}"
+		nginx -t 2>&1
+		;;
+	  7) 
+		echo -e "${rw_huang}Nginx访问日志:${rw_bai}"
+		tail -n 50 /var/log/nginx/access.log 2>/dev/null || echo "无法读取访问日志"
+		echo ""
+		echo -e "${rw_huang}Nginx错误日志:${rw_bai}"
+		tail -n 50 /var/log/nginx/error.log 2>/dev/null || echo "无法读取错误日志"
+		;;
+	  8) 
+		echo -e "${rw_huang}正在重载Nginx配置...${rw_bai}"
+		nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || echo "重载失败"
+		;;
+	  0) return ;;
+	  *) echo "无效的输入!" ;;
+	esac
 	break_end
 done
 }
