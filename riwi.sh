@@ -21823,40 +21823,72 @@ update_clean_menu() {
 while true; do
   clear
   send_stats "日常维护"
-  echo -e "${rw_huang}"
-  echo -e "${rw_huang}日常维护${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}安全加固（新机首选）${rw_bai}"
-  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}修改SSH端口${rw_bai}"
-  echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}禁用ROOT创建${rw_bai}"
-  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}用户密钥登录${rw_bai}"
-  echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}SSH防御程序${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}性能优化${rw_bai}"
-  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}设置BBR3加速${rw_bai}"
-  echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}内核参数优化${rw_bai}"
-  echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}修改虚拟内存大小${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}监控排查${rw_bai}"
-  echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}查看端口${rw_bai}"
-  echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}网卡管理${rw_bai}"
-  echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}系统日志${rw_bai}"
-  echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}TG-bot预警${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}数据管理${rw_bai}"
-  echo -e "${rw_huang}12.  ${rw_bai}${rw_lv}文件管理器${rw_bai}"
-  echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}rsync同步${rw_bai}"
-  echo -e "${rw_huang}14.  ${rw_bai}${rw_lv}备份与恢复${rw_bai}"
-  echo -e "${rw_huang}15.  ${rw_bai}${rw_lv}定时任务管理${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}基础系统维护${rw_bai}"
-  echo -e "${rw_huang}16.  ${rw_bai}${rw_lv}硬盘分区${rw_bai}"
-  echo -e "${rw_huang}17.  ${rw_bai}${rw_lv}系统更新${rw_bai}"
-  echo -e "${rw_huang}18.  ${rw_bai}${rw_lv}系统清理${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  read -e -p "请输入你的选择: " choice
+
+    # ── 状态探测 ──
+    local _ssh_port="22"
+    local _bbr_stat="${rw_hong}未开启${rw_bai}"
+    local _swap_size="0"
+    local _f2b_stat="${rw_hong}未安装${rw_bai}"
+    local _root_login="${rw_lv}允许${rw_bai}"
+
+    # SSH 端口
+    _ssh_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
+    _ssh_port=${_ssh_port:-22}
+
+    # BBR 状态
+    if grep -q "bbr" /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null; then
+      _bbr_stat="${rw_lv}已开启${rw_bai}"
+    fi
+
+    # 虚拟内存
+    _swap_size=$(free -m 2>/dev/null | grep Swap | awk '{print $2}')
+    if [ "$_swap_size" = "0" ] || [ -z "$_swap_size" ]; then
+      _swap_size="${rw_hong}未设置${rw_bai}"
+    else
+      _swap_size="${rw_lv}${_swap_size}MB${rw_bai}"
+    fi
+
+    # fail2ban 状态
+    if systemctl is-active fail2ban &>/dev/null; then
+      _f2b_stat="${rw_lv}运行中${rw_bai}"
+    elif command -v fail2ban-client &>/dev/null; then
+      _f2b_stat="${rw_huang}已安装未运行${rw_bai}"
+    fi
+
+    # Root 登录状态
+    if grep -q "^PermitRootLogin no" /etc/ssh/sshd_config 2>/dev/null; then
+      _root_login="${rw_huang}已禁用${rw_bai}"
+    fi
+
+    echo -e "${rw_cheng}━━━━━━━━━━━━  日常维护  ━━━━━━━━━━━━${rw_bai}"
+    echo -e " SSH端口 ${rw_lv}${_ssh_port}${rw_bai}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}  fail2ban ${_f2b_stat}"
+    echo -e " Root登录 ${_root_login}"
+    echo ""
+    echo -e " ${rw_cheng}──── 安全加固${rw_bai}"
+    echo -e "  ${rw_huang}1${rw_bai} 修改SSH端口           ${rw_huang}2${rw_bai} 禁用ROOT创建"
+    echo -e "  ${rw_huang}3${rw_bai} 用户密钥登录          ${rw_huang}4${rw_bai} SSH防御程序"
+    echo ""
+    echo -e " ${rw_cheng}──── 性能优化${rw_bai}"
+    echo -e "  ${rw_huang}5${rw_bai} 设置BBR3加速          ${rw_huang}6${rw_bai} 内核参数优化"
+    echo -e "  ${rw_huang}7${rw_bai} 修改虚拟内存大小"
+    echo ""
+    echo -e " ${rw_cheng}──── 监控排查${rw_bai}"
+    echo -e "  ${rw_huang}8${rw_bai} 查看端口              ${rw_huang}9${rw_bai} 网卡管理"
+    echo -e " ${rw_huang}10${rw_bai} 系统日志             ${rw_huang}11${rw_bai} TG-bot预警"
+    echo ""
+    echo -e " ${rw_cheng}──── 数据管理${rw_bai}"
+    echo -e " ${rw_huang}12${rw_bai} 文件管理器           ${rw_huang}13${rw_bai} rsync同步"
+    echo -e " ${rw_huang}14${rw_bai} 备份与恢复           ${rw_huang}15${rw_bai} 定时任务管理"
+    echo ""
+    echo -e " ${rw_cheng}──── 系统维护${rw_bai}"
+    echo -e " ${rw_huang}16${rw_bai} 硬盘分区             ${rw_huang}17${rw_bai} 系统更新"
+    echo -e " ${rw_huang}18${rw_bai} 系统清理"
+    echo ""
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    read -e -p " 请选择: " choice
+
   case $choice in
     1)
       root_use
