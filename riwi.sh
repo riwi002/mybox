@@ -7,7 +7,7 @@
 # ================================================================
 # 
 # 【功能说明】
-# - Docker 容器管理（安装、部署、应用市场）
+# - Docker 全管理（容器/镜像/Compose/备份/迁移/安装/升级/Shell/监控）
 # - LNMP 建站环境（Nginx + PHP + MySQL + Redis）
 # - 系统工具（系统更新、清理、信息查看）
 # - 网络工具（端口管理、防火墙、DDOS 防护）
@@ -2472,25 +2472,20 @@ web_security() {
 		check_waf_status
 		check_cf_mode
 			  clear
-			  echo -e "服务器网站防御程序 ${check_f2b_status}${rw_lv}${CFmessage}${waf_status}${rw_bai}"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "1. 安装防御程序"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "5. 查看SSH拦截记录                6. 查看网站拦截记录"
-			  echo "7. 查看防御规则列表               8. 查看日志实时监控"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "11. 配置拦截参数                  12. 清除所有拉黑的IP"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "21. cloudflare模式                22. 高负载开启5秒盾"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "31. 开启WAF                       32. 关闭WAF"
-			  echo "33. 开启DDOS防御                  34. 关闭DDOS防御"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "9. 卸载防御程序"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "0. 返回上一级选单"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  read -e -p "请输入你的选择: " sub_choice
+			  echo -e "${rw_cheng}━━━━━━━━━━━━  安全防御  ━━━━━━━━━━━━${rw_bai}"
+			  echo -e " ${check_f2b_status}${rw_lv}${CFmessage}${waf_status}${rw_bai}"
+			  echo -e " ${rw_lan}──── 防御 ──────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}1${rw_bai} 安装防御   ${rw_huang}9${rw_bai} 卸载防御"
+			  echo -e " ${rw_lan}──── 拦截 ──────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}5${rw_bai} SSH拦截   ${rw_huang}6${rw_bai} 网站拦截   ${rw_huang}7${rw_bai} 规则列表   ${rw_huang}8${rw_bai} 实时监控"
+			  echo -e " ${rw_huang}11${rw_bai} 配置参数  ${rw_huang}12${rw_bai} 清除IP"
+			  echo -e " ${rw_lan}──── CF/WAF ──────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}21${rw_bai} Cloudflare模式  ${rw_huang}22${rw_bai} 5秒盾"
+			  echo -e " ${rw_huang}31${rw_bai} 开启WAF   ${rw_huang}32${rw_bai} 关闭WAF   ${rw_huang}33${rw_bai} DDOS防御   ${rw_huang}34${rw_bai} 关闭DDOS"
+			  echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}0${rw_bai} 返回"
+			  echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+			  read -e -p " 请选择: " sub_choice
 			  case $sub_choice in
 				  1)
 					  f2b_install_sshd
@@ -2710,17 +2705,17 @@ web_optimization() {
 			  check_nginx_compression
 			  clear
 			  send_stats "优化LDNMP环境"
-			  echo -e "优化LDNMP环境${rw_lv}${mode_info}${gzip_status}${br_status}${zstd_status}${rw_bai}"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "1. 标准模式              2. 高性能模式 (推荐2H4G以上)"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "3. 开启gzip压缩          4. 关闭gzip压缩"
-			  echo "5. 开启br压缩            6. 关闭br压缩"
-			  echo "7. 开启zstd压缩          8. 关闭zstd压缩"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "0. 返回上一级选单"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  read -e -p "请输入你的选择: " sub_choice
+			  echo -e "${rw_cheng}━━━━━━━━━━━━  压缩与性能  ━━━━━━━━━━━━${rw_bai}"
+			  echo -e " 模式${rw_lv}${mode_info}${rw_bai}  ${rw_lv}${gzip_status}${br_status}${zstd_status}${rw_bai}"
+			  echo -e " ${rw_lan}──── 模式 ──────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}1${rw_bai} 标准模式   ${rw_huang}2${rw_bai} 高性能模式 (2H4G+)"
+			  echo -e " ${rw_lan}──── 压缩 ──────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}3${rw_bai} 开启gzip   ${rw_huang}4${rw_bai} 关闭gzip   ${rw_huang}5${rw_bai} 开启br   ${rw_huang}6${rw_bai} 关闭br"
+			  echo -e " ${rw_huang}7${rw_bai} 开启zstd   ${rw_huang}8${rw_bai} 关闭zstd"
+			  echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+			  echo -e " ${rw_huang}0${rw_bai} 返回"
+			  echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+			  read -e -p " 请选择: " sub_choice
 			  case $sub_choice in
 				  1)
 				  send_stats "站点标准模式"
@@ -4010,21 +4005,20 @@ stream_panel() {
 		clear
 		check_docker_app
 		check_docker_image_update $docker_name
-		echo -e "Stream四层代理转发工具 $check_docker $update_status"
-		echo "NGINX Stream 是 NGINX 的 TCP/UDP 代理模块，用于实现高性能的 传输层流量转发和负载均衡。"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}━━━━━━━━━━━━  Stream 四层代理  ━━━━━━━━━━━━${rw_bai}"
+		echo -e " $check_docker $update_status"
+		echo -e " ${rw_huang}TCP/UDP 传输层流量转发与负载均衡${rw_bai}"
 		if [ -d "/home/web/stream.d" ]; then
+			echo -e " ${rw_lan}──── 已配置服务 ────────────────────${rw_bai}"
 			list_stream_services
 		fi
-		echo ""
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "1. 安装               2. 更新               3. 卸载"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "4. 添加转发服务       5. 修改转发服务       6. 删除转发服务"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		read -e -p "输入你的选择: " choice
+		echo -e " ${rw_lan}──── 操作 ──────────────────────────${rw_bai}"
+		echo -e " ${rw_huang}1${rw_bai} 安装   ${rw_huang}2${rw_bai} 更新   ${rw_huang}3${rw_bai} 卸载"
+		echo -e " ${rw_huang}4${rw_bai} 添加转发   ${rw_huang}5${rw_bai} 修改转发   ${rw_huang}6${rw_bai} 删除转发"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_huang}0${rw_bai} 返回"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		read -e -p " 请选择: " choice
 		case $choice in
 			1)
 				nginx_install_status
@@ -4038,18 +4032,16 @@ stream_panel() {
 				send_stats "更新Stream四层代理"
 				;;
 			3)
-				read -e -p "确定要删除 nginx 容器吗？这可能会影响网站功能！(y/N): " confirm
+				read -e -p " 确定删除 nginx 容器？可能影响网站 (y/N): " confirm
 				if [[ "$confirm" =~ ^[Yy]$ ]]; then
 					docker rm -f nginx
 					sed -i "/\b${app_id}\b/d" /home/docker/appno.txt
 					send_stats "更新Stream四层代理"
-					echo "nginx 容器已删除。"
+					echo -e "${rw_lv}nginx 容器已删除${rw_bai}"
 				else
-					echo "操作已取消。"
+					echo "操作已取消"
 				fi
-
 				;;
-
 			4)
 				ldnmp_Proxy_backend_stream
 				add_app_id
@@ -4057,7 +4049,7 @@ stream_panel() {
 				;;
 			5)
 				send_stats "编辑转发配置"
-				read -e -p "请输入你要编辑的服务名: " stream_name
+				read -e -p " 输入服务名: " stream_name
 				install nano
 				nano /home/web/stream.d/$stream_name.conf
 				docker restart nginx
@@ -4065,14 +4057,13 @@ stream_panel() {
 				;;
 			6)
 				send_stats "删除转发配置"
-				read -e -p "请输入你要删除的服务名: " stream_name
+				read -e -p " 输入服务名: " stream_name
 				rm /home/web/stream.d/$stream_name.conf > /dev/null 2>&1
 				docker restart nginx
 				send_stats "删除四层代理"
 				;;
-			*)
-				break
-				;;
+			0) return ;;
+			*) echo -e "${rw_hong}无效选择${rw_bai}" ;;
 		esac
 		break_end
 	done
@@ -4172,18 +4163,17 @@ ldnmp_web_status() {
 
 		clear
 		send_stats "LDNMP站点管理"
-		echo "LDNMP环境"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}━━━━━━━━━━━━  站点管理  ━━━━━━━━━━━━${rw_bai}"
 		ldnmp_v
 
-		echo -e "站点: ${output}                      证书到期时间"
-		echo -e "------------------------"
+		echo -e " 站点 ${output}    证书到期时间"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
 		for cert_file in /home/web/certs/*_cert.pem; do
 		  local domain=$(basename "$cert_file" | sed 's/_cert.pem//')
 		  if [ -n "$domain" ]; then
 			local expire_date=$(openssl x509 -noout -enddate -in "$cert_file" | awk -F'=' '{print $2}')
 			local formatted_date=$(date -d "$expire_date" '+%Y-%m-%d')
-			printf "%-30s%s\n" "$domain" "$formatted_date"
+			printf " %-35s%s\n" "$domain" "$formatted_date"
 		  fi
 		done
 
@@ -4206,33 +4196,22 @@ ldnmp_web_status() {
 		  fi
 		done
 
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo ""
-		echo -e "数据库: ${db_output}"
-		echo -e "------------------------"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e " 数据库 ${db_output}"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
 		local dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
 		docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2> /dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys"
 
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo ""
-		echo "站点目录"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo -e "数据 ${rw_lv}/home/web/html${rw_bai}     证书 ${rw_lv}/home/web/certs${rw_bai}     配置 ${rw_lv}/home/web/conf.d${rw_bai}"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo ""
-		echo "操作"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "1.  申请/更新域名证书               2.  克隆站点域名"
-		echo "3.  清理站点缓存                    4.  创建关联站点"
-		echo "5.  查看访问日志                    6.  查看错误日志"
-		echo "7.  编辑全局配置                    8.  编辑站点配置"
-		echo "9.  管理站点数据库                  10. 查看站点分析报告"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "20. 删除指定站点数据"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		read -e -p "请输入你的选择: " sub_choice
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e " 数据 ${rw_lv}/home/web/html${rw_bai}   证书 ${rw_lv}/home/web/certs${rw_bai}   配置 ${rw_lv}/home/web/conf.d${rw_bai}"
+		echo -e " ${rw_lan}──── 操作 ──────────────────────────${rw_bai}"
+		echo -e " ${rw_huang}1${rw_bai} 申请/更新证书   ${rw_huang}2${rw_bai} 克隆站点   ${rw_huang}3${rw_bai} 清理缓存   ${rw_huang}4${rw_bai} 关联站点"
+		echo -e " ${rw_huang}5${rw_bai} 访问日志   ${rw_huang}6${rw_bai} 错误日志   ${rw_huang}7${rw_bai} 全局配置   ${rw_huang}8${rw_bai} 站点配置"
+		echo -e " ${rw_huang}9${rw_bai} 站点数据库   ${rw_huang}10${rw_bai} 分析报告   ${rw_huang}20${rw_bai} 删除站点"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_huang}0${rw_bai} 返回"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		read -e -p " 请选择: " sub_choice
 		case $sub_choice in
 			1)
 				send_stats "申请域名证书"
@@ -8786,467 +8765,6 @@ docker_ssh_migration() {
 
 
 
-linux_docker() {
-
-	while true; do
-	  clear
-	  send_stats "Docker管理"
-	  echo -e "${rw_huang}Docker管理${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}功能说明:${rw_bai}"
-	  echo -e "${rw_huang}  Docker容器化环境的完整管理功能，包括:${rw_bai}"
-	  echo -e "${rw_huang}  • 安装/更新Docker环境${rw_bai}"
-	  echo -e "${rw_huang}  • 查看Docker全局状态${rw_bai}"
-	  echo -e "${rw_huang}  • 管理容器、镜像、网络、卷${rw_bai}"
-	  echo -e "${rw_huang}  • 清理无用的Docker资源${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}提示: 选择对应的数字即可进行相应操作${rw_bai}"
-	  echo ""
-	  docker_tato
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}安装更新Docker环境 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}查看Docker全局状态 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}Docker容器管理 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}Docker镜像管理${rw_bai}"
-	  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}Docker网络管理${rw_bai}"
-	  echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}Docker卷管理${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}清理无用的docker容器和镜像网络数据卷${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}更换Docker源${rw_bai}"
-	  echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}编辑daemon.json文件${rw_bai}"
-	  echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}关闭Docker服务${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}开启Docker-ipv6访问${rw_bai}"
-	  echo -e "${rw_huang}12.  ${rw_bai}${rw_lv}关闭Docker-ipv6访问${rw_bai}"
-	  echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}重启Docker服务${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}19.  ${rw_bai}${rw_lv}备份/迁移/还原Docker环境${rw_bai}"
-	  echo -e "${rw_huang}20.  ${rw_bai}${rw_lv}卸载Docker环境${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  read -e -p "请输入你的选择: " sub_choice
-
-	  case $sub_choice in
-		  1)
-			clear
-			send_stats "安装docker环境"
-			install_add_docker
-
-			  ;;
-		  2)
-			  clear
-			  local container_count=$(docker ps -a -q 2>/dev/null | wc -l)
-			  local image_count=$(docker images -q 2>/dev/null | wc -l)
-			  local network_count=$(docker network ls -q 2>/dev/null | wc -l)
-			  local volume_count=$(docker volume ls -q 2>/dev/null | wc -l)
-
-			  send_stats "docker全局状态"
-			  echo "Docker版本"
-			  docker -v
-			  docker compose version
-
-			  echo ""
-			  echo -e "Docker镜像: ${rw_lv}$image_count${rw_bai} "
-			  docker image ls
-			  echo ""
-			  echo -e "Docker容器: ${rw_lv}$container_count${rw_bai}"
-			  docker ps -a
-			  echo ""
-			  echo -e "Docker卷: ${rw_lv}$volume_count${rw_bai}"
-			  docker volume ls
-			  echo ""
-			  echo -e "Docker网络: ${rw_lv}$network_count${rw_bai}"
-			  docker network ls
-			  echo ""
-
-			  ;;
-		  3)
-			  docker_ps
-			  ;;
-		  4)
-			  docker_image
-			  ;;
-
-		  5)
-			  while true; do
-				  clear
-				  send_stats "Docker网络管理"
-				  echo "Docker网络列表"
-				  echo -e "${rw_cheng}------------------------------------------------------------${rw_bai}"
-				  docker network ls
-				  echo ""
-
-				  echo -e "${rw_cheng}------------------------------------------------------------${rw_bai}"
-				  container_ids=$(docker ps -q)
-				  printf "%-25s %-25s %-25s\n" "容器名称" "网络名称" "IP地址"
-
-				  for container_id in $container_ids; do
-					  local container_info=$(docker inspect --format '{{ .Name }}{{ range $network, $config := .NetworkSettings.Networks }} {{ $network }} {{ $config.IPAddress }}{{ end }}' "$container_id")
-
-					  local container_name=$(echo "$container_info" | awk '{print $1}')
-					  local network_info=$(echo "$container_info" | cut -d' ' -f2-)
-
-					  while IFS= read -r line; do
-						  local network_name=$(echo "$line" | awk '{print $1}')
-						  local ip_address=$(echo "$line" | awk '{print $2}')
-
-						  printf "%-20s %-20s %-15s\n" "$container_name" "$network_name" "$ip_address"
-					  done <<< "$network_info"
-				  done
-
-				  echo ""
-				  echo "网络操作"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  echo "1. 创建网络"
-				  echo "2. 加入网络"
-				  echo "3. 退出网络"
-				  echo "4. 删除网络"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  read -e -p "请输入你的选择: " sub_choice
-
-				  case $sub_choice in
-					  1)
-						  send_stats "创建网络"
-						  read -e -p "设置新网络名: " dockernetwork
-						  docker network create $dockernetwork
-						  ;;
-					  2)
-						  send_stats "加入网络"
-						  read -e -p "加入网络名: " dockernetwork
-						  read -e -p "那些容器加入该网络（多个容器名请用空格分隔）: " dockernames
-
-						  for dockername in $dockernames; do
-							  docker network connect $dockernetwork $dockername
-						  done
-						  ;;
-					  3)
-						  send_stats "加入网络"
-						  read -e -p "退出网络名: " dockernetwork
-						  read -e -p "那些容器退出该网络（多个容器名请用空格分隔）: " dockernames
-
-						  for dockername in $dockernames; do
-							  docker network disconnect $dockernetwork $dockername
-						  done
-
-						  ;;
-
-					  4)
-						  send_stats "删除网络"
-						  read -e -p "请输入要删除的网络名: " dockernetwork
-						  docker network rm $dockernetwork
-						  ;;
-
-					  *)
-						  break  # 跳出循环，退出菜单
-						  ;;
-				  esac
-			  done
-			  ;;
-
-		  6)
-			  while true; do
-				  clear
-				  send_stats "Docker卷管理"
-				  echo "Docker卷列表"
-				  docker volume ls
-				  echo ""
-				  echo "卷操作"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  echo "1. 创建新卷"
-				  echo "2. 删除指定卷"
-				  echo "3. 删除所有卷"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
-				  read -e -p "请输入你的选择: " sub_choice
-
-				  case $sub_choice in
-					  1)
-						  send_stats "新建卷"
-						  read -e -p "设置新卷名: " dockerjuan
-						  docker volume create $dockerjuan
-
-						  ;;
-					  2)
-						  read -e -p "输入删除卷名（多个卷名请用空格分隔）: " dockerjuans
-
-						  for dockerjuan in $dockerjuans; do
-							  docker volume rm $dockerjuan
-						  done
-
-						  ;;
-
-					   3)
-						  send_stats "删除所有卷"
-						  read -e -p "$(echo -e "${rw_hong}注意: ${rw_bai}确定删除所有未使用的卷吗？(Y/N): ")" choice
-						  case "$choice" in
-							[Yy])
-							  docker volume prune -f
-							  ;;
-							[Nn])
-							  ;;
-							*)
-							  echo "无效的选择，请输入 Y 或 N。"
-							  ;;
-						  esac
-						  ;;
-
-					  *)
-						  break  # 跳出循环，退出菜单
-						  ;;
-				  esac
-			  done
-			  ;;
-		  7)
-			  clear
-			  send_stats "Docker清理"
-			  read -e -p "$(echo -e "${rw_huang}提示: ${rw_bai}将清理无用的镜像容器网络，包括停止的容器，确定清理吗？(Y/N): ")" choice
-			  case "$choice" in
-				[Yy])
-				  docker system prune -af --volumes
-				  ;;
-				[Nn])
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-			  ;;
-		  8)
-			  clear
-			  send_stats "Docker源"
-			  bash <(curl -sSL https://linuxmirrors.cn/docker.sh)
-			  ;;
-
-		  9)
-			  clear
-			  install nano
-			  mkdir -p /etc/docker && nano /etc/docker/daemon.json
-			  restart docker
-			  ;;
-		  10)
-			  clear
-			  send_stats "关闭Docker服务"
-			  echo -e "${rw_huang}正在关闭Docker服务...${rw_bai}"
-			  systemctl stop docker 2>/dev/null || service docker stop 2>/dev/null || echo "关闭Docker服务失败，请检查Docker是否已安装"
-			  ;;
-
-
-
-		  11)
-			  clear
-			  send_stats "Docker v6 开"
-			  docker_ipv6_on
-			  ;;
-
-		  12)
-			  clear
-			  send_stats "Docker v6 关"
-			  docker_ipv6_off
-			  ;;
-		  13)
-		  clear
-		  send_stats "重启Docker服务"
-		  echo -e "${rw_huang}正在重启Docker服务...${rw_bai}"
-		  systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || echo "重启Docker服务失败，请检查Docker是否已安装"
-			  ;;
-
-		  19)
-			  docker_ssh_migration
-			  ;;
-
-
-		  20)
-			  clear
-			  send_stats "Docker卸载"
-			  read -e -p "$(echo -e "${rw_hong}注意: ${rw_bai}确定卸载docker环境吗？(Y/N): ")" choice
-			  case "$choice" in
-				[Yy])
-				  docker ps -a -q | xargs -r docker rm -f && docker images -q | xargs -r docker rmi && docker network prune -f && docker volume prune -f
-				  remove docker docker-compose docker-ce docker-ce-cli containerd.io
-				  rm -f /etc/docker/daemon.json
-				  hash -r
-				  ;;
-				[Nn])
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-			  ;;
-
-		  0)
-			  riwi
-			  ;;
-		  *)
-			  echo "无效的输入!"
-			  ;;
-	  esac
-	  break_end
-
-
-	done
-
-
-}
-
-
-
-
-
-linux_Oracle() {
-
-
-	 while true; do
-	  clear
-	  send_stats "甲骨文云脚本合集"
-	  echo -e "甲骨文云脚本合集"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}安装闲置机器活跃脚本${rw_bai}"
-	  echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}卸载闲置机器活跃脚本${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}DD重装系统脚本${rw_bai}"
-	  echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}R探长开机脚本${rw_bai}"
-	  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}开启ROOT密码登录模式${rw_bai}"
-	  echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}IPV6恢复工具${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  read -e -p "请输入你的选择: " sub_choice
-
-	  case $sub_choice in
-		  1)
-			  clear
-			  echo "活跃脚本: CPU占用10-20% 内存占用20% "
-			  read -e -p "确定安装吗？(Y/N): " choice
-			  case "$choice" in
-				[Yy])
-
-				  install_docker
-
-				  # 设置默认值
-				  local DEFAULT_CPU_CORE=1
-				  local DEFAULT_CPU_UTIL="10-20"
-				  local DEFAULT_MEM_UTIL=20
-				  local DEFAULT_SPEEDTEST_INTERVAL=120
-
-				  # 提示用户输入CPU核心数和占用百分比，如果回车则使用默认值
-				  read -e -p "请输入CPU核心数 [默认: $DEFAULT_CPU_CORE]: " cpu_core
-				  local cpu_core=${cpu_core:-$DEFAULT_CPU_CORE}
-
-				  read -e -p "请输入CPU占用百分比范围（例如10-20） [默认: $DEFAULT_CPU_UTIL]: " cpu_util
-				  local cpu_util=${cpu_util:-$DEFAULT_CPU_UTIL}
-
-				  read -e -p "请输入内存占用百分比 [默认: $DEFAULT_MEM_UTIL]: " mem_util
-				  local mem_util=${mem_util:-$DEFAULT_MEM_UTIL}
-
-				  read -e -p "请输入Speedtest间隔时间（秒） [默认: $DEFAULT_SPEEDTEST_INTERVAL]: " speedtest_interval
-				  local speedtest_interval=${speedtest_interval:-$DEFAULT_SPEEDTEST_INTERVAL}
-
-				  # 运行Docker容器
-				  docker run -d --name=lookbusy --restart=always \
-					  -e TZ=Asia/Shanghai \
-					  -e CPU_UTIL="$cpu_util" \
-					  -e CPU_CORE="$cpu_core" \
-					  -e MEM_UTIL="$mem_util" \
-					  -e SPEEDTEST_INTERVAL="$speedtest_interval" \
-					  fogforest/lookbusy
-				  send_stats "甲骨文云安装活跃脚本"
-
-				  ;;
-				[Nn])
-
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-			  ;;
-		  2)
-			  clear
-			  docker rm -f lookbusy
-			  docker rmi fogforest/lookbusy
-			  send_stats "甲骨文云卸载活跃脚本"
-			  ;;
-
-		  3)
-		  clear
-		  echo "重装系统"
-		  echo -e "${rw_cheng}--------------------------------${rw_bai}"
-		  echo -e "${rw_hong}注意: ${rw_bai}重装有风险失联，不放心者慎用。重装预计花费15分钟，请提前备份数据。"
-		  read -e -p "确定继续吗？(Y/N): " choice
-
-		  case "$choice" in
-			[Yy])
-			  while true; do
-				read -e -p "请选择要重装的系统:  1. Debian12 | 2. Ubuntu20.04 : " sys_choice
-
-				case "$sys_choice" in
-				  1)
-					local xitong="-d 12"
-					break  # 结束循环
-					;;
-				  2)
-					local xitong="-u 20.04"
-					break  # 结束循环
-					;;
-				  *)
-					echo "无效的选择，请重新输入。"
-					;;
-				esac
-			  done
-
-			  read -e -p "请输入你重装后的密码: " vpspasswd
-			  install wget
-			  bash <(wget --no-check-certificate -qO- "${gh_proxy}raw.githubusercontent.com/MoeClub/Note/master/InstallNET.sh") $xitong -v 64 -p $vpspasswd -port 22
-			  send_stats "甲骨文云重装系统脚本"
-			  ;;
-			[Nn])
-			  echo "已取消"
-			  ;;
-			*)
-			  echo "无效的选择，请输入 Y 或 N。"
-			  ;;
-		  esac
-			  ;;
-
-		  4)
-			  clear
-			  send_stats "R探长开机脚本"
-			  bash <(wget -qO- ${gh_proxy}github.com/Yohann0617/oci-helper/releases/latest/download/sh_oci-helper_install.sh)
-			  ;;
-		  5)
-			  clear
-			  add_sshpasswd
-			  ;;
-		  6)
-			  clear
-			  bash <(curl -L -s jhb.ovh/jb/v6.sh)
-			  echo "该功能由jhb大神提供，感谢他！"
-			  send_stats "ipv6修复"
-			  ;;
-		  0)
-			  riwi
-
-			  ;;
-		  *)
-			  echo "无效的输入!"
-			  ;;
-	  esac
-	  break_end
-
-	done
-
-
-
-}
 
 
 
@@ -10017,180 +9535,127 @@ ldnmp_nginx_manage() {
   while true; do
     clear
     send_stats "Nginx管理"
-    echo -e "${rw_huang}Nginx管理${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo ""
-    echo -e "${rw_huang}请选择操作：${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}查看Nginx状态"
-    echo -e "${rw_huang}2.   ${rw_bai}启动Nginx"
-    echo -e "${rw_huang}3.   ${rw_bai}停止Nginx"
-    echo -e "${rw_huang}4.   ${rw_bai}重启Nginx"
-    echo -e "${rw_huang}5.   ${rw_bai}重新加载Nginx配置"
-    echo -e "${rw_huang}6.   ${rw_bai}测试Nginx配置语法"
-    echo -e "${rw_huang}7.   ${rw_bai}查看Nginx错误日志"
-    echo -e "${rw_huang}8.   ${rw_bai}查看Nginx访问日志"
-    echo -e "${rw_huang}9.   ${rw_bai}查看Nginx进程"
-    echo -e "${rw_huang}10.  ${rw_bai}查看Nginx监听端口"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}返回上级菜单"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    read -e -p "请输入你的选择（回车默认0返回）：" sub_choice
+
+    # ── 状态探测 ──
+    local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}"
+    if docker inspect nginx &>/dev/null; then
+      _ngx_ver=$(docker exec nginx nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+      docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
+    elif command -v nginx &>/dev/null; then
+      _ngx_ver=$(nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+      pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
+    else
+      _ngx_stat="${rw_hong}未安装${rw_bai}"
+    fi
+
+    echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_bai}"
+    echo -e " ${_ngx_stat}  v${_ngx_ver:-?}"
+    echo -e " ${rw_lan}──── 控制 ──────────────────────────${rw_bai}"
+    echo -e " ${rw_huang}1${rw_bai} 启动   ${rw_huang}2${rw_bai} 停止   ${rw_huang}3${rw_bai} 重启   ${rw_huang}4${rw_bai} 重载   ${rw_huang}5${rw_bai} 测试配置"
+    echo -e " ${rw_lan}──── 日志 ──────────────────────────${rw_bai}"
+    echo -e " ${rw_huang}6${rw_bai} 访问日志   ${rw_huang}7${rw_bai} 错误日志   ${rw_huang}8${rw_bai} 进程   ${rw_huang}9${rw_bai} 监听端口"
+    echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_huang}0${rw_bai} 返回上级菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+    read -e -p " 请选择: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
-        clear
-        send_stats "查看Nginx状态"
-        echo -e "${rw_huang} Nginx状态 ${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
-          if pgrep -x "nginx" >/dev/null 2>&1; then
-            echo -e "${rw_lv}Nginx 正在运行${rw_bai}"
-            nginx -v 2>&1
-          else
-            echo -e "${rw_hong}Nginx 未运行${rw_bai}"
-          fi
-        else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
-        fi
-        echo ""
-        read -e -p "按回车继续..."
-        ;;
-      2)
-        clear
         send_stats "启动Nginx"
-        echo -e "${rw_huang}启动Nginx${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
+        if docker inspect nginx &>/dev/null; then
+          cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_bai}"
+        elif command -v nginx &>/dev/null; then
           nginx_start
           echo -e "${rw_lv}Nginx 启动完成${rw_bai}"
         else
-          echo -e "${rw_hong}Nginx 未安装，请先安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
         fi
-        read -e -p "按回车返回菜单: "
         ;;
-      3)
-        clear
+      2)
         send_stats "停止Nginx"
-        echo -e "${rw_huang}停止Nginx${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
+        if docker inspect nginx &>/dev/null; then
+          cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+        elif command -v nginx &>/dev/null; then
           nginx_stop
           echo -e "${rw_lv}Nginx 已停止${rw_bai}"
         else
           echo -e "${rw_hong}Nginx 未安装${rw_bai}"
         fi
-        read -e -p "按回车返回菜单: "
         ;;
-      4)
-        clear
+      3)
         send_stats "重启Nginx"
-        echo -e "${rw_huang}重启Nginx${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
-          nginx_stop
-          sleep 1
-          nginx_start
+        if docker inspect nginx &>/dev/null; then
+          cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_bai}"
+        elif command -v nginx &>/dev/null; then
+          nginx_stop; sleep 1; nginx_start
           echo -e "${rw_lv}Nginx 重启完成${rw_bai}"
         else
           echo -e "${rw_hong}Nginx 未安装${rw_bai}"
         fi
-        read -e -p "按回车返回菜单: "
+        ;;
+      4)
+        send_stats "重新加载Nginx配置"
+        if docker inspect nginx &>/dev/null; then
+          docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+        elif command -v nginx &>/dev/null; then
+          nginx -s reload 2>&1
+          [ $? -eq 0 ] && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+        else
+          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+        fi
         ;;
       5)
-        clear
-        send_stats "重新加载Nginx配置"
-        echo -e "${rw_huang}重新加载Nginx配置${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
-          nginx -s reload 2>&1
-          if [ $? -eq 0 ]; then
-            echo -e "${rw_lv}Nginx 配置已重新加载${rw_bai}"
-          else
-            echo -e "${rw_hong}重新加载失败，请检查配置${rw_bai}"
-          fi
+        send_stats "测试Nginx配置语法"
+        if docker inspect nginx &>/dev/null; then
+          docker exec nginx nginx -t 2>&1
+        elif command -v nginx &>/dev/null; then
+          nginx -t 2>&1
         else
           echo -e "${rw_hong}Nginx 未安装${rw_bai}"
         fi
-        read -e -p "按回车返回菜单: "
         ;;
       6)
-        clear
-        send_stats "测试Nginx配置语法"
-        echo -e "${rw_huang}测试Nginx配置语法${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if command -v nginx &>/dev/null; then
-          nginx -t 2>&1
-          if [ $? -eq 0 ]; then
-            echo -e "${rw_lv}配置文件语法正确${rw_bai}"
-          else
-            echo -e "${rw_hong}配置文件有错误${rw_bai}"
-          fi
-        else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
-        fi
-        read -e -p "按回车返回菜单: "
-        ;;
-      7)
-        clear
-        send_stats "查看Nginx错误日志"
-        echo -e "${rw_huang}Nginx错误日志（最后50行）${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if [ -f /home/web/logs/error.log ]; then
-          tail -n 50 /home/web/logs/error.log
-        elif [ -f /var/log/nginx/error.log ]; then
-          tail -n 50 /var/log/nginx/error.log
-        else
-          echo -e "${rw_hong}未找到Nginx错误日志文件${rw_bai}"
-        fi
-        echo ""
-        read -e -p "按回车继续..."
-        ;;
-      8)
-        clear
         send_stats "查看Nginx访问日志"
-        echo -e "${rw_huang}Nginx访问日志（最后50行）${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
         if [ -f /home/web/logs/access.log ]; then
           tail -n 50 /home/web/logs/access.log
         elif [ -f /var/log/nginx/access.log ]; then
           tail -n 50 /var/log/nginx/access.log
         else
-          echo -e "${rw_hong}未找到Nginx访问日志文件${rw_bai}"
+          echo -e "${rw_hong}未找到访问日志${rw_bai}"
         fi
-        echo ""
-        read -e -p "按回车继续..."
         ;;
-      9)
-        clear
+      7)
+        send_stats "查看Nginx错误日志"
+        if [ -f /home/web/logs/error.log ]; then
+          tail -n 50 /home/web/logs/error.log
+        elif [ -f /var/log/nginx/error.log ]; then
+          tail -n 50 /var/log/nginx/error.log
+        else
+          echo -e "${rw_hong}未找到错误日志${rw_bai}"
+        fi
+        ;;
+      8)
         send_stats "查看Nginx进程"
-        echo -e "${rw_huang}Nginx进程列表${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        if pgrep -x "nginx" >/dev/null 2>&1; then
+        if docker inspect nginx &>/dev/null; then
+          docker top nginx
+        elif pgrep -x nginx &>/dev/null; then
           ps aux | grep nginx | grep -v grep
         else
           echo -e "${rw_hong}Nginx 未运行${rw_bai}"
         fi
-        echo ""
-        read -e -p "按回车继续..."
         ;;
-      10)
-        clear
+      9)
         send_stats "查看Nginx监听端口"
-        echo -e "${rw_huang}Nginx监听端口${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
         if command -v ss &>/dev/null; then
           ss -tlnp | grep nginx
         elif command -v netstat &>/dev/null; then
           netstat -tlnp | grep nginx
         else
-          echo -e "${rw_hong}未找到 ss 或 netstat 命令${rw_bai}"
+          echo -e "${rw_hong}未找到 ss 或 netstat${rw_bai}"
         fi
-        echo ""
-        read -e -p "按回车继续..."
         ;;
       0) break ;;
-      *) echo "无效的输入！" ;;
+      *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
     esac
     break_end
   done
@@ -22227,15 +21692,15 @@ echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}日常维护${rw_bai}"
 echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}安装环境${rw_bai}"
 echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}GitHub管理器${rw_bai}"
 echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}GitHooks部署${rw_bai}"
-echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}Docker管理${rw_bai}"
-echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}LDNMP建站${rw_bai}"
-echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}应用市场${rw_bai}"
-echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}后台工作区${rw_bai}"
-echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}系统工具${rw_bai}"
-echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}服务器集群控制${rw_bai}"
-echo -e "${rw_huang}12.  ${rw_bai}${rw_lv}安全优化${rw_bai}"
-echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}热门专栏${rw_bai}"
-echo -e "${rw_huang}14.  ${rw_bai}${rw_lv}ngxing管理器${rw_bai}"
+echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}LDNMP建站${rw_bai}"
+echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}应用市场${rw_bai}"
+echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}后台工作区${rw_bai}"
+echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}系统工具${rw_bai}"
+echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}服务器集群控制${rw_bai}"
+echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}安全优化${rw_bai}"
+echo -e "${rw_huang}12.  ${rw_bai}${rw_lv}热门专栏${rw_bai}"
+echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}ngxing管理器${rw_bai}"
+echo -e "${rw_huang}14.  ${rw_bai}${rw_lv}Docker全管理${rw_bai}"
 
 echo -e "${rw_cheng}------------------------${rw_bai}"
 echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}退出脚本${rw_bai}"
@@ -22248,15 +21713,15 @@ case $choice in
   3) linux_tools ;;
   4) github_manager ;;
   5) git_hooks_deploy ;;
-  6) linux_docker ;;
-  7) ldnmp_builder_menu ;;
-  8) linux_panel ;;
-  9) linux_work ;;
-  10) linux_Settings ;;
-  11) linux_cluster ;;
-  12) linux_security ;;
-  13) riwi_Affiliates ;;
- 14) ngxing_manager ;;
+  6) ldnmp_builder_menu ;;
+  7) linux_panel ;;
+  8) linux_work ;;
+  9) linux_Settings ;;
+  10) linux_cluster ;;
+  11) linux_security ;;
+  12) riwi_Affiliates ;;
+  13) ngxing_manager ;;
+  14) docker_manager_menu ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
@@ -22265,74 +21730,198 @@ done
 }
 
 # ================================================================
-# ngxing管理器函数
-# ================================================================
-# 功能: 提供Nginx服务管理功能
-# 包含: 状态查看、启动/停止/重启、配置管理、日志查看等
+# Nginx 管理器
 # ================================================================
 
 ngxing_manager() {
 while true; do
 	clear
-	echo -e "${rw_huang}╔════════════════════════════════════════╗${rw_bai}"
-	echo -e "${rw_huang}║            ngxing管理器                ║${rw_bai}"
-	echo -e "${rw_huang}╚════════════════════════════════════════╝${rw_bai}"
-	echo ""
-	echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}查看Nginx状态${rw_bai}"
-	echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}启动Nginx${rw_bai}"
-	echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}停止Nginx${rw_bai}"
-	echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}重启Nginx${rw_bai}"
-	echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}查看Nginx配置${rw_bai}"
-	echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}测试Nginx配置${rw_bai}"
-	echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}查看Nginx日志${rw_bai}"
-	echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}重载Nginx配置${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	read -e -p "请输入你的选择: " ngx_choice
+
+	# ── 状态探测 ──
+	local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}" _site_cnt=0 _br="" _gz="" _zs="" _waf=""
+	if docker inspect nginx &>/dev/null; then
+		_ngx_ver=$(docker exec nginx nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+		docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
+		_site_cnt=$(ls /home/web/conf.d/*.conf 2>/dev/null | grep -vc 'map\|default')
+	elif command -v nginx &>/dev/null; then
+		_ngx_ver=$(nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+		pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
+	fi
+	# 压缩 / WAF 状态
+	if [ -f /home/web/nginx.conf ]; then
+		grep -qE '^\s*gzip\s+on;' /home/web/nginx.conf && _gz=" gzip"
+		grep -qE '^\s*brotli\s+on;' /home/web/nginx.conf && _br=" br"
+		grep -qE '^\s*zstd\s+on;' /home/web/nginx.conf && _zs=" zstd"
+		grep -qE '^\s*modsecurity\s+on;' /home/web/nginx.conf && _waf=" WAF"
+	fi
+	local _comp="${rw_lv}${_gz}${_br}${_zs}${_waf}${rw_bai}"
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_bai}"
+	echo -e " ${_ngx_stat}  v${_ngx_ver:-?}  站点${rw_lv}${_site_cnt}${rw_bai}  ${_comp}"
+	echo -e " ${rw_lan}──── 服务 ──────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}1${rw_bai} 启动   ${rw_huang}2${rw_bai} 停止   ${rw_huang}3${rw_bai} 重启   ${rw_huang}4${rw_bai} 重载"
+	echo -e " ${rw_huang}5${rw_bai} 测试配置"
+	echo -e " ${rw_lan}──── 站点 ──────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}6${rw_bai} 站点列表   ${rw_huang}7${rw_bai} 编辑站点配置"
+	echo -e " ${rw_huang}8${rw_bai} 编辑全局配置   ${rw_huang}9${rw_bai} 证书管理"
+	echo -e " ${rw_lan}──── 反代 ──────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}10${rw_bai} 添加反向代理   ${rw_huang}11${rw_bai} 添加负载均衡"
+	echo -e " ${rw_huang}12${rw_bai} Stream四层代理"
+	echo -e " ${rw_lan}──── 优化 ──────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}13${rw_bai} 压缩/性能   ${rw_huang}14${rw_bai} 安全防御"
+	echo -e " ${rw_huang}15${rw_bai} 更新Nginx"
+	echo -e " ${rw_lan}──── 日志 ──────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}16${rw_bai} 访问日志   ${rw_huang}17${rw_bai} 错误日志   ${rw_huang}18${rw_bai} 监听端口"
+	echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}0${rw_bai} 返回主菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+	read -e -p " 请选择: " ngx_choice
 
 	case $ngx_choice in
-	  1) 
-		echo -e "${rw_huang}Nginx服务状态:${rw_bai}"
-		systemctl status nginx 2>/dev/null || service nginx status 2>/dev/null || echo "Nginx未安装或无法查看状态"
+	  1)
+		if docker inspect nginx &>/dev/null; then
+			cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_bai}"
+		else
+			systemctl start nginx 2>/dev/null || service nginx start 2>/dev/null || echo -e "${rw_hong}启动失败${rw_bai}"
+		fi
 		;;
-	  2) 
-		echo -e "${rw_huang}正在启动Nginx...${rw_bai}"
-		systemctl start nginx 2>/dev/null || service nginx start 2>/dev/null || echo "启动失败，请检查Nginx是否已安装"
+	  2)
+		if docker inspect nginx &>/dev/null; then
+			cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+		else
+			systemctl stop nginx 2>/dev/null || service nginx stop 2>/dev/null || echo -e "${rw_hong}停止失败${rw_bai}"
+		fi
 		;;
-	  3) 
-		echo -e "${rw_huang}正在停止Nginx...${rw_bai}"
-		systemctl stop nginx 2>/dev/null || service nginx stop 2>/dev/null || echo "停止失败"
+	  3)
+		if docker inspect nginx &>/dev/null; then
+			cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_bai}"
+		else
+			systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || echo -e "${rw_hong}重启失败${rw_bai}"
+		fi
 		;;
-	  4) 
-		echo -e "${rw_huang}正在重启Nginx...${rw_bai}"
-		systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || echo "重启失败"
+	  4)
+		if docker inspect nginx &>/dev/null; then
+			docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+		else
+			nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || echo -e "${rw_hong}重载失败${rw_bai}"
+		fi
 		;;
-	  5) 
-		echo -e "${rw_huang}Nginx配置文件:${rw_bai}"
-		nginx -V 2>&1 | grep "configure arguments" || echo "无法获取Nginx配置"
-		echo ""
-		echo -e "${rw_huang}配置文件通常位于:${rw_bai}"
-		echo "/etc/nginx/nginx.conf"
-		echo "/etc/nginx/conf.d/"
+	  5)
+		if docker inspect nginx &>/dev/null; then
+			docker exec nginx nginx -t 2>&1
+		else
+			nginx -t 2>&1
+		fi
 		;;
-	  6) 
-		echo -e "${rw_huang}测试Nginx配置文件...${rw_bai}"
-		nginx -t 2>&1
+	  6)
+		ldnmp_web_status
 		;;
-	  7) 
-		echo -e "${rw_huang}Nginx访问日志:${rw_bai}"
-		tail -n 50 /var/log/nginx/access.log 2>/dev/null || echo "无法读取访问日志"
-		echo ""
-		echo -e "${rw_huang}Nginx错误日志:${rw_bai}"
-		tail -n 50 /var/log/nginx/error.log 2>/dev/null || echo "无法读取错误日志"
+	  7)
+		if [ -d /home/web/conf.d ]; then
+			echo -e "当前站点配置:"
+			ls -1 /home/web/conf.d/*.conf 2>/dev/null | xargs -I{} basename {} .conf | grep -v '^map$\|^default$'
+			echo ""
+			read -e -p " 输入站点域名编辑配置: " _site
+			[ -z "$_site" ] && continue
+			if [ -f "/home/web/conf.d/${_site}.conf" ]; then
+				install nano
+				nano /home/web/conf.d/${_site}.conf
+				read -e -p " 是否重载Nginx? (y/N): " _rl
+				[[ "$_rl" =~ ^[Yy]$ ]] && docker exec nginx nginx -s reload
+			else
+				echo -e "${rw_hong}配置文件不存在${rw_bai}"
+			fi
+		else
+			echo -e "${rw_hong}未找到站点配置目录${rw_bai}"
+		fi
 		;;
-	  8) 
-		echo -e "${rw_huang}正在重载Nginx配置...${rw_bai}"
-		nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || echo "重载失败"
+	  8)
+		if [ -f /home/web/nginx.conf ]; then
+			install nano
+			nano /home/web/nginx.conf
+			read -e -p " 是否重载Nginx? (y/N): " _rl
+			[[ "$_rl" =~ ^[Yy]$ ]] && { docker exec nginx nginx -s reload 2>/dev/null || nginx -s reload 2>/dev/null; }
+		else
+			echo -e "${rw_huang}Nginx编译参数:${rw_bai}"
+			if docker inspect nginx &>/dev/null; then
+				docker exec nginx nginx -V 2>&1 | grep "configure arguments"
+			else
+				nginx -V 2>&1 | grep "configure arguments"
+			fi
+			echo ""
+			echo -e "配置文件: /etc/nginx/nginx.conf  /etc/nginx/conf.d/"
+		fi
+		;;
+	  9)
+		if [ -d /home/web/certs ]; then
+			echo -e "SSL 证书到期时间:"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			for _cert in /home/web/certs/*_cert.pem; do
+				[ -f "$_cert" ] || continue
+				local _dom=$(basename "$_cert" | sed 's/_cert.pem//')
+				local _exp=$(openssl x509 -noout -enddate -in "$_cert" 2>/dev/null | awk -F'=' '{print $2}')
+				local _exp_fmt=$(date -d "$_exp" '+%Y-%m-%d' 2>/dev/null || echo "$_exp")
+				printf " %-35s %s\n" "$_dom" "$_exp_fmt"
+			done
+			echo ""
+			read -e -p " 输入域名申请/更新证书 (留空跳过): " _cert_domain
+			[ -n "$_cert_domain" ] && { install_certbot; install_ssltls; certs_status; }
+		else
+			echo -e "${rw_hong}未找到证书目录${rw_bai}"
+		fi
+		;;
+	  10)
+		ldnmp_Proxy
+		;;
+	  11)
+		ldnmp_Proxy_backend
+		;;
+	  12)
+		stream_panel
+		;;
+	  13)
+		web_optimization
+		;;
+	  14)
+		web_security
+		;;
+	  15)
+		if docker inspect nginx &>/dev/null; then
+			nginx_upgrade
+			echo -e "${rw_lv}Nginx 已更新${rw_bai}"
+		else
+			echo -e "${rw_huang}Nginx未通过Docker安装，请手动升级${rw_bai}"
+		fi
+		;;
+	  16)
+		if [ -f /home/web/logs/access.log ]; then
+			tail -n 50 /home/web/logs/access.log
+		elif [ -f /var/log/nginx/access.log ]; then
+			tail -n 50 /var/log/nginx/access.log
+		else
+			echo -e "${rw_hong}未找到访问日志${rw_bai}"
+		fi
+		;;
+	  17)
+		if [ -f /home/web/logs/error.log ]; then
+			tail -n 50 /home/web/logs/error.log
+		elif [ -f /var/log/nginx/error.log ]; then
+			tail -n 50 /var/log/nginx/error.log
+		else
+			echo -e "${rw_hong}未找到错误日志${rw_bai}"
+		fi
+		;;
+	  18)
+		if command -v ss &>/dev/null; then
+			ss -tlnp | grep nginx
+		elif command -v netstat &>/dev/null; then
+			netstat -tlnp | grep nginx
+		else
+			docker inspect nginx --format='{{range $k,$v := .NetworkSettings.Ports}}{{$k}} -> {{range $v}}{{.HostPort}}{{end}}{{"\n"}}{{end}}' 2>/dev/null
+		fi
 		;;
 	  0) return ;;
-	  *) echo "无效的输入!" ;;
+	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
 	esac
 	break_end
 done
@@ -23300,8 +22889,9 @@ github_manager() {
     echo -e "${rw_huang}14.  ${rw_bai}${rw_lv}查看远程仓库${rw_bai}"
     echo -e "${rw_huang}15.  ${rw_bai}${rw_lv}添加远程仓库${rw_bai}"
     echo -e "${rw_huang}16.  ${rw_bai}${rw_lv}移除远程仓库${rw_bai}"
+    echo -e "${rw_huang}17.  ${rw_bai}${rw_lv}移除远程分支${rw_bai}"
     echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}17.  ${rw_cheng}切换源${rw_bai}"
+    echo -e "${rw_huang}18.  ${rw_cheng}切换源${rw_bai}"
     echo -e "${rw_cheng}------------------------${rw_bai}"
     echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
     echo -e "${rw_cheng}------------------------${rw_bai}"
@@ -23880,6 +23470,35 @@ EOF
         read -e -p "按回车继续..."
         ;;
       17)
+        echo -e "${rw_huang}移除远程分支${rw_bai}"
+        echo -e "示例: ${rw_hong}git push origin --delete feature-branch${rw_bai}"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo ""
+        if [ -d ".git" ]; then
+          git remote -v
+          echo ""
+          read -e -p "请输入远程仓库名称 (如 origin): " remote_name
+          if [ "$remote_name" = "0" ]; then continue; fi
+          git branch -r | grep "^  ${remote_name}/" | head -20
+          echo ""
+          read -e -p "请输入要删除的远程分支名称: " branch_name
+          if [ "$branch_name" = "0" ]; then continue; fi
+          echo ""
+          echo -e "${rw_hong}警告: 即将删除远程仓库 ${remote_name} 的分支 ${branch_name}${rw_bai}"
+          read -e -p "确认删除？(y/n): " confirm
+          if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+            git push "$remote_name" --delete "$branch_name"
+            echo -e "${rw_lv}远程分支 ${branch_name} 已删除${rw_bai}"
+          else
+            echo -e "${rw_huang}操作已取消${rw_bai}"
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      18)
         switch_git_mirror
         ;;
       0)
@@ -23894,6 +23513,1146 @@ EOF
   done
 }
 
+
+# ================================================================
+# Docker 管理器函数 - 全功能 Docker 管理
+# ================================================================
+# 功能: Docker容器/镜像/Compose/备份/迁移/安装一站式管理
+# ================================================================
+
+docker_manager_menu() {
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 管理  ━━━━━━━━━━━━${rw_bai}"
+# 快速状态一行展示
+if command -v docker &>/dev/null; then
+  _dr=$(docker ps -q 2>/dev/null | wc -l | tr -d ' ')
+  _da=$(docker ps -aq 2>/dev/null | wc -l | tr -d ' ')
+  _di=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
+  echo -e " 容器 ${rw_lv}$_dr${rw_bai}运行  ${rw_huang}$(( _da - _dr ))${rw_bai}停止    镜像 ${rw_lv}$_di${rw_bai}"
+else
+  echo -e " ${rw_hong}Docker 未安装${rw_bai}"
+fi
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai}  容器管理"
+echo -e " ${rw_huang}2${rw_bai}  镜像管理"
+echo -e " ${rw_huang}3${rw_bai}  Compose 管理"
+echo -e " ${rw_huang}4${rw_bai}  进入容器 Shell"
+echo -e " ${rw_huang}5${rw_bai}  健康诊断"
+echo -e " ${rw_huang}6${rw_bai}  备份 & 还原"
+echo -e " ${rw_huang}7${rw_bai}  数据迁移"
+echo -e " ${rw_huang}8${rw_bai}  安装 & 升级"
+echo -e " ${rw_huang}9${rw_bai}  磁盘清理"
+echo -e " ${rw_huang}10${rw_bai} 版本信息"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " docker_choice
+
+case $docker_choice in
+  1) docker_container_manage ;;
+  2) docker_image_manage ;;
+  3) docker_compose_manage ;;
+  4) docker_shell_access ;;
+  5) docker_health_check ;;
+  6) docker_backup_restore ;;
+  7) docker_data_migrate ;;
+  8) docker_install_upgrade ;;
+  9) docker_system_clean ;;
+  10) docker_version_show ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 1. 容器管理
+# ================================================================
+docker_container_manage() {
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━━━━━${rw_bai}"
+docker ps -a --format " {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null \
+  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 启动   ${rw_huang}2${rw_bai} 停止   ${rw_huang}3${rw_bai} 重启   ${rw_huang}4${rw_bai} 删除"
+echo -e " ${rw_huang}5${rw_bai} 日志   ${rw_huang}6${rw_bai} 详情   ${rw_huang}7${rw_bai} 重命名 ${rw_huang}8${rw_bai} 清理已停止"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+_dc_pick() {
+  local prompt="$1" filter="$2"
+  if [ -n "$filter" ]; then
+    docker ps -a --filter "status=$filter" --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+  else
+    docker ps -a --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+  fi
+  read -e -p "$prompt (0=取消): " _picked
+  [ "$_picked" = "0" ] && return 1
+  [ -z "$_picked" ] && { echo -e "${rw_hong}未输入${rw_bai}"; return 1; }
+  echo "$_picked"
+}
+
+case $choice in
+  1)
+    docker ps -a --filter "status=exited" --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    docker start "$cname" && echo -e "${rw_lv}✓ 已启动 $cname${rw_bai}" || echo -e "${rw_hong}启动失败${rw_bai}"
+    break_end
+    ;;
+  2)
+    docker ps --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    docker stop "$cname" && echo -e "${rw_lv}✓ 已停止 $cname${rw_bai}" || echo -e "${rw_hong}停止失败${rw_bai}"
+    break_end
+    ;;
+  3)
+    docker ps --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    docker restart "$cname" && echo -e "${rw_lv}✓ 已重启 $cname${rw_bai}" || echo -e "${rw_hong}重启失败${rw_bai}"
+    break_end
+    ;;
+  4)
+    docker ps -a --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    read -e -p " 确认删除 $cname ? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] || continue
+    docker rm -f "$cname" && echo -e "${rw_lv}✓ 已删除${rw_bai}" || echo -e "${rw_hong}删除失败${rw_bai}"
+    break_end
+    ;;
+  5)
+    docker ps -a --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    read -e -p " 行数 (默认100, f=实时): " lines
+    [ "$lines" = "0" ] && continue
+    if [ "$lines" = "f" ]; then
+      docker logs -f "$cname"
+    else
+      docker logs --tail "${lines:-100}" "$cname"
+    fi
+    ;;
+  6)
+    docker ps -a --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    docker inspect "$cname" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)[0]
+    name = d['Name'].lstrip('/')
+    state = d['State']['Status']
+    image = d['Config']['Image']
+    created = d['Created'][:19].replace('T',' ')
+    ip = d.get('NetworkSettings',{}).get('IPAddress','N/A')
+    ports = []
+    for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
+        if v: ports.append(f'{v[0][\"HostPort\"]}→{k}')
+        else: ports.append(str(k))
+    mounts = [m['Source']+'→'+m['Destination'] for m in d.get('Mounts',[])]
+    restart = d.get('HostConfig',{}).get('RestartPolicy',{}).get('Name','none')
+    print(f'  名称:     {name}')
+    print(f'  状态:     {state}')
+    print(f'  镜像:     {image}')
+    print(f'  创建:     {created}')
+    print(f'  IP:       {ip}')
+    print(f'  端口:     {\" | \".join(ports) if ports else \"无\"}')
+    print(f'  重启:     {restart}')
+    print(f'  挂载:     {\" | \".join(mounts) if mounts else \"无\"}')
+except Exception as e:
+    print(f'解析失败: {e}')
+" 2>/dev/null || docker inspect "$cname"
+    break_end
+    ;;
+  7)
+    docker ps -a --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+    read -e -p " 当前容器名 (0=取消): " oldname
+    [ "$oldname" = "0" ] || [ -z "$oldname" ] && continue
+    read -e -p " 新名称: " newname
+    [ -z "$newname" ] && continue
+    docker rename "$oldname" "$newname" && echo -e "${rw_lv}✓ 已重命名为 $newname${rw_bai}" || echo -e "${rw_hong}重命名失败${rw_bai}"
+    break_end
+    ;;
+  8)
+    _cnt=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$_cnt" -eq 0 ]; then
+      echo -e " ${rw_lv}没有已停止的容器${rw_bai}"
+    else
+      read -e -p " 清理 $_cnt 个已停止容器? (y/N): " confirm
+      [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker container prune -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+    fi
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 2. 镜像管理
+# ================================================================
+docker_image_manage() {
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━━━━━${rw_bai}"
+docker images --format " {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}" 2>/dev/null \
+  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 拉取镜像   ${rw_huang}2${rw_bai} 搜索镜像"
+echo -e " ${rw_huang}3${rw_bai} 删除镜像   ${rw_huang}4${rw_bai} 清理悬空镜像"
+echo -e " ${rw_huang}5${rw_bai} 清理未使用 ${rw_huang}6${rw_bai} 导出 tar"
+echo -e " ${rw_huang}7${rw_bai} 导入 tar   ${rw_huang}8${rw_bai} 查看层信息"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+case $choice in
+  1)
+    read -e -p " 镜像名 (如 nginx:latest, 0=取消): " img
+    [ "$img" = "0" ] || [ -z "$img" ] && continue
+    docker pull "$img" && echo -e "${rw_lv}✓ 拉取成功${rw_bai}" || echo -e "${rw_hong}拉取失败${rw_bai}"
+    break_end
+    ;;
+  2)
+    read -e -p " 关键词 (0=取消): " keyword
+    [ "$keyword" = "0" ] || [ -z "$keyword" ] && continue
+    read -e -p " 显示条数 (默认10): " limit
+    limit=${limit:-10}
+    [ "$limit" -gt 25 ] 2>/dev/null && limit=25
+    docker search --limit "$limit" "$keyword" --format "table {{.Name}}\t{{.StarCount}}\t{{.IsOfficial}}" 2>/dev/null \
+      || echo -e "${rw_hong}搜索失败，请检查网络${rw_bai}"
+    break_end
+    ;;
+  3)
+    docker images --format " {{.Repository}}:{{.Tag}}\t{{.Size}}" | column -t
+    read -e -p " 镜像名 (如 nginx:latest, 0=取消): " img
+    [ "$img" = "0" ] || [ -z "$img" ] && continue
+    read -e -p " 确认删除 $img ? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && \
+      docker rmi -f "$img" && echo -e "${rw_lv}✓ 已删除${rw_bai}" || echo -e "${rw_hong}删除失败${rw_bai}"
+    break_end
+    ;;
+  4)
+    _cnt=$(docker images -f "dangling=true" -q 2>/dev/null | wc -l | tr -d ' ')
+    [ "$_cnt" -eq 0 ] && { echo -e " ${rw_lv}没有悬空镜像${rw_bai}"; break_end; continue; }
+    read -e -p " 清理 $_cnt 个悬空镜像? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+    break_end
+    ;;
+  5)
+    _cnt=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
+    read -e -p " 清理所有未被使用的镜像 ($_cnt 个)? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -a -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+    break_end
+    ;;
+  6)
+    docker images --format " {{.Repository}}:{{.Tag}}\t{{.Size}}" | column -t
+    read -e -p " 镜像名 (0=取消): " img
+    [ "$img" = "0" ] || [ -z "$img" ] && continue
+    safe_name=$(echo "$img" | tr '/:' '_')
+    output_file="${safe_name}_$(date +%Y%m%d_%H%M%S).tar"
+    docker save -o "$output_file" "$img" \
+      && echo -e "${rw_lv}✓ 已导出: $(pwd)/$output_file  $(du -h "$output_file" | cut -f1)${rw_bai}" \
+      || echo -e "${rw_hong}导出失败${rw_bai}"
+    break_end
+    ;;
+  7)
+    ls -lh *.tar 2>/dev/null || echo " 当前目录无 tar 文件"
+    read -e -p " tar 文件路径 (0=取消): " tarfile
+    [ "$tarfile" = "0" ] || [ -z "$tarfile" ] && continue
+    [ ! -f "$tarfile" ] && { echo -e "${rw_hong}文件不存在${rw_bai}"; break_end; continue; }
+    docker load -i "$tarfile" && echo -e "${rw_lv}✓ 导入成功${rw_bai}" || echo -e "${rw_hong}导入失败${rw_bai}"
+    break_end
+    ;;
+  8)
+    docker images --format " {{.Repository}}:{{.Tag}}" | nl
+    read -e -p " 镜像名 (0=取消): " img
+    [ "$img" = "0" ] || [ -z "$img" ] && continue
+    docker history "$img" --format "table {{.CreatedSince}}\t{{.Size}}\t{{.Comment}}" 2>/dev/null
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 3. Docker Compose 管理
+# ================================================================
+docker_compose_manage() {
+# 优先用 docker compose (插件), 否则用 docker-compose (独立版本)
+if docker compose version &>/dev/null; then
+  COMPOSE_CMD="docker compose"
+elif command -v docker-compose &>/dev/null; then
+  COMPOSE_CMD="docker-compose"
+else
+  COMPOSE_CMD=""
+fi
+
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 管理  ━━━━━━━━━━━━${rw_bai}"
+if [ -n "$COMPOSE_CMD" ]; then
+  echo -e " 命令: ${rw_lv}$COMPOSE_CMD${rw_bai}"
+  docker ps --filter "label=com.docker.compose.project" \
+    --format " {{.Label \"com.docker.compose.project\"}}\t{{.Names}}\t{{.Status}}" 2>/dev/null \
+    | column -t | head -10
+else
+  echo -e " ${rw_hong}Docker Compose 未安装，请先执行菜单 8 安装${rw_bai}"
+fi
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 粘贴 yml 创建并运行"
+echo -e " ${rw_huang}2${rw_bai} 管理现有项目 (启动/停止/重启/状态)"
+echo -e " ${rw_huang}3${rw_bai} 查看项目列表"
+echo -e " ${rw_huang}4${rw_bai} 查看项目日志"
+echo -e " ${rw_huang}5${rw_bai} 删除项目"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+_get_proj_dir() {
+  # 先列已有项目
+  if [ -d "$HOME/docker-compose-projects" ]; then
+    ls -d "$HOME/docker-compose-projects"/*/ 2>/dev/null | while read d; do echo " $(basename "$d")"; done
+  fi
+  read -e -p " 项目名或完整路径 (0=取消): " _proj
+  [ "$_proj" = "0" ] && return 1
+  [ -z "$_proj" ] && return 1
+  if [ -d "$_proj" ]; then
+    echo "$_proj"
+  else
+    echo "$HOME/docker-compose-projects/$_proj"
+  fi
+}
+
+case $choice in
+  1)
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    read -e -p " 项目名称 (0=取消): " projname
+    [ "$projname" = "0" ] || [ -z "$projname" ] && continue
+    projdir="$HOME/docker-compose-projects/$projname"
+    mkdir -p "$projdir"
+    compose_file="$projdir/docker-compose.yml"
+    echo -e " ${rw_huang}粘贴 docker-compose.yml 内容，输入 @EOF 结束:${rw_bai}"
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+    > "$compose_file"
+    while IFS= read -r line; do
+      [ "$line" = "@EOF" ] && break
+      echo "$line" >> "$compose_file"
+    done
+    if [ ! -s "$compose_file" ]; then
+      echo -e "${rw_hong}内容为空，操作取消${rw_bai}"
+      rm -rf "$projdir"; break_end; continue
+    fi
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+    cat -n "$compose_file"
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " 已保存到: ${rw_lv}$compose_file${rw_bai}"
+    read -e -p " 立即启动? (y/N): " startnow
+    if [ "$startnow" = "y" ] || [ "$startnow" = "Y" ]; then
+      cd "$projdir" && $COMPOSE_CMD up -d
+      [ $? -eq 0 ] && echo -e "${rw_lv}✓ 项目 $projname 启动成功${rw_bai}" && $COMPOSE_CMD ps \
+        || echo -e "${rw_hong}启动失败，检查 yml 配置${rw_bai}"
+    else
+      echo -e " 启动命令: cd $projdir && $COMPOSE_CMD up -d"
+    fi
+    break_end
+    ;;
+  2)
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    projdir=$(_get_proj_dir) || continue
+    if [ ! -f "$projdir/docker-compose.yml" ] && [ ! -f "$projdir/docker-compose.yaml" ]; then
+      echo -e "${rw_hong}未找到 docker-compose.yml: $projdir${rw_bai}"; break_end; continue
+    fi
+    cd "$projdir"
+    echo -e " ${rw_huang}1=启动  2=停止  3=重启  4=状态  0=取消${rw_bai}"
+    read -e -p " 操作: " op
+    case $op in
+      1) $COMPOSE_CMD up -d ;;
+      2) $COMPOSE_CMD down ;;
+      3) $COMPOSE_CMD down && $COMPOSE_CMD up -d ;;
+      4) $COMPOSE_CMD ps ;;
+    esac
+    break_end
+    ;;
+  3)
+    echo -e "${rw_cheng}── 运行中的 Compose 项目 ──────────────${rw_bai}"
+    docker ps -a --filter "label=com.docker.compose.project" \
+      --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null | sort -u | while read p; do
+      running=$(docker ps --filter "label=com.docker.compose.project=$p" -q 2>/dev/null | wc -l | tr -d ' ')
+      total=$(docker ps -a --filter "label=com.docker.compose.project=$p" -q 2>/dev/null | wc -l | tr -d ' ')
+      echo -e "  ${rw_huang}$p${rw_bai}  运行 ${rw_lv}$running${rw_bai}/$total"
+    done
+    if [ -d "$HOME/docker-compose-projects" ]; then
+      echo -e "${rw_cheng}── 本地项目目录 ────────────────────────${rw_bai}"
+      for d in "$HOME/docker-compose-projects"/*/; do
+        [ -d "$d" ] || continue
+        pname=$(basename "$d")
+        has_yml=""
+        [ -f "$d/docker-compose.yml" ] && has_yml="${rw_lv} [yml]${rw_bai}"
+        echo -e "  ${rw_huang}$pname${rw_bai}$has_yml"
+      done
+    fi
+    break_end
+    ;;
+  4)
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    projdir=$(_get_proj_dir) || continue
+    [ -f "$projdir/docker-compose.yml" ] || [ -f "$projdir/docker-compose.yaml" ] || \
+      { echo -e "${rw_hong}未找到项目${rw_bai}"; break_end; continue; }
+    read -e -p " 行数 (默认50): " lines
+    cd "$projdir" && $COMPOSE_CMD logs --tail "${lines:-50}"
+    ;;
+  5)
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    projdir=$(_get_proj_dir) || continue
+    [ -f "$projdir/docker-compose.yml" ] || [ -f "$projdir/docker-compose.yaml" ] || \
+      { echo -e "${rw_hong}未找到项目${rw_bai}"; break_end; continue; }
+    pname=$(basename "$projdir")
+    echo -e "${rw_hong} ⚠  将删除 $pname 的所有容器、网络、数据卷${rw_bai}"
+    read -e -p " 输入项目名确认 ($pname) 或 0=取消: " confirm
+    if [ "$confirm" = "$pname" ]; then
+      cd "$projdir" && $COMPOSE_CMD down -v
+      echo -e "${rw_lv}✓ 项目已停止并删除${rw_bai}"
+      read -e -p " 同时删除项目目录? (y/N): " deldir
+      [ "$deldir" = "y" ] || [ "$deldir" = "Y" ] && cd "$HOME" && rm -rf "$projdir" && echo -e "${rw_lv}✓ 目录已删除${rw_bai}"
+    else
+      echo -e "${rw_huang}已取消${rw_bai}"
+    fi
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 4. 进入容器内部 Shell
+# ================================================================
+docker_shell_access() {
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  进入容器 Shell  ━━━━━━━━━━${rw_bai}"
+docker ps --format " {{.Names}}\t{{.Image}}\t{{.Status}}" 2>/dev/null | column -t
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+
+if [ "$(docker ps -q 2>/dev/null | wc -l)" -eq 0 ]; then
+  echo -e " ${rw_hong}没有运行中的容器${rw_bai}"
+  break_end; return
+fi
+
+read -e -p " 容器名 (0=取消): " cname
+[ "$cname" = "0" ] || [ -z "$cname" ] && return
+
+# 自动检测 shell
+for sh in bash sh ash; do
+  if docker exec "$cname" which $sh &>/dev/null; then
+    shell="/bin/$sh"
+    break
+  fi
+done
+
+if [ -z "$shell" ]; then
+  echo -e "${rw_hong}容器内未找到可用 Shell${rw_bai}"
+  break_end; return
+fi
+
+echo -e " 进入 ${rw_lv}$cname${rw_bai} ($shell) — 输入 exit 退出"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+
+if [ -t 0 ]; then
+  docker exec -it "$cname" "$shell"
+else
+  echo -e "${rw_hong}终端不支持交互模式，请手动执行: docker exec -it $cname $shell${rw_bai}"
+fi
+}
+
+# ================================================================
+# 5. 容器健康诊断
+# ================================================================
+docker_health_check() {
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  健康诊断  ━━━━━━━━━━━━━━━━${rw_bai}"
+
+# Docker 服务
+echo -n " Docker 服务: "
+if systemctl is-active docker &>/dev/null 2>&1 || pgrep dockerd &>/dev/null; then
+  echo -e "${rw_lv}● 运行中${rw_bai}"
+  docker info --format ' 容器: {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止    镜像: {{.Images}}' 2>/dev/null
+else
+  echo -e "${rw_hong}✗ 未运行${rw_bai}"
+fi
+echo ""
+
+# 磁盘
+echo -e "${rw_cheng}── 磁盘占用 ────────────────────────────${rw_bai}"
+docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取${rw_bai}"
+echo ""
+
+# 容器状态
+echo -e "${rw_cheng}── 容器状态 ────────────────────────────${rw_bai}"
+if [ "$(docker ps -a -q 2>/dev/null | wc -l)" -gt 0 ]; then
+  docker ps -a --format "{{.Names}}|{{.Status}}" 2>/dev/null | while IFS='|' read name status; do
+    health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}-{{end}}' "$name" 2>/dev/null)
+    case $health in
+      healthy)   hd="${rw_lv}healthy${rw_bai}" ;;
+      unhealthy) hd="${rw_hong}unhealthy${rw_bai}" ;;
+      *)         hd="${rw_huang}$health${rw_bai}" ;;
+    esac
+    if echo "$status" | grep -qi "^Up"; then
+      sd="${rw_lv}running${rw_bai}"
+    elif echo "$status" | grep -qi "Exited"; then
+      sd="${rw_hong}stopped${rw_bai}"
+    else
+      sd="${rw_huang}${status:0:12}${rw_bai}"
+    fi
+    printf " %-25s %b  %b\n" "$name" "$sd" "$hd"
+  done
+else
+  echo -e " 没有容器"
+fi
+echo ""
+
+# 资源
+echo -e "${rw_cheng}── 资源占用 Top5 ───────────────────────${rw_bai}"
+[ "$(docker ps -q 2>/dev/null | wc -l)" -gt 0 ] \
+  && docker stats --no-stream --format " {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" 2>/dev/null | head -5 | column -t \
+  || echo -e " 无运行容器"
+echo ""
+
+# 问题诊断
+echo -e "${rw_cheng}── 问题诊断 ────────────────────────────${rw_bai}"
+issues=0
+_exited=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ')
+_unhealthy=$(docker ps --filter "health=unhealthy" -q 2>/dev/null | wc -l | tr -d ' ')
+_restarting=$(docker ps --filter "status=restarting" -q 2>/dev/null | wc -l | tr -d ' ')
+_docker_root=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null)
+[ "$_exited" -gt 0 ] && echo -e " ${rw_hong}⚠  $_exited 个停止的容器 (可清理)${rw_bai}" && issues=$((issues+1))
+[ "$_unhealthy" -gt 0 ] && echo -e " ${rw_hong}⚠  $_unhealthy 个不健康容器${rw_bai}" && issues=$((issues+1))
+[ "$_restarting" -gt 0 ] && echo -e " ${rw_hong}⚠  $_restarting 个反复重启的容器${rw_bai}" && issues=$((issues+1))
+if [ -n "$_docker_root" ]; then
+  _usage=$(df -h "$_docker_root" 2>/dev/null | awk 'NR==2{print $5}' | tr -d '%')
+  [ -n "$_usage" ] && [ "$_usage" -gt 80 ] 2>/dev/null && \
+    echo -e " ${rw_hong}⚠  Docker 磁盘使用率 ${_usage}%，建议清理${rw_bai}" && issues=$((issues+1))
+fi
+[ "$issues" -eq 0 ] && echo -e " ${rw_lv}✓ 未发现问题${rw_bai}"
+
+echo ""
+break_end
+}
+
+# ================================================================
+# 6. 备份与还原
+# ================================================================
+docker_backup_restore() {
+backup_dir="$HOME/docker-backups"
+mkdir -p "$backup_dir"
+
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  备份 & 还原  ━━━━━━━━━━━━━${rw_bai}"
+echo -e " 备份目录: ${rw_lv}$backup_dir${rw_bai}  占用: $(du -sh "$backup_dir" 2>/dev/null | cut -f1)"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 备份容器        ${rw_huang}2${rw_bai} 备份数据卷"
+echo -e " ${rw_huang}3${rw_bai} 还原容器        ${rw_huang}4${rw_bai} 还原数据卷"
+echo -e " ${rw_huang}5${rw_bai} 查看备份列表    ${rw_huang}6${rw_bai} 一键备份所有容器"
+echo -e " ${rw_huang}7${rw_bai} 设置定时自动备份"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+case $choice in
+  1)
+    docker ps --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    bkp="$backup_dir/${cname}_backup_${timestamp}"
+    mkdir -p "$bkp"
+    echo -e " ${rw_huang}[1/3] 提交并导出镜像...${rw_bai}"
+    docker commit "$cname" "${cname}_backup:${timestamp}" 2>/dev/null
+    docker save -o "$bkp/image.tar" "${cname}_backup:${timestamp}" 2>/dev/null
+    docker inspect --format='{{.Config.Image}}' "$cname" > "$bkp/original_image.txt" 2>/dev/null
+    echo -e " ${rw_huang}[2/3] 导出配置...${rw_bai}"
+    docker inspect "$cname" > "$bkp/container_config.json" 2>/dev/null
+    echo -e " ${rw_huang}[3/3] 导出数据卷...${rw_bai}"
+    mounts=$(docker inspect --format='{{range .Mounts}}{{.Source}}{{"\n"}}{{end}}' "$cname" 2>/dev/null)
+    [ -n "$mounts" ] && tar -czf "$bkp/volumes.tar.gz" $mounts 2>/dev/null
+    echo -e " ${rw_lv}✓ 备份完成  →  $bkp  ($(du -sh "$bkp" | cut -f1))${rw_bai}"
+    break_end
+    ;;
+  2)
+    docker volume ls --format " {{.Name}}" | nl
+    read -e -p " 卷名 (0=取消): " volname
+    [ "$volname" = "0" ] || [ -z "$volname" ] && continue
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    backup_file="$backup_dir/volume_${volname}_${timestamp}.tar.gz"
+    docker run --rm -v "${volname}:/data" -v "$backup_dir:/backup" alpine \
+      tar -czf "/backup/volume_${volname}_${timestamp}.tar.gz" -C /data .
+    [ $? -eq 0 ] && [ -f "$backup_file" ] \
+      && echo -e " ${rw_lv}✓ 备份完成: $backup_file  ($(du -h "$backup_file" | cut -f1))${rw_bai}" \
+      || echo -e " ${rw_hong}备份失败${rw_bai}"
+    break_end
+    ;;
+  3)
+    ls -lt "$backup_dir" 2>/dev/null | head -15
+    read -e -p " 备份目录名 (0=取消): " bkp
+    [ "$bkp" = "0" ] || [ -z "$bkp" ] && continue
+    restore_path="$backup_dir/$bkp"
+    [ ! -d "$restore_path" ] && { echo -e " ${rw_hong}目录不存在${rw_bai}"; break_end; continue; }
+    orig_name=$(echo "$bkp" | sed 's/_backup_.*//')
+    read -e -p " 新容器名 (默认: ${orig_name}_restored): " newname
+    newname=${newname:-${orig_name}_restored}
+    if [ -f "$restore_path/image.tar" ]; then
+      docker load -i "$restore_path/image.tar"
+      read -e -p " 立即启动? (y/N): " startit
+      if [ "$startit" = "y" ] || [ "$startit" = "Y" ]; then
+        ports=$(python3 -c "
+import json
+with open('$restore_path/container_config.json') as f:
+    d = json.load(f)[0]
+for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
+    if v: print(f'-p {v[0][\"HostPort\"]}:{k}')
+" 2>/dev/null)
+        docker run -d --name "$newname" $ports "${orig_name}_backup:latest" 2>/dev/null \
+          && echo -e " ${rw_lv}✓ 容器 $newname 已启动${rw_bai}" \
+          || echo -e " ${rw_hong}启动失败，请手动检查参数${rw_bai}"
+      fi
+    else
+      echo -e " ${rw_hong}未找到 image.tar${rw_bai}"
+    fi
+    break_end
+    ;;
+  4)
+    ls -lh "$backup_dir"/volume_*.tar.gz 2>/dev/null || echo " 没有卷备份文件"
+    read -e -p " 备份文件名 (0=取消): " volfile
+    [ "$volfile" = "0" ] || [ -z "$volfile" ] && continue
+    [ ! -f "$backup_dir/$volfile" ] && [ ! -f "$volfile" ] && { echo -e " ${rw_hong}文件不存在${rw_bai}"; break_end; continue; }
+    [ ! -f "$volfile" ] && volfile="$backup_dir/$volfile"
+    read -e -p " 目标卷名 (0=取消): " volname
+    [ "$volname" = "0" ] || [ -z "$volname" ] && continue
+    docker volume create "$volname" 2>/dev/null
+    docker run --rm -v "${volname}:/data" -v "$(dirname "$volfile"):/backup" alpine \
+      tar -xzf "/backup/$(basename "$volfile")" -C /data
+    [ $? -eq 0 ] && echo -e " ${rw_lv}✓ 卷 $volname 还原成功${rw_bai}" || echo -e " ${rw_hong}还原失败${rw_bai}"
+    break_end
+    ;;
+  5)
+    echo -e "${rw_cheng}── 容器备份 ────────────────────────────${rw_bai}"
+    for d in "$backup_dir"/*/; do
+      [ -d "$d" ] && echo -e "  $(basename "$d")  ${rw_huang}$(du -sh "$d" | cut -f1)${rw_bai}"
+    done
+    echo -e "${rw_cheng}── 卷备份 ──────────────────────────────${rw_bai}"
+    ls -lh "$backup_dir"/volume_*.tar.gz 2>/dev/null || echo "  (无)"
+    echo -e " 总占用: ${rw_lv}$(du -sh "$backup_dir" | cut -f1)${rw_bai}"
+    break_end
+    ;;
+  6)
+    running=$(docker ps -q 2>/dev/null)
+    [ -z "$running" ] && { echo -e " ${rw_huang}没有运行中的容器${rw_bai}"; break_end; continue; }
+    count=$(echo "$running" | wc -l | tr -d ' ')
+    read -e -p " 备份 $count 个容器? (y/N): " confirm
+    [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    echo "$running" | while read cid; do
+      cname=$(docker inspect --format='{{.Name}}' "$cid" 2>/dev/null | tr -d '/')
+      bkp="$backup_dir/${cname}_backup_${timestamp}"
+      mkdir -p "$bkp"
+      docker commit "$cid" "${cname}_backup:${timestamp}" 2>/dev/null
+      docker save -o "$bkp/image.tar" "${cname}_backup:${timestamp}" 2>/dev/null
+      docker inspect "$cid" > "$bkp/container_config.json" 2>/dev/null
+      echo -e "  ${rw_lv}✓ $cname${rw_bai}"
+    done
+    echo -e " ${rw_lv}批量备份完成 → $backup_dir${rw_bai}"
+    break_end
+    ;;
+  7)
+    echo -e " ${rw_huang}Cron 示例: 每天凌晨2点 = 0 2 * * *${rw_bai}"
+    read -e -p " Cron 表达式 (0=取消): " cron_exp
+    [ "$cron_exp" = "0" ] || [ -z "$cron_exp" ] && continue
+    script_path="$HOME/docker-auto-backup.sh"
+    cat > "$script_path" << 'AUTO_BACKUP_EOF'
+#!/bin/bash
+BACKUP_DIR="$HOME/docker-backups"
+mkdir -p "$BACKUP_DIR"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$BACKUP_DIR/backup_${TIMESTAMP}.log"
+echo "=== Docker 自动备份 $(date) ===" >> "$LOG"
+docker ps -q | while read cid; do
+    cname=$(docker inspect --format='{{.Name}}' "$cid" 2>/dev/null | tr -d '/')
+    bkp="$BACKUP_DIR/${cname}_backup_${TIMESTAMP}"
+    mkdir -p "$bkp"
+    docker commit "$cid" "${cname}_backup:${TIMESTAMP}" >> "$LOG" 2>&1
+    docker save -o "$bkp/image.tar" "${cname}_backup:${TIMESTAMP}" >> "$LOG" 2>&1
+    docker inspect "$cid" > "$bkp/container_config.json" 2>>"$LOG"
+    echo "$cname → $bkp" >> "$LOG"
+done
+find "$BACKUP_DIR" -type d -name '*_backup_*' -mtime +7 -exec rm -rf {} \; >> "$LOG" 2>&1
+echo "=== 备份完成 $(date) ===" >> "$LOG"
+AUTO_BACKUP_EOF
+    chmod +x "$script_path"
+    (crontab -l 2>/dev/null | grep -v "docker-auto-backup"; echo "$cron_exp $script_path") | crontab -
+    echo -e " ${rw_lv}✓ 定时备份已设置  ($cron_exp)${rw_bai}"
+    echo -e "   脚本: $script_path  |  自动保留最近 7 天"
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 7. 数据迁移
+# ================================================================
+docker_data_migrate() {
+migrate_dir="$HOME/docker-migrations"
+mkdir -p "$migrate_dir"
+
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  数据迁移  ━━━━━━━━━━━━━━━━${rw_bai}"
+echo -e " 迁移目录: ${rw_lv}$migrate_dir${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 导出容器 (打包到本地)"
+echo -e " ${rw_huang}2${rw_bai} 导入容器 (从包恢复)"
+echo -e " ${rw_huang}3${rw_bai} 跨主机迁移 (打包+SCP)"
+echo -e " ${rw_huang}4${rw_bai} 导出数据卷"
+echo -e " ${rw_huang}5${rw_bai} 导出 Compose 项目"
+echo -e " ${rw_huang}6${rw_bai} 从远端拉取备份还原"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+case $choice in
+  1)
+    docker ps -a --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    export_path="$migrate_dir/${cname}_export_${timestamp}"
+    mkdir -p "$export_path"
+    echo -e " ${rw_huang}[1/4] 导出镜像...${rw_bai}"
+    docker commit "$cname" "${cname}_migrate:${timestamp}" 2>/dev/null
+    docker save -o "$export_path/container.tar" "${cname}_migrate:${timestamp}"
+    echo -e " ${rw_huang}[2/4] 导出配置...${rw_bai}"
+    docker inspect "$cname" > "$export_path/config.json"
+    echo -e " ${rw_huang}[3/4] 生成导入脚本...${rw_bai}"
+    cat > "$export_path/import.sh" << RUN_SCRIPT_EOF
+#!/bin/bash
+TARGET_NAME="\${1:-${cname}_imported}"
+echo "正在导入: \$TARGET_NAME"
+docker load -i container.tar
+PORTS=\$(python3 -c "
+import json
+with open('config.json') as f: d=json.load(f)[0]
+for k,v in d['NetworkSettings']['Ports'].items():
+    if v: print(f'-p {v[0][\"HostPort\"]}:{k}')
+" 2>/dev/null)
+docker run -d --name "\$TARGET_NAME" \$PORTS "${cname}_migrate:${timestamp}" 2>/dev/null
+[ \$? -eq 0 ] && echo "✓ 启动成功" || echo "启动失败，请手动执行"
+RUN_SCRIPT_EOF
+    chmod +x "$export_path/import.sh"
+    echo -e " ${rw_huang}[4/4] 打包数据卷...${rw_bai}"
+    mounts=$(docker inspect --format='{{range .Mounts}}{{if eq .Type "bind"}}{{.Source}}{{"\n"}}{{end}}{{end}}' "$cname" 2>/dev/null)
+    [ -n "$mounts" ] && tar -czf "$export_path/volume_data.tar.gz" $mounts 2>/dev/null
+    echo -e " ${rw_lv}✓ 导出完成  →  $export_path  ($(du -sh "$export_path" | cut -f1))${rw_bai}"
+    break_end
+    ;;
+  2)
+    ls -lt "$migrate_dir" 2>/dev/null | head -15
+    read -e -p " 导出目录名 (0=取消): " dirname
+    [ "$dirname" = "0" ] || [ -z "$dirname" ] && continue
+    import_path="$migrate_dir/$dirname"
+    [ ! -d "$import_path" ] && { echo -e " ${rw_hong}目录不存在${rw_bai}"; break_end; continue; }
+    if [ -f "$import_path/import.sh" ]; then
+      read -e -p " 新容器名: " newname
+      cd "$import_path" && bash import.sh "${newname:-}"
+    else
+      echo -e " ${rw_hong}未找到 import.sh${rw_bai}"
+    fi
+    break_end
+    ;;
+  3)
+    docker ps --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
+    read -e -p " 容器名 (0=取消): " cname
+    [ "$cname" = "0" ] || [ -z "$cname" ] && continue
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    export_file="$migrate_dir/${cname}_migrate_${timestamp}.tar.gz"
+    temp_dir="$migrate_dir/.tmp_${cname}"
+    mkdir -p "$temp_dir"
+    docker commit "$cname" "${cname}_migrate:${timestamp}" 2>/dev/null
+    docker save -o "$temp_dir/container.tar" "${cname}_migrate:${timestamp}"
+    docker inspect "$cname" > "$temp_dir/config.json"
+    cd "$temp_dir" && tar -czf "$export_file" . && cd - > /dev/null
+    rm -rf "$temp_dir"
+    echo -e " ${rw_lv}✓ 打包完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_bai}"
+    read -e -p " 目标主机 (user@host, 0=取消): " target
+    [ "$target" = "0" ] || [ -z "$target" ] && continue
+    read -e -p " 目标路径 (默认 /tmp): " target_path
+    target_path=${target_path:-/tmp}
+    scp "$export_file" "${target}:${target_path}/"
+    if [ $? -eq 0 ]; then
+      echo -e " ${rw_lv}✓ 传输成功${rw_bai}"
+      fname=$(basename "$export_file")
+      echo -e " 目标主机还原:"
+      echo "   mkdir -p /tmp/${cname}_r && cd /tmp/${cname}_r"
+      echo "   tar -xzf ${target_path}/$fname && docker load -i container.tar"
+    else
+      echo -e " ${rw_hong}传输失败${rw_bai}"
+    fi
+    break_end
+    ;;
+  4)
+    docker volume ls
+    read -e -p " 卷名 (0=取消): " volname
+    [ "$volname" = "0" ] || [ -z "$volname" ] && continue
+    docker run --rm -v "${volname}:/data" alpine ls -laR /data 2>/dev/null
+    read -e -p " 导出此卷? (y/N): " exportit
+    if [ "$exportit" = "y" ] || [ "$exportit" = "Y" ]; then
+      timestamp=$(date +%Y%m%d_%H%M%S)
+      export_file="$migrate_dir/vol_${volname}_${timestamp}.tar.gz"
+      docker run --rm -v "${volname}:/data" -v "$migrate_dir:/out" alpine \
+        tar -czf "/out/vol_${volname}_${timestamp}.tar.gz" -C /data .
+      echo -e " ${rw_lv}✓ 导出完成: $export_file${rw_bai}"
+    fi
+    break_end
+    ;;
+  5)
+    ls -d "$HOME/docker-compose-projects"/*/ 2>/dev/null | while read d; do echo " $(basename "$d")"; done
+    read -e -p " 项目名 (0=取消): " projname
+    [ "$projname" = "0" ] || [ -z "$projname" ] && continue
+    projdir="$HOME/docker-compose-projects/$projname"
+    [ ! -d "$projdir" ] && { echo -e " ${rw_hong}项目不存在${rw_bai}"; break_end; continue; }
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    export_file="$migrate_dir/compose_${projname}_${timestamp}.tar.gz"
+    docker compose version &>/dev/null && cd "$projdir" && docker compose down 2>/dev/null
+    tar -czf "$export_file" -C "$HOME/docker-compose-projects" "$projname" 2>/dev/null
+    echo -e " ${rw_lv}✓ 导出完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_bai}"
+    echo -e " 目标主机还原: tar -xzf $export_file -C ~/docker-compose-projects/ && cd ~/docker-compose-projects/$projname && docker compose up -d"
+    break_end
+    ;;
+  6)
+    read -e -p " 远端地址 (user@host, 0=取消): " remote_host
+    [ "$remote_host" = "0" ] || [ -z "$remote_host" ] && continue
+    read -e -p " 远端路径: " remote_path
+    [ -z "$remote_path" ] && continue
+    ssh "$remote_host" "ls -lh $remote_path" 2>/dev/null || { echo -e " ${rw_hong}无法连接${rw_bai}"; break_end; continue; }
+    read -e -p " 文件名: " filename
+    [ -z "$filename" ] && continue
+    scp "${remote_host}:${remote_path}/${filename}" "$migrate_dir/"
+    if [ $? -eq 0 ]; then
+      echo -e " ${rw_lv}✓ 已下载到 $migrate_dir/$filename${rw_bai}"
+      read -e -p " 立即 docker load? (y/N): " restoreit
+      [ "$restoreit" = "y" ] || [ "$restoreit" = "Y" ] && docker load -i "$migrate_dir/$filename"
+    else
+      echo -e " ${rw_hong}下载失败${rw_bai}"
+    fi
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 8. Docker 安装 & 升级
+# ================================================================
+docker_install_upgrade() {
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  安装 & 升级  ━━━━━━━━━━━━━${rw_bai}"
+# 当前版本
+if command -v docker &>/dev/null; then
+  echo -e " Docker:   ${rw_lv}$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',')${rw_bai}"
+else
+  echo -e " Docker:   ${rw_hong}未安装${rw_bai}"
+fi
+if docker compose version &>/dev/null 2>&1; then
+  echo -e " Compose:  ${rw_lv}$(docker compose version 2>/dev/null | awk '{print $NF}' | head -1)${rw_bai} (插件版)"
+elif command -v docker-compose &>/dev/null; then
+  echo -e " Compose:  ${rw_lv}$(docker-compose --version 2>/dev/null | awk '{print $NF}' | tr -d ',')${rw_bai} (独立版)"
+else
+  echo -e " Compose:  ${rw_hong}未安装${rw_bai}"
+fi
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 安装/升级 Docker (官方)"
+echo -e " ${rw_huang}2${rw_bai} 安装/升级 Docker Compose"
+echo -e " ${rw_huang}3${rw_bai} 一键安装 Docker + Compose"
+echo -e " ${rw_huang}4${rw_bai} 国内镜像源安装 (阿里云)"
+echo -e " ${rw_huang}5${rw_bai} 配置镜像加速器"
+echo -e " ${rw_huang}6${rw_bai} 卸载 Docker"
+echo -e " ${rw_huang}7${rw_bai} 安装状态检查"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+case $choice in
+  1)
+    read -e -p " 确认安装/升级 Docker? (y/N): " confirm
+    [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
+    if [ "$canshu" = "CN" ]; then
+      curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun 2>/dev/null
+    else
+      curl -fsSL https://get.docker.com | bash
+    fi
+    if [ $? -eq 0 ]; then
+      systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
+      [ "$(whoami)" != "root" ] && usermod -aG docker "$(whoami)" 2>/dev/null
+      echo -e " ${rw_lv}✓ Docker 安装成功${rw_bai}"; docker --version
+    else
+      echo -e " ${rw_hong}安装失败${rw_bai}"
+    fi
+    break_end
+    ;;
+  2)
+    echo -e " ${rw_huang}1=Compose 插件版 (推荐)  2=Compose 独立版${rw_bai}"
+    read -e -p " 选择: " comp_type
+    DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+    mkdir -p $DOCKER_CONFIG/cli-plugins
+    if [ "$canshu" = "CN" ]; then
+      _gh_base="https://gh.riwi.pro/https://github.com/docker/compose/releases/latest/download"
+    else
+      _gh_base="https://github.com/docker/compose/releases/latest/download"
+    fi
+    _compose_bin="docker-compose-$(uname -s)-$(uname -m)"
+    if [ "$comp_type" = "1" ]; then
+      curl -SL "$_gh_base/$_compose_bin" -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>/dev/null
+      chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+      docker compose version &>/dev/null \
+        && echo -e " ${rw_lv}✓ Compose 插件安装成功${rw_bai}" && docker compose version \
+        || echo -e " ${rw_hong}安装失败${rw_bai}"
+    elif [ "$comp_type" = "2" ]; then
+      curl -L "$_gh_base/$_compose_bin" -o /usr/local/bin/docker-compose 2>/dev/null
+      chmod +x /usr/local/bin/docker-compose
+      command -v docker-compose &>/dev/null \
+        && echo -e " ${rw_lv}✓ Compose 独立版安装成功${rw_bai}" && docker-compose --version \
+        || echo -e " ${rw_hong}安装失败${rw_bai}"
+    fi
+    break_end
+    ;;
+  3)
+    read -e -p " 一键安装 Docker + Compose? (y/N): " confirm
+    [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
+    echo -e " ${rw_huang}[1/2] 安装 Docker...${rw_bai}"
+    [ "$canshu" = "CN" ] && curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun \
+      || curl -fsSL https://get.docker.com | bash
+    systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
+    echo -e " ${rw_huang}[2/2] 安装 Compose 插件...${rw_bai}"
+    DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+    mkdir -p $DOCKER_CONFIG/cli-plugins
+    if [ "$canshu" = "CN" ]; then
+      curl -SL "https://gh.riwi.pro/https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+        -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>/dev/null
+    else
+      curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+        -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>/dev/null
+    fi
+    chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+    echo -e " ${rw_lv}✓ 安装完成${rw_bai}"
+    docker --version 2>/dev/null
+    docker compose version 2>/dev/null
+    [ "$(whoami)" != "root" ] && usermod -aG docker "$(whoami)" 2>/dev/null \
+      && echo -e " ${rw_huang}请重新登录使 docker 组权限生效${rw_bai}"
+    break_end
+    ;;
+  4)
+    read -e -p " 使用阿里云镜像源安装 Docker? (y/N): " confirm
+    [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case $ID in
+        ubuntu|debian)
+          apt-get update && apt-get install -y ca-certificates curl
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/$ID $(lsb_release -cs) stable" \
+            | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          ;;
+        centos|rhel|fedora|rocky|almalinux)
+          yum install -y yum-utils
+          yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+          yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          ;;
+        *) echo -e " ${rw_hong}不支持的发行版${rw_bai}"; break_end; continue ;;
+      esac
+      systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
+      echo -e " ${rw_lv}✓ 安装完成${rw_bai}"; docker --version
+    fi
+    break_end
+    ;;
+  5)
+    echo -e " ${rw_huang}1=阿里云  2=中科大  3=网易  4=自定义  5=恢复默认${rw_bai}"
+    read -e -p " 选择: " mirror_choice
+    case $mirror_choice in
+      1) registry_mirror="https://registry.cn-hangzhou.aliyuncs.com" ;;
+      2) registry_mirror="https://docker.mirrors.ustc.edu.cn" ;;
+      3) registry_mirror="https://hub-mirror.c.163.com" ;;
+      4) read -e -p " 镜像地址: " registry_mirror; [ -z "$registry_mirror" ] && continue ;;
+      5) registry_mirror="" ;;
+      *) echo -e " ${rw_hong}无效选择${rw_bai}"; break_end; continue ;;
+    esac
+    mkdir -p /etc/docker 2>/dev/null
+    if [ -n "$registry_mirror" ]; then
+      printf '{\n  "registry-mirrors": ["%s"]\n}\n' "$registry_mirror" > /etc/docker/daemon.json
+      echo -e " ${rw_lv}✓ 已配置加速器: $registry_mirror${rw_bai}"
+    else
+      echo '{}' > /etc/docker/daemon.json
+      echo -e " ${rw_lv}✓ 已恢复默认${rw_bai}"
+    fi
+    systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null
+    echo -e " ${rw_lv}Docker 已重启${rw_bai}"
+    break_end
+    ;;
+  6)
+    echo -e " ${rw_hong}⚠  卸载 Docker 将删除所有容器、镜像、数据卷！不可逆！${rw_bai}"
+    read -e -p " 输入 YES 确认卸载 (0=取消): " confirm
+    [ "$confirm" != "YES" ] && { echo -e " 已取消"; continue; }
+    docker stop $(docker ps -q) 2>/dev/null
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case $ID in
+        ubuntu|debian)
+          apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras 2>/dev/null
+          apt-get autoremove -y 2>/dev/null ;;
+        centos|rhel|fedora|rocky|almalinux)
+          yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras 2>/dev/null ;;
+      esac
+    fi
+    rm -rf /var/lib/docker /var/lib/containerd ~/.docker /usr/local/bin/docker-compose 2>/dev/null
+    echo -e " ${rw_lv}✓ Docker 已卸载${rw_bai}"
+    break_end
+    ;;
+  7)
+    echo -e "${rw_cheng}── 安装状态 ────────────────────────────${rw_bai}"
+    _chk() { printf " %-20s" "$1"; }
+    _chk "Docker 命令:"
+    command -v docker &>/dev/null && echo -e "${rw_lv}✓ 已安装${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"
+    _chk "Docker 服务:"
+    systemctl is-active docker &>/dev/null 2>&1 || pgrep dockerd &>/dev/null \
+      && echo -e "${rw_lv}✓ 运行中${rw_bai}" || echo -e "${rw_hong}✗ 未运行${rw_bai}"
+    _chk "Docker Compose:"
+    docker compose version &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 插件版${rw_bai}" \
+      || { command -v docker-compose &>/dev/null && echo -e "${rw_lv}✓ 独立版${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"; }
+    _chk "开机自启:"
+    systemctl is-enabled docker &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 已启用${rw_bai}" || echo -e "${rw_huang}─ 未启用${rw_bai}"
+    _chk "用户组权限:"
+    groups "$(whoami)" | grep -q docker && echo -e "${rw_lv}✓ 有权限${rw_bai}" || echo -e "${rw_huang}─ 需 sudo${rw_bai}"
+    _chk "镜像加速器:"
+    if [ -f /etc/docker/daemon.json ]; then
+      _m=$(grep -o '"https://[^"]*"' /etc/docker/daemon.json 2>/dev/null | tr -d '"')
+      [ -n "$_m" ] && echo -e "${rw_lv}$_m${rw_bai}" || echo -e "${rw_huang}未配置${rw_bai}"
+    else
+      echo -e "${rw_huang}未配置${rw_bai}"
+    fi
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 9. 系统资源 & 磁盘清理
+# ================================================================
+docker_system_clean() {
+while true; do
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  磁盘清理  ━━━━━━━━━━━━━━━━${rw_bai}"
+docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取信息${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}1${rw_bai} 清理已停止容器  ${rw_huang}2${rw_bai} 清理悬空镜像"
+echo -e " ${rw_huang}3${rw_bai} 清理未用数据卷  ${rw_huang}4${rw_bai} 清理未用网络"
+echo -e " ${rw_huang}5${rw_bai} 清理构建缓存    ${rw_huang}6${rw_bai} 一键大扫除"
+echo -e " ${rw_huang}7${rw_bai} 容器磁盘占用"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " ${rw_huang}0${rw_bai} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+read -e -p " 请选择: " choice
+
+case $choice in
+  1) docker container prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  2) docker image prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  3)
+    read -e -p " 清理未使用的数据卷 (数据将永久删除)? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker volume prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"
+    break_end
+    ;;
+  4) docker network prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  5) docker builder prune -f 2>/dev/null && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  6)
+    echo -e " ${rw_hong}⚠  清理所有未使用的资源 (停止容器/无用镜像/网络/缓存)${rw_bai}"
+    read -e -p " 确认? (y/N): " confirm
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && \
+      docker system prune -a -f --volumes 2>/dev/null && echo -e " ${rw_lv}✓ 清理完成${rw_bai}"
+    break_end
+    ;;
+  7)
+    echo -e "${rw_cheng}── 容器磁盘占用 ────────────────────────${rw_bai}"
+    docker ps -a --format " {{.Names}}\t{{.Size}}" 2>/dev/null | sort -t$'\t' -k2 -h | column -t
+    break_end
+    ;;
+  0) return ;;
+  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+esac
+done
+}
+
+# ================================================================
+# 10. Docker 版本信息
+# ================================================================
+docker_version_show() {
+clear
+echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 版本信息  ━━━━━━━━━━${rw_bai}"
+
+if ! command -v docker &>/dev/null; then
+  echo -e " ${rw_hong}Docker 未安装${rw_bai}"
+  break_end; return
+fi
+
+echo -e "${rw_cheng}── Docker ──────────────────────────────${rw_bai}"
+docker version --format ' Client: {{.Client.Version}} ({{.Client.Os}}/{{.Client.Arch}})' 2>/dev/null
+docker version --format ' Server: {{.Server.Version}} ({{.Server.Os}}/{{.Server.Arch}})' 2>/dev/null
+
+echo -e "${rw_cheng}── Compose ─────────────────────────────${rw_bai}"
+if docker compose version &>/dev/null 2>&1; then
+  echo -e " ${rw_lv}$(docker compose version 2>/dev/null | head -1)${rw_bai}  (插件版)"
+elif command -v docker-compose &>/dev/null; then
+  echo -e " ${rw_lv}$(docker-compose --version 2>/dev/null)${rw_bai}  (独立版)"
+else
+  echo -e " ${rw_hong}未安装${rw_bai}"
+fi
+
+echo -e "${rw_cheng}── 系统信息 ────────────────────────────${rw_bai}"
+docker info --format ' 容器:  {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止
+ 镜像:  {{.Images}}
+ 驱动:  {{.Driver}}
+ 目录:  {{.DockerRootDir}}
+ CPU:   {{.NCPU}} 核
+ 内存:  {{.MemTotal}}
+ 系统:  {{.OperatingSystem}}
+ 内核:  {{.KernelVersion}}' 2>/dev/null
+
+echo ""
+break_end
+}
 
 k_info() {
 send_stats "r命令参考用例"
@@ -23924,7 +24683,7 @@ echo "软件状态查看        r status sshd | r 状态 sshd "
 echo "软件开机启动        r enable docker | r autostart docke | r 开机启动 docker "
 echo "域名证书申请        r ssl"
 echo "域名证书到期查询    r ssl ps"
-echo "docker管理平面      r docker"
+echo "docker管理平面      r docker | r docker manager"
 echo "docker环境安装      r docker install |r docker 安装"
 echo "docker容器管理      r docker ps |r docker 容器"
 echo "docker镜像管理      r docker img |r docker 镜像"
@@ -24147,8 +24906,17 @@ else
 					send_stats "快捷镜像管理"
 					docker_image
 					;;
+				manager|管理|"")
+					send_stats "Docker全管理"
+					docker_manager_menu
+					;;
 				*)
-					linux_docker
+					echo "Docker 管理相关命令:"
+					echo "  r docker              进入 Docker 全管理界面"
+					echo "  r docker install       安装 Docker"
+					echo "  r docker ps            容器管理"
+					echo "  r docker img           镜像管理"
+					echo "  r docker manager       进入管理界面"
 					;;
 			esac
 			;;
