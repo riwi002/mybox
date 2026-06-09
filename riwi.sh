@@ -8864,7 +8864,7 @@ ldnmp_builder_menu() {
     # 检查 Docker 模式
     if docker inspect nginx &>/dev/null 2>&1; then
         docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_bai}"
-    elif systemctl is-active nginx &>/dev/null 2>&1; then
+    elif command -v systemctl &>/dev/null && systemctl is-active nginx &>/dev/null 2>&1; then
         _nginx_stat="${rw_lv}运行中${rw_bai}"
     fi
 
@@ -8874,7 +8874,7 @@ ldnmp_builder_menu() {
         elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true 2>/dev/null; then
             _mysql_stat="${rw_lv}运行中${rw_bai}"
         fi
-    elif systemctl is-active mysql &>/dev/null 2>&1 || systemctl is-active mariadb &>/dev/null 2>&1; then
+    elif command -v systemctl &>/dev/null && (systemctl is-active mysql &>/dev/null 2>&1 || systemctl is-active mariadb &>/dev/null 2>&1); then
         _mysql_stat="${rw_lv}运行中${rw_bai}"
     fi
 
@@ -8884,7 +8884,7 @@ ldnmp_builder_menu() {
         elif docker inspect -f '{{.State.Running}}' php-fpm 2>/dev/null | grep -q true 2>/dev/null; then
             _php_stat="${rw_lv}运行中${rw_bai}"
         fi
-    elif systemctl is-active php-fpm &>/dev/null 2>&1; then
+    elif command -v systemctl &>/dev/null && systemctl is-active php-fpm &>/dev/null 2>&1; then
         _php_stat="${rw_lv}运行中${rw_bai}"
     fi
 
@@ -19793,14 +19793,14 @@ linux_Settings() {
     local _swap_size="0"
 
     # 防火墙状态
-    if systemctl is-active firewalld &>/dev/null; then
+    if command -v systemctl &>/dev/null && systemctl is-active firewalld &>/dev/null; then
       _fw_stat="${rw_lv}firewalld运行中${rw_bai}"
-    elif systemctl is-active ufw &>/dev/null; then
+    elif command -v systemctl &>/dev/null && systemctl is-active ufw &>/dev/null; then
       _fw_stat="${rw_lv}ufw运行中${rw_bai}"
     fi
 
     # SSH 状态
-    if systemctl is-active sshd &>/dev/null || systemctl is-active ssh &>/dev/null; then
+    if command -v systemctl &>/dev/null && (systemctl is-active sshd &>/dev/null || systemctl is-active ssh &>/dev/null); then
       _ssh_stat="${rw_lv}运行中${rw_bai}"
     fi
 
@@ -20993,8 +20993,8 @@ linux_security() {
     local _fw_stat="${rw_hong}未运行${rw_bai}"
     local _user_cnt=0
 
-    systemctl is-active sshd &>/dev/null && _ssh_stat="${rw_lv}运行中${rw_bai}"
-    systemctl is-active firewalld &>/dev/null && _fw_stat="${rw_lv}运行中${rw_bai}"
+    command -v systemctl &>/dev/null && systemctl is-active sshd &>/dev/null && _ssh_stat="${rw_lv}运行中${rw_bai}"
+    command -v systemctl &>/dev/null && systemctl is-active firewalld &>/dev/null && _fw_stat="${rw_lv}运行中${rw_bai}"
     _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
 
     echo -e "${rw_cheng}━━━━━━━━━━━━  安全优化  ━━━━━━━━━━━━${rw_bai}"
@@ -21849,7 +21849,7 @@ while true; do
     fi
 
     # fail2ban 状态
-    if systemctl is-active fail2ban &>/dev/null; then
+    if command -v systemctl &>/dev/null && systemctl is-active fail2ban &>/dev/null; then
       _f2b_stat="${rw_lv}运行中${rw_bai}"
     elif command -v fail2ban-client &>/dev/null; then
       _f2b_stat="${rw_huang}已安装未运行${rw_bai}"
@@ -24426,7 +24426,7 @@ echo -e "${rw_cheng}━━━━━━━━━━━━  健康诊断  ━━�
 
 # Docker 服务
 echo -n " Docker 服务: "
-if systemctl is-active docker &>/dev/null 2>&1 || pgrep dockerd &>/dev/null; then
+if (command -v systemctl &>/dev/null && systemctl is-active docker &>/dev/null 2>&1) || pgrep dockerd &>/dev/null; then
   echo -e "${rw_lv}● 运行中${rw_bai}"
   docker info --format ' 容器: {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止    镜像: {{.Images}}' 2>/dev/null
 else
@@ -24984,7 +24984,7 @@ case $choice in
     _chk "Docker 命令:"
     command -v docker &>/dev/null && echo -e "${rw_lv}✓ 已安装${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"
     _chk "Docker 服务:"
-    systemctl is-active docker &>/dev/null 2>&1 || pgrep dockerd &>/dev/null \
+    (command -v systemctl &>/dev/null && systemctl is-active docker &>/dev/null 2>&1) || pgrep dockerd &>/dev/null \
       && echo -e "${rw_lv}✓ 运行中${rw_bai}" || echo -e "${rw_hong}✗ 未运行${rw_bai}"
     _chk "Docker Compose:"
     docker compose version &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 插件版${rw_bai}" \
@@ -25173,7 +25173,7 @@ while true; do
 			_1p_url="http://${_1p_ip:-localhost}:${_1p_port:-$(grep port /opt/1panel/conf/app.yaml 2>/dev/null | awk '{print $2}' | head -1)}"
 		fi
 		# 服务状态
-		if systemctl is-active 1panel &>/dev/null; then
+		if command -v systemctl &>/dev/null && systemctl is-active 1panel &>/dev/null; then
 			_1p_stat="${rw_lv}运行中${rw_bai}"
 		else
 			_1p_stat="${rw_hong}未运行${rw_bai}"
@@ -25492,7 +25492,7 @@ while true; do
 	# 1Panel 状态
 	if command -v 1pctl &>/dev/null; then
 		_1p_stat="${rw_lv}已安装${rw_bai}"
-		systemctl is-active 1panel &>/dev/null && _1p_stat="${rw_lv}运行中${rw_bai}"
+		command -v systemctl &>/dev/null && systemctl is-active 1panel &>/dev/null && _1p_stat="${rw_lv}运行中${rw_bai}"
 	fi
 
 	# Nginx 状态
