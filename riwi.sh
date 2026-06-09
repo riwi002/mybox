@@ -432,6 +432,188 @@ verify_password() {
 
 # ==================== 密码保护模块 - 结束 ====================
 
+# ==================== 便携式 date 兼容函数 ====================
+# 兼容 GNU date (Linux) 和 BSD date (macOS)
+# 用法: portable_date "date_string" "+format"
+# 示例: portable_date "2026-06-15" "+%Y-%m-%d"
+portable_date() {
+    local date_str="$1"
+    local format="$2"
+    
+    # 尝试 GNU date (Linux)
+    if date -d "$date_str" "$format" &>/dev/null; then
+        date -d "$date_str" "$format" 2>/dev/null
+        return $?
+    fi
+    
+    # 尝试 BSD date (macOS)
+    # 自动检测输入格式
+    if echo "$date_str" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+        # YYYY-MM-DD 格式
+        date -j -f "%Y-%m-%d" "$date_str" "$format" 2>/dev/null
+        return $?
+    elif echo "$date_str" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'; then
+        # "YYYY-MM-DD HH:MM:SS" 格式
+        date -j -f "%Y-%m-%d %H:%M:%S" "$date_str" "$format" 2>/dev/null
+        return $?
+    else
+        # 尝试自动解析
+        date -j -f "%Y-%m-%d %H:%M:%S" "$date_str" "$format" 2>/dev/null || \
+        date -j -f "%a %b %d %H:%M:%S %Z %Y" "$date_str" "$format" 2>/dev/null || \
+        echo "$date_str"
+        return $?
+    fi
+}
+
+# 转换为时间戳 (兼容 GNU 和 BSD)
+# 用法: portable_date_to_timestamp "date_string"
+portable_date_to_timestamp() {
+    local date_str="$1"
+    
+    # 尝试 GNU date
+    if date -d "$date_str" +%s &>/dev/null 2>&1; then
+        date -d "$date_str" +%s 2>/dev/null
+        return $?
+    fi
+    
+    # 尝试 BSD date
+    if echo "$date_str" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+        date -j -f "%Y-%m-%d" "$date_str" +%s 2>/dev/null
+        return $?
+    elif echo "$date_str" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'; then
+        date -j -f "%Y-%m-%d %H:%M:%S" "$date_str" +%s 2>/dev/null
+        return $?
+    else
+        # 当前时间戳作为回退
+        date +%s 2>/dev/null || echo "$(date +%s)"
+        return 1
+    fi
+}
+
+# 获取文件修改时间 (兼容 Linux 和 macOS)
+# 用法: portable_file_mtime "file_path" "+format"
+portable_file_mtime() {
+    local file_path="$1"
+    local format="${2:-+%Y-%m-%d %H:%M:%S}"
+    
+    if [ ! -f "$file_path" ]; then
+        echo "文件不存在"
+        return 1
+    fi
+    
+    # 尝试 Linux stat
+    if command -v stat &>/dev/null && stat -c %y "$file_path" &>/dev/null 2>&1; then
+        stat -c %y "$file_path" 2>/dev/null | awk '{print $1" "$2}' | sed 's/\..*//'
+        return $?
+    fi
+    
+    # 尝试 macOS stat
+    if command -v stat &>/dev/null && stat -f %Sm "$file_path" &>/dev/null 2>&1; then
+        stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file_path" 2>/dev/null
+        return $?
+    fi
+    
+    # 回退到 ls
+    ls -l "$file_path" 2>/dev/null | awk '{print $6" "$7" "$8}'
+    return $?
+}
+# ==================== 便携式 date 兼容函数结束 ====================
+
+# ==================== 状态缓存机制 ====================
+# 避免每次菜单刷新都重新执行耗时的状态探测命令
+# 缓存有效期：60 秒
+
+_CACHE_TIMESTAMP=0
+_CACHE_TTL=60  # 缓存有效期（秒）
+
+# 缓存的状态值
+_CACHE_SYSTEMCTL_AVAILABLE=false
+_CACHE_FIREWALLD_ACTIVE=false
+_CACHE_UFW_ACTIVE=false
+_CACHE_SSHD_ACTIVE=false
+_CACHE_FAIL2BAN_ACTIVE=false
+_CACHE_DOCKER_ACTIVE=false
+_CACHE_NGINX_ACTIVE=false
+_CACHE_MYSQL_ACTIVE=false
+_CACHE_PHP_ACTIVE=false
+_CACHE_1PANEL_ACTIVE=false
+
+# 检查缓存是否有效
+_should_refresh_cache() {
+    local current_time=$(date +%s 2>/dev/null || echo 0)
+    local time_diff=$((current_time - _CACHE_TIMESTAMP))
+    [ $_CACHE_TIMESTAMP -eq 0 ] || [ $time_diff -ge $_CACHE_TTL ]
+}
+
+# 刷新所有状态缓存
+refresh_status_cache() {
+    # 重置缓存
+    _CACHE_SYSTEMCTL_AVAILABLE=false
+    _CACHE_FIREWALLD_ACTIVE=false
+    _CACHE_UFW_ACTIVE=false
+    _CACHE_SSHD_ACTIVE=false
+    _CACHE_FAIL2BAN_ACTIVE=false
+    _CACHE_DOCKER_ACTIVE=false
+    _CACHE_NGINX_ACTIVE=false
+    _CACHE_MYSQL_ACTIVE=false
+    _CACHE_PHP_ACTIVE=false
+    _CACHE_1PANEL_ACTIVE=false
+    
+    # systemctl 可用性
+    if command -v systemctl &>/dev/null; then
+        _CACHE_SYSTEMCTL_AVAILABLE=true
+        
+        # 服务状态
+        if systemctl is-active firewalld &>/dev/null; then
+            _CACHE_FIREWALLD_ACTIVE=true
+        fi
+        
+        if systemctl is-active ufw &>/dev/null; then
+            _CACHE_UFW_ACTIVE=true
+        fi
+        
+        if systemctl is-active sshd &>/dev/null || systemctl is-active ssh &>/dev/null; then
+            _CACHE_SSHD_ACTIVE=true
+        fi
+        
+        if systemctl is-active fail2ban &>/dev/null; then
+            _CACHE_FAIL2BAN_ACTIVE=true
+        fi
+        
+        if systemctl is-active docker &>/dev/null; then
+            _CACHE_DOCKER_ACTIVE=true
+        fi
+        
+        if systemctl is-active nginx &>/dev/null; then
+            _CACHE_NGINX_ACTIVE=true
+        fi
+        
+        if systemctl is-active mysql &>/dev/null || systemctl is-active mariadb &>/dev/null; then
+            _CACHE_MYSQL_ACTIVE=true
+        fi
+        
+        if systemctl is-active php-fpm &>/dev/null; then
+            _CACHE_PHP_ACTIVE=true
+        fi
+        
+        if systemctl is-active 1panel &>/dev/null; then
+            _CACHE_1PANEL_ACTIVE=true
+        fi
+    fi
+    
+    # Docker 可用性（不依赖 systemctl）
+    if pgrep dockerd &>/dev/null || docker ps &>/dev/null; then
+        _CACHE_DOCKER_ACTIVE=true
+    fi
+    
+    # 更新缓存时间戳
+    _CACHE_TIMESTAMP=$(date +%s 2>/dev/null || echo 0)
+}
+
+# 初始化缓存（脚本加载时执行一次）
+refresh_status_cache
+# ==================== 状态缓存机制结束 ====================
+
 # 执行密码验证
 verify_password
 
@@ -445,8 +627,8 @@ get_public_ip() {
 	curl -s https://ipinfo.io/ip && echo
 }
 
-get_local_ip() {
-	ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K[^ ]+' || \
+	get_local_ip() {
+	ip route get 8.8.8.8 2>/dev/null | sed -n 's/.*src \([^ ]*\).*/\1/p' || \
 	hostname -I 2>/dev/null | awk '{print $1}' || \
 	ifconfig 2>/dev/null | grep -E 'inet [0-9]' | grep -v '127.0.0.1' | awk '{print $2}' | head -n1
 }
@@ -1643,20 +1825,20 @@ ldnmp_v() {
 
 	  # 获取nginx版本
 	  local nginx_version=$(docker exec nginx nginx -v 2>&1)
-	  local nginx_version=$(echo "$nginx_version" | grep -oP "nginx/\K[0-9]+\.[0-9]+\.[0-9]+")
+	  local nginx_version=$(echo "$nginx_version" | sed -n -E 's/.*nginx\/([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
 	  echo -n -e "nginx : ${rw_huang}v$nginx_version${rw_bai}"
 
 	  # 获取mysql版本
-	  local dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+	  local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 	  local mysql_version=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SELECT VERSION();" 2>/dev/null | tail -n 1)
 	  echo -n -e "            mysql : ${rw_huang}v$mysql_version${rw_bai}"
 
 	  # 获取php版本
-	  local php_version=$(docker exec php php -v 2>/dev/null | grep -oP "PHP \K[0-9]+\.[0-9]+\.[0-9]+")
+	  local php_version=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
 	  echo -n -e "            php : ${rw_huang}v$php_version${rw_bai}"
 
 	  # 获取redis版本
-	  local redis_version=$(docker exec redis redis-server -v 2>&1 | grep -oP "v=+\K[0-9]+\.[0-9]+")
+	  local redis_version=$(docker exec redis redis-server -v 2>&1 | sed -n -E 's/.*v=([0-9]+\.[0-9]+).*/\1/p')
 	  echo -e "            redis : ${rw_huang}v$redis_version${rw_bai}"
 
 	  echo -e "${rw_cheng}------------------------${rw_bai}"
@@ -1694,9 +1876,9 @@ update_docker_compose_with_db_creds() {
   if ! grep -q "letsencrypt" /home/web/docker-compose.yml; then
 	wget -O /home/web/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/LNMP-docker-compose-10.yml
 
-  	dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose1.yml | tr -d '[:space:]')
-  	dbuse=$(grep -oP 'MYSQL_USER:\s*\K.*' /home/web/docker-compose1.yml | tr -d '[:space:]')
-  	dbusepasswd=$(grep -oP 'MYSQL_PASSWORD:\s*\K.*' /home/web/docker-compose1.yml | tr -d '[:space:]')
+  	dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose1.yml | tr -d '[:space:]')
+  	dbuse=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose1.yml | tr -d '[:space:]')
+  	dbusepasswd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose1.yml | tr -d '[:space:]')
 
 	sed -i "s#webroot#$dbrootpasswd#g" /home/web/docker-compose.yml
 	sed -i "s#riwiYYDS#$dbusepasswd#g" /home/web/docker-compose.yml
@@ -1862,7 +2044,7 @@ ssl_ps() {
 	  if [ -f "$cert_file" ]; then
 		local domain=$(basename "$cert_dir")
 		local expire_date=$(openssl x509 -noout -enddate -in "$cert_file" | awk -F'=' '{print $2}')
-		local formatted_date=$(date -d "$expire_date" '+%Y-%m-%d')
+		local formatted_date=$(portable_date "$expire_date" '+%Y-%m-%d')
 		printf "%-30s%s\n" "$domain" "$formatted_date"
 	  fi
 	done
@@ -2026,9 +2208,9 @@ add_db() {
 	  dbname=$(echo "$yuming" | sed -e 's/[^A-Za-z0-9]/_/g')
 	  dbname="${dbname}"
 
-	  dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
-	  dbuse=$(grep -oP 'MYSQL_USER:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
-	  dbusepasswd=$(grep -oP 'MYSQL_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+	  dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
+	  dbuse=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
+	  dbusepasswd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 	  docker exec mysql mysql -u root -p"$dbrootpasswd" -e "CREATE DATABASE $dbname; GRANT ALL PRIVILEGES ON $dbname.* TO \"$dbuse\"@\"%\";"
 }
 
@@ -2071,8 +2253,8 @@ nginx_upgrade() {
 phpmyadmin_upgrade() {
   local ldnmp_pods="phpmyadmin"
   local local docker_port=8877
-  local dbuse=$(grep -oP 'MYSQL_USER:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
-  local dbusepasswd=$(grep -oP 'MYSQL_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+  local dbuse=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
+  local dbusepasswd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 
   cd /home/web/
   docker rm -f $ldnmp_pods > /dev/null 2>&1
@@ -2160,7 +2342,7 @@ web_del() {
 
 		# 将域名转换为数据库名
 		dbname=$(echo "$yuming" | sed -e 's/[^A-Za-z0-9]/_/g')
-		dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+		dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 
 		# 删除数据库前检查是否存在，避免报错
 		echo "正在删除数据库: $dbname"
@@ -2206,7 +2388,7 @@ nginx_waf() {
 }
 
 check_waf_status() {
-	if grep -q "^\s*#\s*modsecurity on;" /home/web/nginx.conf; then
+	if grep -q "^[[:space:]]*#[[:space:]]*modsecurity on;" /home/web/nginx.conf; then
 		waf_status=""
 	elif grep -q "modsecurity on;" /home/web/nginx.conf; then
 		waf_status=" WAF已开启"
@@ -2681,21 +2863,21 @@ check_nginx_compression() {
 	local CONFIG_FILE="/home/web/nginx.conf"
 
 	# 检查 zstd 是否开启且未被注释（整行以 zstd on; 开头）
-	if grep -qE '^\s*zstd\s+on;' "$CONFIG_FILE"; then
+	if grep -qE '^[[:space:]]*zstd[[:space:]]+on;' "$CONFIG_FILE"; then
 		zstd_status=" zstd压缩已开启"
 	else
 		zstd_status=""
 	fi
 
 	# 检查 brotli 是否开启且未被注释
-	if grep -qE '^\s*brotli\s+on;' "$CONFIG_FILE"; then
+	if grep -qE '^[[:space:]]*brotli[[:space:]]+on;' "$CONFIG_FILE"; then
 		br_status=" br压缩已开启"
 	else
 		br_status=""
 	fi
 
 	# 检查 gzip 是否开启且未被注释
-	if grep -qE '^\s*gzip\s+on;' "$CONFIG_FILE"; then
+	if grep -qE '^[[:space:]]*gzip[[:space:]]+on;' "$CONFIG_FILE"; then
 		gzip_status=" gzip压缩已开启"
 	else
 		gzip_status=""
@@ -2915,7 +3097,7 @@ check_docker_image_update() {
 
 	local container_created=$(echo "$container_info" | cut -d',' -f1)
 	local full_image_name=$(echo "$container_info" | cut -d',' -f2)
-	local container_created_ts=$(date -d "$container_created" +%s 2>/dev/null)
+	local container_created_ts=$(portable_date_to_timestamp "$container_created")
 
 	# 3. 智能路由判断
 	if [[ "$full_image_name" == ghcr.io* ]]; then
@@ -2944,7 +3126,7 @@ check_docker_image_update() {
 
 	# 4. 时间戳对比
 	if [[ -n "$remote_date" && "$remote_date" != "null" ]]; then
-		local remote_ts=$(date -d "$remote_date" +%s 2>/dev/null)
+		local remote_ts=$(portable_date_to_timestamp "$remote_date")
 		if [[ $container_created_ts -lt $remote_ts ]]; then
 			update_status="${rw_huang}发现新版本!${rw_bai}"
 		fi
@@ -3625,7 +3807,7 @@ EOF
 	# (without it, fail2ban-server may refuse to start)
 	if [ "$jail_name" = "sshd" ]; then
 		if [ -f /etc/fail2ban/jail.d/sshd.local ]; then
-			grep -qE '^\s*logpath\s*=' /etc/fail2ban/jail.d/sshd.local || echo 'logpath = /var/log/auth.log' >> /etc/fail2ban/jail.d/sshd.local
+			grep -qE '^[[:space:]]*logpath[[:space:]]*=' /etc/fail2ban/jail.d/sshd.local || echo 'logpath = /var/log/auth.log' >> /etc/fail2ban/jail.d/sshd.local
 		fi
 	fi
 
@@ -3747,7 +3929,7 @@ install_ldnmp_conf
 nginx_upgrade
 clear
 local nginx_version=$(docker exec nginx nginx -v 2>&1)
-local nginx_version=$(echo "$nginx_version" | grep -oP "nginx/\K[0-9]+\.[0-9]+\.[0-9]+")
+local nginx_version=$(echo "$nginx_version" | sed -n -E 's/.*nginx\/([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
 echo "nginx已安装完成"
 echo -e "当前版本: ${rw_huang}v$nginx_version${rw_bai}"
 echo ""
@@ -4169,7 +4351,7 @@ ldnmp_web_status() {
 		local cert_count=$(ls /home/web/certs/*_cert.pem 2>/dev/null | wc -l)
 		local output="${rw_lv}${cert_count}${rw_bai}"
 
-		local dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+		local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 		local db_count=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2> /dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys" | wc -l)
 		local db_output="${rw_lv}${db_count}${rw_bai}"
 
@@ -4184,7 +4366,7 @@ ldnmp_web_status() {
 		  local domain=$(basename "$cert_file" | sed 's/_cert.pem//')
 		  if [ -n "$domain" ]; then
 			local expire_date=$(openssl x509 -noout -enddate -in "$cert_file" | awk -F'=' '{print $2}')
-			local formatted_date=$(date -d "$expire_date" '+%Y-%m-%d')
+			local formatted_date=$(portable_date "$expire_date" '+%Y-%m-%d')
 			printf " %-35s%s\n" "$domain" "$formatted_date"
 		  fi
 		done
@@ -4211,7 +4393,7 @@ ldnmp_web_status() {
 		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
 		echo -e " 数据库 ${db_output}"
 		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-		local dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml | tr -d '[:space:]')
+		local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 		docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2> /dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys"
 
 		echo ""
@@ -5270,13 +5452,13 @@ correct_ssh_config() {
 	local sshd_config="/etc/ssh/sshd_config"
 
 
-	if grep -Eq "^\s*PasswordAuthentication\s+no" "$sshd_config"; then
-		sed -i -e 's/^\s*#\?\s*PermitRootLogin .*/PermitRootLogin prohibit-password/' \
-			   -e 's/^\s*#\?\s*PasswordAuthentication .*/PasswordAuthentication no/' \
-			   -e 's/^\s*#\?\s*PubkeyAuthentication .*/PubkeyAuthentication yes/' \
-			   -e 's/^\s*#\?\s*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' "$sshd_config"
+	if grep -Eq "^[[:space:]]*PasswordAuthentication[[:space:]]+no" "$sshd_config"; then
+		sed -i -e 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin .*/PermitRootLogin prohibit-password/' \
+			   -e 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication .*/PasswordAuthentication no/' \
+			   -e 's/^[[:space:]]*#\?[[:space:]]*PubkeyAuthentication .*/PubkeyAuthentication yes/' \
+			   -e 's/^[[:space:]]*#\?[[:space:]]*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' "$sshd_config"
 	else
-		sed -i -e 's/^\s*#\?\s*PermitRootLogin .*/PermitRootLogin yes/' \
+		sed -i -e 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin .*/PermitRootLogin yes/' \
 			   -e 's/^\s*#\?\s*PasswordAuthentication .*/PasswordAuthentication yes/' \
 			   -e 's/^\s*#\?\s*PubkeyAuthentication .*/PubkeyAuthentication yes/' "$sshd_config"
 	fi
@@ -5310,10 +5492,10 @@ new_ssh_port() {
 
 sshkey_on() {
 
-	sed -i -e 's/^\s*#\?\s*PermitRootLogin .*/PermitRootLogin prohibit-password/' \
-		   -e 's/^\s*#\?\s*PasswordAuthentication .*/PasswordAuthentication no/' \
-		   -e 's/^\s*#\?\s*PubkeyAuthentication .*/PubkeyAuthentication yes/' \
-		   -e 's/^\s*#\?\s*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+	sed -i -e 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin .*/PermitRootLogin prohibit-password/' \
+		   -e 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication .*/PasswordAuthentication no/' \
+		   -e 's/^[[:space:]]*#\?[[:space:]]*PubkeyAuthentication .*/PubkeyAuthentication yes/' \
+		   -e 's/^[[:space:]]*#\?[[:space:]]*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 	rm -rf /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
 	restart_ssh
 	echo -e "${rw_lv}用户密钥登录模式已开启，已关闭密码登录模式，重连将会生效${rw_bai}"
@@ -5605,10 +5787,10 @@ add_sshpasswd() {
 	passwd "$target_user"
 
 	if [[ "$target_user" == "root" ]]; then
-		sed -i 's/^\s*#\?\s*PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config
+		sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config
 	fi
 
-	sed -i 's/^\s*#\?\s*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+	sed -i 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
 	rm -rf /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
 
 	restart_ssh
@@ -6555,7 +6737,7 @@ net.ipv4.tcp_slow_start_after_idle = 0"
 	local CC="bbr"
 	local QDISC="fq"
 	local KVER
-	KVER=$(uname -r | grep -oP '^\d+\.\d+')
+	KVER=$(uname -r | sed -n -E 's/^([0-9]+\.[0-9]+).*/\1/p')
 	if printf '%s\n%s' "4.9" "$KVER" | sort -V -C; then
 		if ! lsmod 2>/dev/null | grep -q tcp_bbr; then
 			modprobe tcp_bbr 2>/dev/null
@@ -8806,7 +8988,7 @@ ldnmp_tato() {
 local cert_count=$(ls /home/web/certs/*_cert.pem 2>/dev/null | wc -l)
 local output="${rw_lv}${cert_count}${rw_bai}"
 
-local dbrootpasswd=$(grep -oP 'MYSQL_ROOT_PASSWORD:\s*\K.*' /home/web/docker-compose.yml 2>/dev/null | tr -d '[:space:]')
+local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml 2>/dev/null | tr -d '[:space:]')
 if [ -n "$dbrootpasswd" ]; then
 	local db_count=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2>/dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys" | wc -l)
 fi
@@ -8838,7 +9020,6 @@ fix_phpfpm_conf() {
 
 
 
-LDNMP环境未安装
 
 
 
@@ -9594,10 +9775,10 @@ ldnmp_nginx_manage() {
     # ── 状态探测 ──
     local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}"
     if docker inspect nginx &>/dev/null; then
-      _ngx_ver=$(docker exec nginx nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+      _ngx_ver=$(docker exec nginx nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
       docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
     elif command -v nginx &>/dev/null; then
-      _ngx_ver=$(nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+      _ngx_ver=$(nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
       pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
     else
       _ngx_stat="${rw_hong}未安装${rw_bai}"
@@ -10361,7 +10542,7 @@ EOF
 			return 1
 		fi
 
-		local model_ids=$(echo "$models_json" | grep -oP '"id":\s*"\K[^"]+')
+		local model_ids=$(echo "$models_json" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
 		if [[ -z "$model_ids" ]]; then
 			echo "❌ 未找到任何模型"
@@ -10450,7 +10631,7 @@ EOF
 			"${base_url}/models")
 
 		if [[ -n "$models_json" ]]; then
-			available_models=$(echo "$models_json" | grep -oP '"id":\s*"\K[^"]+' | sort)
+			available_models=$(echo "$models_json" | sed -n 's/.*"id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | sort)
 
 			if [[ -n "$available_models" ]]; then
 				model_count=$(echo "$available_models" | wc -l)
@@ -12743,7 +12924,7 @@ if os.path.isdir(agents_root):
 				[ "$file_type" != "记忆备份文件" ] && continue
 				file_path="$backup_root/$file_name"
 				file_size=$(ls -lh "$file_path" | awk '{print $5}')
-				file_time=$(date -d "$(stat -c %y "$file_path")" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || stat -c %y "$file_path" | awk '{print $1" "$2}')
+				file_time=$(portable_file_mtime "$file_path")
 				printf "%s | %s | %s\n" "$file_name" "$file_size" "$file_time"
 			done
 		fi
@@ -12756,7 +12937,7 @@ if os.path.isdir(agents_root):
 				[ "$file_type" != "项目备份文件" ] && continue
 				file_path="$backup_root/$file_name"
 				file_size=$(ls -lh "$file_path" | awk '{print $5}')
-				file_time=$(date -d "$(stat -c %y "$file_path")" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || stat -c %y "$file_path" | awk '{print $1" "$2}')
+				file_time=$(portable_file_mtime "$file_path")
 				printf "%s | %s | %s\n" "$file_name" "$file_size" "$file_time"
 			done
 		fi
@@ -12769,7 +12950,7 @@ if os.path.isdir(agents_root):
 				[ "$file_type" != "其他备份文件" ] && continue
 				file_path="$backup_root/$file_name"
 				file_size=$(ls -lh "$file_path" | awk '{print $5}')
-				file_time=$(date -d "$(stat -c %y "$file_path")" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || stat -c %y "$file_path" | awk '{print $1" "$2}')
+				file_time=$(portable_file_mtime "$file_path")
 				printf "%s | %s | %s\n" "$file_name" "$file_size" "$file_time"
 			done
 		fi
@@ -13817,7 +13998,7 @@ EOF
 			file="${OPENCLAW_MEMORY_FILES[$i]}"
 			rel="${OPENCLAW_MEMORY_FILE_LABELS[$i]}"
 			size=$(ls -lh "$file" | awk '{print $5}')
-			mtime=$(date -d "$(stat -c %y "$file")" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || stat -c %y "$file" | awk '{print $1" "$2}')
+			mtime=$(portable_file_mtime "$file")
 			printf "%s | %s | %s | %s\\n" "$((i+1))" "$rel" "$size" "$mtime"
 		done
 	}
@@ -19786,30 +19967,34 @@ linux_Settings() {
     clear
     send_stats "系统工具"
 
-    # ── 状态探测 ──
+    # ── 使用缓存的状态探测（避免每次刷新都执行 systemctl）──
+    if _should_refresh_cache; then
+        refresh_status_cache
+    fi
+    
     local _fw_stat="${rw_hong}未运行${rw_bai}"
     local _ssh_stat="${rw_hong}未运行${rw_bai}"
     local _bbr_stat="${rw_hong}未开启${rw_bai}"
     local _swap_size="0"
 
-    # 防火墙状态
-    if command -v systemctl &>/dev/null && systemctl is-active firewalld &>/dev/null; then
+    # 防火墙状态（使用缓存）
+    if $_CACHE_FIREWALLD_ACTIVE; then
       _fw_stat="${rw_lv}firewalld运行中${rw_bai}"
-    elif command -v systemctl &>/dev/null && systemctl is-active ufw &>/dev/null; then
+    elif $_CACHE_UFW_ACTIVE; then
       _fw_stat="${rw_lv}ufw运行中${rw_bai}"
     fi
 
-    # SSH 状态
-    if command -v systemctl &>/dev/null && (systemctl is-active sshd &>/dev/null || systemctl is-active ssh &>/dev/null); then
+    # SSH 状态（使用缓存）
+    if $_CACHE_SSHD_ACTIVE; then
       _ssh_stat="${rw_lv}运行中${rw_bai}"
     fi
 
-    # BBR 状态
+    # BBR 状态（这个不依赖 systemctl，保持原样）
     if grep -q "bbr" /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null; then
       _bbr_stat="${rw_lv}已开启${rw_bai}"
     fi
 
-    # 虚拟内存
+    # 虚拟内存（这个不依赖 systemctl，保持原样）
     _swap_size=$(free -m 2>/dev/null | grep Swap | awk '{print $2}')
     if [ "$_swap_size" = "0" ] || [ -z "$_swap_size" ]; then
       _swap_size="${rw_hong}未设置${rw_bai}"
@@ -19880,7 +20065,7 @@ linux_Settings() {
 				echo -e "${rw_cheng}------------------------${rw_bai}"
 
 
-				if grep -Eq '^\s*precedence\s+::ffff:0:0/96\s+100\s*$' /etc/gai.conf 2>/dev/null; then
+				if grep -Eq '^[[:space:]]*precedence[[:space:]]+::ffff:0:0/96[[:space:]]+100[[:space:]]*$' /etc/gai.conf 2>/dev/null; then
 					echo -e "当前网络优先级设置: ${rw_huang}IPv4${rw_bai} 优先"
 				else
 					echo -e "当前网络优先级设置: ${rw_huang}IPv6${rw_bai} 优先"
@@ -20257,8 +20442,8 @@ EOF
 				# 检查是否存在 Limiting_Shut_down.sh 文件
 				if [ -f ~/Limiting_Shut_down.sh ]; then
 					# 获取 threshold_gb 的值
-					local rx_threshold_gb=$(grep -oP 'rx_threshold_gb=\K\d+' ~/Limiting_Shut_down.sh)
-					local tx_threshold_gb=$(grep -oP 'tx_threshold_gb=\K\d+' ~/Limiting_Shut_down.sh)
+					local rx_threshold_gb=$(sed -n 's/.*rx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
+					local tx_threshold_gb=$(sed -n 's/.*tx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
 					echo -e "${rw_lv}当前设置的进站限流阈值为: ${rw_huang}${rx_threshold_gb}${rw_lv}G${rw_bai}"
 					echo -e "${rw_lv}当前设置的出站限流阈值为: ${rw_huang}${tx_threshold_gb}${rw_lv}GB${rw_bai}"
 				else
@@ -20794,7 +20979,19 @@ run_commands_on_servers() {
 	install sshpass
 
 	local SERVERS_FILE="$HOME/cluster/servers.py"
-	local SERVERS=$(grep -oP '{"name": "\K[^"]+|"hostname": "\K[^"]+|"port": \K[^,]+|"username": "\K[^"]+|"password": "\K[^"]+' "$SERVERS_FILE")
+	local SERVERS=""
+	
+	# 便携式提取服务器信息（替代 grep -oP）
+	while IFS= read -r line; do
+		if echo "$line" | grep -q '"name"'; then
+			_name=$(echo "$line" | sed -n 's/.*"name": "\([^"]*\)".*/\1/p')
+			_hostname=$(echo "$line" | sed -n 's/.*"hostname": "\([^"]*\)".*/\1/p')
+			_port=$(echo "$line" | sed -n 's/.*"port": \([^,]*\).*/\1/p')
+			_username=$(echo "$line" | sed -n 's/.*"username": "\([^"]*\)".*/\1/p')
+			_password=$(echo "$line" | sed -n 's/.*"password": "\([^"]*\)".*/\1/p')
+			SERVERS="$SERVERS$_name"$'\n'"$_hostname"$'\n'"$_port"$'\n'"$_username"$'\n'"$_password"$'\n'
+		fi
+	done < "$SERVERS_FILE"
 
 	# 将提取的信息转换为数组
 	IFS=$'\n' read -r -d '' -a SERVER_ARRAY <<< "$SERVERS"
@@ -21036,14 +21233,14 @@ linux_security() {
             echo -e "${rw_huang}请先确保已配置SSH密钥登录${rw_bai}"
             read -e -p "确认禁用密码登录? (y/N): " confirm
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-              sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+              sed -i 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
               systemctl restart sshd
               echo -e "${rw_lv}已禁用密码登录${rw_bai}"
             fi
             break_end
             ;;
           3)
-            sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+            sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
             systemctl restart sshd
             echo -e "${rw_lv}已禁用root远程登录${rw_bai}"
             break_end
@@ -21431,7 +21628,7 @@ EOF
         fi
 
         # 添加服务器到配置文件
-        sed -i "/^servers = \[/a\  {\"name\": \"$server_name\", \"ip\": \"$server_ip\", \"port\": $ssh_port, \"user\": \"$ssh_user\"}," ~/cluster/servers.py
+        cat >> ~/cluster/servers.py <<< "  {\"name\": \"$server_name\", \"ip\": \"$server_ip\", \"port\": $ssh_port, \"user\": \"$ssh_user\"},"
         echo -e "${rw_lv}✓ 服务器 $server_name 添加成功${rw_bai}"
         break_end
         ;;
@@ -21448,7 +21645,7 @@ EOF
           continue
         fi
         echo -e "${rw_huang}当前服务器列表:${rw_bai}"
-        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "$.*$",.*/  • \1/'
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/'
         echo ""
         read -e -p "请输入要删除的服务器名称: " server_name
         if [ -z "$server_name" ]; then
@@ -21473,7 +21670,7 @@ EOF
           continue
         fi
         echo -e "${rw_lv}服务器列表:${rw_bai}"
-        grep -A 3 '"name"' ~/cluster/servers.py | grep -E '"name"|"ip"|"port"|"user"' | sed 's/.*"name": "$.*$",.*/  名称: \1/' | sed 's/.*"ip": "$.*$",.*/  IP: \1/' | sed 's/.*"port": $.∗$,.*/  端口: \1/' | sed 's/.*"user": "$.*$",.*/  用户: \1/'
+        grep -A 3 '"name"' ~/cluster/servers.py | grep -E '"name"|"ip"|"port"|"user"' | sed 's/.*"name": "\(.*\)",.*/  名称: \1/' | sed 's/.*"ip": "\(.*\)",.*/  IP: \1/' | sed 's/.*"port": \([0-9]*\),.*/  端口: \1/' | sed 's/.*"user": "\(.*\)",.*/  用户: \1/'
         echo ""
         break_end
         ;;
@@ -21490,8 +21687,8 @@ EOF
           continue
         fi
         echo -e "${rw_huang}正在测试连接...${rw_bai}"
-        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "$.*$",.*/\1/' | while read server_name; do
-          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "$.*$",.*/\1/')
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           echo -e " 测试 $server_name ($server_ip)..."
           if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
             echo -e "    ${rw_lv}✓ 连接正常${rw_bai}"
@@ -21538,9 +21735,9 @@ EOF
           continue
         fi
         echo -e "${rw_huang}正在执行命令: $cmd${rw_bai}"
-        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "$.*$",.*/\1/' | while read server_name; do
-          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "$.*$",.*/\1/')
-          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "$.*$",.*/\1/')
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
           server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
           echo -e "${rw_huang}在 $server_name 上执行...${rw_bai}"
           ssh -p "$server_port" "$server_user@$server_ip" "$cmd" 2>/dev/null || echo -e "${rw_hong}执行失败${rw_bai}"
@@ -21568,9 +21765,9 @@ EOF
           continue
         fi
         echo -e "${rw_huang}正在上传文件...${rw_bai}"
-        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "$.*$",.*/\1/' | while read server_name; do
-          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "$.*$",.*/\1/')
-          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "$.*$",.*/\1/')
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
           server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
           echo -e "  上传到 $server_name ..."
           scp -P "$server_port" "$local_file" "$server_user@$server_ip:$remote_file" 2>/dev/null && echo -e "${rw_lv}✓ 成功${rw_bai}" || echo -e "${rw_hong}✗ 失败${rw_bai}"
@@ -21610,8 +21807,8 @@ EOF
           continue
         fi
         echo -e "${rw_lv}集群状态:${rw_bai}"
-        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "$.*$",.*/  • \1/' | while read server_name; do
-          server_ip=$(grep -A 1 ""name": "$server_name"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "$.*$",.*/\1/')
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/' | while read server_name; do
+          server_ip=$(grep -A 1 ""name": "$server_name"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
             echo -e "  $server_name ($server_ip): ${rw_lv}在线${rw_bai}"
           else
@@ -21824,6 +22021,11 @@ while true; do
   clear
   send_stats "日常维护"
 
+    # ── 使用缓存的状态探测 ──
+    if _should_refresh_cache; then
+        refresh_status_cache
+    fi
+
     # ── 状态探测 ──
     local _ssh_port="22"
     local _bbr_stat="${rw_hong}未开启${rw_bai}"
@@ -21848,8 +22050,8 @@ while true; do
       _swap_size="${rw_lv}${_swap_size}MB${rw_bai}"
     fi
 
-    # fail2ban 状态
-    if command -v systemctl &>/dev/null && systemctl is-active fail2ban &>/dev/null; then
+    # fail2ban 状态（使用缓存）
+    if $_CACHE_FAIL2BAN_ACTIVE; then
       _f2b_stat="${rw_lv}运行中${rw_bai}"
     elif command -v fail2ban-client &>/dev/null; then
       _f2b_stat="${rw_huang}已安装未运行${rw_bai}"
@@ -21895,7 +22097,7 @@ while true; do
       send_stats "修改SSH端口"
       while true; do
         clear
-        sed -i 's/^\s*#\?\s*Port/Port/' /etc/ssh/sshd_config
+        sed -i 's/^[[:space:]]*#\?[[:space:]]*Port/Port/' /etc/ssh/sshd_config
         local current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
         echo -e "当前的 SSH 端口号是:  ${rw_huang}$current_port ${rw_bai}"
         echo -e "${rw_cheng}------------------------${rw_bai}"
@@ -22147,19 +22349,19 @@ while true; do
 	# ── 状态探测 ──
 	local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}" _site_cnt=0 _br="" _gz="" _zs="" _waf=""
 	if docker inspect nginx &>/dev/null; then
-		_ngx_ver=$(docker exec nginx nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+		_ngx_ver=$(docker exec nginx nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
 		docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
 		_site_cnt=$(ls /home/web/conf.d/*.conf 2>/dev/null | grep -vc 'map\|default')
 	elif command -v nginx &>/dev/null; then
-		_ngx_ver=$(nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+')
+		_ngx_ver=$(nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
 		pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
 	fi
 	# 压缩 / WAF 状态
 	if [ -f /home/web/nginx.conf ]; then
-		grep -qE '^\s*gzip\s+on;' /home/web/nginx.conf && _gz=" gzip"
-		grep -qE '^\s*brotli\s+on;' /home/web/nginx.conf && _br=" br"
-		grep -qE '^\s*zstd\s+on;' /home/web/nginx.conf && _zs=" zstd"
-		grep -qE '^\s*modsecurity\s+on;' /home/web/nginx.conf && _waf=" WAF"
+		grep -qE '^[[:space:]]*gzip[[:space:]]+on;' /home/web/nginx.conf && _gz=" gzip"
+		grep -qE '^[[:space:]]*brotli[[:space:]]+on;' /home/web/nginx.conf && _br=" br"
+		grep -qE '^[[:space:]]*zstd[[:space:]]+on;' /home/web/nginx.conf && _zs=" zstd"
+		grep -qE '^[[:space:]]*modsecurity[[:space:]]+on;' /home/web/nginx.conf && _waf=" WAF"
 	fi
 	local _comp="${rw_lv}${_gz}${_br}${_zs}${_waf}${rw_bai}"
 
@@ -22273,7 +22475,7 @@ while true; do
 				[ -f "$_cert" ] || continue
 				local _dom=$(basename "$_cert" | sed 's/_cert.pem//')
 				local _exp=$(openssl x509 -noout -enddate -in "$_cert" 2>/dev/null | awk -F'=' '{print $2}')
-				local _exp_fmt=$(date -d "$_exp" '+%Y-%m-%d' 2>/dev/null || echo "$_exp")
+				local _exp_fmt=$(portable_date "$_exp" '+%Y-%m-%d' 2>/dev/null || echo "$_exp")
 				printf " %-35s %s\n" "$_dom" "$_exp_fmt"
 			done
 			echo ""
@@ -25155,31 +25357,36 @@ one_panel_manager() {
 while true; do
 	clear
 
+	# ── 使用缓存的状态探测 ──
+	if _should_refresh_cache; then
+	    refresh_status_cache
+	fi
+
 	# ── 状态探测 ──
 	local _1p_ver="" _1p_stat="${rw_hong}未安装${rw_bai}" _1p_port="" _1p_user="" _1p_url=""
 	local _1p_ip=""
 
 	if command -v 1pctl &>/dev/null; then
 		_1p_stat="${rw_lv}已安装${rw_bai}"
-		_1p_ver=$(1pctl version 2>/dev/null | grep -oP 'v[0-9.]+' | head -1)
+		_1p_ver=$(1pctl version 2>/dev/null | sed -n -E 's/.*(v[0-9.]+).*/\1/p' | head -1)
 		# 获取端口和访问地址
 		local _conf_file=""
 		[ -f /opt/1panel/conf/app.yaml ] && _conf_file="/opt/1panel/conf/app.yaml"
 		[ -f /opt/1panel/conf/1panel.yaml ] && _conf_file="/opt/1panel/conf/1panel.yaml"
 		if [ -n "$_conf_file" ]; then
-			_1p_port=$(grep -oP 'port:\s*\K[0-9]+' "$_conf_file" 2>/dev/null | head -1)
-			_1p_ip=$(grep -oP 'listen_ip:\s*\K\S+' "$_conf_file" 2>/dev/null | head -1)
+			_1p_port=$(sed -n -E 's/.*port:[[:space:]]*([0-9]+).*/\1/p' "$_conf_file" 2>/dev/null | head -1)
+			_1p_ip=$(sed -n -E 's/.*listen_ip:[[:space:]]*([^[:space:]]+).*/\1/p' "$_conf_file" 2>/dev/null | head -1)
 			[ "$_1p_ip" = "0.0.0.0" ] && _1p_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
 			_1p_url="http://${_1p_ip:-localhost}:${_1p_port:-$(grep port /opt/1panel/conf/app.yaml 2>/dev/null | awk '{print $2}' | head -1)}"
 		fi
-		# 服务状态
-		if command -v systemctl &>/dev/null && systemctl is-active 1panel &>/dev/null; then
+		# 服务状态（使用缓存）
+		if $_CACHE_1PANEL_ACTIVE; then
 			_1p_stat="${rw_lv}运行中${rw_bai}"
 		else
 			_1p_stat="${rw_hong}未运行${rw_bai}"
 		fi
 		# 用户信息
-		_1p_user=$(1pctl user-info 2>/dev/null | grep -oP '用户名:\s*\K\S+' | head -1)
+		_1p_user=$(1pctl user-info 2>/dev/null | sed -n -E 's/.*用户名:[[:space:]]*([^[:space:]]+).*/\1/p' | head -1)
 	fi
 
 	echo -e "${rw_cheng}━━━━━━━━━━━━  1Panel 面板管理  ━━━━━━━━━━━━${rw_bai}"
