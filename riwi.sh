@@ -26011,12 +26011,397 @@ while true; do
 	break_end
 done
 }
+
+python_manager() {
+while true; do
+	clear
+
+	# ── 状态探测 ──
+	local _py3_stat="${rw_hong}未安装${rw_bai}" _py3_ver="" _pip_stat="${rw_hong}未安装${rw_bai}" _pip_ver=""
+	local _py2_stat="${rw_hong}未安装${rw_bai}" _py2_ver="" _venv_stat="${rw_hong}未安装${rw_bai}"
+
+	# Python3 状态
+	if command -v python3 &>/dev/null; then
+		_py3_ver=$(python3 --version 2>/dev/null | sed 's/Python //')
+		_py3_stat="${rw_lv}${_py3_ver}${rw_bai}"
+	fi
+
+	# Python2 状态
+	if command -v python2 &>/dev/null; then
+		_py2_ver=$(python2 --version 2>&1 | sed 's/Python //')
+		_py2_stat="${rw_lv}${_py2_ver}${rw_bai}"
+	fi
+
+	# pip3 状态
+	if command -v pip3 &>/dev/null; then
+		_pip_ver=$(pip3 --version 2>/dev/null | sed -E 's/pip ([0-9.]+).*/\1/')
+		_pip_stat="${rw_lv}v${_pip_ver}${rw_bai}"
+	elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
+		_pip_ver=$(python3 -m pip --version 2>/dev/null | sed -E 's/pip ([0-9.]+).*/\1/')
+		_pip_stat="${rw_lv}v${_pip_ver}${rw_bai}"
+	fi
+
+	# venv 模块状态
+	if command -v python3 &>/dev/null && python3 -c "import venv" 2>/dev/null; then
+		_venv_stat="${rw_lv}可用${rw_bai}"
+	fi
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  Python 管理  ━━━━━━━━━━━━${rw_bai}"
+	echo -e " Python3 ${_py3_stat}  pip3 ${_pip_stat}  venv ${_venv_stat}"
+	[ -n "$_py2_ver" ] && echo -e " Python2 ${_py2_stat}"
+	echo ""
+	echo -e " ${rw_cheng}──── 安装与卸载${rw_bai}"
+	echo -e " ${rw_huang}1${rw_bai}  安装Python3          ${rw_huang}2${rw_bai}  安装pip3"
+	echo -e " ${rw_huang}3${rw_bai}  安装Python2           ${rw_huang}4${rw_bai}  卸载Python3"
+	echo ""
+	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
+	echo -e " ${rw_huang}5${rw_bai}  切换Python默认版本   ${rw_huang}6${rw_bai}  查看已安装版本"
+	echo ""
+	echo -e " ${rw_cheng}──── 虚拟环境${rw_bai}"
+	echo -e " ${rw_huang}7${rw_bai}  创建虚拟环境          ${rw_huang}8${rw_bai}  删除虚拟环境"
+	echo -e " ${rw_huang}9${rw_bai}  查看虚拟环境列表"
+	echo ""
+	echo -e " ${rw_cheng}──── 包管理${rw_bai}"
+	echo -e " ${rw_huang}10${rw_bai} 安装Python包          ${rw_huang}11${rw_bai} 卸载Python包"
+	echo -e " ${rw_huang}12${rw_bai} 查看已安装包          ${rw_huang}13${rw_bai} 升级pip"
+	echo ""
+	echo -e " ${rw_cheng}──── 信息${rw_bai}"
+	echo -e " ${rw_huang}14${rw_bai} Python环境详情        ${rw_huang}15${rw_bai} pip配置信息"
+	echo ""
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	read -e -p " 请选择: " _py_choice
+
+	case $_py_choice in
+	  1)
+		send_stats "Python安装Python3"
+		echo -e "${rw_huang}正在安装 Python3 ...${rw_bai}"
+		install python3
+		# 尝试安装 pip
+		if ! command -v pip3 &>/dev/null; then
+			echo -e "${rw_huang}正在安装 pip ...${rw_bai}"
+			if command -v apt &>/dev/null; then
+				apt install -y python3-pip
+			elif command -v yum &>/dev/null; then
+				yum install -y python3-pip
+			elif command -v dnf &>/dev/null; then
+				dnf install -y python3-pip
+			elif command -v apk &>/dev/null; then
+				apk add py3-pip
+			fi
+		fi
+		# 安装 venv 模块
+		if command -v apt &>/dev/null; then
+			apt install -y python3-venv 2>/dev/null
+		fi
+		if command -v python3 &>/dev/null; then
+			echo -e "${rw_lv}Python3 安装成功！${rw_bai}"
+			echo -e "  版本: $(python3 --version 2>/dev/null)"
+			echo -e "  路径: $(which python3 2>/dev/null)"
+		else
+			echo -e "${rw_hong}Python3 安装失败${rw_bai}"
+		fi
+		;;
+	  2)
+		send_stats "Python安装pip3"
+		if ! command -v python3 &>/dev/null; then
+			echo -e "${rw_hong}请先安装 Python3${rw_bai}"
+		else
+			echo -e "${rw_huang}正在安装 pip3 ...${rw_bai}"
+			if command -v apt &>/dev/null; then
+				apt install -y python3-pip
+			elif command -v yum &>/dev/null; then
+				yum install -y python3-pip
+			elif command -v dnf &>/dev/null; then
+				dnf install -y python3-pip
+			elif command -v apk &>/dev/null; then
+				apk add py3-pip
+			else
+				python3 -m ensurepip --upgrade 2>/dev/null || curl -sS https://bootstrap.pypa.io/get-pip.py | python3
+			fi
+			if command -v pip3 &>/dev/null || python3 -m pip --version &>/dev/null 2>&1; then
+				echo -e "${rw_lv}pip3 安装成功！${rw_bai}"
+			else
+				echo -e "${rw_hong}pip3 安装失败${rw_bai}"
+			fi
+		fi
+		;;
+	  3)
+		send_stats "Python安装Python2"
+		echo -e "${rw_huang}正在安装 Python2 ...${rw_bai}"
+		if command -v apt &>/dev/null; then
+			apt install -y python2 2>/dev/null || apt install -y python 2>/dev/null
+		elif command -v yum &>/dev/null; then
+			yum install -y python2 2>/dev/null || yum install -y python 2>/dev/null
+		elif command -v apk &>/dev/null; then
+			apk add python2 2>/dev/null || apk add python 2>/dev/null
+		else
+			echo -e "${rw_hong}当前包管理器不支持直接安装 Python2${rw_bai}"
+		fi
+		if command -v python2 &>/dev/null; then
+			echo -e "${rw_lv}Python2 安装成功！$(python2 --version 2>&1)${rw_bai}"
+		else
+			echo -e "${rw_hong}Python2 安装失败或已停止维护${rw_bai}"
+		fi
+		;;
+	  4)
+		send_stats "Python卸载Python3"
+		echo -e "${rw_hong}警告：卸载Python3可能导致系统工具异常！${rw_bai}"
+		read -e -p " 确认卸载？输入YES继续: " _py_confirm
+		if [ "$_py_confirm" = "YES" ]; then
+			if command -v apt &>/dev/null; then
+				apt remove -y python3 python3-pip python3-venv
+				apt autoremove -y
+			elif command -v yum &>/dev/null; then
+				yum remove -y python3 python3-pip
+			elif command -v dnf &>/dev/null; then
+				dnf remove -y python3 python3-pip
+			elif command -v apk &>/dev/null; then
+				apk del python3 py3-pip
+			fi
+			echo -e "${rw_lv}Python3 已卸载${rw_bai}"
+		else
+			echo -e "已取消"
+		fi
+		;;
+	  5)
+		send_stats "Python切换默认版本"
+		if ! command -v python3 &>/dev/null; then
+			echo -e "${rw_hong}未安装 Python3${rw_bai}"
+		else
+			echo -e " ${rw_huang}1${rw_bai}  python → python3"
+			if command -v python2 &>/dev/null; then
+				echo -e " ${rw_huang}2${rw_bai}  python → python2"
+			fi
+			echo -e " ${rw_huang}3${rw_bai}  取消"
+			read -e -p " 选择: " _alt_choice
+			case $_alt_choice in
+			  1)
+				update-alternatives --install /usr/bin/python python "$(which python3)" 1 2>/dev/null
+				ln -sf "$(which python3)" /usr/bin/python 2>/dev/null
+				echo -e "${rw_lv}已将 python 指向 python3${rw_bai}"
+				;;
+			  2)
+				if command -v python2 &>/dev/null; then
+					update-alternatives --install /usr/bin/python python "$(which python2)" 2 2>/dev/null
+					ln -sf "$(which python2)" /usr/bin/python 2>/dev/null
+					echo -e "${rw_lv}已将 python 指向 python2${rw_bai}"
+				else
+					echo -e "${rw_hong}Python2 未安装${rw_bai}"
+				fi
+				;;
+			  3) ;;
+			  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+			esac
+		fi
+		;;
+	  6)
+		send_stats "Python查看已安装版本"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_huang}已安装的 Python 版本:${rw_bai}"
+		echo ""
+		for _py_bin in python python2 python3 python3.8 python3.9 python3.10 python3.11 python3.12 python3.13 python3.14; do
+			if command -v "$_py_bin" &>/dev/null; then
+				local _v=$("$_py_bin" --version 2>/dev/null || "$_py_bin" -V 2>/dev/null)
+				[ -n "$_v" ] && echo -e "  ${rw_lv}${_v}${rw_bai}  → $(which $_py_bin)"
+			fi
+		done
+		echo ""
+		if command -v update-alternatives &>/dev/null; then
+			echo -e "${rw_huang}update-alternatives 配置:${rw_bai}"
+			update-alternatives --display python 2>/dev/null || echo "  未配置"
+		fi
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		;;
+	  7)
+		send_stats "Python创建虚拟环境"
+		if ! command -v python3 &>/dev/null; then
+			echo -e "${rw_hong}请先安装 Python3${rw_bai}"
+		else
+			read -e -p " 输入虚拟环境名称: " _venv_name
+			[ -z "$_venv_name" ] && { echo "已取消"; continue; }
+			read -e -p " 输入目录路径（默认当前目录）: " _venv_dir
+			_venv_dir=${_venv_dir:-.}
+			if python3 -m venv "${_venv_dir}/${_venv_name}" 2>/dev/null; then
+				echo -e "${rw_lv}虚拟环境已创建！${rw_bai}"
+				echo -e "  路径: ${_venv_dir}/${_venv_name}"
+				echo -e "  激活: source ${_venv_dir}/${_venv_name}/bin/activate"
+				echo -e "  退出: deactivate"
+			else
+				echo -e "${rw_hong}创建失败，可能缺少 python3-venv 模块${rw_bai}"
+				echo -e "${rw_huang}尝试安装 venv 模块...${rw_bai}"
+				if command -v apt &>/dev/null; then
+					apt install -y python3-venv
+					python3 -m venv "${_venv_dir}/${_venv_name}"
+					echo -e "${rw_lv}虚拟环境已创建！${rw_bai}"
+				else
+					echo -e "${rw_hong}请手动安装 venv 模块后重试${rw_bai}"
+				fi
+			fi
+		fi
+		;;
+	  8)
+		send_stats "Python删除虚拟环境"
+		read -e -p " 输入虚拟环境路径: " _venv_del
+		[ -z "$_venv_del" ] && { echo "已取消"; continue; }
+		if [ -d "$_venv_del" ] && [ -f "${_venv_del}/bin/activate" ]; then
+			echo -e "${rw_hong}将删除虚拟环境: ${_venv_del}${rw_bai}"
+			read -e -p " 确认删除？(y/N): " _vd_confirm
+			if [[ "$_vd_confirm" =~ ^[Yy]$ ]]; then
+				rm -rf "$_venv_del"
+				echo -e "${rw_lv}虚拟环境已删除${rw_bai}"
+			else
+				echo -e "已取消"
+			fi
+		else
+			echo -e "${rw_hong}未找到有效的虚拟环境: ${_venv_del}${rw_bai}"
+		fi
+		;;
+	  9)
+		send_stats "Python查看虚拟环境列表"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_huang}搜索虚拟环境（当前目录及子目录）:${rw_bai}"
+		local _venv_count=0
+		while IFS= read -r _venv_found; do
+			_venv_count=$((_venv_count + 1))
+			local _pv_ver=""
+			if [ -f "${_venv_found}/bin/python3" ]; then
+				_pv_ver=$("${_venv_found}/bin/python3" --version 2>/dev/null)
+			fi
+			echo -e "  ${rw_lv}${_venv_count}${rw_bai}. ${_venv_found}  ${rw_huang}${_pv_ver}${rw_bai}"
+		done < <(find . -maxdepth 3 -type f -name "activate" -path "*/bin/activate" -not -path "*/\.*" 2>/dev/null | sed 's|/bin/activate$||' | sort)
+		[ $_venv_count -eq 0 ] && echo -e "  ${rw_hong}未找到虚拟环境${rw_bai}"
+		# 也检查常见目录
+		for _chk_dir in ~/venvs ~/envs ~/.virtualenvs; do
+			if [ -d "$_chk_dir" ]; then
+				echo -e "\n  ${rw_huang}${_chk_dir}:${rw_bai}"
+				for _sub in "$_chk_dir"/*/; do
+					[ -f "${_sub}bin/activate" ] && echo -e "    ${rw_lv}${_sub}${rw_bai}"
+				done
+			fi
+		done
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		;;
+	  10)
+		send_stats "Python安装包"
+		if ! command -v pip3 &>/dev/null && ! python3 -m pip --version &>/dev/null 2>&1; then
+			echo -e "${rw_hong}请先安装 pip3${rw_bai}"
+		else
+			read -e -p " 输入要安装的包名（多个包用空格分隔）: " _pip_pkgs
+			[ -z "$_pip_pkgs" ] && { echo "已取消"; continue; }
+			echo -e "${rw_huang}正在安装 ${_pip_pkgs} ...${rw_bai}"
+			if command -v pip3 &>/dev/null; then
+				pip3 install "$_pip_pkgs"
+			else
+				python3 -m pip install "$_pip_pkgs"
+			fi
+			echo -e "${rw_lv}安装完成${rw_bai}"
+		fi
+		;;
+	  11)
+		send_stats "Python卸载包"
+		if ! command -v pip3 &>/dev/null && ! python3 -m pip --version &>/dev/null 2>&1; then
+			echo -e "${rw_hong}请先安装 pip3${rw_bai}"
+		else
+			read -e -p " 输入要卸载的包名: " _pip_rmpkg
+			[ -z "$_pip_rmpkg" ] && { echo "已取消"; continue; }
+			if command -v pip3 &>/dev/null; then
+				pip3 uninstall -y "$_pip_rmpkg"
+			else
+				python3 -m pip uninstall -y "$_pip_rmpkg"
+			fi
+			echo -e "${rw_lv}卸载完成${rw_bai}"
+		fi
+		;;
+	  12)
+		send_stats "Python查看已安装包"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		if command -v pip3 &>/dev/null; then
+			pip3 list 2>/dev/null
+		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
+			python3 -m pip list 2>/dev/null
+		else
+			echo -e "${rw_hong}pip3 未安装${rw_bai}"
+		fi
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		;;
+	  13)
+		send_stats "Python升级pip"
+		if ! command -v python3 &>/dev/null; then
+			echo -e "${rw_hong}Python3 未安装${rw_bai}"
+		else
+			echo -e "${rw_huang}正在升级 pip ...${rw_bai}"
+			if command -v pip3 &>/dev/null; then
+				pip3 install --upgrade pip
+			else
+				python3 -m pip install --upgrade pip
+			fi
+			echo -e "${rw_lv}pip 已升级到最新版本${rw_bai}"
+		fi
+		;;
+	  14)
+		send_stats "Python环境详情"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_huang}Python 环境详情:${rw_bai}"
+		echo ""
+		if command -v python3 &>/dev/null; then
+			echo -e "  ${rw_lv}Python3:${rw_bai}"
+			echo -e "    版本:   $(python3 --version 2>/dev/null)"
+			echo -e "    路径:   $(which python3 2>/dev/null)"
+			echo -e "    前缀:   $(python3 -c 'import sys; print(sys.prefix)' 2>/dev/null)"
+			echo -e "    包路径: $(python3 -c 'import site; print(site.getsitepackages()[0])' 2>/dev/null)"
+		else
+			echo -e "  ${rw_hong}Python3: 未安装${rw_bai}"
+		fi
+		echo ""
+		if command -v python2 &>/dev/null; then
+			echo -e "  ${rw_lv}Python2:${rw_bai} $(python2 --version 2>&1) → $(which python2 2>/dev/null)"
+		fi
+		echo ""
+		if command -v pip3 &>/dev/null; then
+			echo -e "  ${rw_lv}pip3:${rw_bai}  $(pip3 --version 2>/dev/null)"
+			echo -e "    路径:   $(which pip3 2>/dev/null)"
+		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
+			echo -e "  ${rw_lv}pip:${rw_bai}   $(python3 -m pip --version 2>/dev/null)"
+		else
+			echo -e "  ${rw_hong}pip3: 未安装${rw_bai}"
+		fi
+		echo ""
+		# 检查默认 python 指向
+		if command -v python &>/dev/null; then
+			echo -e "  python → $(readlink -f $(which python) 2>/dev/null || which python 2>/dev/null)"
+		else
+			echo -e "  python: 未配置默认版本"
+		fi
+		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		;;
+	  15)
+		send_stats "Python查看pip配置"
+		if command -v pip3 &>/dev/null; then
+			pip3 config list 2>/dev/null
+			echo ""
+			echo -e "${rw_huang}pip 配置文件位置:${rw_bai}"
+			pip3 config list -v 2>/dev/null | grep -i "global\|user\|site" || echo "  使用默认配置"
+		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
+			python3 -m pip config list 2>/dev/null
+		else
+			echo -e "${rw_hong}pip3 未安装${rw_bai}"
+		fi
+		;;
+	  0) return ;;
+	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+	esac
+	break_end
+done
+}
+
 other_panel_manager() {
 while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _1p_stat="${rw_hong}未安装${rw_bai}" _ngx_stat="${rw_hong}未安装${rw_bai}" _gh_stat="${rw_hong}未安装${rw_bai}"
+	local _1p_stat="${rw_hong}未安装${rw_bai}" _ngx_stat="${rw_hong}未安装${rw_bai}" _gh_stat="${rw_hong}未安装${rw_bai}" _py_stat="${rw_hong}未安装${rw_bai}"
 
 	# 1Panel 状态
 	if command -v 1pctl &>/dev/null; then
@@ -26035,17 +26420,24 @@ while true; do
 		fi
 	fi
 
+	# Python 状态
+	if command -v python3 &>/dev/null; then
+		_py_stat="${rw_lv}$(python3 --version 2>/dev/null | sed 's/Python //')${rw_bai}"
+	fi
+
 	# GitHooks 状态（检查是否已配置）
 	if [ -d /home/githooks ] || command -v git &>/dev/null; then
 		_gh_stat="${rw_lv}可用${rw_bai}"
 	fi
 
 	echo -e "${rw_cheng}━━━━━━━━━━━━  其他管理面板  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " 1Panel ${_1p_stat}    Nginx ${_ngx_stat}    GitHooks ${_gh_stat}"
+	echo -e " 1Panel ${_1p_stat}    Nginx ${_ngx_stat}    Python ${_py_stat}"
+	echo -e " GitHooks ${_gh_stat}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
 	echo -e "${rw_huang}1.  ${rw_bai}${rw_lv}1Panel 面板管理${rw_bai}"
 	echo -e "${rw_huang}2.  ${rw_bai}${rw_lv}Nginx 管理器${rw_bai}"
-	echo -e "${rw_huang}3.  ${rw_bai}${rw_lv}GitHooks 部署${rw_bai}"
+	echo -e "${rw_huang}3.  ${rw_bai}${rw_lv}Python 管理${rw_bai}"
+	echo -e "${rw_huang}4.  ${rw_bai}${rw_lv}GitHooks 部署${rw_bai}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
 	echo -e "${rw_huang}0.  ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
@@ -26054,7 +26446,8 @@ while true; do
 	case $_op_choice in
 	  1) one_panel_manager ;;
 	  2) ngxing_manager ;;
-	  3) git_hooks_deploy ;;
+	  3) python_manager ;;
+	  4) git_hooks_deploy ;;
 	  0) return ;;
 	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
 	esac
