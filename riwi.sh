@@ -225,7 +225,7 @@ UserLicenseAgreement() {
 	fi
 }
 
-CheckFirstRun_false
+# CheckFirstRun_false  # 已改用 riwi_sh() 内的 ~/.riwi_license_agreed 机制
 
 
 # ================================================================
@@ -8273,28 +8273,10 @@ linux_tools() {
 
   while true; do
 	  clear
-	  send_stats "基础工具"
-	  echo -e "${rw_huang}安装环境${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}功能说明:${rw_bai}"
-	  echo -e "${rw_huang}  提供常用系统工具的安装和管理，包括:${rw_bai}"
-	  echo -e "${rw_huang}  • 网络工具: curl, wget, socat${rw_bai}"
-	  echo -e "${rw_huang}  • 系统监控: htop, iftop, btop${rw_bai}"
-	  echo -e "${rw_huang}  • 文件工具: unzip, tar, ranger, ncdu${rw_bai}"
-	  echo -e "${rw_huang}  • 编辑器: vim, nano${rw_bai}"
-	  echo -e "${rw_huang}  • 开发工具: git, brew, nodejs, pnpm${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}提示: 选择对应的数字即可安装相应工具${rw_bai}"
-	  echo ""
+	  send_stats "安装环境"
 
-	  tools=(
-		curl wget sudo socat htop iftop unzip tar tmux ffmpeg
-		btop ranger ncdu fzf 
-		vim nano git
-		brew nodejs pnpm
-	  )
-
+	  # ── 检测包管理器 ──
+	  local PM="unknown"
 	  if command -v apt >/dev/null 2>&1; then
 		PM="apt"
 	  elif command -v dnf >/dev/null 2>&1; then
@@ -8314,217 +8296,123 @@ linux_tools() {
 	  elif command -v pkg >/dev/null 2>&1; then
 		PM="pkg"
 	  else
-		echo -e "${rw_hong}❌ 未识别的包管理器${rw_bai}"
-		echo -e "${rw_huang}提示: 请先安装包管理器后重试${rw_bai}"
+		echo -e "${rw_hong}未识别的包管理器，请先安装后重试${rw_bai}"
 		sleep 3
 		return
 	  fi
 
-	  echo "📦 使用包管理器: $PM"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-
-	  for ((i=0; i<${#tools[@]}; i+=2)); do
-		# 左列
-		if command -v "${tools[i]}" >/dev/null 2>&1; then
-		  left=$(printf "✅ %-12s 已安装" "${tools[i]}")
-		else
-		  left=$(printf "❌ %-12s 未安装" "${tools[i]}")
-		fi
-
-		# 右列（防止数组越界）
-		if [[ -n "${tools[i+1]}" ]]; then
-		  if command -v "${tools[i+1]}" >/dev/null 2>&1; then
-			right=$(printf "✅ %-12s 已安装" "${tools[i+1]}")
-		  else
-			right=$(printf "❌ %-12s 未安装" "${tools[i+1]}")
-		  fi
-		  printf "%-42s %s\n" "$left" "$right"
-		else
-		  printf "%s\n" "$left"
+	  # ── 统计已安装工具 ──
+	  local _all_tools=(curl wget sudo socat htop iftop unzip tar tmux ffmpeg btop ranger ncdu fzf vim nano git opencode brew nodejs pnpm)
+	  local _installed=0 _total=${#_all_tools[@]}
+	  for _t in "${_all_tools[@]}"; do
+		if command -v "$_t" >/dev/null 2>&1; then
+		  ((_installed++))
 		fi
 	  done
 
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}curl 下载工具 ${rw_bai}${rw_huang}★${rw_bai}                   ${rw_huang}2.   ${rw_bai}${rw_lv}wget 下载工具 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}sudo 超级管理权限工具             ${rw_bai}${rw_huang}4.   ${rw_bai}${rw_lv}socat 通信连接工具${rw_bai}"
-	  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}htop 系统监控工具                 ${rw_bai}${rw_huang}6.   ${rw_bai}${rw_lv}iftop 网络流量监控工具${rw_bai}"
-	  echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}unzip ZIP压缩解压工具             ${rw_bai}${rw_huang}8.   ${rw_bai}${rw_lv}tar GZ压缩解压工具${rw_bai}"
-	  echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}tmux 多路后台运行工具             ${rw_bai}${rw_huang}10.  ${rw_bai}${rw_lv}ffmpeg 视频编码直播推流工具${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}btop 现代化监控工具 ${rw_bai}${rw_huang}★${rw_bai}             ${rw_huang}12.  ${rw_bai}${rw_lv}ranger 文件管理工具${rw_bai}"
-	  echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}ncdu 磁盘占用查看工具             ${rw_bai}${rw_huang}14.  ${rw_bai}${rw_lv}fzf 全局搜索工具${rw_bai}"
-	  echo -e "${rw_huang}15.  ${rw_bai}${rw_lv}vim 文本编辑器                    ${rw_bai}${rw_huang}16.  ${rw_bai}${rw_lv}nano 文本编辑器 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}17.  ${rw_bai}${rw_lv}git 版本控制系统                  ${rw_bai}${rw_huang}18.  ${rw_bai}${rw_lv}opencode AI编程助手 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}19.  ${rw_bai}${rw_lv}brew macOS包管理器                ${rw_bai}${rw_huang}20.  ${rw_bai}${rw_lv}nodejs JavaScript运行时 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}21.  ${rw_bai}${rw_lv}pnpm 快速高效的包管理器 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}31.  ${rw_bai}${rw_lv}全部安装${rw_bai}"
-	  echo -e "${rw_huang}33.  ${rw_bai}${rw_lv}全部卸载${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}41.  ${rw_bai}${rw_lv}安装指定工具                      ${rw_bai}${rw_huang}42.  ${rw_bai}${rw_lv}卸载指定工具${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  read -e -p "请输入你的选择: " sub_choice
+	  # ── 安装状态标记函数 ──
+	  _ist() {
+		if command -v "$1" >/dev/null 2>&1; then
+		  echo -ne "✅"
+		else
+		  echo -ne "❌"
+		fi
+	  }
+
+	  echo -e "${rw_cheng}━━━━━━━━━━━━  安装环境  ━━━━━━━━━━━━${rw_bai}"
+	  echo -e " 包管理器 ${rw_huang}${PM}${rw_bai}  已安装 ${rw_lv}${_installed}${rw_bai}/${_total}"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 网络工具${rw_bai}"
+	  echo -e " $(_ist curl) ${rw_huang}1${rw_bai}  curl 下载工具★       $(_ist wget) ${rw_huang}2${rw_bai}  wget 下载工具★"
+	  echo -e " $(_ist sudo) ${rw_huang}3${rw_bai}  sudo 超管权限        $(_ist socat) ${rw_huang}4${rw_bai}  socat 通信工具"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 系统监控${rw_bai}"
+	  echo -e " $(_ist htop) ${rw_huang}5${rw_bai}  htop 系统监控         $(_ist iftop) ${rw_huang}6${rw_bai}  iftop 流量监控"
+	  echo -e " $(_ist btop) ${rw_huang}7${rw_bai}  btop 现代监控★        $(_ist tmux) ${rw_huang}8${rw_bai}  tmux 后台多路"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 文件工具${rw_bai}"
+	  echo -e " $(_ist unzip) ${rw_huang}9${rw_bai}  unzip ZIP解压         $(_ist tar) ${rw_huang}10${rw_bai} tar GZ解压"
+	  echo -e " $(_ist ranger) ${rw_huang}11${rw_bai} ranger 文件管理       $(_ist ncdu) ${rw_huang}12${rw_bai} ncdu 磁盘分析"
+	  echo -e " $(_ist fzf) ${rw_huang}13${rw_bai}  fzf 全局搜索         $(_ist ffmpeg) ${rw_huang}14${rw_bai} ffmpeg 视频推流"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 编辑器${rw_bai}"
+	  echo -e " $(_ist vim) ${rw_huang}15${rw_bai}  vim 编辑器           $(_ist nano) ${rw_huang}16${rw_bai}  nano 编辑器★"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 开发工具${rw_bai}"
+	  echo -e " $(_ist git) ${rw_huang}17${rw_bai}  git 版本控制         $(_ist opencode) ${rw_huang}18${rw_bai} opencode AI编程★"
+	  echo -e " $(_ist brew) ${rw_huang}19${rw_bai}  brew macOS包管理     $(_ist nodejs) ${rw_huang}20${rw_bai} nodejs JS运行时★"
+	  echo -e " $(_ist pnpm) ${rw_huang}21${rw_bai}  pnpm 包管理器★"
+	  echo ""
+	  echo -e " ${rw_cheng}──── 批量操作${rw_bai}"
+	  echo -e " ${rw_huang}31${rw_bai} 全部安装              ${rw_huang}32${rw_bai} 全部卸载"
+	  echo -e " ${rw_huang}33${rw_bai} 安装指定工具          ${rw_huang}34${rw_bai} 卸载指定工具"
+	  echo ""
+	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	  echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
+	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	  read -e -p " 请选择: " sub_choice
 
 	  case $sub_choice in
 		  1)
-			  clear
-			  install curl
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  curl --help
-			  send_stats "安装curl"
-			  ;;
+			  clear; install curl; clear; curl --help
+			  send_stats "安装curl" ;;
 		  2)
-			  clear
-			  install wget
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  wget --help
-			  send_stats "安装wget"
-			  ;;
-			3)
-			  clear
-			  install sudo
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  sudo --help
-			  send_stats "安装sudo"
-			  ;;
-			4)
-			  clear
-			  install socat
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  socat -h
-			  send_stats "安装socat"
-			  ;;
-			5)
-			  clear
-			  install htop
-			  clear
-			  htop
-			  send_stats "安装htop"
-			  ;;
-			6)
-			  clear
-			  install iftop
-			  clear
-			  iftop
-			  send_stats "安装iftop"
-			  ;;
-			7)
-			  clear
-			  install unzip
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  unzip
-			  send_stats "安装unzip"
-			  ;;
-			8)
-			  clear
-			  install tar
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  tar --help
-			  send_stats "安装tar"
-			  ;;
-			9)
-			  clear
-			  install tmux
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  tmux --help
-			  send_stats "安装tmux"
-			  ;;
-			10)
-			  clear
-			  install ffmpeg
-			  clear
-			  echo "工具已安装，使用方法如下："
-			  ffmpeg --help
-			  send_stats "安装ffmpeg"
-			  ;;
-
-			11)
-			  clear
-			  install btop
-			  clear
-			  btop
-			  send_stats "安装btop"
-			  ;;
-			12)
-			  clear
-			  install ranger
-			  cd /
-			  clear
-			  ranger
-			  cd ~
-			  send_stats "安装ranger"
-			  ;;
-			13)
-			  clear
-			  install ncdu
-			  cd /
-			  clear
-			  ncdu
-			  cd ~
-			  send_stats "安装ncdu"
-			  ;;
-			14)
-			  clear
-			  install fzf
-			  cd /
-			  clear
-			  fzf
-			  cd ~
-			  send_stats "安装fzf"
-			  ;;
-			15)
-			  clear
-			  install vim
-			  cd /
-			  clear
-			  vim -h
-			  cd ~
-			  send_stats "安装vim"
-			  ;;
-			16)
-			  clear
-			  install nano
-			  cd /
-			  clear
-			  nano -h
-			  cd ~
-			  send_stats "安装nano"
-			  ;;
-
-
-			17)
-			  clear
-			  install git
-			  cd /
-			  clear
-			  git --help
-			  cd ~
-			  send_stats "安装git"
-			  ;;
-
-			18)
-			  clear
-			  cd ~
+			  clear; install wget; clear; wget --help
+			  send_stats "安装wget" ;;
+		  3)
+			  clear; install sudo; clear; sudo --help
+			  send_stats "安装sudo" ;;
+		  4)
+			  clear; install socat; clear; socat -h
+			  send_stats "安装socat" ;;
+		  5)
+			  clear; install htop; clear; htop
+			  send_stats "安装htop" ;;
+		  6)
+			  clear; install iftop; clear; iftop
+			  send_stats "安装iftop" ;;
+		  7)
+			  clear; install btop; clear; btop
+			  send_stats "安装btop" ;;
+		  8)
+			  clear; install tmux; clear; tmux --help
+			  send_stats "安装tmux" ;;
+		  9)
+			  clear; install unzip; clear; unzip
+			  send_stats "安装unzip" ;;
+		  10)
+			  clear; install tar; clear; tar --help
+			  send_stats "安装tar" ;;
+		  11)
+			  clear; install ranger; cd /; clear; ranger; cd ~
+			  send_stats "安装ranger" ;;
+		  12)
+			  clear; install ncdu; cd /; clear; ncdu; cd ~
+			  send_stats "安装ncdu" ;;
+		  13)
+			  clear; install fzf; cd /; clear; fzf; cd ~
+			  send_stats "安装fzf" ;;
+		  14)
+			  clear; install ffmpeg; clear; ffmpeg --help
+			  send_stats "安装ffmpeg" ;;
+		  15)
+			  clear; install vim; cd /; clear; vim -h; cd ~
+			  send_stats "安装vim" ;;
+		  16)
+			  clear; install nano; cd /; clear; nano -h; cd ~
+			  send_stats "安装nano" ;;
+		  17)
+			  clear; install git; cd /; clear; git --help; cd ~
+			  send_stats "安装git" ;;
+		  18)
+			  clear; cd ~
 			  curl -fsSL https://opencode.ai/install | bash
-			  source ~/.bashrc
-			  source ~/.profile
+			  source ~/.bashrc 2>/dev/null
+			  source ~/.profile 2>/dev/null
 			  opencode
-			  send_stats "安装opencode"
-			  ;;
-
-			19)
-			  clear
-			  cd ~
+			  send_stats "安装opencode" ;;
+		  19)
+			  clear; cd ~
 			  echo -e "${rw_lv}正在安装 brew...${rw_bai}"
 			  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 			  if [ $? -eq 0 ]; then
@@ -8535,12 +8423,9 @@ linux_tools() {
 			  else
 				echo -e "${rw_hong}brew 安装失败${rw_bai}"
 			  fi
-			  send_stats "安装brew"
-			  ;;
-
-			20)
-			  clear
-			  cd ~
+			  send_stats "安装brew" ;;
+		  20)
+			  clear; cd ~
 			  echo -e "${rw_lv}正在安装 Node.js...${rw_bai}"
 			  if command -v brew >/dev/null 2>&1; then
 				brew install node
@@ -8556,12 +8441,9 @@ linux_tools() {
 			  else
 				echo -e "${rw_hong}Node.js 安装失败${rw_bai}"
 			  fi
-			  send_stats "安装nodejs"
-			  ;;
-
-			21)
-			  clear
-			  cd ~
+			  send_stats "安装nodejs" ;;
+		  21)
+			  clear; cd ~
 			  echo -e "${rw_lv}正在安装 pnpm...${rw_bai}"
 			  if command -v npm >/dev/null 2>&1; then
 				npm install -g pnpm
@@ -8576,8 +8458,7 @@ linux_tools() {
 			  else
 				echo -e "${rw_hong}pnpm 安装失败${rw_bai}"
 			  fi
-			  send_stats "安装pnpm"
-			  ;;
+			  send_stats "安装pnpm" ;;
 
 		  31)
 			  clear
@@ -8600,45 +8481,35 @@ linux_tools() {
 			  else
 				curl -fsSL https://get.pnpm.io/install.sh | sh - 2>/dev/null || true
 			  fi
-			  echo -e "${rw_lv}全部安装完成${rw_bai}"
-			  ;;
+			  echo -e "${rw_lv}全部安装完成${rw_bai}" ;;
 
-
-		  33)
+		  32)
 			  clear
 			  send_stats "全部卸载"
 			  remove htop iftop tmux ffmpeg btop ranger ncdu fzf vim nano git
-			  opencode uninstall
+			  opencode uninstall 2>/dev/null || true
 			  rm -rf ~/.opencode
 			  ;;
 
-		  41)
+		  33)
 			  clear
 			  read -e -p "请输入安装的工具名（wget curl sudo htop）: " installname
 			  install $installname
-			  send_stats "安装指定软件"
-			  ;;
-		  42)
+			  send_stats "安装指定软件" ;;
+
+		  34)
 			  clear
 			  read -e -p "请输入卸载的工具名（htop ufw tmux cmatrix）: " removename
 			  remove $removename
-			  send_stats "卸载指定软件"
-			  ;;
+			  send_stats "卸载指定软件" ;;
 
 		  0)
-			  riwi
-			  ;;
-
+			  riwi ;;
 		  *)
-			  echo "无效的输入!"
-			  ;;
+			  echo "无效的输入!" ;;
 	  esac
 	  break_end
   done
-
-
-
-
 }
 
 
@@ -9036,36 +8907,42 @@ ldnmp_builder_menu() {
     clear
     send_stats "LDNMP建站"
 
-    # ── 状态探测 ──
+    # ── 使用缓存的状态探测 ──
+    if _should_refresh_cache; then
+        refresh_status_cache
+    fi
+
     local _nginx_stat="${rw_hong}未运行${rw_bai}"
     local _mysql_stat="${rw_hong}未运行${rw_bai}"
     local _php_stat="${rw_hong}未运行${rw_bai}"
     local _site_cnt=0
 
-    # 检查 Docker 模式
+    # Nginx 状态：优先 Docker 容器，再使用缓存
     if docker inspect nginx &>/dev/null 2>&1; then
         docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_bai}"
-    elif command -v systemctl &>/dev/null && systemctl is-active nginx &>/dev/null 2>&1; then
+    elif $_CACHE_NGINX_ACTIVE; then
         _nginx_stat="${rw_lv}运行中${rw_bai}"
     fi
 
+    # MySQL 状态：优先 Docker 容器，再使用缓存
     if docker inspect mysql &>/dev/null 2>&1 || docker inspect mariadb &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' mysql 2>/dev/null | grep -q true 2>/dev/null; then
             _mysql_stat="${rw_lv}运行中${rw_bai}"
         elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true 2>/dev/null; then
             _mysql_stat="${rw_lv}运行中${rw_bai}"
         fi
-    elif command -v systemctl &>/dev/null && (systemctl is-active mysql &>/dev/null 2>&1 || systemctl is-active mariadb &>/dev/null 2>&1); then
+    elif $_CACHE_MYSQL_ACTIVE; then
         _mysql_stat="${rw_lv}运行中${rw_bai}"
     fi
 
+    # PHP 状态：优先 Docker 容器，再使用缓存
     if docker inspect php &>/dev/null 2>&1 || docker inspect php-fpm &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' php 2>/dev/null | grep -q true 2>/dev/null; then
             _php_stat="${rw_lv}运行中${rw_bai}"
         elif docker inspect -f '{{.State.Running}}' php-fpm 2>/dev/null | grep -q true 2>/dev/null; then
             _php_stat="${rw_lv}运行中${rw_bai}"
         fi
-    elif command -v systemctl &>/dev/null && systemctl is-active php-fpm &>/dev/null 2>&1; then
+    elif $_CACHE_PHP_ACTIVE; then
         _php_stat="${rw_lv}运行中${rw_bai}"
     fi
 
@@ -9076,20 +8953,21 @@ ldnmp_builder_menu() {
     echo ""
     echo -e " ${rw_cheng}──── 环境安装${rw_bai}"
     echo -e " ${rw_huang}1${rw_bai}  安装LDNMP环境        ${rw_huang}2${rw_bai}  安装Typecho博客"
-    echo -e " ${rw_huang}3${rw_bai}  仅安装Nginx"
+    echo -e " ${rw_huang}3${rw_bai}  仅安装Nginx          ${rw_huang}4${rw_bai}  MySQL管理"
+    echo -e " ${rw_huang}5${rw_bai}  PHP管理"
     echo ""
     echo -e " ${rw_cheng}──── 站点管理${rw_bai}"
-    echo -e " ${rw_huang}4${rw_bai}  Nginx管理             ${rw_huang}5${rw_bai}  站点数据管理"
-    echo -e " ${rw_huang}11${rw_bai} 自定义静态站点        ${rw_huang}12${rw_bai} 反向代理-负载均衡"
-    echo -e " ${rw_huang}13${rw_bai} 反向代理+域名         ${rw_huang}14${rw_bai} 站点重定向"
-    echo -e " ${rw_huang}15${rw_bai} 反向代理+IP+端口"
+    echo -e " ${rw_huang}6${rw_bai}  Nginx管理             ${rw_huang}7${rw_bai}  站点数据管理"
+    echo -e " ${rw_huang}13${rw_bai} 自定义静态站点        ${rw_huang}14${rw_bai} 反向代理-负载均衡"
+    echo -e " ${rw_huang}15${rw_bai} 反向代理+域名         ${rw_huang}16${rw_bai} 站点重定向"
+    echo -e " ${rw_huang}17${rw_bai} 反向代理+IP+端口"
     echo ""
     echo -e " ${rw_cheng}──── 数据管理${rw_bai}"
-    echo -e " ${rw_huang}6${rw_bai}  定时远程备份         ${rw_huang}10${rw_bai} 还原全站数据"
+    echo -e " ${rw_huang}8${rw_bai}  定时远程备份         ${rw_huang}12${rw_bai} 还原全站数据"
     echo ""
     echo -e " ${rw_cheng}──── 环境维护${rw_bai}"
-    echo -e " ${rw_huang}7${rw_bai}  防护LDNMP环境         ${rw_huang}8${rw_bai}  更新LDNMP环境"
-    echo -e " ${rw_huang}9${rw_bai}  优化LDNMP环境"
+    echo -e " ${rw_huang}9${rw_bai}  防护LDNMP环境         ${rw_huang}10${rw_bai} 更新LDNMP环境"
+    echo -e " ${rw_huang}11${rw_bai} 优化LDNMP环境"
     echo ""
     echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
     echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
@@ -9101,18 +8979,20 @@ ldnmp_builder_menu() {
       1) ldnmp_install_env ;;
       2) ldnmp_install_typecho ;;
       3) ldnmp_install_nginx_only ;;
-      4) ldnmp_nginx_manage ;;
-      5) ldnmp_site_data_manage ;;
-      6) ldnmp_scheduled_backup ;;
-      7) ldnmp_protect_env ;;
-      8) ldnmp_update_env ;;
-      9) ldnmp_optimize_env ;;
-      10) ldnmp_restore_full ;;
-      11) ldnmp_custom_static ;;
-      12) ldnmp_proxy_load_balance ;;
-      13) ldnmp_proxy_domain ;;
-      14) ldnmp_site_redirect ;;
-      15) ldnmp_proxy_ip_port ;;
+      4) ldnmp_mysql_manager ;;
+      5) ldnmp_php_manager ;;
+      6) ldnmp_nginx_manage ;;
+      7) ldnmp_site_data_manage ;;
+      8) ldnmp_scheduled_backup ;;
+      9) ldnmp_protect_env ;;
+      10) ldnmp_update_env ;;
+      11) ldnmp_optimize_env ;;
+      12) ldnmp_restore_full ;;
+      13) ldnmp_custom_static ;;
+      14) ldnmp_proxy_load_balance ;;
+      15) ldnmp_proxy_domain ;;
+      16) ldnmp_site_redirect ;;
+      17) ldnmp_proxy_ip_port ;;
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
@@ -9177,6 +9057,482 @@ ldnmp_install_nginx_only() {
   nginx_install_all
   echo -e "${rw_lv}Nginx安装完成！${rw_bai}"
   read -e -p "按回车返回菜单: "
+}
+
+# ── MySQL 管理子菜单 ──
+ldnmp_mysql_manager() {
+while true; do
+	clear
+
+	# ── 状态探测 ──
+	local _my_stat="${rw_hong}未安装${rw_bai}" _my_ver="" _my_port="" _my_img=""
+	local _my_root_pwd="" _my_user="" _my_user_pwd="" _my_dbs=""
+
+	if docker inspect mysql &>/dev/null 2>&1 || docker inspect mariadb &>/dev/null 2>&1; then
+		_my_stat="${rw_huang}已停止${rw_bai}"
+		# 运行状态
+		if docker inspect -f '{{.State.Running}}' mysql 2>/dev/null | grep -q true; then
+			_my_stat="${rw_lv}运行中${rw_bai}"
+		elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true; then
+			_my_stat="${rw_lv}运行中${rw_bai}"
+		fi
+		# 版本
+		_my_ver=$(docker exec mysql mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+		[ -z "$_my_ver" ] && _my_ver=$(docker exec mariadb mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+		# 镜像名
+		_my_img=$(docker inspect --format='{{.Config.Image}}' mysql 2>/dev/null || docker inspect --format='{{.Config.Image}}' mariadb 2>/dev/null)
+		# 端口
+		_my_port=$(docker port mysql 3306 2>/dev/null | head -1 || docker port mariadb 3306 2>/dev/null | head -1)
+		# 从 docker-compose.yml 读取凭据
+		if [ -f /home/web/docker-compose.yml ]; then
+			_my_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+			_my_user=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+			_my_user_pwd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+		fi
+		# 数据库列表
+		if [ -n "$_my_root_pwd" ]; then
+			_my_dbs=$(docker exec mysql mysql -u root -p"$_my_root_pwd" -e "SHOW DATABASES;" 2>/dev/null | grep -v "Database\|information_schema\|performance_schema\|mysql\|sys" | tr '\n' ' ' | sed 's/ *$//')
+		fi
+	else
+		# 检查 docker-compose.yml 是否配置了 mysql
+		if [ -f /home/web/docker-compose.yml ] && grep -q "mysql\|mariadb" /home/web/docker-compose.yml 2>/dev/null; then
+			_my_stat="${rw_huang}未启动${rw_bai}"
+		fi
+	fi
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  MySQL 管理  ━━━━━━━━━━━━${rw_bai}"
+	echo -e " 状态 ${_my_stat}  v${_my_ver:-?}  镜像 ${rw_lv}${_my_img:-?}${rw_bai}"
+	[ -n "$_my_port" ] && echo -e " 端口映射 ${rw_lv}${_my_port}${rw_bai}"
+	[ -n "$_my_dbs" ] && echo -e " 数据库 ${rw_lv}${_my_dbs}${rw_bai}"
+	echo ""
+	echo -e " ${rw_cheng}──── 服务${rw_bai}"
+	echo -e " ${rw_huang}1${rw_bai}  安装MySQL           ${rw_huang}2${rw_bai}  启动"
+	echo -e " ${rw_huang}3${rw_bai}  停止                ${rw_huang}4${rw_bai}  重启"
+	echo ""
+	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
+	echo -e " ${rw_huang}5${rw_bai}  更新MySQL           ${rw_huang}6${rw_bai}  切换MySQL版本"
+	echo ""
+	echo -e " ${rw_cheng}──── 数据${rw_bai}"
+	echo -e " ${rw_huang}7${rw_bai}  查看连接信息        ${rw_huang}8${rw_bai}  查看数据库列表"
+	echo ""
+	echo -e " ${rw_cheng}──── 卸载${rw_bai}"
+	echo -e " ${rw_huang}9${rw_bai}  卸载MySQL"
+	echo ""
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	read -e -p " 请选择: " _my_choice
+
+	case $_my_choice in
+		1)
+			send_stats "安装MySQL"
+			root_use
+			echo -e "${rw_huang}正在安装MySQL...${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_bai}"
+			install_dependency
+			install_docker
+			install_ldnmp_conf
+			cd /home/web && docker compose up -d mysql
+			sleep 3
+			# mysql调优
+			wget -O /home/custom_mysql_config.cnf ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/custom_mysql_config-1.cnf 2>/dev/null
+			docker cp /home/custom_mysql_config.cnf mysql:/etc/mysql/conf.d/ 2>/dev/null
+			rm -rf /home/custom_mysql_config.cnf
+			docker restart mysql 2>/dev/null
+			sleep 1
+			# ── 显示安装信息 ──
+			local _ins_ver=$(docker exec mysql mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+			local _ins_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+			local _ins_user=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+			local _ins_user_pwd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+			echo ""
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_lv}MySQL 安装完成！${rw_bai}"
+			[ -n "$_ins_ver" ] && echo -e "  版本:        ${rw_huang}v${_ins_ver}${rw_bai}"
+			[ -n "$_ins_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_ins_root_pwd}${rw_bai}"
+			[ -n "$_ins_user" ] && echo -e "  用户名:      ${rw_huang}${_ins_user}${rw_bai}"
+			[ -n "$_ins_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_ins_user_pwd}${rw_bai}"
+			echo -e "  容器名:      ${rw_huang}mysql${rw_bai}"
+			echo -e "  数据目录:    ${rw_huang}/home/web/mysql${rw_bai}"
+			echo -e "  管理命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			read -e -p "按回车返回菜单: "
+			;;
+		2)
+			send_stats "启动MySQL"
+			if docker inspect mysql &>/dev/null 2>&1; then
+				docker start mysql && echo -e "${rw_lv}MySQL 已启动${rw_bai}" || echo -e "${rw_hong}MySQL 启动失败${rw_bai}"
+			elif docker inspect mariadb &>/dev/null 2>&1; then
+				docker start mariadb && echo -e "${rw_lv}MariaDB 已启动${rw_bai}" || echo -e "${rw_hong}MariaDB 启动失败${rw_bai}"
+			else
+				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_bai}"
+			fi
+			;;
+		3)
+			send_stats "停止MySQL"
+			if docker inspect mysql &>/dev/null 2>&1; then
+				docker stop mysql && echo -e "${rw_lv}MySQL 已停止${rw_bai}"
+			elif docker inspect mariadb &>/dev/null 2>&1; then
+				docker stop mariadb && echo -e "${rw_lv}MariaDB 已停止${rw_bai}"
+			else
+				echo -e "${rw_hong}MySQL 容器不存在${rw_bai}"
+			fi
+			;;
+		4)
+			send_stats "重启MySQL"
+			if docker inspect mysql &>/dev/null 2>&1; then
+				docker restart mysql && echo -e "${rw_lv}MySQL 已重启${rw_bai}"
+			elif docker inspect mariadb &>/dev/null 2>&1; then
+				docker restart mariadb && echo -e "${rw_lv}MariaDB 已重启${rw_bai}"
+			else
+				echo -e "${rw_hong}MySQL 容器不存在${rw_bai}"
+			fi
+			;;
+		5)
+			send_stats "更新MySQL"
+			root_use
+			if ! docker inspect mysql &>/dev/null 2>&1 && ! docker inspect mariadb &>/dev/null 2>&1; then
+				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_bai}"
+			else
+				echo -e "${rw_huang}正在更新MySQL...${rw_bai}"
+				cd /home/web/
+				local _my_container="mysql"
+				docker inspect mysql &>/dev/null 2>&1 || _my_container="mariadb"
+				# 保存数据
+				docker stop $_my_container 2>/dev/null
+				docker rm $_my_container 2>/dev/null
+				docker images --filter=reference="*${_my_container}*" -q | xargs docker rmi 2>/dev/null
+				docker compose up -d --force-recreate $_my_container
+				# 重新应用调优配置
+				wget -O /home/custom_mysql_config.cnf ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/custom_mysql_config-1.cnf 2>/dev/null
+				docker cp /home/custom_mysql_config.cnf ${_my_container}:/etc/mysql/conf.d/ 2>/dev/null
+				rm -rf /home/custom_mysql_config.cnf
+				docker restart $_my_container 2>/dev/null
+				local _new_ver=$(docker exec $_my_container mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+				echo -e "${rw_lv}MySQL 更新完成！${rw_bai}"
+				[ -n "$_new_ver" ] && echo -e "当前版本: ${rw_huang}v${_new_ver}${rw_bai}"
+			fi
+			;;
+		6)
+			send_stats "切换MySQL版本"
+			root_use
+			if [ ! -f /home/web/docker-compose.yml ]; then
+				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_bai}"
+			else
+				echo -e "${rw_huang}可选MySQL版本:${rw_bai}"
+				echo -e "  ${rw_huang}1${rw_bai}  MySQL 5.7"
+				echo -e "  ${rw_huang}2${rw_bai}  MySQL 8.0"
+				echo -e "  ${rw_huang}3${rw_bai}  MySQL 8.4"
+				echo -e "  ${rw_huang}4${rw_bai}  MariaDB 10.11"
+				echo -e "  ${rw_huang}5${rw_bai}  MariaDB 11.4"
+				echo ""
+				read -e -p "请选择版本: " _my_ver_choice
+				local _new_img=""
+				case $_my_ver_choice in
+					1) _new_img="mysql:5.7" ;;
+					2) _new_img="mysql:8.0" ;;
+					3) _new_img="mysql:8.4" ;;
+					4) _new_img="mariadb:10.11" ;;
+					5) _new_img="mariadb:11.4" ;;
+					*) echo -e "${rw_hong}无效选择${rw_bai}" ; continue ;;
+				esac
+				echo -e "${rw_huang}正在切换到 ${_new_img}...${rw_bai}"
+				# 停止并移除旧容器
+				docker stop mysql mariadb 2>/dev/null
+				docker rm mysql mariadb 2>/dev/null
+				# 修改 docker-compose.yml 中的镜像
+				sed -i -E "s|image: mysql:[0-9.]+|image: ${_new_img}|g; s|image: mariadb:[0-9.]+|image: ${_new_img}|g" /home/web/docker-compose.yml
+				# 修改容器名（mariadb → mysql 或反之）
+				if echo "$_new_img" | grep -q "mariadb"; then
+					sed -i -E "s|container_name: mysql|container_name: mariadb|g" /home/web/docker-compose.yml
+				else
+					sed -i -E "s|container_name: mariadb|container_name: mysql|g" /home/web/docker-compose.yml
+				fi
+				cd /home/web && docker compose up -d --force-recreate
+				sleep 3
+				# 重新应用调优配置
+				wget -O /home/custom_mysql_config.cnf ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/custom_mysql_config-1.cnf 2>/dev/null
+				local _my_new_name=$(echo "$_new_img" | sed -E 's/[:/].*//')
+				docker cp /home/custom_mysql_config.cnf ${_my_new_name}:/etc/mysql/conf.d/ 2>/dev/null
+				rm -rf /home/custom_mysql_config.cnf
+				docker restart $_my_new_name 2>/dev/null
+				echo -e "${rw_lv}MySQL 版本切换完成！${rw_bai}"
+				echo -e "当前镜像: ${rw_huang}${_new_img}${rw_bai}"
+			fi
+			;;
+		7)
+			send_stats "查看MySQL连接信息"
+			if [ ! -f /home/web/docker-compose.yml ]; then
+				echo -e "${rw_hong}未找到 docker-compose.yml${rw_bai}"
+			else
+				local _info_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+				local _info_user=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+				local _info_user_pwd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				[ -n "$_info_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_info_root_pwd}${rw_bai}"
+				[ -n "$_info_user" ] && echo -e "  用户名:      ${rw_huang}${_info_user}${rw_bai}"
+				[ -n "$_info_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_info_user_pwd}${rw_bai}"
+				echo -e "  主机:        ${rw_huang}127.0.0.1${rw_bai}"
+				echo -e "  端口:        ${rw_huang}3306${rw_bai}"
+				echo -e "  连接命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			fi
+			;;
+		8)
+			send_stats "查看数据库列表"
+			if docker inspect mysql &>/dev/null 2>&1; then
+				local _list_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
+				if [ -n "$_list_root_pwd" ]; then
+					echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+					docker exec mysql mysql -u root -p"$_list_root_pwd" -e "SHOW DATABASES;" 2>/dev/null
+					echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				else
+					echo -e "${rw_hong}无法读取Root密码${rw_bai}"
+				fi
+			else
+				echo -e "${rw_hong}MySQL 容器不存在或未运行${rw_bai}"
+			fi
+			;;
+		9)
+			send_stats "卸载MySQL"
+			root_use
+			echo -e "${rw_hong}⚠️  卸载将删除MySQL容器和数据，此操作不可逆！${rw_bai}"
+			read -e -p "确认卸载MySQL？输入 YES 继续: " _uninstall_confirm
+			if [ "$_uninstall_confirm" = "YES" ]; then
+				echo -e "${rw_huang}正在卸载MySQL...${rw_bai}"
+				docker stop mysql mariadb 2>/dev/null
+				docker rm -f mysql mariadb 2>/dev/null
+				docker images --filter=reference="*mysql*" -q | xargs docker rmi 2>/dev/null
+				docker images --filter=reference="*mariadb*" -q | xargs docker rmi 2>/dev/null
+				echo -e "${rw_huang}注意: 数据目录 /home/web/mysql 已保留${rw_bai}"
+				echo -e "${rw_lv}MySQL 已卸载${rw_bai}"
+			else
+				echo -e "${rw_huang}已取消卸载${rw_bai}"
+			fi
+			;;
+		0)
+			break
+			;;
+		*)
+			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			;;
+	esac
+	break_end
+done
+}
+
+# ── PHP 管理子菜单 ──
+ldnmp_php_manager() {
+while true; do
+	clear
+
+	# ── 状态探测 ──
+	local _php_stat="${rw_hong}未安装${rw_bai}" _php_ver="" _php74_ver="" _php_img=""
+	local _php_modules=""
+
+	if docker inspect php &>/dev/null 2>&1; then
+		if docker inspect -f '{{.State.Running}}' php 2>/dev/null | grep -q true; then
+			_php_stat="${rw_lv}运行中${rw_bai}"
+		else
+			_php_stat="${rw_huang}已停止${rw_bai}"
+		fi
+		_php_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+		_php_img=$(docker inspect --format='{{.Config.Image}}' php 2>/dev/null)
+		_php_modules=$(docker exec php php -m 2>/dev/null | head -20 | tr '\n' ' ' | sed 's/ *$//')
+	fi
+	local _php74_stat="${rw_hong}未安装${rw_bai}"
+	if docker inspect php74 &>/dev/null 2>&1; then
+		_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+		if docker inspect -f '{{.State.Running}}' php74 2>/dev/null | grep -q true; then
+			_php74_stat="${rw_lv}运行中${rw_bai}"
+		else
+			_php74_stat="${rw_huang}已停止${rw_bai}"
+		fi
+	fi
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  PHP 管理  ━━━━━━━━━━━━${rw_bai}"
+	echo -e " PHP ${_php_stat}  v${_php_ver:-?}  镜像 ${rw_lv}${_php_img:-?}${rw_bai}"
+	[ -n "$_php74_ver" ] && echo -e " PHP74 ${_php74_stat}  v${_php74_ver}"
+	echo ""
+	echo -e " ${rw_cheng}──── 服务${rw_bai}"
+	echo -e " ${rw_huang}1${rw_bai}  安装PHP             ${rw_huang}2${rw_bai}  启动"
+	echo -e " ${rw_huang}3${rw_bai}  停止                ${rw_huang}4${rw_bai}  重启"
+	echo ""
+	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
+	echo -e " ${rw_huang}5${rw_bai}  更新PHP             ${rw_huang}6${rw_bai}  切换PHP版本"
+	echo ""
+	echo -e " ${rw_cheng}──── 信息${rw_bai}"
+	echo -e " ${rw_huang}7${rw_bai}  查看已安装模块      ${rw_huang}8${rw_bai}  查看php.ini配置"
+	echo ""
+	echo -e " ${rw_cheng}──── 卸载${rw_bai}"
+	echo -e " ${rw_huang}9${rw_bai}  卸载PHP"
+	echo ""
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	read -e -p " 请选择: " _php_choice
+
+	case $_php_choice in
+		1)
+			send_stats "安装PHP"
+			root_use
+			echo -e "${rw_huang}正在安装PHP...${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_bai}"
+			install_dependency
+			install_docker
+			install_ldnmp_conf
+			cd /home/web && docker compose up -d php php74 2>/dev/null
+			sleep 3
+			fix_phpfpm_conf php 2>/dev/null
+			fix_phpfpm_conf php74 2>/dev/null
+			docker restart php php74 2>/dev/null
+			sleep 1
+			# ── 显示安装信息 ──
+			local _ins_php_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+			local _ins_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+			local _ins_php_img=$(docker inspect --format='{{.Config.Image}}' php 2>/dev/null)
+			echo ""
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_lv}PHP 安装完成！${rw_bai}"
+			[ -n "$_ins_php_ver" ] && echo -e "  PHP 版本:      ${rw_huang}v${_ins_php_ver}${rw_bai}"
+			[ -n "$_ins_php74_ver" ] && echo -e "  PHP74 版本:    ${rw_huang}v${_ins_php74_ver}${rw_bai}"
+			[ -n "$_ins_php_img" ] && echo -e "  镜像:          ${rw_huang}${_ins_php_img}${rw_bai}"
+			echo -e "  容器名:        ${rw_huang}php / php74${rw_bai}"
+			echo -e "  网站根目录:    ${rw_huang}/home/web/html${rw_bai}"
+			echo -e "  fpm配置:       ${rw_huang}/usr/local/etc/php-fpm.d/www.conf${rw_bai}"
+			echo -e "  管理命令:      ${rw_huang}docker exec -it php bash${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			read -e -p "按回车返回菜单: "
+			;;
+		2)
+			send_stats "启动PHP"
+			if docker inspect php &>/dev/null 2>&1; then
+				docker start php php74 2>/dev/null && echo -e "${rw_lv}PHP 已启动${rw_bai}" || echo -e "${rw_hong}PHP 启动失败${rw_bai}"
+			else
+				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_bai}"
+			fi
+			;;
+		3)
+			send_stats "停止PHP"
+			if docker inspect php &>/dev/null 2>&1; then
+				docker stop php php74 2>/dev/null && echo -e "${rw_lv}PHP 已停止${rw_bai}"
+			else
+				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+			fi
+			;;
+		4)
+			send_stats "重启PHP"
+			if docker inspect php &>/dev/null 2>&1; then
+				docker restart php php74 2>/dev/null && echo -e "${rw_lv}PHP 已重启${rw_bai}"
+			else
+				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+			fi
+			;;
+		5)
+			send_stats "更新PHP"
+			root_use
+			if ! docker inspect php &>/dev/null 2>&1; then
+				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_bai}"
+			else
+				echo -e "${rw_huang}正在更新PHP...${rw_bai}"
+				cd /home/web/
+				docker stop php php74 2>/dev/null
+				docker rm php php74 2>/dev/null
+				docker images --filter=reference="*php*" -q | xargs docker rmi 2>/dev/null
+				docker compose up -d --force-recreate php php74 2>/dev/null
+				sleep 2
+				fix_phpfpm_conf php 2>/dev/null
+				fix_phpfpm_conf php74 2>/dev/null
+				docker restart php php74 2>/dev/null
+				local _new_php_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+				local _new_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+				echo -e "${rw_lv}PHP 更新完成！${rw_bai}"
+				[ -n "$_new_php_ver" ] && echo -e "PHP 版本: ${rw_huang}v${_new_php_ver}${rw_bai}"
+				[ -n "$_new_php74_ver" ] && echo -e "PHP74 版本: ${rw_huang}v${_new_php74_ver}${rw_bai}"
+			fi
+			;;
+		6)
+			send_stats "切换PHP版本"
+			root_use
+			if [ ! -f /home/web/docker-compose.yml ]; then
+				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_bai}"
+			else
+				echo -e "${rw_huang}可选PHP版本:${rw_bai}"
+				echo -e "  ${rw_huang}1${rw_bai}  PHP 7.4"
+				echo -e "  ${rw_huang}2${rw_bai}  PHP 8.0"
+				echo -e "  ${rw_huang}3${rw_bai}  PHP 8.1"
+				echo -e "  ${rw_huang}4${rw_bai}  PHP 8.2"
+				echo -e "  ${rw_huang}5${rw_bai}  PHP 8.3"
+				echo ""
+				read -e -p "请选择PHP主版本: " _php_ver_choice
+				local _new_php_img=""
+				case $_php_ver_choice in
+					1) _new_php_img="php:7.4-fpm" ;;
+					2) _new_php_img="php:8.0-fpm" ;;
+					3) _new_php_img="php:8.1-fpm" ;;
+					4) _new_php_img="php:8.2-fpm" ;;
+					5) _new_php_img="php:8.3-fpm" ;;
+					*) echo -e "${rw_hong}无效选择${rw_bai}" ; continue ;;
+				esac
+				echo -e "${rw_huang}正在切换PHP到 ${_new_php_img}...${rw_bai}"
+				docker stop php php74 2>/dev/null
+				docker rm php php74 2>/dev/null
+				# 修改 docker-compose.yml 中的PHP镜像
+				sed -i -E "s|image: php:[0-9.]+-fpm|image: ${_new_php_img}|g" /home/web/docker-compose.yml
+				cd /home/web && docker compose up -d --force-recreate php php74 2>/dev/null
+				sleep 3
+				fix_phpfpm_conf php 2>/dev/null
+				fix_phpfpm_conf php74 2>/dev/null
+				docker restart php php74 2>/dev/null
+				local _switched_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
+				echo -e "${rw_lv}PHP 版本切换完成！${rw_bai}"
+				[ -n "$_switched_ver" ] && echo -e "当前版本: ${rw_huang}v${_switched_ver}${rw_bai}"
+			fi
+			;;
+		7)
+			send_stats "查看PHP模块"
+			if docker inspect php &>/dev/null 2>&1; then
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				docker exec php php -m 2>/dev/null | sort
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			else
+				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+			fi
+			;;
+		8)
+			send_stats "查看php.ini配置"
+			if docker inspect php &>/dev/null 2>&1; then
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				docker exec php php -i 2>/dev/null | grep -E "^(php.ini|Configuration File|Loaded Configuration|memory_limit|max_execution_time|upload_max_filesize|post_max_size|display_errors)" | head -20
+				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			else
+				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+			fi
+			;;
+		9)
+			send_stats "卸载PHP"
+			root_use
+			echo -e "${rw_hong}⚠️  卸载将删除PHP容器，此操作不可逆！${rw_bai}"
+			read -e -p "确认卸载PHP？输入 YES 继续: " _php_uninstall_confirm
+			if [ "$_php_uninstall_confirm" = "YES" ]; then
+				echo -e "${rw_huang}正在卸载PHP...${rw_bai}"
+				docker stop php php74 2>/dev/null
+				docker rm -f php php74 2>/dev/null
+				docker images --filter=reference="*php*fpm*" -q | xargs docker rmi 2>/dev/null
+				echo -e "${rw_lv}PHP 已卸载${rw_bai}"
+			else
+				echo -e "${rw_huang}已取消卸载${rw_bai}"
+			fi
+			;;
+		0)
+			break
+			;;
+		*)
+			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			;;
+	esac
+	break_end
+done
 }
 
 ldnmp_proxy_ip_port() {
@@ -19271,191 +19627,124 @@ done
 
 
 linux_work() {
+while true; do
+	clear
 
-	while true; do
-	  clear
-	  send_stats "后台工作区"
-	  echo -e "${rw_huang}后台工作区${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}功能说明:${rw_bai}"
-	  echo -e "${rw_huang}  提供可以后台常驻运行的工作区，适合执行长时间任务，包括:${rw_bai}"
-	  echo -e "${rw_huang}  • 支持多个独立的后台工作区${rw_bai}"
-	  echo -e "${rw_huang}  • 断开SSH连接后任务继续运行${rw_bai}"
-	  echo -e "${rw_huang}  • 随时查看和恢复后台工作区${rw_bai}"
-	  echo ""
-	  echo -e "${rw_huang}操作提示:${rw_bai}"
-	  echo -e "${rw_huang}  • 进入工作区: 选择对应的工作区编号${rw_bai}"
-	  echo -e "${rw_huang}  • 退出工作区: 按 Ctrl+b 再按 d${rw_bai}"
-	  echo -e "${rw_huang}  • 切换窗口: 按 Ctrl+b 再按 n${rw_bai}"
-	  echo ""
-	  echo -e "${rw_lan}------------------------"
-	  echo "当前已存在的工作区列表"
-	  echo -e "${rw_lan}------------------------"
-	  tmux list-sessions
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}1号工作区${rw_bai}"
-	  echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}2号工作区${rw_bai}"
-	  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}3号工作区${rw_bai}"
-	  echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}4号工作区${rw_bai}"
-	  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}5号工作区${rw_bai}"
-	  echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}6号工作区${rw_bai}"
-	  echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}7号工作区${rw_bai}"
-	  echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}8号工作区${rw_bai}"
-	  echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}9号工作区${rw_bai}"
-	  echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}10号工作区${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}21.  ${rw_bai}${rw_lv}SSH常驻模式 ${rw_bai}${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}22.  ${rw_bai}${rw_lv}创建/进入工作区${rw_bai}"
-	  echo -e "${rw_huang}23.  ${rw_bai}${rw_lv}注入命令到后台工作区${rw_bai}"
-	  echo -e "${rw_huang}24.  ${rw_bai}${rw_lv}删除指定工作区${rw_bai}"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
-	  read -e -p "请输入你的选择: " sub_choice
+	# ── 状态探测 ──
+	local _tmux_stat="${rw_hong}未安装${rw_bai}" _tmux_ver="" _session_count=0 _session_list=""
+	local _sshd_stat="${rw_hong}关闭${rw_bai}"
 
-	  case $sub_choice in
+	if command -v tmux &>/dev/null; then
+		_tmux_ver=$(tmux -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+).*/\1/p' | head -1)
+		if pgrep -x tmux &>/dev/null; then
+			_tmux_stat="${rw_lv}运行中${rw_bai}"
+		else
+			_tmux_stat="${rw_huang}已安装${rw_bai}"
+		fi
+		_session_list=$(tmux list-sessions 2>/dev/null)
+		_session_count=$(echo "$_session_list" | grep -c . 2>/dev/null || echo 0)
+		[ "$_session_count" -le 0 ] && _session_count=0
+	fi
+	if grep -q 'tmux attach-session -t sshd || tmux new-session -s sshd' ~/.bashrc 2>/dev/null; then
+		_sshd_stat="${rw_lv}开启${rw_bai}"
+	fi
 
-		  1)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work1"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
+	echo -e "${rw_cheng}━━━━━━━━━━━━  后台工作区  ━━━━━━━━━━━━${rw_bai}"
+	echo -e " tmux ${_tmux_stat}  v${_tmux_ver:-?}  会话 ${rw_lv}${_session_count}${rw_bai}  SSH常驻 ${_sshd_stat}"
+	echo ""
+	echo -e " ${rw_cheng}──── 快速进入${rw_bai}"
+	echo -e " ${rw_huang}1${rw_bai}  1号工作区        ${rw_huang}2${rw_bai}  2号工作区        ${rw_huang}3${rw_bai}  3号工作区"
+	echo -e " ${rw_huang}4${rw_bai}  4号工作区        ${rw_huang}5${rw_bai}  5号工作区        ${rw_huang}6${rw_bai}  6号工作区"
+	echo -e " ${rw_huang}7${rw_bai}  7号工作区        ${rw_huang}8${rw_bai}  8号工作区        ${rw_huang}9${rw_bai}  9号工作区"
+	echo -e " ${rw_huang}10${rw_bai} 10号工作区"
+	echo ""
+	echo -e " ${rw_cheng}──── 工作区管理${rw_bai}"
+	echo -e " ${rw_huang}11${rw_bai} 创建/进入工作区    ${rw_huang}12${rw_bai} 删除指定工作区"
+	echo -e " ${rw_huang}13${rw_bai} 注入命令到后台      ${rw_huang}14${rw_bai} 查看会话列表"
+	echo ""
+	echo -e " ${rw_cheng}──── SSH常驻模式${rw_bai}"
+	echo -e " ${rw_huang}15${rw_bai} 开启SSH常驻        ${rw_huang}16${rw_bai} 关闭SSH常驻"
+	echo ""
+	echo -e " ${rw_cheng}──── 操作提示${rw_bai}"
+	echo -e " ${rw_lan}退出工作区: Ctrl+b d   切换窗口: Ctrl+b n${rw_bai}"
 
-			  ;;
-		  2)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work2"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  3)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work3"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  4)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work4"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  5)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work5"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  6)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work6"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  7)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work7"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  8)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work8"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  9)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work9"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
-		  10)
-			  clear
-			  install tmux
-			  local SESSION_NAME="work10"
-			  send_stats "启动工作区$SESSION_NAME"
-			  tmux_run
-			  ;;
+	# ── 显示当前会话列表 ──
+	if [ "$_session_count" -gt 0 ]; then
+		echo ""
+		echo -e " ${rw_cheng}──── 当前会话${rw_bai}"
+		echo "$_session_list" | while IFS= read -r _line; do
+			echo -e " ${rw_lan}$_line${rw_bai}"
+		done
+	fi
 
-		  21)
-			while true; do
-			  clear
-			  if grep -q 'tmux attach-session -t sshd || tmux new-session -s sshd' ~/.bashrc; then
-				  local tmux_sshd_status="${rw_lv}开启${rw_bai}"
-			  else
-				  local tmux_sshd_status="${rw_lv}关闭${rw_bai}"
-			  fi
-			  send_stats "SSH常驻模式 "
-			  echo -e "SSH常驻模式 ${tmux_sshd_status}"
-			  echo "开启后SSH连接后会直接进入常驻模式，直接回到之前的工作状态。"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "1. 开启            2. 关闭"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  echo "0. 返回上一级选单"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
-			  read -e -p "请输入你的选择: " gongzuoqu_del
-			  case "$gongzuoqu_del" in
-				1)
-			  	  install tmux
-			  	  local SESSION_NAME="sshd"
-			  	  send_stats "启动工作区$SESSION_NAME"
-				  grep -q "tmux attach-session -t sshd" ~/.bashrc || echo -e "\n# 自动进入 tmux 会话\nif [[ -z \"\$TMUX\" ]]; then\n    tmux attach-session -t sshd || tmux new-session -s sshd\nfi" >> ~/.bashrc
-				  source ~/.bashrc
-			  	  tmux_run
-				  ;;
-				2)
-				  sed -i '/# 自动进入 tmux 会话/,+4d' ~/.bashrc
-				  tmux kill-window -t sshd
-				  ;;
-				*)
-				  break
-				  ;;
-			  esac
-			done
-			  ;;
+	echo ""
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	read -e -p " 请选择: " _wk_choice
 
-		  22)
-			  read -e -p "请输入你创建或进入的工作区名称，如1001 kj001 work1: " SESSION_NAME
-			  tmux_run
-			  send_stats "自定义工作区"
-			  ;;
-
-
-		  23)
-			  read -e -p "请输入你要后台执行的命令，如:curl -fsSL https://get.docker.com | sh: " tmuxd
-			  tmux_run_d
-			  send_stats "注入命令到后台工作区"
-			  ;;
-
-		  24)
-			  read -e -p "请输入要删除的工作区名称: " gongzuoqu_name
-			  tmux kill-window -t $gongzuoqu_name
-			  send_stats "删除工作区"
-			  ;;
-
-		  0)
-			  riwi
-			  ;;
-		  *)
-			  echo "无效的输入!"
-			  ;;
-	  esac
-	  break_end
-
-	done
-
-
+	case $_wk_choice in
+		1|2|3|4|5|6|7|8|9|10)
+			clear
+			install tmux
+			local SESSION_NAME="work${_wk_choice}"
+			send_stats "启动工作区$SESSION_NAME"
+			tmux_run
+			;;
+		11)
+			read -e -p "请输入工作区名称 (如 1001/kj001/work1): " SESSION_NAME
+			install tmux
+			tmux_run
+			send_stats "自定义工作区"
+			;;
+		12)
+			read -e -p "请输入要删除的工作区名称: " gongzuoqu_name
+			tmux kill-session -t "$gongzuoqu_name" 2>/dev/null && \
+				echo -e "${rw_lv}工作区 ${gongzuoqu_name} 已删除${rw_bai}" || \
+				echo -e "${rw_hong}工作区 ${gongzuoqu_name} 不存在或删除失败${rw_bai}"
+			send_stats "删除工作区"
+			;;
+		13)
+			read -e -p "请输入要后台执行的命令: " tmuxd
+			install tmux
+			tmux_run_d
+			send_stats "注入命令到后台工作区"
+			;;
+		14)
+			clear
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			if command -v tmux &>/dev/null; then
+				tmux list-sessions 2>/dev/null || echo -e "${rw_huang}当前无活跃会话${rw_bai}"
+			else
+				echo -e "${rw_hong}tmux 未安装${rw_bai}"
+			fi
+			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			send_stats "查看会话列表"
+			;;
+		15)
+			install tmux
+			local SESSION_NAME="sshd"
+			send_stats "开启SSH常驻模式"
+			grep -q "tmux attach-session -t sshd" ~/.bashrc 2>/dev/null || \
+				echo -e "\n# 自动进入 tmux 会话\nif [[ -z \"\$TMUX\" ]]; then\n    tmux attach-session -t sshd || tmux new-session -s sshd\nfi" >> ~/.bashrc
+			source ~/.bashrc 2>/dev/null
+			tmux_run
+			;;
+		16)
+			send_stats "关闭SSH常驻模式"
+			sed -i '/# 自动进入 tmux 会话/,+4d' ~/.bashrc
+			tmux kill-session -t sshd 2>/dev/null
+			echo -e "${rw_lv}SSH常驻模式已关闭${rw_bai}"
+			;;
+		0)
+			riwi
+			;;
+		*)
+			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			;;
+	esac
+	break_end
+done
 }
 
 
@@ -21185,13 +21474,18 @@ linux_security() {
     clear
     send_stats "安全优化"
 
-    # ── 状态探测 ──
+    # ── 使用缓存的状态探测 ──
+    if _should_refresh_cache; then
+        refresh_status_cache
+    fi
+
     local _ssh_stat="${rw_hong}未运行${rw_bai}"
     local _fw_stat="${rw_hong}未运行${rw_bai}"
     local _user_cnt=0
 
-    command -v systemctl &>/dev/null && systemctl is-active sshd &>/dev/null && _ssh_stat="${rw_lv}运行中${rw_bai}"
-    command -v systemctl &>/dev/null && systemctl is-active firewalld &>/dev/null && _fw_stat="${rw_lv}运行中${rw_bai}"
+    # 使用缓存值
+    $_CACHE_SSHD_ACTIVE && _ssh_stat="${rw_lv}运行中${rw_bai}"
+    ( $_CACHE_FIREWALLD_ACTIVE || $_CACHE_UFW_ACTIVE ) && _fw_stat="${rw_lv}运行中${rw_bai}"
     _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
 
     echo -e "${rw_cheng}━━━━━━━━━━━━  安全优化  ━━━━━━━━━━━━${rw_bai}"
@@ -22294,6 +22588,30 @@ done
 
 
 riwi_sh() {
+
+# ── 首次运行许可协议检查 ──
+if [ ! -f ~/.riwi_license_agreed ]; then
+	clear
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_bai}"
+	echo -e "${rw_lv}  欢迎使用 Riou 脚本工具箱${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_bai}"
+	echo ""
+	echo -e "  首次使用脚本，请先阅读并同意用户许可协议。"
+	echo ""
+	echo -e "  用户许可协议: ${rw_huang}https://github.com/riwi002/mybox/blob/main/LICENSE${rw_bai}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────${rw_bai}"
+	echo ""
+	read -e -p "  是否同意以上条款？(y/n): " _license_agree
+	if [ "$_license_agree" = "y" ] || [ "$_license_agree" = "Y" ]; then
+		touch ~/.riwi_license_agreed
+		echo -e "\n  ${rw_lv}感谢同意！即将进入脚本...${rw_bai}"
+		sleep 1
+	else
+		echo -e "\n  ${rw_hong}未同意许可协议，脚本退出。${rw_bai}"
+		exit 1
+	fi
+fi
+
 while true; do
 clear
 echo -e "$(orange "Riou脚本工具箱 v$sh_v")"
@@ -24164,14 +24482,18 @@ docker_manager_menu() {
     clear
     send_stats "Docker全管理"
 
-    # ── 状态探测 ──
+    # ── 状态探测（容器/镜像数量每次刷新，状态使用缓存）──
+    if _should_refresh_cache; then
+        refresh_status_cache
+    fi
+
     local _dr=0 _da=0 _di=0 _docker_stat="${rw_hong}未安装${rw_bai}"
     if command -v docker &>/dev/null; then
         _docker_stat="${rw_lv}已安装${rw_bai}"
         _dr=$(docker ps -q 2>/dev/null | wc -l | tr -d ' ')
         _da=$(docker ps -aq 2>/dev/null | wc -l | tr -d ' ')
         _di=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
-        if ! docker info &>/dev/null; then
+        if ! $_CACHE_DOCKER_ACTIVE; then
             _docker_stat="${rw_huang}已安装但未运行${rw_bai}"
         fi
     fi
@@ -24626,9 +24948,9 @@ docker_health_check() {
 clear
 echo -e "${rw_cheng}━━━━━━━━━━━━  健康诊断  ━━━━━━━━━━━━━━━━${rw_bai}"
 
-# Docker 服务
+# Docker 服务（使用缓存）
 echo -n " Docker 服务: "
-if (command -v systemctl &>/dev/null && systemctl is-active docker &>/dev/null 2>&1) || pgrep dockerd &>/dev/null; then
+if $_CACHE_DOCKER_ACTIVE || pgrep dockerd &>/dev/null; then
   echo -e "${rw_lv}● 运行中${rw_bai}"
   docker info --format ' 容器: {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止    镜像: {{.Images}}' 2>/dev/null
 else
@@ -25186,7 +25508,7 @@ case $choice in
     _chk "Docker 命令:"
     command -v docker &>/dev/null && echo -e "${rw_lv}✓ 已安装${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"
     _chk "Docker 服务:"
-    (command -v systemctl &>/dev/null && systemctl is-active docker &>/dev/null 2>&1) || pgrep dockerd &>/dev/null \
+    ( $_CACHE_DOCKER_ACTIVE || pgrep dockerd &>/dev/null ) \
       && echo -e "${rw_lv}✓ 运行中${rw_bai}" || echo -e "${rw_hong}✗ 未运行${rw_bai}"
     _chk "Docker Compose:"
     docker compose version &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 插件版${rw_bai}" \
@@ -25699,7 +26021,7 @@ while true; do
 	# 1Panel 状态
 	if command -v 1pctl &>/dev/null; then
 		_1p_stat="${rw_lv}已安装${rw_bai}"
-		command -v systemctl &>/dev/null && systemctl is-active 1panel &>/dev/null && _1p_stat="${rw_lv}运行中${rw_bai}"
+		$_CACHE_1PANEL_ACTIVE && _1p_stat="${rw_lv}运行中${rw_bai}"
 	fi
 
 	# Nginx 状态
