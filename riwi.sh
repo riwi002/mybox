@@ -22629,7 +22629,7 @@ if [ ! -f ~/.riwi_license_agreed ]; then
 	echo -e "  用户许可协议: ${rw_huang}https://github.com/riwi002/mybox/blob/main/LICENSE${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────────────${rw_lv}"
 	echo ""
-	read -e -p "  是否同意以上条款？(y/n): " _license_agree
+	read -e -p "  是否同意以上条款？(y/n): " _license_agree < /dev/tty
 	if [ "$_license_agree" = "y" ] || [ "$_license_agree" = "Y" ]; then
 		touch ~/.riwi_license_agreed
 		echo -e "\n  ${rw_lv}感谢同意！即将进入脚本...${rw_lv}"
