@@ -207,7 +207,7 @@ CheckFirstRun_false() {
 # 提示用户同意条款
 UserLicenseAgreement() {
 	clear
-	echo -e "${rw_huang}欢迎使用Riou脚本工具箱${rw_bai}"
+	echo -e "${rw_huang}欢迎使用Riou脚本工具箱${rw_lv}"
 	echo "首次使用脚本，请先阅读并同意用户许可协议。"
 	echo "用户许可协议: https://github.com/riwi002/mybox/blob/main/LICENSE"
 	echo -e "----------------------"
@@ -281,13 +281,13 @@ generate_salt() {
 # 设置密码（首次使用）
 set_password() {
   clear
-  echo -e "${rw_hong}╔════════════════════════════════════════╗${rw_bai}"
-  echo -e "${rw_hong}║   ${rw_huang}首次使用 - 设置访问密码${rw_hong}              ║${rw_bai}"
-  echo -e "${rw_hong}╚════════════════════════════════════════╝${rw_bai}"
+  echo -e "${rw_hong}╔════════════════════════════════════════╗${rw_lv}"
+  echo -e "${rw_hong}║   ${rw_huang}首次使用 - 设置访问密码${rw_hong}              ║${rw_lv}"
+  echo -e "${rw_hong}╚════════════════════════════════════════╝${rw_lv}"
   echo ""
   
   while true; do
-    echo -e "${rw_huang}请设置访问密码（至少8位，包含大小写字母和数字）${rw_bai}"
+    echo -e "${rw_huang}请设置访问密码（至少8位，包含大小写字母和数字）${rw_lv}"
     read -s -p "输入密码: " password1
     echo ""
     read -s -p "确认密码: " password2
@@ -295,17 +295,17 @@ set_password() {
     
     # 验证密码强度
     if [ ${#password1} -lt 8 ]; then
-      echo -e "${rw_hong}错误：密码长度至少需要8位${rw_bai}"
+      echo -e "${rw_hong}错误：密码长度至少需要8位${rw_lv}"
       continue
     fi
     
     if ! echo "$password1" | grep -q '[A-Z]' || ! echo "$password1" | grep -q '[a-z]' || ! echo "$password1" | grep -q '[0-9]'; then
-      echo -e "${rw_hong}错误：密码需要包含大小写字母和数字${rw_bai}"
+      echo -e "${rw_hong}错误：密码需要包含大小写字母和数字${rw_lv}"
       continue
     fi
     
     if [ "$password1" != "$password2" ]; then
-      echo -e "${rw_hong}错误：两次输入的密码不一致${rw_bai}"
+      echo -e "${rw_hong}错误：两次输入的密码不一致${rw_lv}"
       continue
     fi
     
@@ -326,8 +326,8 @@ set_password() {
   chmod 600 "$PASSWORD_FILE" 2>/dev/null
   
   echo ""
-  echo -e "${rw_lv}✓ 密码设置成功！${rw_bai}"
-  echo -e "${rw_huang}请牢记您的密码${rw_bai}"
+  echo -e "${rw_lv}✓ 密码设置成功！${rw_lv}"
+  echo -e "${rw_huang}请牢记您的密码${rw_lv}"
   echo ""
   sleep 2
 }
@@ -371,9 +371,9 @@ verify_password() {
       local remaining_seconds=$((timeout_seconds - time_diff))
       local remaining_minutes=$((remaining_seconds / 60))
       if [ "$remaining_minutes" -gt 0 ]; then
-        echo -e "${rw_lv}✓ 密码已在免密期内（还剩 ${remaining_minutes} 分钟）${rw_bai}"
+        echo -e "${rw_lv}✓ 密码已在免密期内（还剩 ${remaining_minutes} 分钟）${rw_lv}"
       else
-        echo -e "${rw_lv}✓ 密码已在免密期内${rw_bai}"
+        echo -e "${rw_lv}✓ 密码已在免密期内${rw_lv}"
       fi
       sleep 1
       return 0
@@ -385,11 +385,11 @@ verify_password() {
   
   while [ $attempt -le $max_attempts ]; do
     clear
-    echo -e "${rw_huang}╔════════════════════════════════════════╗${rw_bai}"
-    echo -e "${rw_huang}║   ${rw_huang}Riou脚本工具箱 - 身份验证${rw_bai}        ║${rw_bai}"
-    echo -e "${rw_huang}╚════════════════════════════════════════╝${rw_bai}"
+    echo -e "${rw_huang}╔════════════════════════════════════════╗${rw_lv}"
+    echo -e "${rw_huang}║   ${rw_huang}Riou脚本工具箱 - 身份验证${rw_lv}        ║${rw_lv}"
+    echo -e "${rw_huang}╚════════════════════════════════════════╝${rw_lv}"
     echo ""
-    echo -e "${rw_huang}尝试次数: $attempt / $max_attempts${rw_bai}"
+    echo -e "${rw_huang}尝试次数: $attempt / $max_attempts${rw_lv}"
     echo ""
     read -s -p "请输入访问密码: " input_password
     echo ""
@@ -406,14 +406,14 @@ verify_password() {
     
     # 验证密码
     if [ "$input_hash" = "$stored_hash" ]; then
-      echo -e "${rw_lv}✓ 密码验证成功！${rw_bai}"
+      echo -e "${rw_lv}✓ 密码验证成功！${rw_lv}"
       # 记录当前时间戳
       date +%s > "$PASSWORD_TIMESTAMP_FILE"
       chmod 600 "$PASSWORD_TIMESTAMP_FILE" 2>/dev/null
       sleep 1
       return 0
     else
-      echo -e "${rw_hong}✗ 密码错误${rw_bai}"
+      echo -e "${rw_hong}✗ 密码错误${rw_lv}"
       attempt=$((attempt + 1))
       if [ $attempt -le $max_attempts ]; then
         sleep 1
@@ -422,7 +422,7 @@ verify_password() {
   done
   
   # 达到最大尝试次数
-  echo -e "${rw_hong}✗ 已达到最大尝试次数，访问被拒绝${rw_bai}"
+  echo -e "${rw_hong}✗ 已达到最大尝试次数，访问被拒绝${rw_lv}"
   send_stats "密码验证失败_锁定" 2>/dev/null
   sleep 2
   exit 1
@@ -537,6 +537,10 @@ _CACHE_NGINX_ACTIVE=false
 _CACHE_MYSQL_ACTIVE=false
 _CACHE_PHP_ACTIVE=false
 _CACHE_1PANEL_ACTIVE=false
+_CACHE_COLIMA_ACTIVE=false
+_CACHE_DOCKER_CONTAINER_RUNNING=0
+_CACHE_DOCKER_CONTAINER_ALL=0
+_CACHE_DOCKER_IMAGE_COUNT=0
 
 # 检查缓存是否有效
 _should_refresh_cache() {
@@ -558,7 +562,11 @@ refresh_status_cache() {
     _CACHE_MYSQL_ACTIVE=false
     _CACHE_PHP_ACTIVE=false
     _CACHE_1PANEL_ACTIVE=false
-    
+    _CACHE_COLIMA_ACTIVE=false
+    _CACHE_DOCKER_CONTAINER_RUNNING=0
+    _CACHE_DOCKER_CONTAINER_ALL=0
+    _CACHE_DOCKER_IMAGE_COUNT=0
+
     # systemctl 可用性
     if command -v systemctl &>/dev/null; then
         _CACHE_SYSTEMCTL_AVAILABLE=true
@@ -602,8 +610,14 @@ refresh_status_cache() {
     fi
     
     # Docker 可用性（不依赖 systemctl）
-    if pgrep dockerd &>/dev/null || docker ps &>/dev/null; then
+    if pgrep dockerd &>/dev/null || timeout 5 docker ps &>/dev/null; then
         _CACHE_DOCKER_ACTIVE=true
+        # 缓存容器数和镜像数（带超时保护）
+        if _CACHE_DOCKER_ACTIVE; then
+            _CACHE_DOCKER_CONTAINER_RUNNING=$(timeout 5 docker ps -q 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+            _CACHE_DOCKER_CONTAINER_ALL=$(timeout 5 docker ps -aq 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+            _CACHE_DOCKER_IMAGE_COUNT=$(timeout 5 docker images -q 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+        fi
     fi
     
     # 更新缓存时间戳
@@ -659,7 +673,7 @@ install() {
 
 	for package in "$@"; do
 		if ! command -v "$package" &>/dev/null; then
-			echo -e "${rw_huang}正在安装 $package...${rw_bai}"
+			echo -e "${rw_huang}正在安装 $package...${rw_lv}"
 			if command -v dnf &>/dev/null; then
 				dnf -y update
 				dnf install -y epel-release
@@ -705,7 +719,7 @@ check_disk_space() {
 	local available_space_mb=$(df -m "$path" | awk 'NR==2 {print $4}')
 
 	if [ "$available_space_mb" -lt "$required_space_mb" ]; then
-		echo -e "${rw_huang}提示: ${rw_bai}磁盘空间不足！"
+		echo -e "${rw_huang}提示: ${rw_lv}磁盘空间不足！"
 		echo "当前可用空间: $((available_space_mb/1024))G"
 		echo "最小需求空间: ${required_gb}G"
 		echo "无法继续安装，请清理磁盘空间后重试。"
@@ -734,7 +748,7 @@ remove() {
 	fi
 
 	for package in "$@"; do
-		echo -e "${rw_huang}正在卸载 $package...${rw_bai}"
+		echo -e "${rw_huang}正在卸载 $package...${rw_lv}"
 		if command -v dnf &>/dev/null; then
 			dnf remove -y "$package"
 		elif command -v yum &>/dev/null; then
@@ -827,7 +841,7 @@ enable() {
 
 
 break_end() {
-	  echo -e "${rw_lv}操作完成${rw_bai}"
+	  echo -e "${rw_lv}操作完成${rw_lv}"
 	  echo "按任意键继续..."
 	  read -n 1 -s -r -p ""
 	  echo ""
@@ -976,7 +990,7 @@ install_add_docker_cn
 
 
 install_add_docker() {
-	echo -e "${rw_huang}正在安装docker环境...${rw_bai}"
+	echo -e "${rw_huang}正在安装docker环境...${rw_lv}"
 	if command -v apt &>/dev/null || command -v yum &>/dev/null || command -v dnf &>/dev/null; then
 		linuxmirrors_install_docker
 	else
@@ -999,35 +1013,35 @@ docker_ps() {
 while true; do
 	clear
 	send_stats "Docker容器管理"
-	echo -e "${rw_huang}Docker容器管理${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_huang}Docker容器管理${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${rw_huang}  Docker容器的完整管理功能，包括:${rw_bai}"
-	echo -e "${rw_huang}  • 容器生命周期管理: 创建、启动、停止、删除、重启${rw_bai}"
-	echo -e "${rw_huang}  • 容器监控: 查看日志、资源占用、网络信息${rw_bai}"
-	echo -e "${rw_huang}  • 容器操作: 进入容器、端口管理${rw_bai}"
+	echo -e "${rw_huang}功能说明:${rw_lv}"
+	echo -e "${rw_huang}  Docker容器的完整管理功能，包括:${rw_lv}"
+	echo -e "${rw_huang}  • 容器生命周期管理: 创建、启动、停止、删除、重启${rw_lv}"
+	echo -e "${rw_huang}  • 容器监控: 查看日志、资源占用、网络信息${rw_lv}"
+	echo -e "${rw_huang}  • 容器操作: 进入容器、端口管理${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}提示: ${rw_bai}选择对应的数字即可进行相应操作${rw_bai}"
+	echo -e "${rw_huang}提示: ${rw_lv}选择对应的数字即可进行相应操作${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}当前容器列表:${rw_bai}"
+	echo -e "${rw_huang}当前容器列表:${rw_lv}"
 	docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
 	echo ""
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}创建新容器 ${rw_bai}${rw_huang}★${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}启动指定容器${rw_bai}   ${rw_huang}6.   ${rw_bai}${rw_lv}启动所有容器${rw_bai}"
-	echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}停止指定容器${rw_bai}   ${rw_huang}7.   ${rw_bai}${rw_lv}停止所有容器${rw_bai}"
-	echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}删除指定容器${rw_bai}   ${rw_huang}8.   ${rw_bai}${rw_lv}删除所有容器${rw_bai}"
-	echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}重启指定容器${rw_bai}   ${rw_huang}9.   ${rw_bai}${rw_lv}重启所有容器${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}进入指定容器${rw_bai}   ${rw_huang}12.  ${rw_bai}${rw_lv}查看容器日志${rw_bai}"
-	echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}查看容器网络${rw_bai}   ${rw_huang}14.  ${rw_bai}${rw_lv}查看容器资源占用${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}15.  ${rw_bai}${rw_lv}开启容器端口访问${rw_bai}   ${rw_huang}16.  ${rw_bai}${rw_lv}关闭容器端口访问${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回上一级选单${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}创建新容器 ${rw_lv}${rw_huang}★${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}启动指定容器${rw_lv}   ${rw_huang}6.   ${rw_lv}${rw_lv}启动所有容器${rw_lv}"
+	echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}停止指定容器${rw_lv}   ${rw_huang}7.   ${rw_lv}${rw_lv}停止所有容器${rw_lv}"
+	echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}删除指定容器${rw_lv}   ${rw_huang}8.   ${rw_lv}${rw_lv}删除所有容器${rw_lv}"
+	echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}重启指定容器${rw_lv}   ${rw_huang}9.   ${rw_lv}${rw_lv}重启所有容器${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}进入指定容器${rw_lv}   ${rw_huang}12.  ${rw_lv}${rw_lv}查看容器日志${rw_lv}"
+	echo -e "${rw_huang}13.  ${rw_lv}${rw_lv}查看容器网络${rw_lv}   ${rw_huang}14.  ${rw_lv}${rw_lv}查看容器资源占用${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}15.  ${rw_lv}${rw_lv}开启容器端口访问${rw_lv}   ${rw_huang}16.  ${rw_lv}${rw_lv}关闭容器端口访问${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回上一级选单${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " sub_choice
 	case $sub_choice in
 		1)
@@ -1065,7 +1079,7 @@ while true; do
 			;;
 		8)
 			send_stats "删除所有容器"
-			read -e -p "$(echo -e "${rw_hong}注意: ${rw_bai}确定删除所有容器吗？(Y/N): ")" choice
+			read -e -p "$(echo -e "${rw_hong}注意: ${rw_lv}确定删除所有容器吗？(Y/N): ")" choice
 			case "$choice" in
 			  [Yy])
 				docker rm -f $(docker ps -a -q)
@@ -1097,7 +1111,7 @@ while true; do
 			send_stats "查看容器网络"
 			echo ""
 			container_ids=$(docker ps -q)
-			echo -e "${rw_cheng}------------------------------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------------------------------------------${rw_lv}"
 			printf "%-25s %-25s %-25s\n" "容器名称" "网络名称" "IP地址"
 			for container_id in $container_ids; do
 				local container_info=$(docker inspect --format '{{ .Name }}{{ range $network, $config := .NetworkSettings.Networks }} {{ $network }} {{ $config.IPAddress }}{{ end }}' "$container_id")
@@ -1149,33 +1163,33 @@ docker_image() {
 while true; do
 	clear
 	send_stats "Docker镜像管理"
-	echo -e "${rw_huang}Docker镜像管理${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_huang}Docker镜像管理${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${rw_huang}  Docker镜像的管理功能，包括:${rw_bai}"
-	echo -e "${rw_huang}  • 拉取/下载镜像: 从Docker Hub获取镜像${rw_bai}"
-	echo -e "${rw_huang}  • 更新镜像: 重新拉取最新版本的镜像${rw_bai}"
-	echo -e "${rw_huang}  • 删除镜像: 清理不需要的镜像以释放空间${rw_bai}"
+	echo -e "${rw_huang}功能说明:${rw_lv}"
+	echo -e "${rw_huang}  Docker镜像的管理功能，包括:${rw_lv}"
+	echo -e "${rw_huang}  • 拉取/下载镜像: 从Docker Hub获取镜像${rw_lv}"
+	echo -e "${rw_huang}  • 更新镜像: 重新拉取最新版本的镜像${rw_lv}"
+	echo -e "${rw_huang}  • 删除镜像: 清理不需要的镜像以释放空间${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}提示: ${rw_bai}选择对应的数字即可进行相应操作${rw_bai}"
+	echo -e "${rw_huang}提示: ${rw_lv}选择对应的数字即可进行相应操作${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}当前镜像列表:${rw_bai}"
+	echo -e "${rw_huang}当前镜像列表:${rw_lv}"
 	docker image ls
 	echo ""
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}获取指定镜像${rw_bai}   ${rw_huang}3.   ${rw_bai}${rw_lv}删除指定镜像${rw_bai}"
-	echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}更新指定镜像${rw_bai}   ${rw_huang}4.   ${rw_bai}${rw_lv}删除所有镜像${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回上一级选单${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}获取指定镜像${rw_lv}   ${rw_huang}3.   ${rw_lv}${rw_lv}删除指定镜像${rw_lv}"
+	echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}更新指定镜像${rw_lv}   ${rw_huang}4.   ${rw_lv}${rw_lv}删除所有镜像${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回上一级选单${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " sub_choice
 	case $sub_choice in
 		1)
 			send_stats "拉取镜像"
 			read -e -p "请输入镜像名（多个镜像名请用空格分隔）: " imagenames
 			for name in $imagenames; do
-				echo -e "${rw_huang}正在获取镜像: $name${rw_bai}"
+				echo -e "${rw_huang}正在获取镜像: $name${rw_lv}"
 				docker pull $name
 			done
 			;;
@@ -1183,7 +1197,7 @@ while true; do
 			send_stats "更新镜像"
 			read -e -p "请输入镜像名（多个镜像名请用空格分隔）: " imagenames
 			for name in $imagenames; do
-				echo -e "${rw_huang}正在更新镜像: $name${rw_bai}"
+				echo -e "${rw_huang}正在更新镜像: $name${rw_lv}"
 				docker pull $name
 			done
 			;;
@@ -1196,7 +1210,7 @@ while true; do
 			;;
 		4)
 			send_stats "删除所有镜像"
-			read -e -p "$(echo -e "${rw_hong}注意: ${rw_bai}确定删除所有镜像吗？(Y/N): ")" choice
+			read -e -p "$(echo -e "${rw_hong}注意: ${rw_lv}确定删除所有镜像吗？(Y/N): ")" choice
 			case "$choice" in
 			  [Yy])
 				docker rmi -f $(docker images -q)
@@ -1281,7 +1295,7 @@ install_crontab() {
 		return
 	fi
 
-	echo -e "${rw_lv}crontab 已安装且 cron 服务正在运行。${rw_bai}"
+	echo -e "${rw_lv}crontab 已安装且 cron 服务正在运行。${rw_lv}"
 }
 
 
@@ -1313,7 +1327,7 @@ docker_ipv6_on() {
 
 		# 对比原始配置与新配置
 		if [[ "$ORIGINAL_CONFIG" == "$UPDATED_CONFIG" ]]; then
-			echo -e "${rw_huang}当前已开启ipv6访问${rw_bai}"
+			echo -e "${rw_huang}当前已开启ipv6访问${rw_lv}"
 		else
 			echo "$UPDATED_CONFIG" | jq . > "$CONFIG_FILE"
 			restart docker
@@ -1330,7 +1344,7 @@ docker_ipv6_off() {
 
 	# 检查配置文件是否存在
 	if [ ! -f "$CONFIG_FILE" ]; then
-		echo -e "${rw_hong}配置文件不存在${rw_bai}"
+		echo -e "${rw_hong}配置文件不存在${rw_lv}"
 		return
 	fi
 
@@ -1345,11 +1359,11 @@ docker_ipv6_off() {
 
 	# 对比原始配置与新配置
 	if [[ "$CURRENT_IPV6" == "false" ]]; then
-		echo -e "${rw_huang}当前已关闭ipv6访问${rw_bai}"
+		echo -e "${rw_huang}当前已关闭ipv6访问${rw_lv}"
 	else
 		echo "$UPDATED_CONFIG" | jq . > "$CONFIG_FILE"
 		restart docker
-		echo -e "${rw_huang}已成功关闭ipv6访问${rw_bai}"
+		echo -e "${rw_huang}已成功关闭ipv6访问${rw_lv}"
 	fi
 }
 
@@ -1629,26 +1643,26 @@ iptables_panel() {
 		  clear
 		  echo "高级防火墙管理"
 		  send_stats "高级防火墙管理"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  iptables -L INPUT
 		  echo ""
 		  echo "防火墙管理"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "1.  开放指定端口                 2.  关闭指定端口"
 		  echo "3.  开放所有端口                 4.  关闭所有端口"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "5.  IP白名单                  	 6.  IP黑名单"
 		  echo "7.  清除指定IP"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "11. 允许PING                  	 12. 禁止PING"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "13. 启动DDOS防御                 14. 关闭DDOS防御"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "15. 阻止指定国家IP               16. 仅允许指定国家IP"
 		  echo "17. 解除指定国家IP限制"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "0. 返回上一级选单"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  read -e -p "请输入你的选择: " sub_choice
 		  case $sub_choice in
 			  1)
@@ -1797,7 +1811,7 @@ add_swap() {
 		rc-update add local
 	fi
 
-	echo -e "虚拟内存大小已调整为${rw_huang}${new_swap}${rw_bai}M"
+	echo -e "虚拟内存大小已调整为${rw_huang}${new_swap}${rw_lv}M"
 }
 
 
@@ -1826,22 +1840,22 @@ ldnmp_v() {
 	  # 获取nginx版本
 	  local nginx_version=$(docker exec nginx nginx -v 2>&1)
 	  local nginx_version=$(echo "$nginx_version" | sed -n -E 's/.*nginx\/([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
-	  echo -n -e "nginx : ${rw_huang}v$nginx_version${rw_bai}"
+	  echo -n -e "nginx : ${rw_huang}v$nginx_version${rw_lv}"
 
 	  # 获取mysql版本
 	  local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 	  local mysql_version=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SELECT VERSION();" 2>/dev/null | tail -n 1)
-	  echo -n -e "            mysql : ${rw_huang}v$mysql_version${rw_bai}"
+	  echo -n -e "            mysql : ${rw_huang}v$mysql_version${rw_lv}"
 
 	  # 获取php版本
 	  local php_version=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
-	  echo -n -e "            php : ${rw_huang}v$php_version${rw_bai}"
+	  echo -n -e "            php : ${rw_huang}v$php_version${rw_lv}"
 
 	  # 获取redis版本
 	  local redis_version=$(docker exec redis redis-server -v 2>&1 | sed -n -E 's/.*v=([0-9]+\.[0-9]+).*/\1/p')
-	  echo -e "            redis : ${rw_huang}v$redis_version${rw_bai}"
+	  echo -e "            redis : ${rw_huang}v$redis_version${rw_lv}"
 
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  echo ""
 
 }
@@ -1953,7 +1967,7 @@ install_ldnmp() {
 
 	  clear
 	  echo "LDNMP环境安装完毕"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  ldnmp_v
 
 }
@@ -2003,13 +2017,13 @@ install_ssltls() {
 
 
 install_ssltls_text() {
-	echo -e "${rw_huang}$yuming 公钥信息${rw_bai}"
+	echo -e "${rw_huang}$yuming 公钥信息${rw_lv}"
 	cat /etc/letsencrypt/live/$yuming/fullchain.pem
 	echo ""
-	echo -e "${rw_huang}$yuming 私钥信息${rw_bai}"
+	echo -e "${rw_huang}$yuming 私钥信息${rw_lv}"
 	cat /etc/letsencrypt/live/$yuming/privkey.pem
 	echo ""
-	echo -e "${rw_huang}证书存放路径${rw_bai}"
+	echo -e "${rw_huang}证书存放路径${rw_lv}"
 	echo "公钥: /etc/letsencrypt/live/$yuming/fullchain.pem"
 	echo "私钥: /etc/letsencrypt/live/$yuming/privkey.pem"
 	echo ""
@@ -2020,7 +2034,7 @@ install_ssltls_text() {
 
 
 add_ssl() {
-echo -e "${rw_huang}快速申请SSL证书，过期前自动续签${rw_bai}"
+echo -e "${rw_huang}快速申请SSL证书，过期前自动续签${rw_lv}"
 yuming="${1:-}"
 if [ -z "$yuming" ]; then
 	add_yuming
@@ -2036,9 +2050,9 @@ ssl_ps
 
 
 ssl_ps() {
-	echo -e "${rw_huang}已申请的证书到期情况${rw_bai}"
+	echo -e "${rw_huang}已申请的证书到期情况${rw_lv}"
 	echo "站点信息                      证书到期时间"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	for cert_dir in /etc/letsencrypt/live/*; do
 	  local cert_file="$cert_dir/fullchain.pem"
 	  if [ -f "$cert_file" ]; then
@@ -2079,16 +2093,16 @@ certs_status() {
 		send_stats "域名证书申请成功"
 	else
 		send_stats "域名证书申请失败"
-		echo -e "${rw_hong}注意: ${rw_bai}证书申请失败，请检查以下可能原因并重试："
+		echo -e "${rw_hong}注意: ${rw_lv}证书申请失败，请检查以下可能原因并重试："
 		echo -e "1. 域名拼写错误 ➠ 请检查域名输入是否正确"
 		echo -e "2. DNS解析问题 ➠ 确认域名已正确解析到本服务器IP"
 		echo -e "3. 网络配置问题 ➠ 如使用Cloudflare Warp等虚拟网络请暂时关闭"
 		echo -e "4. 防火墙限制 ➠ 检查80/443端口是否开放，确保验证可访问"
 		echo -e "5. 申请次数超限 ➠ Let's Encrypt 有每周限额（5次/域名/周）"
 		echo -e "6. 国内备案限制 ➠ 中国大陆环境请确认域名是否备案"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 重新申请        2. 导入已有证书        0. 退出"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " sub_choice
 		case $sub_choice in
 	  	  1)
@@ -2165,7 +2179,7 @@ fi
 
 add_yuming() {
 	  ip_address
-	  echo -e "先将域名解析到本机IP: ${rw_huang}$ipv4_address  $ipv6_address${rw_bai}"
+	  echo -e "先将域名解析到本机IP: ${rw_huang}$ipv4_address  $ipv6_address${rw_lv}"
 	  read -e -p "请输入你的IP或者解析过的域名: " yuming
 }
 
@@ -2654,25 +2668,25 @@ web_security() {
 		check_waf_status
 		check_cf_mode
 			  clear
-			  echo -e "${rw_cheng}━━━━━━━━━━━━  安全防御  ━━━━━━━━━━━━${rw_bai}"
-			  echo -e " ${check_f2b_status}${rw_lv}${CFmessage}${waf_status}${rw_bai}"
+			  echo -e "${rw_cheng}━━━━━━━━━━━━  安全防御  ━━━━━━━━━━━━${rw_lv}"
+			  echo -e " ${check_f2b_status}${rw_lv}${CFmessage}${waf_status}${rw_lv}"
 			  echo ""
-			  echo -e " ${rw_lan}──── 防御${rw_bai}"
-			  echo -e " ${rw_huang}1${rw_bai}  安装防御    ${rw_huang}9${rw_bai}  卸载防御"
+			  echo -e " ${rw_lv}──── 防御${rw_lv}"
+			  echo -e " ${rw_huang}1${rw_lv}  安装防御    ${rw_huang}9${rw_lv}  卸载防御"
 			  echo ""
-			  echo -e " ${rw_lan}──── 拦截${rw_bai}"
-			  echo -e " ${rw_huang}5${rw_bai}  SSH拦截      ${rw_huang}6${rw_bai}  网站拦截"
-			  echo -e " ${rw_huang}7${rw_bai}  规则列表      ${rw_huang}8${rw_bai}  实时监控"
-			  echo -e " ${rw_huang}11${rw_bai} 配置参数      ${rw_huang}12${rw_bai} 清除IP"
+			  echo -e " ${rw_lv}──── 拦截${rw_lv}"
+			  echo -e " ${rw_huang}5${rw_lv}  SSH拦截      ${rw_huang}6${rw_lv}  网站拦截"
+			  echo -e " ${rw_huang}7${rw_lv}  规则列表      ${rw_huang}8${rw_lv}  实时监控"
+			  echo -e " ${rw_huang}11${rw_lv} 配置参数      ${rw_huang}12${rw_lv} 清除IP"
 			  echo ""
-			  echo -e " ${rw_lan}──── CF/WAF${rw_bai}"
-			  echo -e " ${rw_huang}21${rw_bai} Cloudflare模式  ${rw_huang}22${rw_bai} 5秒盾"
-			  echo -e " ${rw_huang}31${rw_bai} 开启WAF        ${rw_huang}32${rw_bai} 关闭WAF"
-			  echo -e " ${rw_huang}33${rw_bai} DDOS防御       ${rw_huang}34${rw_bai} 关闭DDOS"
+			  echo -e " ${rw_lv}──── CF/WAF${rw_lv}"
+			  echo -e " ${rw_huang}21${rw_lv} Cloudflare模式  ${rw_huang}22${rw_lv} 5秒盾"
+			  echo -e " ${rw_huang}31${rw_lv} 开启WAF        ${rw_huang}32${rw_lv} 关闭WAF"
+			  echo -e " ${rw_huang}33${rw_lv} DDOS防御       ${rw_huang}34${rw_lv} 关闭DDOS"
 			  echo ""
-			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-			  echo -e " ${rw_huang}0${rw_bai}  返回"
-			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+			  echo -e " ${rw_huang}0${rw_lv}  返回"
+			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 			  read -e -p " 请选择: " sub_choice
 			  case $sub_choice in
 				  1)
@@ -2690,40 +2704,40 @@ web_security() {
 					  f2b_status
 					  ;;
 				  5)
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  f2b_sshd
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  ;;
 				  6)
 
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="fail2ban-nginx-cc"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-418"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-bad-request"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-badbots"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-botsearch"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-deny"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-http-auth"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="nginx-unauthorized"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 					  local xxx="php-url-fopen"
 					  f2b_status_xxx
-					  echo -e "${rw_cheng}------------------------${rw_bai}"
+					  echo -e "${rw_cheng}------------------------${rw_lv}"
 
 					  ;;
 
@@ -2778,13 +2792,13 @@ web_security() {
 
 				  22)
 					  send_stats "高负载开启5秒盾"
-					  echo -e "${rw_huang}网站每5分钟自动检测，当达检测到高负载会自动开盾，低负载也会自动关闭5秒盾。${rw_bai}"
-					  echo -e "${rw_cheng}--------------${rw_bai}"
+					  echo -e "${rw_huang}网站每5分钟自动检测，当达检测到高负载会自动开盾，低负载也会自动关闭5秒盾。${rw_lv}"
+					  echo -e "${rw_cheng}--------------${rw_lv}"
 					  echo "获取CF参数: "
-					  echo -e "到cf后台右上角我的个人资料，选择左侧API令牌，获取${rw_huang}Global API Key${rw_bai}"
-					  echo -e "到cf后台域名概要页面右下方获取${rw_huang}区域ID${rw_bai}"
+					  echo -e "到cf后台右上角我的个人资料，选择左侧API令牌，获取${rw_huang}Global API Key${rw_lv}"
+					  echo -e "到cf后台域名概要页面右下方获取${rw_huang}区域ID${rw_lv}"
 					  echo "https://dash.cloudflare.com/login"
-					  echo -e "${rw_cheng}--------------${rw_bai}"
+					  echo -e "${rw_cheng}--------------${rw_lv}"
 					  read -e -p "输入CF的账号: " cfuser
 					  read -e -p "输入CF的Global API Key: " cftoken
 					  read -e -p "输入CF中域名的区域ID: " cfzonID
@@ -2893,19 +2907,19 @@ web_optimization() {
 			  check_nginx_compression
 			  clear
 			  send_stats "优化LDNMP环境"
-			  echo -e "${rw_cheng}━━━━━━━━━━━━  压缩与性能  ━━━━━━━━━━━━${rw_bai}"
-			  echo -e " 模式${rw_lv}${mode_info}${rw_bai}  ${rw_lv}${gzip_status}${br_status}${zstd_status}${rw_bai}"
+			  echo -e "${rw_cheng}━━━━━━━━━━━━  压缩与性能  ━━━━━━━━━━━━${rw_lv}"
+			  echo -e " 模式${rw_lv}${mode_info}${rw_lv}  ${rw_lv}${gzip_status}${br_status}${zstd_status}${rw_lv}"
 			  echo ""
-			  echo -e " ${rw_lan}──── 模式${rw_bai}"
-			  echo -e " ${rw_huang}1${rw_bai}  标准模式        ${rw_huang}2${rw_bai}  高性能模式 (2H4G+)"
+			  echo -e " ${rw_lv}──── 模式${rw_lv}"
+			  echo -e " ${rw_huang}1${rw_lv}  标准模式        ${rw_huang}2${rw_lv}  高性能模式 (2H4G+)"
 			  echo ""
-			  echo -e " ${rw_lan}──── 压缩${rw_bai}"
-			  echo -e " ${rw_huang}3${rw_bai}  开启gzip    ${rw_huang}4${rw_bai}  关闭gzip    ${rw_huang}5${rw_bai}  开启br    ${rw_huang}6${rw_bai}  关闭br"
-			  echo -e " ${rw_huang}7${rw_bai}  开启zstd    ${rw_huang}8${rw_bai}  关闭zstd"
+			  echo -e " ${rw_lv}──── 压缩${rw_lv}"
+			  echo -e " ${rw_huang}3${rw_lv}  开启gzip    ${rw_huang}4${rw_lv}  关闭gzip    ${rw_huang}5${rw_lv}  开启br    ${rw_huang}6${rw_lv}  关闭br"
+			  echo -e " ${rw_huang}7${rw_lv}  开启zstd    ${rw_huang}8${rw_lv}  关闭zstd"
 			  echo ""
-			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-			  echo -e " ${rw_huang}0${rw_bai}  返回"
-			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+			  echo -e " ${rw_huang}0${rw_lv}  返回"
+			  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 			  read -e -p " 请选择: " sub_choice
 			  case $sub_choice in
 				  1)
@@ -3034,9 +3048,9 @@ web_optimization() {
 
 check_docker_app() {
 	if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "$docker_name" ; then
-		check_docker="${rw_lv}已安装${rw_bai}"
+		check_docker="${rw_lv}已安装${rw_lv}"
 	else
-		check_docker="${rw_lv}未安装${rw_bai}"
+		check_docker="${rw_lv}未安装${rw_lv}"
 	fi
 }
 
@@ -3045,16 +3059,16 @@ check_docker_app() {
 # check_docker_app() {
 
 # if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "$docker_name"; then
-# 	check_docker="${rw_lv}已安装${rw_bai}"
+# 	check_docker="${rw_lv}已安装${rw_lv}"
 # else
-# 	check_docker="${rw_lv}未安装${rw_bai}"
+# 	check_docker="${rw_lv}未安装${rw_lv}"
 # fi
 
 # }
 
 
 check_docker_app_ip() {
-echo -e "${rw_cheng}------------------------${rw_bai}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
 echo "访问地址:"
 ip_address
 
@@ -3128,7 +3142,7 @@ check_docker_image_update() {
 	if [[ -n "$remote_date" && "$remote_date" != "null" ]]; then
 		local remote_ts=$(portable_date_to_timestamp "$remote_date")
 		if [[ $container_created_ts -lt $remote_ts ]]; then
-			update_status="${rw_huang}发现新版本!${rw_bai}"
+			update_status="${rw_huang}发现新版本!${rw_lv}"
 		fi
 	fi
 }
@@ -3422,14 +3436,14 @@ while true; do
 		check_docker_app_ip
 	fi
 	echo ""
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "1. 安装              2. 更新            3. 卸载"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "5. 添加域名访问      6. 删除域名访问"
 	echo "7. 允许IP+端口访问   8. 阻止IP+端口访问"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回上一级选单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " choice
 	 case $choice in
 		1)
@@ -3440,7 +3454,7 @@ while true; do
 				local app_port=${app_port:-${docker_port}}
 
 				if ss -tuln | grep -q ":$app_port "; then
-					echo -e "${rw_hong}错误: ${rw_bai}端口 $app_port 已被占用，请更换一个端口"
+					echo -e "${rw_hong}错误: ${rw_lv}端口 $app_port 已被占用，请更换一个端口"
 					send_stats "应用端口已被占用"
 				else
 					local docker_port=$app_port
@@ -3544,14 +3558,14 @@ docker_app_plus() {
 			check_docker_app_ip
 		fi
 		echo ""
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 安装             2. 更新             3. 卸载"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "5. 添加域名访问     6. 删除域名访问"
 		echo "7. 允许IP+端口访问  8. 阻止IP+端口访问"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "输入你的选择: " choice
 		case $choice in
 			1)
@@ -3563,7 +3577,7 @@ docker_app_plus() {
 					local app_port=${app_port:-${docker_port}}
 
 					if ss -tuln | grep -q ":$app_port "; then
-						echo -e "${rw_hong}错误: ${rw_bai}端口 $app_port 已被占用，请更换一个端口"
+						echo -e "${rw_hong}错误: ${rw_lv}端口 $app_port 已被占用，请更换一个端口"
 						send_stats "应用端口已被占用"
 					else
 						local docker_port=$app_port
@@ -3726,9 +3740,9 @@ f2b_status_xxx() {
 
 check_f2b_status() {
 	if command -v fail2ban-client >/dev/null 2>&1; then
-		check_f2b_status="${rw_lv}已安装${rw_bai}"
+		check_f2b_status="${rw_lv}已安装${rw_lv}"
 	else
-		check_f2b_status="${rw_lv}未安装${rw_bai}"
+		check_f2b_status="${rw_lv}未安装${rw_lv}"
 	fi
 }
 
@@ -3771,7 +3785,7 @@ f2b_basic_config() {
 	install nano
 
 	if ! command -v fail2ban-client >/dev/null 2>&1; then
-		echo -e "${rw_lv}未检测到 fail2ban-client，请先安装 fail2ban。${rw_bai}"
+		echo -e "${rw_lv}未检测到 fail2ban-client，请先安装 fail2ban。${rw_lv}"
 		return
 	fi
 
@@ -3811,7 +3825,7 @@ EOF
 		fi
 	fi
 
-	echo -e "${rw_lv}已写入配置${rw_bai}: /etc/fail2ban/jail.d/sshd.local"
+	echo -e "${rw_lv}已写入配置${rw_lv}: /etc/fail2ban/jail.d/sshd.local"
 	fail2ban-client reload >/dev/null 2>&1 || true
 	sleep 2
 	fail2ban-client status $jail_name || true
@@ -3824,7 +3838,7 @@ f2b_edit_config() {
 	install nano
 
 	if [ ! -d /etc/fail2ban ]; then
-		echo -e "${rw_lv}/etc/fail2ban 不存在，请先安装 fail2ban。${rw_bai}"
+		echo -e "${rw_lv}/etc/fail2ban 不存在，请先安装 fail2ban。${rw_lv}"
 		return
 	fi
 
@@ -3833,7 +3847,7 @@ f2b_edit_config() {
 	[ -f "$cfg" ] || printf "[sshd]\n# bantime/findtime/maxretry\n" > "$cfg"
 
 	nano "$cfg"
-	echo -e "${rw_lv}已保存${rw_bai}，正在 reload fail2ban..."
+	echo -e "${rw_lv}已保存${rw_lv}，正在 reload fail2ban..."
 	fail2ban-client reload >/dev/null 2>&1 || true
 }
 
@@ -3841,7 +3855,7 @@ f2b_edit_config() {
 
 server_reboot() {
 
-	read -e -p "$(echo -e "${rw_huang}提示: ${rw_bai}现在重启服务器吗？(Y/N): ")" rboot
+	read -e -p "$(echo -e "${rw_huang}提示: ${rw_lv}现在重启服务器吗？(Y/N): ")" rboot
 	case "$rboot" in
 	  [Yy])
 		echo "已重启"
@@ -3892,7 +3906,7 @@ ldnmp_install_status_one() {
    if docker inspect "php" &>/dev/null; then
 	clear
 	send_stats "无法再次安装LDNMP环境"
-	echo -e "${rw_huang}提示: ${rw_bai}建站环境已安装。无需再次安装！"
+	echo -e "${rw_huang}提示: ${rw_lv}建站环境已安装。无需再次安装！"
 	break_end
 	linux_ldnmp
    fi
@@ -3905,7 +3919,7 @@ cd ~
 send_stats "安装LDNMP环境"
 root_use
 clear
-echo -e "${rw_huang}LDNMP环境未安装，开始安装LDNMP环境...${rw_bai}"
+echo -e "${rw_huang}LDNMP环境未安装，开始安装LDNMP环境...${rw_lv}"
 check_disk_space 3 /home
 install_dependency
 install_docker
@@ -3921,7 +3935,7 @@ cd ~
 send_stats "安装nginx环境"
 root_use
 clear
-echo -e "${rw_huang}nginx未安装，开始安装nginx环境...${rw_bai}"
+echo -e "${rw_huang}nginx未安装，开始安装nginx环境...${rw_lv}"
 install_dependency
 install_docker
 install_certbot
@@ -3931,7 +3945,7 @@ clear
 local nginx_version=$(docker exec nginx nginx -v 2>&1)
 local nginx_version=$(echo "$nginx_version" | sed -n -E 's/.*nginx\/([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
 echo "nginx已安装完成"
-echo -e "当前版本: ${rw_huang}v$nginx_version${rw_bai}"
+echo -e "当前版本: ${rw_huang}v$nginx_version${rw_lv}"
 echo ""
 
 }
@@ -3965,7 +3979,7 @@ ldnmp_web_on() {
 	  clear
 	  echo "您的 $webname 搭建好了！"
 	  echo "https://$yuming"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  echo "$webname 安装信息如下: "
 
 }
@@ -4196,22 +4210,22 @@ stream_panel() {
 		clear
 		check_docker_app
 		check_docker_image_update $docker_name
-		echo -e "${rw_cheng}━━━━━━━━━━━━  Stream 四层代理  ━━━━━━━━━━━━${rw_bai}"
+		echo -e "${rw_cheng}━━━━━━━━━━━━  Stream 四层代理  ━━━━━━━━━━━━${rw_lv}"
 		echo -e " $check_docker $update_status"
-		echo -e " ${rw_huang}TCP/UDP 传输层流量转发与负载均衡${rw_bai}"
+		echo -e " ${rw_huang}TCP/UDP 传输层流量转发与负载均衡${rw_lv}"
 		if [ -d "/home/web/stream.d" ]; then
 			echo ""
-			echo -e " ${rw_lan}──── 已配置服务${rw_bai}"
+			echo -e " ${rw_lv}──── 已配置服务${rw_lv}"
 			list_stream_services
 		fi
 		echo ""
-		echo -e " ${rw_lan}──── 操作${rw_bai}"
-		echo -e " ${rw_huang}1${rw_bai}  安装      ${rw_huang}2${rw_bai}  更新      ${rw_huang}3${rw_bai}  卸载"
-		echo -e " ${rw_huang}4${rw_bai}  添加转发  ${rw_huang}5${rw_bai}  修改转发  ${rw_huang}6${rw_bai}  删除转发"
+		echo -e " ${rw_lv}──── 操作${rw_lv}"
+		echo -e " ${rw_huang}1${rw_lv}  安装      ${rw_huang}2${rw_lv}  更新      ${rw_huang}3${rw_lv}  卸载"
+		echo -e " ${rw_huang}4${rw_lv}  添加转发  ${rw_huang}5${rw_lv}  修改转发  ${rw_huang}6${rw_lv}  删除转发"
 		echo ""
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-		echo -e " ${rw_huang}0${rw_bai}  返回"
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+		echo -e " ${rw_huang}0${rw_lv}  返回"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 		read -e -p " 请选择: " choice
 		case $choice in
 			1)
@@ -4231,7 +4245,7 @@ stream_panel() {
 					docker rm -f nginx
 					sed -i "/\b${app_id}\b/d" /home/docker/appno.txt
 					send_stats "更新Stream四层代理"
-					echo -e "${rw_lv}nginx 容器已删除${rw_bai}"
+					echo -e "${rw_lv}nginx 容器已删除${rw_lv}"
 				else
 					echo "操作已取消"
 				fi
@@ -4257,7 +4271,7 @@ stream_panel() {
 				send_stats "删除四层代理"
 				;;
 			0) return ;;
-			*) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+			*) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 		esac
 		break_end
 	done
@@ -4316,7 +4330,7 @@ ldnmp_Proxy_backend_stream() {
 	docker exec nginx nginx -s reload
 	clear
 	echo "您的 $webname 搭建好了！"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "访问地址:"
 	ip_address
 	if [ -n "$ipv4_address" ]; then
@@ -4349,19 +4363,19 @@ ldnmp_web_status() {
 	root_use
 	while true; do
 		local cert_count=$(ls /home/web/certs/*_cert.pem 2>/dev/null | wc -l)
-		local output="${rw_lv}${cert_count}${rw_bai}"
+		local output="${rw_lv}${cert_count}${rw_lv}"
 
 		local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 		local db_count=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2> /dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys" | wc -l)
-		local db_output="${rw_lv}${db_count}${rw_bai}"
+		local db_output="${rw_lv}${db_count}${rw_lv}"
 
 		clear
 		send_stats "LDNMP站点管理"
-		echo -e "${rw_cheng}━━━━━━━━━━━━  站点管理  ━━━━━━━━━━━━${rw_bai}"
+		echo -e "${rw_cheng}━━━━━━━━━━━━  站点管理  ━━━━━━━━━━━━${rw_lv}"
 		ldnmp_v
 
 		echo -e " 站点 ${output}    证书到期时间"
-		echo -e " ${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_cheng}────────────────────────────────────${rw_lv}"
 		for cert_file in /home/web/certs/*_cert.pem; do
 		  local domain=$(basename "$cert_file" | sed 's/_cert.pem//')
 		  if [ -n "$domain" ]; then
@@ -4390,26 +4404,26 @@ ldnmp_web_status() {
 		  fi
 		done
 
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 		echo -e " 数据库 ${db_output}"
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 		local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]')
 		docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2> /dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys"
 
 		echo ""
-		echo -e " ${rw_lv}/home/web/html${rw_bai}    ${rw_lv}/home/web/certs${rw_bai}    ${rw_lv}/home/web/conf.d${rw_bai}"
+		echo -e " ${rw_lv}/home/web/html${rw_lv}    ${rw_lv}/home/web/certs${rw_lv}    ${rw_lv}/home/web/conf.d${rw_lv}"
 		echo ""
-		echo -e " ${rw_lan}──── 操作${rw_bai}"
-		echo -e " ${rw_huang}1${rw_bai}  申请/更新证书    ${rw_huang}2${rw_bai}  克隆站点"
-		echo -e " ${rw_huang}3${rw_bai}  清理缓存        ${rw_huang}4${rw_bai}  关联站点"
-		echo -e " ${rw_huang}5${rw_bai}  访问日志        ${rw_huang}6${rw_bai}  错误日志"
-		echo -e " ${rw_huang}7${rw_bai}  全局配置        ${rw_huang}8${rw_bai}  站点配置"
-		echo -e " ${rw_huang}9${rw_bai}  站点数据库      ${rw_huang}10${rw_bai} 分析报告"
-		echo -e " ${rw_huang}20${rw_bai} 删除站点"
+		echo -e " ${rw_lv}──── 操作${rw_lv}"
+		echo -e " ${rw_huang}1${rw_lv}  申请/更新证书    ${rw_huang}2${rw_lv}  克隆站点"
+		echo -e " ${rw_huang}3${rw_lv}  清理缓存        ${rw_huang}4${rw_lv}  关联站点"
+		echo -e " ${rw_huang}5${rw_lv}  访问日志        ${rw_huang}6${rw_lv}  错误日志"
+		echo -e " ${rw_huang}7${rw_lv}  全局配置        ${rw_huang}8${rw_lv}  站点配置"
+		echo -e " ${rw_huang}9${rw_lv}  站点数据库      ${rw_huang}10${rw_lv} 分析报告"
+		echo -e " ${rw_huang}20${rw_lv} 删除站点"
 		echo ""
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-		echo -e " ${rw_huang}0${rw_bai}  返回"
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+		echo -e " ${rw_huang}0${rw_lv}  返回"
+		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 		read -e -p " 请选择: " sub_choice
 		case $sub_choice in
 			1)
@@ -4530,7 +4544,7 @@ ldnmp_web_status() {
 
 check_panel_app() {
 if $lujing > /dev/null 2>&1; then
-	check_panel="${rw_lv}已安装${rw_bai}"
+	check_panel="${rw_lv}已安装${rw_lv}"
 else
 	check_panel=""
 fi
@@ -4548,11 +4562,11 @@ while true; do
 	echo "官网介绍: $panelurl "
 
 	echo ""
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "1. 安装            2. 管理            3. 卸载"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回上一级选单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " choice
 	 case $choice in
 		1)
@@ -4591,9 +4605,9 @@ done
 check_frp_app() {
 
 if [ -d "/home/frp/" ]; then
-	check_frp="${rw_lv}已安装${rw_bai}"
+	check_frp="${rw_lv}已安装${rw_lv}"
 else
-	check_frp="${rw_lv}未安装${rw_bai}"
+	check_frp="${rw_lv}未安装${rw_lv}"
 fi
 
 }
@@ -4643,7 +4657,7 @@ EOF
 
 	# 输出生成的信息
 	ip_address
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "客户端部署时需要用的参数"
 	echo "服务IP: $ipv4_address"
 	echo "token: $token"
@@ -4889,15 +4903,15 @@ frps_panel() {
 			frps_main_ports
 		fi
 		echo ""
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 安装                  2. 更新                  3. 卸载"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "5. 内网服务域名访问      6. 删除域名访问"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "7. 允许IP+端口访问       8. 阻止IP+端口访问"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "00. 刷新服务状态         0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "输入你的选择: " choice
 		case $choice in
 			1)
@@ -4982,19 +4996,19 @@ frpc_panel() {
 		echo "与服务端对接，对接后可创建内网穿透服务到互联网访问"
 		echo "官网介绍: ${gh_https_url}github.com/fatedier/frp/"
 		echo "视频教学: https://www.bilibili.com/video/BV1yMw6e2EwL?t=173.9"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		if [ -d "/home/frp/" ]; then
 			[ -f /home/frp/frpc.toml ] || cp /home/frp/frp_0.61.0_linux_amd64/frpc.toml /home/frp/frpc.toml
 			list_forwarding_services "/home/frp/frpc.toml"
 		fi
 		echo ""
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 安装               2. 更新               3. 卸载"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "4. 添加对外服务       5. 删除对外服务       6. 手动配置服务"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "输入你的选择: " choice
 		case $choice in
 			1)
@@ -5064,9 +5078,9 @@ yt_menu_pro() {
 	while true; do
 
 		if [ -x "/usr/local/bin/yt-dlp" ]; then
-		   local YTDLP_STATUS="${rw_lv}已安装${rw_bai}"
+		   local YTDLP_STATUS="${rw_lv}已安装${rw_lv}"
 		else
-		   local YTDLP_STATUS="${rw_lv}未安装${rw_bai}"
+		   local YTDLP_STATUS="${rw_lv}未安装${rw_lv}"
 		fi
 
 		clear
@@ -5074,17 +5088,17 @@ yt_menu_pro() {
 		echo -e "yt-dlp $YTDLP_STATUS"
 		echo -e "yt-dlp 是一个功能强大的视频下载工具，支持 YouTube、Bilibili、Twitter 等数千站点。"
 		echo -e "官网地址：${gh_https_url}github.com/yt-dlp/yt-dlp"
-		echo -e "${rw_cheng}-------------------------${rw_bai}"
+		echo -e "${rw_cheng}-------------------------${rw_lv}"
 		echo "已下载视频列表:"
 		ls -td "$VIDEO_DIR"/*/ 2>/dev/null || echo "（暂无）"
-		echo -e "${rw_cheng}-------------------------${rw_bai}"
+		echo -e "${rw_cheng}-------------------------${rw_lv}"
 		echo "1.  安装               2.  更新               3.  卸载"
-		echo -e "${rw_cheng}-------------------------${rw_bai}"
+		echo -e "${rw_cheng}-------------------------${rw_lv}"
 		echo "5.  单个视频下载       6.  批量视频下载       7.  自定义参数下载"
 		echo "8.  下载为MP3音频      9.  删除视频目录       10. Cookie管理（开发中）"
-		echo -e "${rw_cheng}-------------------------${rw_bai}"
+		echo -e "${rw_cheng}-------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}-------------------------${rw_bai}"
+		echo -e "${rw_cheng}-------------------------${rw_lv}"
 		read -e -p "请输入选项编号: " choice
 
 		case $choice in
@@ -5209,20 +5223,20 @@ fix_dpkg() {
 
 linux_update() {
 	clear
-	echo -e "${rw_huang}系统更新${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_huang}系统更新${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${rw_huang}  自动检测系统包管理器并更新所有软件包，包括:${rw_bai}"
-	echo -e "${rw_huang}  • Debian/Ubuntu: apt update && apt full-upgrade${rw_bai}"
-	echo -e "${rw_huang}  • CentOS/RHEL: yum update 或 dnf update${rw_bai}"
-	echo -e "${rw_huang}  • Alpine: apk update && apk upgrade${rw_bai}"
-	echo -e "${rw_huang}  • Arch: pacman -Syu${rw_bai}"
+	echo -e "${rw_huang}功能说明:${rw_lv}"
+	echo -e "${rw_huang}  自动检测系统包管理器并更新所有软件包，包括:${rw_lv}"
+	echo -e "${rw_huang}  • Debian/Ubuntu: apt update && apt full-upgrade${rw_lv}"
+	echo -e "${rw_huang}  • CentOS/RHEL: yum update 或 dnf update${rw_lv}"
+	echo -e "${rw_huang}  • Alpine: apk update && apk upgrade${rw_lv}"
+	echo -e "${rw_huang}  • Arch: pacman -Syu${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}提示: 更新过程可能需要几分钟，请耐心等待${rw_bai}"
+	echo -e "${rw_huang}提示: 更新过程可能需要几分钟，请耐心等待${rw_lv}"
 	echo ""
 	send_stats "系统更新"
-	echo -e "${rw_huang}正在系统更新...${rw_bai}"
+	echo -e "${rw_huang}正在系统更新...${rw_lv}"
 	if command -v dnf &>/dev/null; then
 		dnf -y update
 	elif command -v yum &>/dev/null; then
@@ -5250,20 +5264,20 @@ linux_update() {
 
 linux_clean() {
 	clear
-	echo -e "${rw_huang}系统清理${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_huang}系统清理${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${rw_huang}  清理系统垃圾文件和缓存，释放磁盘空间，包括:${rw_bai}"
-	echo -e "${rw_huang}  • 清理包管理器缓存${rw_bai}"
-	echo -e "${rw_huang}  • 卸载不需要的依赖包${rw_bai}"
-	echo -e "${rw_huang}  • 清理旧的系统日志${rw_bai}"
-	echo -e "${rw_huang}  • 重建软件包数据库${rw_bai}"
+	echo -e "${rw_huang}功能说明:${rw_lv}"
+	echo -e "${rw_huang}  清理系统垃圾文件和缓存，释放磁盘空间，包括:${rw_lv}"
+	echo -e "${rw_huang}  • 清理包管理器缓存${rw_lv}"
+	echo -e "${rw_huang}  • 卸载不需要的依赖包${rw_lv}"
+	echo -e "${rw_huang}  • 清理旧的系统日志${rw_lv}"
+	echo -e "${rw_huang}  • 重建软件包数据库${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}提示: 清理过程中可能需要几分钟，请耐心等待${rw_bai}"
+	echo -e "${rw_huang}提示: 清理过程中可能需要几分钟，请耐心等待${rw_lv}"
 	echo ""
 	send_stats "系统清理"
-	echo -e "${rw_huang}正在系统清理...${rw_bai}"
+	echo -e "${rw_huang}正在系统清理...${rw_lv}"
 	if command -v dnf &>/dev/null; then
 		rpm --rebuilddb
 		dnf autoremove -y
@@ -5390,10 +5404,10 @@ send_stats "优化DNS"
 while true; do
 	clear
 	echo "优化DNS地址"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "当前DNS地址"
 	cat /etc/resolv.conf
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
 	echo "1. 国外DNS优化: "
 	echo " v4: 1.1.1.1 8.8.8.8"
@@ -5402,9 +5416,9 @@ while true; do
 	echo " v4: 223.5.5.5 183.60.83.19"
 	echo " v6: 2400:3200::1 2400:da00::6666"
 	echo "3. 手动编辑DNS配置"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回上一级选单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " Limiting
 	case "$Limiting" in
 	  1)
@@ -5498,7 +5512,7 @@ sshkey_on() {
 		   -e 's/^[[:space:]]*#\?[[:space:]]*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 	rm -rf /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
 	restart_ssh
-	echo -e "${rw_lv}用户密钥登录模式已开启，已关闭密码登录模式，重连将会生效${rw_bai}"
+	echo -e "${rw_lv}用户密钥登录模式已开启，已关闭密码登录模式，重连将会生效${rw_lv}"
 
 }
 
@@ -5516,11 +5530,11 @@ add_sshkey() {
 	chmod 600 "${HOME}/.ssh/authorized_keys"
 
 	ip_address
-	echo -e "私钥信息已生成，务必复制保存，可保存成 ${rw_huang}${ipv4_address}_ssh.key${rw_bai} 文件，用于以后的SSH登录"
+	echo -e "私钥信息已生成，务必复制保存，可保存成 ${rw_huang}${ipv4_address}_ssh.key${rw_lv} 文件，用于以后的SSH登录"
 
-	echo -e "${rw_cheng}--------------------------------${rw_bai}"
+	echo -e "${rw_cheng}--------------------------------${rw_lv}"
 	cat "${HOME}/.ssh/sshkey"
-	echo -e "${rw_cheng}--------------------------------${rw_bai}"
+	echo -e "${rw_cheng}--------------------------------${rw_lv}"
 
 	sshkey_on
 }
@@ -5541,12 +5555,12 @@ import_sshkey() {
 	fi
 
 	if [[ -z "$public_key" ]]; then
-		echo -e "${rw_hong}错误：未输入公钥内容。${rw_bai}"
+		echo -e "${rw_hong}错误：未输入公钥内容。${rw_lv}"
 		return 1
 	fi
 
 	if [[ ! "$public_key" =~ ^ssh-(rsa|ed25519|ecdsa) ]]; then
-		echo -e "${rw_hong}错误：看起来不像合法的 SSH 公钥。${rw_bai}"
+		echo -e "${rw_hong}错误：看起来不像合法的 SSH 公钥。${rw_lv}"
 		return 1
 	fi
 
@@ -5691,21 +5705,21 @@ sshkey_panel() {
 	  clear
 	  local REAL_STATUS=$(grep -i "^PubkeyAuthentication" /etc/ssh/sshd_config | tr '[:upper:]' '[:lower:]')
 	  if [[ "$REAL_STATUS" =~ "yes" ]]; then
-		  IS_KEY_ENABLED="${rw_lv}已启用${rw_bai}"
+		  IS_KEY_ENABLED="${rw_lv}已启用${rw_lv}"
 	  else
-	  	  IS_KEY_ENABLED="${rw_lv}未启用${rw_bai}"
+	  	  IS_KEY_ENABLED="${rw_lv}未启用${rw_lv}"
 	  fi
   	  echo -e "用户密钥登录模式 ${IS_KEY_ENABLED}"
   	  echo "进阶玩法: https://blog.riwi.pro/ssh-key"
-  	  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+  	  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
   	  echo "将会生成密钥对，更安全的方式SSH登录"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  echo "1. 生成新密钥对                  2. 手动输入已有公钥"
 	  echo "3. 从GitHub导入已有公钥          4. 从URL导入已有公钥"
 	  echo "5. 编辑公钥文件                  6. 查看本机密钥"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  echo "0. 返回上一级选单"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  read -e -p "请输入你的选择: " host_dns
 	  case $host_dns in
 		  1)
@@ -5739,13 +5753,13 @@ sshkey_panel() {
 
 		  6)
 			send_stats "查看本机密钥"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "公钥信息"
 			cat ${HOME}/.ssh/authorized_keys
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "私钥信息"
 			cat ${HOME}/.ssh/sshkey
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			break_end
 			  ;;
 		  *)
@@ -5795,7 +5809,7 @@ add_sshpasswd() {
 
 	restart_ssh
 
-	echo -e "${rw_lv}密码设置完毕，已更改为密码登录模式！${rw_bai}"
+	echo -e "${rw_lv}密码设置完毕，已更改为密码登录模式！${rw_lv}"
 }
 
 
@@ -5813,7 +5827,7 @@ add_sshpasswd() {
 
 root_use() {
 clear
-[ "$EUID" -ne 0 ] && echo -e "${rw_huang}提示: ${rw_bai}该功能需要root用户才能运行！" && break_end && riwi
+[ "$EUID" -ne 0 ] && echo -e "${rw_huang}提示: ${rw_lv}该功能需要root用户才能运行！" && break_end && riwi
 }
 
 
@@ -5839,8 +5853,8 @@ dd_xitong() {
 		}
 
 		dd_xitong_1() {
-		  echo -e "重装后初始用户名: ${rw_huang}root${rw_bai}  初始密码: ${rw_huang}LeitboGi0ro${rw_bai}  初始端口: ${rw_huang}22${rw_bai}"
-		  echo -e "${rw_huang}重装后请及时修改初始密码，防止暴力入侵。命令行输入passwd修改密码${rw_bai}"
+		  echo -e "重装后初始用户名: ${rw_huang}root${rw_lv}  初始密码: ${rw_huang}LeitboGi0ro${rw_lv}  初始端口: ${rw_huang}22${rw_lv}"
+		  echo -e "${rw_huang}重装后请及时修改初始密码，防止暴力入侵。命令行输入passwd修改密码${rw_lv}"
 		  echo -e "按任意键继续..."
 		  read -n 1 -s -r -p ""
 		  install wget
@@ -5848,7 +5862,7 @@ dd_xitong() {
 		}
 
 		dd_xitong_2() {
-		  echo -e "重装后初始用户名: ${rw_huang}Administrator${rw_bai}  初始密码: ${rw_huang}Teddysun.com${rw_bai}  初始端口: ${rw_huang}3389${rw_bai}"
+		  echo -e "重装后初始用户名: ${rw_huang}Administrator${rw_lv}  初始密码: ${rw_huang}Teddysun.com${rw_lv}  初始端口: ${rw_huang}3389${rw_lv}"
 		  echo -e "按任意键继续..."
 		  read -n 1 -s -r -p ""
 		  install wget
@@ -5856,14 +5870,14 @@ dd_xitong() {
 		}
 
 		dd_xitong_3() {
-		  echo -e "重装后初始用户名: ${rw_huang}root${rw_bai}  初始密码: ${rw_huang}123@@@${rw_bai}  初始端口: ${rw_huang}22${rw_bai}"
+		  echo -e "重装后初始用户名: ${rw_huang}root${rw_lv}  初始密码: ${rw_huang}123@@@${rw_lv}  初始端口: ${rw_huang}22${rw_lv}"
 		  echo -e "按任意键继续..."
 		  read -n 1 -s -r -p ""
 		  dd_xitong_bin456789
 		}
 
 		dd_xitong_4() {
-		  echo -e "重装后初始用户名: ${rw_huang}Administrator${rw_bai}  初始密码: ${rw_huang}123@@@${rw_bai}  初始端口: ${rw_huang}3389${rw_bai}"
+		  echo -e "重装后初始用户名: ${rw_huang}Administrator${rw_lv}  初始密码: ${rw_huang}123@@@${rw_lv}  初始端口: ${rw_huang}3389${rw_lv}"
 		  echo -e "按任意键继续..."
 		  read -n 1 -s -r -p ""
 		  dd_xitong_bin456789
@@ -5872,35 +5886,35 @@ dd_xitong() {
 		  while true; do
 			root_use
 			echo "重装系统"
-			echo -e "${rw_cheng}--------------------------------${rw_bai}"
-			echo -e "${rw_hong}注意: ${rw_bai}重装有风险失联，不放心者慎用。重装预计花费15分钟，请提前备份数据。"
-			echo -e "${rw_lv}感谢bin456789大佬和leitbogioro大佬的脚本支持！${rw_bai} "
-			echo -e "${rw_lv}bin456789项目地址: ${gh_https_url}github.com/bin456789/reinstall${rw_bai}"
-			echo -e "${rw_lv}leitbogioro项目地址: ${gh_https_url}github.com/leitbogioro/Tools${rw_bai}"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}--------------------------------${rw_lv}"
+			echo -e "${rw_hong}注意: ${rw_lv}重装有风险失联，不放心者慎用。重装预计花费15分钟，请提前备份数据。"
+			echo -e "${rw_lv}感谢bin456789大佬和leitbogioro大佬的脚本支持！${rw_lv} "
+			echo -e "${rw_lv}bin456789项目地址: ${gh_https_url}github.com/bin456789/reinstall${rw_lv}"
+			echo -e "${rw_lv}leitbogioro项目地址: ${gh_https_url}github.com/leitbogioro/Tools${rw_lv}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "1. Debian 13                  2. Debian 12"
 			echo "3. Debian 11                  4. Debian 10"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "11. Ubuntu 26.04              12. Ubuntu 24.04"
 			echo "13. Ubuntu 22.04              14. Ubuntu 20.04"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "21. Rocky Linux 10            22. Rocky Linux 9"
 			echo "23. Alma Linux 10             24. Alma Linux 9"
 			echo "25. oracle Linux 10           26. oracle Linux 9"
 			echo "27. Fedora Linux 44           28. Fedora Linux 43"
 			echo "29. CentOS 10                 30. CentOS 9"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "31. Alpine Linux              32. Arch Linux"
 			echo "33. Kali Linux                34. openEuler"
 			echo "35. openSUSE Tumbleweed       36. fnos飞牛公测版"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "41. Windows 11                42. Windows 10"
 			echo "43. Windows 7                 44. Windows Server 2025"
 			echo "45. Windows Server 2022       46. Windows Server 2019"
 			echo "47. Windows 11 ARM"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "0. 返回上一级选单"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			read -e -p "请选择要重装的系统: " sys_choice
 			case "$sys_choice" in
 
@@ -6322,11 +6336,11 @@ bbrv3() {
 
 				  echo ""
 				  echo "内核管理"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "1. 更新BBRv3内核              2. 卸载BBRv3内核"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  read -e -p "请输入你的选择: " sub_choice
 
 				  case $sub_choice in
@@ -6347,10 +6361,10 @@ bbrv3() {
 		  clear
 		  echo "设置BBR3加速"
 		  echo "视频介绍: https://www.bilibili.com/video/BV14K421x7BS?t=0.1"
-		  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 		  echo "仅支持Debian/Ubuntu"
 		  echo "请备份数据，将为你升级Linux内核开启BBR3"
-		  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 		  read -e -p "确定继续吗？(Y/N): " choice
 
 		  case "$choice" in
@@ -6420,11 +6434,11 @@ elrepo() {
 
 				  echo ""
 				  echo "内核管理"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "1. 更新elrepo内核              2. 卸载elrepo内核"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  read -e -p "请输入你的选择: " sub_choice
 
 				  case $sub_choice in
@@ -6455,10 +6469,10 @@ elrepo() {
 		  clear
 		  echo "请备份数据，将为你升级Linux内核"
 		  echo "视频介绍: https://www.bilibili.com/video/BV1mH4y1w7qA?t=529.2"
-		  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 		  echo "仅支持红帽系列发行版 CentOS/RedHat/Alma/Rocky/oracle "
 		  echo "升级Linux内核可提升系统性能和安全，建议有条件的尝试，生产环境谨慎升级！"
-		  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 		  read -e -p "确定继续吗？(Y/N): " choice
 
 		  case "$choice" in
@@ -6483,7 +6497,7 @@ elrepo() {
 
 
 clamav_freshclam() {
-	echo -e "${rw_huang}正在更新病毒库...${rw_bai}"
+	echo -e "${rw_huang}正在更新病毒库...${rw_lv}"
 	docker run --rm \
 		--name clamav \
 		--mount source=clam_db,target=/var/lib/clamav \
@@ -6497,7 +6511,7 @@ clamav_scan() {
 		return
 	fi
 
-	echo -e "${rw_huang}正在扫描目录$@... ${rw_bai}"
+	echo -e "${rw_huang}正在扫描目录$@... ${rw_lv}"
 
 	# 构建 mount 参数
 	local MOUNT_PARAMS=""
@@ -6523,8 +6537,8 @@ clamav_scan() {
 		clamav/clamav-debian:latest \
 		clamscan -r --log=/var/log/clamav/scan.log $SCAN_PARAMS
 
-	echo -e "${rw_lv}$@ 扫描完成，病毒报告存放在${rw_huang}/home/docker/clamav/log/scan.log${rw_bai}"
-	echo -e "${rw_lv}如果有病毒请在${rw_huang}scan.log${rw_lv}文件中搜索FOUND关键字确认病毒位置 ${rw_bai}"
+	echo -e "${rw_lv}$@ 扫描完成，病毒报告存放在${rw_huang}/home/docker/clamav/log/scan.log${rw_lv}"
+	echo -e "${rw_lv}如果有病毒请在${rw_huang}scan.log${rw_lv}文件中搜索FOUND关键字确认病毒位置 ${rw_lv}"
 
 }
 
@@ -6541,14 +6555,14 @@ clamav() {
 				clear
 				echo "clamav病毒扫描工具"
 				echo "视频介绍: https://www.bilibili.com/video/BV1TqvZe4EQm?t=0.1"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "是一个开源的防病毒软件工具，主要用于检测和删除各种类型的恶意软件。"
 				echo "包括病毒、特洛伊木马、间谍软件、恶意脚本和其他有害软件。"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
-				echo -e "${rw_lv}1. 全盘扫描 ${rw_bai}             ${rw_huang}2. 重要目录扫描 ${rw_bai}            ${rw_huang} 3. 自定义目录扫描 ${rw_bai}"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
+				echo -e "${rw_lv}1. 全盘扫描 ${rw_lv}             ${rw_huang}2. 重要目录扫描 ${rw_lv}            ${rw_huang} 3. 自定义目录扫描 ${rw_lv}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				read -e -p "请输入你的选择: " sub_choice
 				case $sub_choice in
 					1)
@@ -6604,7 +6618,7 @@ _kernel_optimize_core() {
 	local CONF="/etc/sysctl.d/99-riwi-optimize.conf"
 	local MEM_MB=$(_get_mem_mb)
 
-	echo -e "${rw_lv}切换到${mode_name}...${rw_bai}"
+	echo -e "${rw_lv}切换到${mode_name}...${rw_lv}"
 
 	# ── 根据场景设定参数 ──
 	local SWAPPINESS DIRTY_RATIO DIRTY_BG_RATIO OVERCOMMIT MIN_FREE_KB VFS_PRESSURE
@@ -6755,7 +6769,7 @@ net.ipv4.tcp_slow_start_after_idle = 0"
 	[ -f "$CONF" ] && cp "$CONF" "${CONF}.bak.$(date +%s)"
 
 	# ── 写入配置文件（持久化） ──
-	echo -e "${rw_lv}写入优化配置...${rw_bai}"
+	echo -e "${rw_lv}写入优化配置...${rw_lv}"
 	cat > "$CONF" << SYSCTL
 # riwi 内核调优配置
 # 模式: $mode_name | 场景: $scene
@@ -6842,7 +6856,7 @@ $GAME_EXTRA
 SYSCTL
 
 	# ── 应用配置（逐行，跳过不支持的参数） ──
-	echo -e "${rw_lv}应用优化参数...${rw_bai}"
+	echo -e "${rw_lv}应用优化参数...${rw_lv}"
 	local applied=0 skipped=0
 	while IFS= read -r line; do
 		# 跳过注释和空行
@@ -6854,7 +6868,7 @@ SYSCTL
 			skipped=$((skipped + 1))
 		fi
 	done < "$CONF"
-	echo -e "${rw_lv}已应用 ${applied} 项参数${skipped:+，跳过 ${skipped} 项不支持的参数}${rw_bai}"
+	echo -e "${rw_lv}已应用 ${applied} 项参数${skipped:+，跳过 ${skipped} 项不支持的参数}${rw_lv}"
 
 	# ── 透明大页面 ──
 	if [ -f /sys/kernel/mm/transparent_hugepage/enabled ]; then
@@ -6880,8 +6894,8 @@ LIMITS
 		sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
 	fi
 
-	echo -e "${rw_lv}${mode_name} 优化完成！配置已持久化到 ${CONF}${rw_bai}"
-	echo -e "${rw_lv}内存: ${MEM_MB}MB | 拥塞算法: ${CC} | 队列: ${QDISC}${rw_bai}"
+	echo -e "${rw_lv}${mode_name} 优化完成！配置已持久化到 ${CONF}${rw_lv}"
+	echo -e "${rw_lv}内存: ${MEM_MB}MB | 拥塞算法: ${CC} | 队列: ${QDISC}${rw_lv}"
 }
 
 # ── 各模式入口函数（保持原有调用接口不变） ──
@@ -6900,7 +6914,7 @@ optimize_web_server() {
 
 # ── 还原默认设置（完全清理） ──
 restore_defaults() {
-	echo -e "${rw_lv}还原到默认设置...${rw_bai}"
+	echo -e "${rw_lv}还原到默认设置...${rw_lv}"
 
 	local CONF="/etc/sysctl.d/99-riwi-optimize.conf"
 
@@ -6926,7 +6940,7 @@ restore_defaults() {
 	# 清理 BBR 持久化
 	rm -f /etc/modules-load.d/bbr.conf 2>/dev/null
 
-	echo -e "${rw_lv}系统已还原到默认设置${rw_bai}"
+	echo -e "${rw_lv}系统已还原到默认设置${rw_lv}"
 }
 
 
@@ -6939,14 +6953,14 @@ Kernel_optimize() {
 	  [ -z "$current_mode" ] && [ -f /etc/sysctl.d/99-network-optimize.conf ] && current_mode="自动调优模式"
 	  echo "Linux系统内核参数优化"
 	  if [ -n "$current_mode" ]; then
-		  echo -e "当前模式: ${rw_lv}${current_mode}${rw_bai}"
+		  echo -e "当前模式: ${rw_lv}${current_mode}${rw_lv}"
 	  else
-		  echo -e "当前模式: ${rw_lv}未优化${rw_bai}"
+		  echo -e "当前模式: ${rw_lv}未优化${rw_lv}"
 	  fi
 	  echo "视频介绍: https://www.bilibili.com/video/BV1Kb421J7yg?t=0.1"
-	  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+	  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 	  echo "提供多种系统参数调优模式，用户可以根据自身使用场景进行选择切换。"
-	  echo -e "${rw_huang}提示: ${rw_bai}生产环境请谨慎使用！"
+	  echo -e "${rw_huang}提示: ${rw_lv}生产环境请谨慎使用！"
 	  echo -e "--------------------"
 	  echo -e "1. 高性能优化模式：     最大化系统性能，激进的内存和网络参数。"
 	  echo -e "2. 均衡优化模式：       在性能与资源消耗之间取得平衡，适合日常使用。"
@@ -6954,10 +6968,10 @@ Kernel_optimize() {
 	  echo -e "4. 直播优化模式：       针对直播推流优化，UDP 缓冲区加大，减少延迟。"
 	  echo -e "5. 游戏服优化模式：     针对游戏服务器优化，低延迟优先。"
 	  echo -e "6. 还原默认设置：       将系统设置还原为默认配置。"
-	  echo -e "7. 自动调优：           根据测试数据自动调优内核参数。${rw_huang}★${rw_bai}"
-	  echo -e "${rw_cheng}--------------------${rw_bai}"
+	  echo -e "7. 自动调优：           根据测试数据自动调优内核参数。${rw_huang}★${rw_lv}"
+	  echo -e "${rw_cheng}--------------------${rw_lv}"
 	  echo "0. 返回上一级选单"
-	  echo -e "${rw_cheng}--------------------${rw_bai}"
+	  echo -e "${rw_cheng}--------------------${rw_lv}"
 	  read -e -p "请输入你的选择: " sub_choice
 	  case $sub_choice in
 		  1)
@@ -7033,7 +7047,7 @@ update_locale() {
 				locale-gen
 				echo "LANG=${lang}" > /etc/default/locale
 				export LANG=${lang}
-				echo -e "${rw_lv}系统语言已经修改为: $lang 重新连接SSH生效。${rw_bai}"
+				echo -e "${rw_lv}系统语言已经修改为: $lang 重新连接SSH生效。${rw_lv}"
 				hash -r
 				break_end
 
@@ -7042,7 +7056,7 @@ update_locale() {
 				install glibc-langpack-zh
 				localectl set-locale LANG=${lang}
 				echo "LANG=${lang}" | tee /etc/locale.conf
-				echo -e "${rw_lv}系统语言已经修改为: $lang 重新连接SSH生效。${rw_bai}"
+				echo -e "${rw_lv}系统语言已经修改为: $lang 重新连接SSH生效。${rw_lv}"
 				hash -r
 				break_end
 				;;
@@ -7066,11 +7080,11 @@ send_stats "切换系统语言"
 while true; do
   clear
   echo "当前系统语言: $LANG"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo "1. 英文          2. 简体中文          3. 繁体中文"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo "0. 返回上一级选单"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   read -e -p "输入你的选择: " choice
 
   case $choice in
@@ -7106,7 +7120,7 @@ else
 	echo "${bianse}" >> ~/.profile
 	# source ~/.profile
 fi
-echo -e "${rw_lv}变更完成。重新连接SSH后可查看变化！${rw_bai}"
+echo -e "${rw_lv}变更完成。重新连接SSH后可查看变化！${rw_lv}"
 
 hash -r
 break_end
@@ -7121,17 +7135,17 @@ shell_bianse() {
   while true; do
 	clear
 	echo "命令行美化工具"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
-	echo -e "1. \033[1;32mroot \033[1;34mlocalhost \033[1;31m~ \033[0m${rw_bai}#"
-	echo -e "2. \033[1;35mroot \033[1;36mlocalhost \033[1;33m~ \033[0m${rw_bai}#"
-	echo -e "3. \033[1;31mroot \033[1;32mlocalhost \033[1;34m~ \033[0m${rw_bai}#"
-	echo -e "4. \033[1;36mroot \033[1;33mlocalhost \033[1;37m~ \033[0m${rw_bai}#"
-	echo -e "5. \033[1;37mroot \033[1;31mlocalhost \033[1;32m~ \033[0m${rw_bai}#"
-	echo -e "6. \033[1;33mroot \033[1;34mlocalhost \033[1;35m~ \033[0m${rw_bai}#"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
+	echo -e "1. \033[1;32mroot \033[1;34mlocalhost \033[1;31m~ \033[0m${rw_lv}#"
+	echo -e "2. \033[1;35mroot \033[1;36mlocalhost \033[1;33m~ \033[0m${rw_lv}#"
+	echo -e "3. \033[1;31mroot \033[1;32mlocalhost \033[1;34m~ \033[0m${rw_lv}#"
+	echo -e "4. \033[1;36mroot \033[1;33mlocalhost \033[1;37m~ \033[0m${rw_lv}#"
+	echo -e "5. \033[1;37mroot \033[1;31mlocalhost \033[1;32m~ \033[0m${rw_lv}#"
+	echo -e "6. \033[1;33mroot \033[1;34mlocalhost \033[1;35m~ \033[0m${rw_lv}#"
 	echo -e "7. root localhost ~ #"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回上一级选单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "输入你的选择: " choice
 
 	case $choice in
@@ -7186,22 +7200,22 @@ linux_trash() {
 
 	local trash_status
 	if ! grep -q "trash-put" "$bashrc_profile"; then
-		trash_status="${rw_lv}未启用${rw_bai}"
+		trash_status="${rw_lv}未启用${rw_lv}"
 	else
-		trash_status="${rw_lv}已启用${rw_bai}"
+		trash_status="${rw_lv}已启用${rw_lv}"
 	fi
 
 	clear
 	echo -e "当前回收站 ${trash_status}"
 	echo -e "启用后rm删除的文件先进入回收站，防止误删重要文件！"
-	echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 	ls -l --color=auto "$TRASH_DIR" 2>/dev/null || echo "回收站为空"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "1. 启用回收站          2. 关闭回收站"
 	echo "3. 还原内容            4. 清空回收站"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回上一级选单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "输入你的选择: " choice
 
 	case $choice in
@@ -7367,13 +7381,13 @@ linux_backup() {
 		clear
 		send_stats "系统备份功能"
 		echo "系统备份功能"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		list_backups
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 创建备份        2. 恢复备份        3. 删除备份"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " choice
 		case $choice in
 			1) create_backup ;;
@@ -7554,9 +7568,9 @@ kj_ssh_read_port() {
 # 显示连接列表
 list_connections() {
 	echo "已保存的连接:"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	cat "$CONFIG_FILE" | awk -F'|' '{print NR " - " $1 " (" $2 ")"}'
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 }
 
 
@@ -7568,7 +7582,7 @@ add_connection() {
 	echo "  - IP地址: 192.168.1.100"
 	echo "  - 用户名: root"
 	echo "  - 端口: 22"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入连接名称: " name
 
 	kj_ssh_read_host_user_port "请输入IP地址: " "请输入用户名 (默认: root): " "请输入端口号 (默认: 22): " "root" "22"
@@ -7667,12 +7681,12 @@ ssh_manager() {
 		clear
 		echo "SSH 远程连接工具"
 		echo "可以通过SSH连接到其他Linux系统上"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		list_connections
 		echo "1. 创建新连接        2. 使用连接        3. 删除连接"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " choice
 		case $choice in
 			1) add_connection ;;
@@ -7863,15 +7877,15 @@ disk_manager() {
 	while true; do
 		clear
 		echo "硬盘分区管理"
-		echo -e "${rw_huang}该功能内部测试阶段，请勿在生产环境使用。${rw_bai}"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_huang}该功能内部测试阶段，请勿在生产环境使用。${rw_lv}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		list_partitions
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1. 挂载分区        2. 卸载分区        3. 查看已挂载分区"
 		echo "4. 格式化分区      5. 检查分区状态"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " choice
 		case $choice in
 			1) mount_partition ;;
@@ -7891,9 +7905,9 @@ disk_manager() {
 # 显示任务列表
 list_tasks() {
 	echo "已保存的同步任务:"
-	echo -e "${rw_cheng}---------------------------------${rw_bai}"
+	echo -e "${rw_cheng}---------------------------------${rw_lv}"
 	awk -F'|' '{print NR " - " $1 " ( " $2 " -> " $3":"$4 " )"}' "$CONFIG_FILE"
-	echo -e "${rw_cheng}---------------------------------${rw_bai}"
+	echo -e "${rw_cheng}---------------------------------${rw_lv}"
 }
 
 # 添加新任务
@@ -7905,7 +7919,7 @@ add_task() {
 	echo "  - 远程地址: user@192.168.1.100"
 	echo "  - 远程目录: /backup/www"
 	echo "  - 端口号 (默认 22)"
-	echo -e "${rw_cheng}---------------------------------${rw_bai}"
+	echo -e "${rw_cheng}---------------------------------${rw_lv}"
 	read -e -p "请输入任务名称: " name
 	read -e -p "请输入本地目录: " local_path
 	read -e -p "请输入远程目录: " remote_path
@@ -8090,9 +8104,9 @@ schedule_task() {
 # 查看定时任务
 view_tasks() {
 	echo "当前的定时任务:"
-	echo -e "${rw_cheng}---------------------------------${rw_bai}"
+	echo -e "${rw_cheng}---------------------------------${rw_lv}"
 	crontab -l | grep "k rsync_run"
-	echo -e "${rw_cheng}---------------------------------${rw_bai}"
+	echo -e "${rw_cheng}---------------------------------${rw_lv}"
 }
 
 # 删除定时任务
@@ -8118,7 +8132,7 @@ rsync_manager() {
 		clear
 		echo "Rsync 远程同步工具"
 		echo "远程目录之间同步，支持增量同步，高效稳定。"
-		echo -e "${rw_cheng}---------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------${rw_lv}"
 		list_tasks
 		echo
 		view_tasks
@@ -8126,9 +8140,9 @@ rsync_manager() {
 		echo "1. 创建新任务                 2. 删除任务"
 		echo "3. 执行本地同步到远端         4. 执行远端同步到本地"
 		echo "5. 创建定时任务               6. 删除定时任务"
-		echo -e "${rw_cheng}---------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}---------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " choice
 		case $choice in
 			1) add_task ;;
@@ -8156,17 +8170,17 @@ linux_info() {
 
 
 	clear
-	echo -e "${rw_huang}系统查询${rw_bai}"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_huang}系统查询${rw_lv}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}功能说明:${rw_bai}"
-	echo -e "${rw_huang}  查询系统的基本信息，包括:${rw_bai}"
-	echo -e "${rw_huang}  • IP地址和网络信息${rw_bai}"
-	echo -e "${rw_huang}  • CPU型号和使用率${rw_bai}"
-	echo -e "${rw_huang}  • 内存使用情况${rw_bai}"
-	echo -e "${rw_huang}  • 磁盘使用情况${rw_bai}"
+	echo -e "${rw_huang}功能说明:${rw_lv}"
+	echo -e "${rw_huang}  查询系统的基本信息，包括:${rw_lv}"
+	echo -e "${rw_huang}  • IP地址和网络信息${rw_lv}"
+	echo -e "${rw_huang}  • CPU型号和使用率${rw_lv}"
+	echo -e "${rw_huang}  • 内存使用情况${rw_lv}"
+	echo -e "${rw_huang}  • 磁盘使用情况${rw_lv}"
 	echo ""
-	echo -e "${rw_huang}提示: 信息将自动显示，查看后按回车继续${rw_bai}"
+	echo -e "${rw_huang}提示: 信息将自动显示，查看后按回车继续${rw_lv}"
 	echo ""
 	send_stats "系统信息查询"
 
@@ -8226,41 +8240,41 @@ linux_info() {
 
 	clear
 	echo -e "系统信息查询"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}主机名${rw_huang}:         ${rw_bai}$hostname"
-	echo -e "${rw_huang}${rw_huang}系统版本${rw_huang}:       ${rw_bai}$os_info"
-	echo -e "${rw_huang}${rw_huang}Linux版本${rw_huang}:      ${rw_bai}$kernel_version"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}CPU架构${rw_huang}:        ${rw_bai}$cpu_arch"
-	echo -e "${rw_huang}${rw_huang}CPU型号${rw_huang}:        ${rw_bai}$cpu_info"
-	echo -e "${rw_huang}${rw_huang}CPU核心数${rw_huang}:      ${rw_bai}$cpu_cores"
-	echo -e "${rw_huang}${rw_huang}CPU频率${rw_huang}:        ${rw_bai}$cpu_freq"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}CPU占用${rw_huang}:        ${rw_bai}$cpu_usage_percent%"
-	echo -e "${rw_huang}${rw_huang}系统负载${rw_huang}:       ${rw_bai}$load"
-	echo -e "${rw_huang}${rw_huang}TCP|UDP连接数${rw_huang}:  ${rw_bai}$tcp_count|$udp_count"
-	echo -e "${rw_huang}${rw_huang}物理内存${rw_huang}:       ${rw_bai}$mem_info"
-	echo -e "${rw_huang}${rw_huang}虚拟内存${rw_huang}:       ${rw_bai}$swap_info"
-	echo -e "${rw_huang}${rw_huang}硬盘占用${rw_huang}:       ${rw_bai}$disk_info"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}总接收${rw_huang}:         ${rw_bai}$rx"
-	echo -e "${rw_huang}${rw_huang}总发送${rw_huang}:         ${rw_bai}$tx"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}网络算法${rw_huang}:       ${rw_bai}$congestion_algorithm $queue_algorithm"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}运营商${rw_huang}:         ${rw_bai}$isp_info"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}主机名${rw_huang}:         ${rw_lv}$hostname"
+	echo -e "${rw_huang}${rw_huang}系统版本${rw_huang}:       ${rw_lv}$os_info"
+	echo -e "${rw_huang}${rw_huang}Linux版本${rw_huang}:      ${rw_lv}$kernel_version"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}CPU架构${rw_huang}:        ${rw_lv}$cpu_arch"
+	echo -e "${rw_huang}${rw_huang}CPU型号${rw_huang}:        ${rw_lv}$cpu_info"
+	echo -e "${rw_huang}${rw_huang}CPU核心数${rw_huang}:      ${rw_lv}$cpu_cores"
+	echo -e "${rw_huang}${rw_huang}CPU频率${rw_huang}:        ${rw_lv}$cpu_freq"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}CPU占用${rw_huang}:        ${rw_lv}$cpu_usage_percent%"
+	echo -e "${rw_huang}${rw_huang}系统负载${rw_huang}:       ${rw_lv}$load"
+	echo -e "${rw_huang}${rw_huang}TCP|UDP连接数${rw_huang}:  ${rw_lv}$tcp_count|$udp_count"
+	echo -e "${rw_huang}${rw_huang}物理内存${rw_huang}:       ${rw_lv}$mem_info"
+	echo -e "${rw_huang}${rw_huang}虚拟内存${rw_huang}:       ${rw_lv}$swap_info"
+	echo -e "${rw_huang}${rw_huang}硬盘占用${rw_huang}:       ${rw_lv}$disk_info"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}总接收${rw_huang}:         ${rw_lv}$rx"
+	echo -e "${rw_huang}${rw_huang}总发送${rw_huang}:         ${rw_lv}$tx"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}网络算法${rw_huang}:       ${rw_lv}$congestion_algorithm $queue_algorithm"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}运营商${rw_huang}:         ${rw_lv}$isp_info"
 	if [ -n "$ipv4_address" ]; then
-		echo -e "${rw_huang}IPv4地址:       ${rw_bai}$ipv4_address"
+		echo -e "${rw_huang}IPv4地址:       ${rw_lv}$ipv4_address"
 	fi
 
 	if [ -n "$ipv6_address" ]; then
-		echo -e "${rw_huang}IPv6地址:       ${rw_bai}$ipv6_address"
+		echo -e "${rw_huang}IPv6地址:       ${rw_lv}$ipv6_address"
 	fi
-	echo -e "${rw_huang}${rw_huang}DNS地址${rw_huang}:        ${rw_bai}$dns_addresses"
-	echo -e "${rw_huang}${rw_huang}地理位置${rw_huang}:       ${rw_bai}$country $city"
-	echo -e "${rw_huang}${rw_huang}系统时间${rw_huang}:       ${rw_bai}$timezone $current_time"
-	echo -e "${rw_lan}-------------"
-	echo -e "${rw_huang}${rw_huang}运行时长${rw_huang}:       ${rw_bai}$runtime"
+	echo -e "${rw_huang}${rw_huang}DNS地址${rw_huang}:        ${rw_lv}$dns_addresses"
+	echo -e "${rw_huang}${rw_huang}地理位置${rw_huang}:       ${rw_lv}$country $city"
+	echo -e "${rw_huang}${rw_huang}系统时间${rw_huang}:       ${rw_lv}$timezone $current_time"
+	echo -e "${rw_lv}-------------"
+	echo -e "${rw_huang}${rw_huang}运行时长${rw_huang}:       ${rw_lv}$runtime"
 	echo
 
 
@@ -8296,7 +8310,7 @@ linux_tools() {
 	  elif command -v pkg >/dev/null 2>&1; then
 		PM="pkg"
 	  else
-		echo -e "${rw_hong}未识别的包管理器，请先安装后重试${rw_bai}"
+		echo -e "${rw_hong}未识别的包管理器，请先安装后重试${rw_lv}"
 		sleep 3
 		return
 	  fi
@@ -8319,37 +8333,37 @@ linux_tools() {
 		fi
 	  }
 
-	  echo -e "${rw_cheng}━━━━━━━━━━━━  安装环境  ━━━━━━━━━━━━${rw_bai}"
-	  echo -e " 包管理器 ${rw_huang}${PM}${rw_bai}  已安装 ${rw_lv}${_installed}${rw_bai}/${_total}"
+	  echo -e "${rw_cheng}━━━━━━━━━━━━  安装环境  ━━━━━━━━━━━━${rw_lv}"
+	  echo -e " 包管理器 ${rw_huang}${PM}${rw_lv}  已安装 ${rw_lv}${_installed}${rw_lv}/${_total}"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 网络工具${rw_bai}"
-	  echo -e " $(_ist curl) ${rw_huang}1${rw_bai}  curl 下载工具★       $(_ist wget) ${rw_huang}2${rw_bai}  wget 下载工具★"
-	  echo -e " $(_ist sudo) ${rw_huang}3${rw_bai}  sudo 超管权限        $(_ist socat) ${rw_huang}4${rw_bai}  socat 通信工具"
+	  echo -e " ${rw_cheng}──── 网络工具${rw_lv}"
+	  echo -e " $(_ist curl) ${rw_huang}1${rw_lv}  curl 下载工具★        $(_ist wget) ${rw_huang}2${rw_lv}  wget 下载工具★"
+	  echo -e " $(_ist sudo) ${rw_huang}3${rw_lv}  sudo 超管权限         $(_ist socat) ${rw_huang}4${rw_lv}  socat 通信工具"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 系统监控${rw_bai}"
-	  echo -e " $(_ist htop) ${rw_huang}5${rw_bai}  htop 系统监控         $(_ist iftop) ${rw_huang}6${rw_bai}  iftop 流量监控"
-	  echo -e " $(_ist btop) ${rw_huang}7${rw_bai}  btop 现代监控★        $(_ist tmux) ${rw_huang}8${rw_bai}  tmux 后台多路"
+	  echo -e " ${rw_cheng}──── 系统监控${rw_lv}"
+	  echo -e " $(_ist htop) ${rw_huang}5${rw_lv}  htop 系统监控         $(_ist iftop) ${rw_huang}6${rw_lv}  iftop 流量监控"
+	  echo -e " $(_ist btop) ${rw_huang}7${rw_lv}  btop 现代监控★        $(_ist tmux) ${rw_huang}8${rw_lv}  tmux 后台多路"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 文件工具${rw_bai}"
-	  echo -e " $(_ist unzip) ${rw_huang}9${rw_bai}  unzip ZIP解压         $(_ist tar) ${rw_huang}10${rw_bai} tar GZ解压"
-	  echo -e " $(_ist ranger) ${rw_huang}11${rw_bai} ranger 文件管理       $(_ist ncdu) ${rw_huang}12${rw_bai} ncdu 磁盘分析"
-	  echo -e " $(_ist fzf) ${rw_huang}13${rw_bai}  fzf 全局搜索         $(_ist ffmpeg) ${rw_huang}14${rw_bai} ffmpeg 视频推流"
+	  echo -e " ${rw_cheng}──── 文件工具${rw_lv}"
+	  echo -e " $(_ist unzip) ${rw_huang}9${rw_lv}  unzip ZIP解压         $(_ist tar) ${rw_huang}10${rw_lv} tar GZ解压"
+	  echo -e " $(_ist ranger) ${rw_huang}11${rw_lv} ranger 文件管理       $(_ist ncdu) ${rw_huang}12${rw_lv} ncdu 磁盘分析"
+	  echo -e " $(_ist fzf) ${rw_huang}13${rw_lv}  fzf 全局搜索         $(_ist ffmpeg) ${rw_huang}14${rw_lv} ffmpeg 视频推流"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 编辑器${rw_bai}"
-	  echo -e " $(_ist vim) ${rw_huang}15${rw_bai}  vim 编辑器           $(_ist nano) ${rw_huang}16${rw_bai}  nano 编辑器★"
+	  echo -e " ${rw_cheng}──── 编辑器${rw_lv}"
+	  echo -e " $(_ist vim) ${rw_huang}15${rw_lv}  vim 编辑器           $(_ist nano) ${rw_huang}16${rw_lv}  nano 编辑器★"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 开发工具${rw_bai}"
-	  echo -e " $(_ist git) ${rw_huang}17${rw_bai}  git 版本控制         $(_ist opencode) ${rw_huang}18${rw_bai} opencode AI编程★"
-	  echo -e " $(_ist brew) ${rw_huang}19${rw_bai}  brew macOS包管理     $(_ist nodejs) ${rw_huang}20${rw_bai} nodejs JS运行时★"
-	  echo -e " $(_ist pnpm) ${rw_huang}21${rw_bai}  pnpm 包管理器★"
+	  echo -e " ${rw_cheng}──── 开发工具${rw_lv}"
+	  echo -e " $(_ist git) ${rw_huang}17${rw_lv}  git 版本控制         $(_ist opencode) ${rw_huang}18${rw_lv} opencode AI编程★"
+	  echo -e " $(_ist brew) ${rw_huang}19${rw_lv}  brew macOS包管理     $(_ist nodejs) ${rw_huang}20${rw_lv} nodejs JS运行时★"
+	  echo -e " $(_ist pnpm) ${rw_huang}21${rw_lv}  pnpm 包管理器★"
 	  echo ""
-	  echo -e " ${rw_cheng}──── 批量操作${rw_bai}"
-	  echo -e " ${rw_huang}31${rw_bai} 全部安装              ${rw_huang}32${rw_bai} 全部卸载"
-	  echo -e " ${rw_huang}33${rw_bai} 安装指定工具          ${rw_huang}34${rw_bai} 卸载指定工具"
+	  echo -e " ${rw_cheng}──── 批量操作${rw_lv}"
+	  echo -e " ${rw_huang}31${rw_lv} 全部安装                    ${rw_huang}32${rw_lv} 全部卸载"
+	  echo -e " ${rw_huang}33${rw_lv} 安装指定工具                ${rw_huang}34${rw_lv} 卸载指定工具"
 	  echo ""
-	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	  echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	  echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+	  echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	  read -e -p " 请选择: " sub_choice
 
 	  case $sub_choice in
@@ -8413,20 +8427,20 @@ linux_tools() {
 			  send_stats "安装opencode" ;;
 		  19)
 			  clear; cd ~
-			  echo -e "${rw_lv}正在安装 brew...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 brew...${rw_lv}"
 			  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 			  if [ $? -eq 0 ]; then
-				echo -e "${rw_lv}brew 安装成功${rw_bai}"
-				echo -e "${rw_huang}提示: 请运行以下命令添加到环境变量:${rw_bai}"
+				echo -e "${rw_lv}brew 安装成功${rw_lv}"
+				echo -e "${rw_huang}提示: 请运行以下命令添加到环境变量:${rw_lv}"
 				echo "  echo 'export PATH=/opt/homebrew/bin:$PATH' >> ~/.zshrc"
 				echo "  source ~/.zshrc"
 			  else
-				echo -e "${rw_hong}brew 安装失败${rw_bai}"
+				echo -e "${rw_hong}brew 安装失败${rw_lv}"
 			  fi
 			  send_stats "安装brew" ;;
 		  20)
 			  clear; cd ~
-			  echo -e "${rw_lv}正在安装 Node.js...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 Node.js...${rw_lv}"
 			  if command -v brew >/dev/null 2>&1; then
 				brew install node
 			  else
@@ -8435,16 +8449,16 @@ linux_tools() {
 				source ~/.zshrc
 			  fi
 			  if command -v node >/dev/null 2>&1; then
-				echo -e "${rw_lv}Node.js 安装成功${rw_bai}"
+				echo -e "${rw_lv}Node.js 安装成功${rw_lv}"
 				node --version
 				npm --version
 			  else
-				echo -e "${rw_hong}Node.js 安装失败${rw_bai}"
+				echo -e "${rw_hong}Node.js 安装失败${rw_lv}"
 			  fi
 			  send_stats "安装nodejs" ;;
 		  21)
 			  clear; cd ~
-			  echo -e "${rw_lv}正在安装 pnpm...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 pnpm...${rw_lv}"
 			  if command -v npm >/dev/null 2>&1; then
 				npm install -g pnpm
 			  elif command -v brew >/dev/null 2>&1; then
@@ -8453,10 +8467,10 @@ linux_tools() {
 				curl -fsSL https://get.pnpm.io/install.sh | sh -
 			  fi
 			  if command -v pnpm >/dev/null 2>&1; then
-				echo -e "${rw_lv}pnpm 安装成功${rw_bai}"
+				echo -e "${rw_lv}pnpm 安装成功${rw_lv}"
 				pnpm --version
 			  else
-				echo -e "${rw_hong}pnpm 安装失败${rw_bai}"
+				echo -e "${rw_hong}pnpm 安装失败${rw_lv}"
 			  fi
 			  send_stats "安装pnpm" ;;
 
@@ -8464,16 +8478,16 @@ linux_tools() {
 			  clear
 			  send_stats "全部安装"
 			  install curl wget sudo socat htop iftop unzip tar tmux ffmpeg btop ranger ncdu fzf vim nano git
-			  echo -e "${rw_lv}正在安装 brew...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 brew...${rw_lv}"
 			  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 2>/dev/null || true
-			  echo -e "${rw_lv}正在安装 Node.js...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 Node.js...${rw_lv}"
 			  if command -v brew >/dev/null 2>&1; then
 				brew install node 2>/dev/null || true
 			  else
 				curl -fsSL https://nodejs.org/dist/v20.10.0/node-v20.10.0-darwin-arm64.tar.gz | tar -xz -C ~/.local --strip-components=1 2>/dev/null || true
 				echo 'export PATH=~/.local/bin:$PATH' >> ~/.zshrc 2>/dev/null || true
 			  fi
-			  echo -e "${rw_lv}正在安装 pnpm...${rw_bai}"
+			  echo -e "${rw_lv}正在安装 pnpm...${rw_lv}"
 			  if command -v npm >/dev/null 2>&1; then
 				npm install -g pnpm 2>/dev/null || true
 			  elif command -v brew >/dev/null 2>&1; then
@@ -8481,7 +8495,7 @@ linux_tools() {
 			  else
 				curl -fsSL https://get.pnpm.io/install.sh | sh - 2>/dev/null || true
 			  fi
-			  echo -e "${rw_lv}全部安装完成${rw_bai}" ;;
+			  echo -e "${rw_lv}全部安装完成${rw_lv}" ;;
 
 		  32)
 			  clear
@@ -8493,13 +8507,27 @@ linux_tools() {
 
 		  33)
 			  clear
-			  read -e -p "请输入安装的工具名（wget curl sudo htop）: " installname
+			  echo -e "${rw_huang}──── 安装指定工具 ────${rw_lv}"
+			  echo -e " ${rw_lv}提示: 多个工具用空格分隔，支持工具名或编号${rw_lv}"
+			  echo -e " ${rw_huang}示例:${rw_lv}"
+			  echo -e "   工具名: ${rw_lv}wget curl htop vim${rw_lv}"
+			  echo -e "   编号:   ${rw_lv}1 2 5 15${rw_lv}"
+			  echo ""
+			  read -e -p " 请输入要安装的工具: " installname
+			  [ -z "$installname" ] && { echo "已取消"; continue; }
 			  install $installname
 			  send_stats "安装指定软件" ;;
 
 		  34)
 			  clear
-			  read -e -p "请输入卸载的工具名（htop ufw tmux cmatrix）: " removename
+			  echo -e "${rw_huang}──── 卸载指定工具 ────${rw_lv}"
+			  echo -e " ${rw_lv}提示: 多个工具用空格分隔，支持工具名或编号${rw_lv}"
+			  echo -e " ${rw_huang}示例:${rw_lv}"
+			  echo -e "   工具名: ${rw_lv}htop iftop btop ranger${rw_lv}"
+			  echo -e "   编号:   ${rw_lv}5 6 7 11${rw_lv}"
+			  echo ""
+			  read -e -p " 请输入要卸载的工具: " removename
+			  [ -z "$removename" ] && { echo "已取消"; continue; }
 			  remove $removename
 			  send_stats "卸载指定软件" ;;
 
@@ -8523,7 +8551,7 @@ docker_ssh_migration() {
 
 	list_backups() {
 		local BACKUP_ROOT="/tmp"
-		echo -e "${rw_huang}当前备份列表:${rw_bai}"
+		echo -e "${rw_huang}当前备份列表:${rw_lv}"
 		ls -1dt ${BACKUP_ROOT}/docker_backup_* 2>/dev/null || echo "无备份"
 	}
 
@@ -8535,7 +8563,7 @@ docker_ssh_migration() {
 	backup_docker() {
 		send_stats "Docker备份"
 
-		echo -e "${rw_huang}正在备份 Docker 容器...${rw_bai}"
+		echo -e "${rw_huang}正在备份 Docker 容器...${rw_lv}"
 		docker ps --format '{{.Names}}'
 		read -e -p  "请输入要备份的容器名（多个空格分隔，回车备份全部运行中容器）: " containers
 
@@ -8550,7 +8578,7 @@ docker_ssh_migration() {
 		else
 			read -ra TARGET_CONTAINERS <<< "$containers"
 		fi
-		[[ ${#TARGET_CONTAINERS[@]} -eq 0 ]] && { echo -e "${rw_hong}没有找到容器${rw_bai}"; return; }
+		[[ ${#TARGET_CONTAINERS[@]} -eq 0 ]] && { echo -e "${rw_hong}没有找到容器${rw_lv}"; return; }
 
 		local BACKUP_DIR="${BACKUP_ROOT}/docker_backup_${DATE_STR}"
 		mkdir -p "$BACKUP_DIR"
@@ -8564,12 +8592,12 @@ docker_ssh_migration() {
 		declare -A PACKED_COMPOSE_PATHS=()
 
 		for c in "${TARGET_CONTAINERS[@]}"; do
-			echo -e "${rw_lv}备份容器: $c${rw_bai}"
+			echo -e "${rw_lv}备份容器: $c${rw_lv}"
 			local inspect_file="${BACKUP_DIR}/${c}_inspect.json"
 			docker inspect "$c" > "$inspect_file"
 
 			if is_compose_container "$c"; then
-				echo -e "${rw_huang}检测到 $c 是 docker-compose 容器${rw_bai}"
+				echo -e "${rw_huang}检测到 $c 是 docker-compose 容器${rw_lv}"
 				local project_dir=$(docker inspect "$c" | jq -r '.[0].Config.Labels["com.docker.compose.project.working_dir"] // empty')
 				local project_name=$(docker inspect "$c" | jq -r '.[0].Config.Labels["com.docker.compose.project"] // empty')
 
@@ -8579,7 +8607,7 @@ docker_ssh_migration() {
 
 				# 如果该 Compose 项目已经打包过，跳过
 				if [[ -n "${PACKED_COMPOSE_PATHS[$project_dir]}" ]]; then
-					echo -e "${rw_huang}Compose 项目 [$project_name] 已备份过，跳过重复打包...${rw_bai}"
+					echo -e "${rw_huang}Compose 项目 [$project_name] 已备份过，跳过重复打包...${rw_lv}"
 					continue
 				fi
 
@@ -8590,9 +8618,9 @@ docker_ssh_migration() {
 					echo "# docker-compose 恢复: $project_name" >> "$RESTORE_SCRIPT"
 					echo "cd \"$project_dir\" && docker compose up -d" >> "$RESTORE_SCRIPT"
 					PACKED_COMPOSE_PATHS["$project_dir"]=1
-					echo -e "${rw_lv}Compose 项目 [$project_name] 已打包: ${project_dir}${rw_bai}"
+					echo -e "${rw_lv}Compose 项目 [$project_name] 已打包: ${project_dir}${rw_lv}"
 				else
-					echo -e "${rw_hong}未找到 docker-compose.yml，跳过此容器...${rw_bai}"
+					echo -e "${rw_hong}未找到 docker-compose.yml，跳过此容器...${rw_lv}"
 				fi
 			else
 				# 普通容器备份卷
@@ -8629,14 +8657,14 @@ docker_ssh_migration() {
 
 		# 备份 /home/docker 下的所有文件（不含子目录）
 		if [ -d "/home/docker" ]; then
-			echo -e "${rw_huang}备份 /home/docker 下的文件...${rw_bai}"
+			echo -e "${rw_huang}备份 /home/docker 下的文件...${rw_lv}"
 			find /home/docker -maxdepth 1 -type f | tar -czf "${BACKUP_DIR}/home_docker_files.tar.gz" -T -
-			echo -e "${rw_lv}/home/docker 下的文件已打包到: ${BACKUP_DIR}/home_docker_files.tar.gz${rw_bai}"
+			echo -e "${rw_lv}/home/docker 下的文件已打包到: ${BACKUP_DIR}/home_docker_files.tar.gz${rw_lv}"
 		fi
 
 		chmod +x "$RESTORE_SCRIPT"
-		echo -e "${rw_lv}备份完成: ${BACKUP_DIR}${rw_bai}"
-		echo -e "${rw_lv}可用还原脚本: ${RESTORE_SCRIPT}${rw_bai}"
+		echo -e "${rw_lv}备份完成: ${BACKUP_DIR}${rw_lv}"
+		echo -e "${rw_lv}可用还原脚本: ${RESTORE_SCRIPT}${rw_lv}"
 
 
 	}
@@ -8648,9 +8676,9 @@ docker_ssh_migration() {
 
 		send_stats "Docker还原"
 		read -e -p  "请输入要还原的备份目录: " BACKUP_DIR
-		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_bai}"; return; }
+		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_lv}"; return; }
 
-		echo -e "${rw_huang}开始执行还原操作...${rw_bai}"
+		echo -e "${rw_huang}开始执行还原操作...${rw_lv}"
 
 		install tar jq gzip
 		install_docker
@@ -8667,7 +8695,7 @@ docker_ssh_migration() {
 				# 检查该 compose 项目的容器是否已经在运行
 				running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format '{{.Names}}' | wc -l)
 				if [[ "$running_count" -gt 0 ]]; then
-					echo -e "${rw_huang}Compose 项目 [$project_name] 已有容器在运行，跳过还原...${rw_bai}"
+					echo -e "${rw_huang}Compose 项目 [$project_name] 已有容器在运行，跳过还原...${rw_lv}"
 					continue
 				fi
 
@@ -8676,32 +8704,32 @@ docker_ssh_migration() {
 
 				mkdir -p "$original_path"
 				tar -xzf "$BACKUP_DIR/compose_project_${project_name}.tar.gz" -C "$original_path"
-				echo -e "${rw_lv}Compose 项目 [$project_name] 已解压到: $original_path${rw_bai}"
+				echo -e "${rw_lv}Compose 项目 [$project_name] 已解压到: $original_path${rw_lv}"
 
 				cd "$original_path" || return
 				docker compose down || true
 				docker compose up -d
-				echo -e "${rw_lv}Compose 项目 [$project_name] 还原完成！${rw_bai}"
+				echo -e "${rw_lv}Compose 项目 [$project_name] 还原完成！${rw_lv}"
 			fi
 		done
 
 		# --------- 继续还原普通容器 ---------
-		echo -e "${rw_huang}检查并还原普通 Docker 容器...${rw_bai}"
+		echo -e "${rw_huang}检查并还原普通 Docker 容器...${rw_lv}"
 		local has_container=false
 		for json in "$BACKUP_DIR"/*_inspect.json; do
 			[[ ! -f "$json" ]] && continue
 			has_container=true
 			container=$(basename "$json" | sed 's/_inspect.json//')
-			echo -e "${rw_lv}处理容器: $container${rw_bai}"
+			echo -e "${rw_lv}处理容器: $container${rw_lv}"
 
 			# 检查容器是否已经存在且正在运行
 			if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
-				echo -e "${rw_huang}容器 [$container] 已在运行，跳过还原...${rw_bai}"
+				echo -e "${rw_huang}容器 [$container] 已在运行，跳过还原...${rw_lv}"
 				continue
 			fi
 
 			IMAGE=$(jq -r '.[0].Config.Image' "$json")
-			[[ -z "$IMAGE" || "$IMAGE" == "null" ]] && { echo -e "${rw_hong}未找到镜像信息，跳过: $container${rw_bai}"; continue; }
+			[[ -z "$IMAGE" || "$IMAGE" == "null" ]] && { echo -e "${rw_hong}未找到镜像信息，跳过: $container${rw_lv}"; continue; }
 
 			# 端口映射
 			PORT_ARGS=""
@@ -8735,7 +8763,7 @@ docker_ssh_migration() {
 
 			# 删除已存在但未运行的容器
 			if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
-				echo -e "${rw_huang}容器 [$container] 存在但未运行，删除旧容器...${rw_bai}"
+				echo -e "${rw_huang}容器 [$container] 存在但未运行，删除旧容器...${rw_lv}"
 				docker rm -f "$container"
 			fi
 
@@ -8744,16 +8772,16 @@ docker_ssh_migration() {
 			eval "docker run -d --name \"$container\" $PORT_ARGS $VOL_ARGS $ENV_ARGS \"$IMAGE\""
 		done
 
-		[[ "$has_container" == false ]] && echo -e "${rw_huang}未找到普通容器的备份信息${rw_bai}"
+		[[ "$has_container" == false ]] && echo -e "${rw_huang}未找到普通容器的备份信息${rw_lv}"
 
 		# 还原 /home/docker 下的文件
 		if [ -f "$BACKUP_DIR/home_docker_files.tar.gz" ]; then
-			echo -e "${rw_huang}正在还原 /home/docker 下的文件...${rw_bai}"
+			echo -e "${rw_huang}正在还原 /home/docker 下的文件...${rw_lv}"
 			mkdir -p /home/docker
 			tar -xzf "$BACKUP_DIR/home_docker_files.tar.gz" -C /
-			echo -e "${rw_lv}/home/docker 下的文件已还原完成${rw_bai}"
+			echo -e "${rw_lv}/home/docker 下的文件已还原完成${rw_lv}"
 		else
-			echo -e "${rw_huang}未找到 /home/docker 下文件的备份，跳过...${rw_bai}"
+			echo -e "${rw_huang}未找到 /home/docker 下文件的备份，跳过...${rw_lv}"
 		fi
 
 
@@ -8767,7 +8795,7 @@ docker_ssh_migration() {
 		send_stats "Docker迁移"
 		install jq
 		read -e -p  "请输入要迁移的备份目录: " BACKUP_DIR
-		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_bai}"; return; }
+		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_lv}"; return; }
 
 		kj_ssh_read_host_user_port "目标服务器IP: " "目标服务器SSH用户名 [默认root]: " "目标服务器SSH端口 [默认22]: " "root" "22"
 		local TARGET_IP="$KJ_SSH_HOST"
@@ -8776,7 +8804,7 @@ docker_ssh_migration() {
 
 		local LATEST_TAR="$BACKUP_DIR"
 
-		echo -e "${rw_huang}传输备份中...${rw_bai}"
+		echo -e "${rw_huang}传输备份中...${rw_lv}"
 		if [[ -z "$TARGET_PASS" ]]; then
 			# 使用密钥登录
 			scp -P "$TARGET_PORT" -o StrictHostKeyChecking=no -r "$LATEST_TAR" "$TARGET_USER@$TARGET_IP:/tmp/"
@@ -8790,9 +8818,9 @@ docker_ssh_migration() {
 	delete_backup() {
 		send_stats "Docker备份文件删除"
 		read -e -p  "请输入要删除的备份目录: " BACKUP_DIR
-		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_bai}"; return; }
+		[[ ! -d "$BACKUP_DIR" ]] && { echo -e "${rw_hong}备份目录不存在${rw_lv}"; return; }
 		rm -rf "$BACKUP_DIR"
-		echo -e "${rw_lv}已删除备份: ${BACKUP_DIR}${rw_bai}"
+		echo -e "${rw_lv}已删除备份: ${BACKUP_DIR}${rw_lv}"
 	}
 
 	# ----------------------------
@@ -8802,19 +8830,19 @@ docker_ssh_migration() {
 		send_stats "Docker备份迁移还原"
 		while true; do
 			clear
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo -e "Docker备份/迁移/还原工具"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			list_backups
 			echo -e ""
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo -e "1. 备份docker项目"
 			echo -e "2. 迁移docker项目"
 			echo -e "3. 还原docker项目"
 			echo -e "4. 删除docker项目的备份文件"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo -e "0. 返回上一级选单"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			read -e -p  "请选择: " choice
 			case $choice in
 				1) backup_docker ;;
@@ -8822,7 +8850,7 @@ docker_ssh_migration() {
 				3) restore_docker ;;
 				4) delete_backup ;;
 				0) return ;;
-				*) echo -e "${rw_hong}无效选项${rw_bai}" ;;
+				*) echo -e "${rw_hong}无效选项${rw_lv}" ;;
 			esac
 		break_end
 		done
@@ -8848,8 +8876,8 @@ docker_tato() {
 	local volume_count=$(docker volume ls -q 2>/dev/null | wc -l)
 
 	if command -v docker &> /dev/null; then
-		echo -e "${rw_lan}------------------------"
-		echo -e "${rw_lv}环境已经安装${rw_bai}  容器: ${rw_lv}$container_count${rw_bai}  镜像: ${rw_lv}$image_count${rw_bai}  网络: ${rw_lv}$network_count${rw_bai}  卷: ${rw_lv}$volume_count${rw_bai}"
+		echo -e "${rw_lv}------------------------"
+		echo -e "${rw_lv}环境已经安装${rw_lv}  容器: ${rw_lv}$container_count${rw_lv}  镜像: ${rw_lv}$image_count${rw_lv}  网络: ${rw_lv}$network_count${rw_lv}  卷: ${rw_lv}$volume_count${rw_lv}"
 	fi
 }
 
@@ -8857,20 +8885,20 @@ docker_tato() {
 
 ldnmp_tato() {
 local cert_count=$(ls /home/web/certs/*_cert.pem 2>/dev/null | wc -l)
-local output="${rw_lv}${cert_count}${rw_bai}"
+local output="${rw_lv}${cert_count}${rw_lv}"
 
 local dbrootpasswd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml 2>/dev/null | tr -d '[:space:]')
 if [ -n "$dbrootpasswd" ]; then
 	local db_count=$(docker exec mysql mysql -u root -p"$dbrootpasswd" -e "SHOW DATABASES;" 2>/dev/null | grep -Ev "Database|information_schema|mysql|performance_schema|sys" | wc -l)
 fi
 
-local db_output="${rw_lv}${db_count}${rw_bai}"
+local db_output="${rw_lv}${db_count}${rw_lv}"
 
 
 if command -v docker &>/dev/null; then
 	if docker ps --filter "name=nginx" --filter "status=running" | grep -q nginx; then
 		echo -e "${rw_huang}------------------------"
-		echo -e "${rw_lv}环境已安装${rw_bai}  站点: $output  数据库: $db_output"
+		echo -e "${rw_lv}环境已安装${rw_lv}  站点: $output  数据库: $db_output"
 	fi
 fi
 
@@ -8912,66 +8940,66 @@ ldnmp_builder_menu() {
         refresh_status_cache
     fi
 
-    local _nginx_stat="${rw_hong}未运行${rw_bai}"
-    local _mysql_stat="${rw_hong}未运行${rw_bai}"
-    local _php_stat="${rw_hong}未运行${rw_bai}"
+    local _nginx_stat="${rw_hong}未运行${rw_lv}"
+    local _mysql_stat="${rw_hong}未运行${rw_lv}"
+    local _php_stat="${rw_hong}未运行${rw_lv}"
     local _site_cnt=0
 
     # Nginx 状态：优先 Docker 容器，再使用缓存
     if docker inspect nginx &>/dev/null 2>&1; then
-        docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_bai}"
+        docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_lv}"
     elif $_CACHE_NGINX_ACTIVE; then
-        _nginx_stat="${rw_lv}运行中${rw_bai}"
+        _nginx_stat="${rw_lv}运行中${rw_lv}"
     fi
 
     # MySQL 状态：优先 Docker 容器，再使用缓存
     if docker inspect mysql &>/dev/null 2>&1 || docker inspect mariadb &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' mysql 2>/dev/null | grep -q true 2>/dev/null; then
-            _mysql_stat="${rw_lv}运行中${rw_bai}"
+            _mysql_stat="${rw_lv}运行中${rw_lv}"
         elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true 2>/dev/null; then
-            _mysql_stat="${rw_lv}运行中${rw_bai}"
+            _mysql_stat="${rw_lv}运行中${rw_lv}"
         fi
     elif $_CACHE_MYSQL_ACTIVE; then
-        _mysql_stat="${rw_lv}运行中${rw_bai}"
+        _mysql_stat="${rw_lv}运行中${rw_lv}"
     fi
 
     # PHP 状态：优先 Docker 容器，再使用缓存
     if docker inspect php &>/dev/null 2>&1 || docker inspect php-fpm &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' php 2>/dev/null | grep -q true 2>/dev/null; then
-            _php_stat="${rw_lv}运行中${rw_bai}"
+            _php_stat="${rw_lv}运行中${rw_lv}"
         elif docker inspect -f '{{.State.Running}}' php-fpm 2>/dev/null | grep -q true 2>/dev/null; then
-            _php_stat="${rw_lv}运行中${rw_bai}"
+            _php_stat="${rw_lv}运行中${rw_lv}"
         fi
     elif $_CACHE_PHP_ACTIVE; then
-        _php_stat="${rw_lv}运行中${rw_bai}"
+        _php_stat="${rw_lv}运行中${rw_lv}"
     fi
 
     [ -d /home/web/conf.d ] && _site_cnt=$(ls /home/web/conf.d/*.conf 2>/dev/null | grep -vc 'map\|default')
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  LDNMP 建站  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " Nginx ${_nginx_stat}  MySQL ${_mysql_stat}  PHP ${_php_stat}  站点 ${rw_lv}${_site_cnt}${rw_bai}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  LDNMP 建站  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " Nginx ${_nginx_stat}  MySQL ${_mysql_stat}  PHP ${_php_stat}  站点 ${rw_lv}${_site_cnt}${rw_lv}"
     echo ""
-    echo -e " ${rw_cheng}──── 环境安装${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  安装LDNMP环境        ${rw_huang}2${rw_bai}  安装Typecho博客"
-    echo -e " ${rw_huang}3${rw_bai}  仅安装Nginx          ${rw_huang}4${rw_bai}  MySQL管理"
-    echo -e " ${rw_huang}5${rw_bai}  PHP管理"
+    echo -e " ${rw_cheng}──── 环境安装${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  安装LDNMP环境        ${rw_huang}2${rw_lv}  安装Typecho博客"
+    echo -e " ${rw_huang}3${rw_lv}  仅安装Nginx          ${rw_huang}4${rw_lv}  MySQL管理"
+    echo -e " ${rw_huang}5${rw_lv}  PHP管理"
     echo ""
-    echo -e " ${rw_cheng}──── 站点管理${rw_bai}"
-    echo -e " ${rw_huang}6${rw_bai}  Nginx管理             ${rw_huang}7${rw_bai}  站点数据管理"
-    echo -e " ${rw_huang}13${rw_bai} 自定义静态站点        ${rw_huang}14${rw_bai} 反向代理-负载均衡"
-    echo -e " ${rw_huang}15${rw_bai} 反向代理+域名         ${rw_huang}16${rw_bai} 站点重定向"
-    echo -e " ${rw_huang}17${rw_bai} 反向代理+IP+端口"
+    echo -e " ${rw_cheng}──── 站点管理${rw_lv}"
+    echo -e " ${rw_huang}6${rw_lv}  Nginx管理             ${rw_huang}7${rw_lv}  站点数据管理"
+    echo -e " ${rw_huang}13${rw_lv} 自定义静态站点        ${rw_huang}14${rw_lv} 反向代理-负载均衡"
+    echo -e " ${rw_huang}15${rw_lv} 反向代理+域名         ${rw_huang}16${rw_lv} 站点重定向"
+    echo -e " ${rw_huang}17${rw_lv} 反向代理+IP+端口"
     echo ""
-    echo -e " ${rw_cheng}──── 数据管理${rw_bai}"
-    echo -e " ${rw_huang}8${rw_bai}  定时远程备份         ${rw_huang}12${rw_bai} 还原全站数据"
+    echo -e " ${rw_cheng}──── 数据管理${rw_lv}"
+    echo -e " ${rw_huang}8${rw_lv}  定时远程备份         ${rw_huang}12${rw_lv} 还原全站数据"
     echo ""
-    echo -e " ${rw_cheng}──── 环境维护${rw_bai}"
-    echo -e " ${rw_huang}9${rw_bai}  防护LDNMP环境         ${rw_huang}10${rw_bai} 更新LDNMP环境"
-    echo -e " ${rw_huang}11${rw_bai} 优化LDNMP环境"
+    echo -e " ${rw_cheng}──── 环境维护${rw_lv}"
+    echo -e " ${rw_huang}9${rw_lv}  防护LDNMP环境         ${rw_huang}10${rw_lv} 更新LDNMP环境"
+    echo -e " ${rw_huang}11${rw_lv} 优化LDNMP环境"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " choice
     choice=${choice:-0}
 
@@ -9004,19 +9032,19 @@ ldnmp_builder_menu() {
 ldnmp_install_env() {
   clear
   send_stats "安装LDNMP环境"
-  echo -e "${rw_huang}正在安装LDNMP环境...${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}正在安装LDNMP环境...${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   ldnmp_install_status_one
   ldnmp_install_all
-  echo -e "${rw_lv}LDNMP环境安装完成！${rw_bai}"
+  echo -e "${rw_lv}LDNMP环境安装完成！${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
 ldnmp_install_typecho() {
   clear
   send_stats "安装Typecho轻量博客网站"
-  echo -e "${rw_huang}安装Typecho轻量博客网站${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}安装Typecho轻量博客网站${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例域名：blog.example.com（请先将域名解析到本机IP）"
   echo ""
   add_yuming
@@ -9028,7 +9056,7 @@ ldnmp_install_typecho() {
   add_db
   mkdir -p /home/web/html/${yuming}
   cd /home/web/html/${yuming}
-  echo -e "${rw_huang}正在下载Typecho...${rw_bai}"
+  echo -e "${rw_huang}正在下载Typecho...${rw_lv}"
   curl -sSL "https://github.com/typecho/typecho/releases/latest/download/typecho.zip" -o typecho.zip 2>/dev/null ||     wget -q "https://github.com/typecho/typecho/releases/latest/download/typecho.zip" -O typecho.zip 2>/dev/null
   if [ -f typecho.zip ]; then
     unzip -o typecho.zip >/dev/null 2>&1
@@ -9036,7 +9064,7 @@ ldnmp_install_typecho() {
     rm -rf typecho typecho.zip
     chmod -R 755 /home/web/html/${yuming}
   else
-    echo -e "${rw_hong}下载失败，请手动下载Typecho${rw_bai}"
+    echo -e "${rw_hong}下载失败，请手动下载Typecho${rw_lv}"
   fi
   wget -q -O /home/web/conf.d/map.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/map.conf" 2>/dev/null
   wget -q -O /home/web/conf.d/${yuming}.conf "${gh_proxy}raw.githubusercontent.com/riwi/nginx/main/default10.conf" 2>/dev/null
@@ -9044,18 +9072,18 @@ ldnmp_install_typecho() {
   nginx_http_on
   restart_ldnmp
   ldnmp_web_on
-  echo -e "${rw_lv}Typecho站点 ${yuming} 创建成功！${rw_bai}"
-  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_bai}"
+  echo -e "${rw_lv}Typecho站点 ${yuming} 创建成功！${rw_lv}"
+  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
 ldnmp_install_nginx_only() {
   clear
   send_stats "仅安装Nginx"
-  echo -e "${rw_huang}正在安装Nginx...${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}正在安装Nginx...${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   nginx_install_all
-  echo -e "${rw_lv}Nginx安装完成！${rw_bai}"
+  echo -e "${rw_lv}Nginx安装完成！${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
@@ -9065,16 +9093,16 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _my_stat="${rw_hong}未安装${rw_bai}" _my_ver="" _my_port="" _my_img=""
+	local _my_stat="${rw_hong}未安装${rw_lv}" _my_ver="" _my_port="" _my_img=""
 	local _my_root_pwd="" _my_user="" _my_user_pwd="" _my_dbs=""
 
 	if docker inspect mysql &>/dev/null 2>&1 || docker inspect mariadb &>/dev/null 2>&1; then
-		_my_stat="${rw_huang}已停止${rw_bai}"
+		_my_stat="${rw_huang}已停止${rw_lv}"
 		# 运行状态
 		if docker inspect -f '{{.State.Running}}' mysql 2>/dev/null | grep -q true; then
-			_my_stat="${rw_lv}运行中${rw_bai}"
+			_my_stat="${rw_lv}运行中${rw_lv}"
 		elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true; then
-			_my_stat="${rw_lv}运行中${rw_bai}"
+			_my_stat="${rw_lv}运行中${rw_lv}"
 		fi
 		# 版本
 		_my_ver=$(docker exec mysql mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
@@ -9096,39 +9124,39 @@ while true; do
 	else
 		# 检查 docker-compose.yml 是否配置了 mysql
 		if [ -f /home/web/docker-compose.yml ] && grep -q "mysql\|mariadb" /home/web/docker-compose.yml 2>/dev/null; then
-			_my_stat="${rw_huang}未启动${rw_bai}"
+			_my_stat="${rw_huang}未启动${rw_lv}"
 		fi
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  MySQL 管理  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " 状态 ${_my_stat}  v${_my_ver:-?}  镜像 ${rw_lv}${_my_img:-?}${rw_bai}"
-	[ -n "$_my_port" ] && echo -e " 端口映射 ${rw_lv}${_my_port}${rw_bai}"
-	[ -n "$_my_dbs" ] && echo -e " 数据库 ${rw_lv}${_my_dbs}${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  MySQL 管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 状态 ${_my_stat}  v${_my_ver:-?}  镜像 ${rw_lv}${_my_img:-?}${rw_lv}"
+	[ -n "$_my_port" ] && echo -e " 端口映射 ${rw_lv}${_my_port}${rw_lv}"
+	[ -n "$_my_dbs" ] && echo -e " 数据库 ${rw_lv}${_my_dbs}${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}──── 服务${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  安装MySQL           ${rw_huang}2${rw_bai}  启动"
-	echo -e " ${rw_huang}3${rw_bai}  停止                ${rw_huang}4${rw_bai}  重启"
+	echo -e " ${rw_cheng}──── 服务${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  安装MySQL           ${rw_huang}2${rw_lv}  启动"
+	echo -e " ${rw_huang}3${rw_lv}  停止                ${rw_huang}4${rw_lv}  重启"
 	echo ""
-	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
-	echo -e " ${rw_huang}5${rw_bai}  更新MySQL           ${rw_huang}6${rw_bai}  切换MySQL版本"
+	echo -e " ${rw_cheng}──── 版本管理${rw_lv}"
+	echo -e " ${rw_huang}5${rw_lv}  更新MySQL           ${rw_huang}6${rw_lv}  切换MySQL版本"
 	echo ""
-	echo -e " ${rw_cheng}──── 数据${rw_bai}"
-	echo -e " ${rw_huang}7${rw_bai}  查看连接信息        ${rw_huang}8${rw_bai}  查看数据库列表"
+	echo -e " ${rw_cheng}──── 数据${rw_lv}"
+	echo -e " ${rw_huang}7${rw_lv}  查看连接信息        ${rw_huang}8${rw_lv}  查看数据库列表"
 	echo ""
-	echo -e " ${rw_cheng}──── 卸载${rw_bai}"
-	echo -e " ${rw_huang}9${rw_bai}  卸载MySQL"
+	echo -e " ${rw_cheng}──── 卸载${rw_lv}"
+	echo -e " ${rw_huang}9${rw_lv}  卸载MySQL"
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _my_choice
 
 	case $_my_choice in
 		1)
 			send_stats "安装MySQL"
 			root_use
-			echo -e "${rw_huang}正在安装MySQL...${rw_bai}"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_huang}正在安装MySQL...${rw_lv}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			install_dependency
 			install_docker
 			install_ldnmp_conf
@@ -9146,55 +9174,55 @@ while true; do
 			local _ins_user=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
 			local _ins_user_pwd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
 			echo ""
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-			echo -e "${rw_lv}MySQL 安装完成！${rw_bai}"
-			[ -n "$_ins_ver" ] && echo -e "  版本:        ${rw_huang}v${_ins_ver}${rw_bai}"
-			[ -n "$_ins_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_ins_root_pwd}${rw_bai}"
-			[ -n "$_ins_user" ] && echo -e "  用户名:      ${rw_huang}${_ins_user}${rw_bai}"
-			[ -n "$_ins_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_ins_user_pwd}${rw_bai}"
-			echo -e "  容器名:      ${rw_huang}mysql${rw_bai}"
-			echo -e "  数据目录:    ${rw_huang}/home/web/mysql${rw_bai}"
-			echo -e "  管理命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_bai}"
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+			echo -e "${rw_lv}MySQL 安装完成！${rw_lv}"
+			[ -n "$_ins_ver" ] && echo -e "  版本:        ${rw_huang}v${_ins_ver}${rw_lv}"
+			[ -n "$_ins_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_ins_root_pwd}${rw_lv}"
+			[ -n "$_ins_user" ] && echo -e "  用户名:      ${rw_huang}${_ins_user}${rw_lv}"
+			[ -n "$_ins_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_ins_user_pwd}${rw_lv}"
+			echo -e "  容器名:      ${rw_huang}mysql${rw_lv}"
+			echo -e "  数据目录:    ${rw_huang}/home/web/mysql${rw_lv}"
+			echo -e "  管理命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_lv}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			read -e -p "按回车返回菜单: "
 			;;
 		2)
 			send_stats "启动MySQL"
 			if docker inspect mysql &>/dev/null 2>&1; then
-				docker start mysql && echo -e "${rw_lv}MySQL 已启动${rw_bai}" || echo -e "${rw_hong}MySQL 启动失败${rw_bai}"
+				docker start mysql && echo -e "${rw_lv}MySQL 已启动${rw_lv}" || echo -e "${rw_hong}MySQL 启动失败${rw_lv}"
 			elif docker inspect mariadb &>/dev/null 2>&1; then
-				docker start mariadb && echo -e "${rw_lv}MariaDB 已启动${rw_bai}" || echo -e "${rw_hong}MariaDB 启动失败${rw_bai}"
+				docker start mariadb && echo -e "${rw_lv}MariaDB 已启动${rw_lv}" || echo -e "${rw_hong}MariaDB 启动失败${rw_lv}"
 			else
-				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_bai}"
+				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_lv}"
 			fi
 			;;
 		3)
 			send_stats "停止MySQL"
 			if docker inspect mysql &>/dev/null 2>&1; then
-				docker stop mysql && echo -e "${rw_lv}MySQL 已停止${rw_bai}"
+				docker stop mysql && echo -e "${rw_lv}MySQL 已停止${rw_lv}"
 			elif docker inspect mariadb &>/dev/null 2>&1; then
-				docker stop mariadb && echo -e "${rw_lv}MariaDB 已停止${rw_bai}"
+				docker stop mariadb && echo -e "${rw_lv}MariaDB 已停止${rw_lv}"
 			else
-				echo -e "${rw_hong}MySQL 容器不存在${rw_bai}"
+				echo -e "${rw_hong}MySQL 容器不存在${rw_lv}"
 			fi
 			;;
 		4)
 			send_stats "重启MySQL"
 			if docker inspect mysql &>/dev/null 2>&1; then
-				docker restart mysql && echo -e "${rw_lv}MySQL 已重启${rw_bai}"
+				docker restart mysql && echo -e "${rw_lv}MySQL 已重启${rw_lv}"
 			elif docker inspect mariadb &>/dev/null 2>&1; then
-				docker restart mariadb && echo -e "${rw_lv}MariaDB 已重启${rw_bai}"
+				docker restart mariadb && echo -e "${rw_lv}MariaDB 已重启${rw_lv}"
 			else
-				echo -e "${rw_hong}MySQL 容器不存在${rw_bai}"
+				echo -e "${rw_hong}MySQL 容器不存在${rw_lv}"
 			fi
 			;;
 		5)
 			send_stats "更新MySQL"
 			root_use
 			if ! docker inspect mysql &>/dev/null 2>&1 && ! docker inspect mariadb &>/dev/null 2>&1; then
-				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_bai}"
+				echo -e "${rw_hong}MySQL 容器不存在，请先安装${rw_lv}"
 			else
-				echo -e "${rw_huang}正在更新MySQL...${rw_bai}"
+				echo -e "${rw_huang}正在更新MySQL...${rw_lv}"
 				cd /home/web/
 				local _my_container="mysql"
 				docker inspect mysql &>/dev/null 2>&1 || _my_container="mariadb"
@@ -9209,22 +9237,22 @@ while true; do
 				rm -rf /home/custom_mysql_config.cnf
 				docker restart $_my_container 2>/dev/null
 				local _new_ver=$(docker exec $_my_container mysql -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
-				echo -e "${rw_lv}MySQL 更新完成！${rw_bai}"
-				[ -n "$_new_ver" ] && echo -e "当前版本: ${rw_huang}v${_new_ver}${rw_bai}"
+				echo -e "${rw_lv}MySQL 更新完成！${rw_lv}"
+				[ -n "$_new_ver" ] && echo -e "当前版本: ${rw_huang}v${_new_ver}${rw_lv}"
 			fi
 			;;
 		6)
 			send_stats "切换MySQL版本"
 			root_use
 			if [ ! -f /home/web/docker-compose.yml ]; then
-				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_bai}"
+				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_lv}"
 			else
-				echo -e "${rw_huang}可选MySQL版本:${rw_bai}"
-				echo -e "  ${rw_huang}1${rw_bai}  MySQL 5.7"
-				echo -e "  ${rw_huang}2${rw_bai}  MySQL 8.0"
-				echo -e "  ${rw_huang}3${rw_bai}  MySQL 8.4"
-				echo -e "  ${rw_huang}4${rw_bai}  MariaDB 10.11"
-				echo -e "  ${rw_huang}5${rw_bai}  MariaDB 11.4"
+				echo -e "${rw_huang}可选MySQL版本:${rw_lv}"
+				echo -e "  ${rw_huang}1${rw_lv}  MySQL 5.7"
+				echo -e "  ${rw_huang}2${rw_lv}  MySQL 8.0"
+				echo -e "  ${rw_huang}3${rw_lv}  MySQL 8.4"
+				echo -e "  ${rw_huang}4${rw_lv}  MariaDB 10.11"
+				echo -e "  ${rw_huang}5${rw_lv}  MariaDB 11.4"
 				echo ""
 				read -e -p "请选择版本: " _my_ver_choice
 				local _new_img=""
@@ -9234,9 +9262,9 @@ while true; do
 					3) _new_img="mysql:8.4" ;;
 					4) _new_img="mariadb:10.11" ;;
 					5) _new_img="mariadb:11.4" ;;
-					*) echo -e "${rw_hong}无效选择${rw_bai}" ; continue ;;
+					*) echo -e "${rw_hong}无效选择${rw_lv}" ; continue ;;
 				esac
-				echo -e "${rw_huang}正在切换到 ${_new_img}...${rw_bai}"
+				echo -e "${rw_huang}正在切换到 ${_new_img}...${rw_lv}"
 				# 停止并移除旧容器
 				docker stop mysql mariadb 2>/dev/null
 				docker rm mysql mariadb 2>/dev/null
@@ -9256,26 +9284,26 @@ while true; do
 				docker cp /home/custom_mysql_config.cnf ${_my_new_name}:/etc/mysql/conf.d/ 2>/dev/null
 				rm -rf /home/custom_mysql_config.cnf
 				docker restart $_my_new_name 2>/dev/null
-				echo -e "${rw_lv}MySQL 版本切换完成！${rw_bai}"
-				echo -e "当前镜像: ${rw_huang}${_new_img}${rw_bai}"
+				echo -e "${rw_lv}MySQL 版本切换完成！${rw_lv}"
+				echo -e "当前镜像: ${rw_huang}${_new_img}${rw_lv}"
 			fi
 			;;
 		7)
 			send_stats "查看MySQL连接信息"
 			if [ ! -f /home/web/docker-compose.yml ]; then
-				echo -e "${rw_hong}未找到 docker-compose.yml${rw_bai}"
+				echo -e "${rw_hong}未找到 docker-compose.yml${rw_lv}"
 			else
 				local _info_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
 				local _info_user=$(sed -n -E 's/.*MYSQL_USER:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
 				local _info_user_pwd=$(sed -n -E 's/.*MYSQL_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-				[ -n "$_info_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_info_root_pwd}${rw_bai}"
-				[ -n "$_info_user" ] && echo -e "  用户名:      ${rw_huang}${_info_user}${rw_bai}"
-				[ -n "$_info_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_info_user_pwd}${rw_bai}"
-				echo -e "  主机:        ${rw_huang}127.0.0.1${rw_bai}"
-				echo -e "  端口:        ${rw_huang}3306${rw_bai}"
-				echo -e "  连接命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_bai}"
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+				[ -n "$_info_root_pwd" ] && echo -e "  Root密码:    ${rw_huang}${_info_root_pwd}${rw_lv}"
+				[ -n "$_info_user" ] && echo -e "  用户名:      ${rw_huang}${_info_user}${rw_lv}"
+				[ -n "$_info_user_pwd" ] && echo -e "  用户密码:    ${rw_huang}${_info_user_pwd}${rw_lv}"
+				echo -e "  主机:        ${rw_huang}127.0.0.1${rw_lv}"
+				echo -e "  端口:        ${rw_huang}3306${rw_lv}"
+				echo -e "  连接命令:    ${rw_huang}docker exec -it mysql mysql -u root -p${rw_lv}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			fi
 			;;
 		8)
@@ -9283,38 +9311,38 @@ while true; do
 			if docker inspect mysql &>/dev/null 2>&1; then
 				local _list_root_pwd=$(sed -n -E 's/.*MYSQL_ROOT_PASSWORD:[[:space:]]*(.*)/\1/p' /home/web/docker-compose.yml | tr -d '[:space:]' | head -1)
 				if [ -n "$_list_root_pwd" ]; then
-					echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+					echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 					docker exec mysql mysql -u root -p"$_list_root_pwd" -e "SHOW DATABASES;" 2>/dev/null
-					echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+					echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 				else
-					echo -e "${rw_hong}无法读取Root密码${rw_bai}"
+					echo -e "${rw_hong}无法读取Root密码${rw_lv}"
 				fi
 			else
-				echo -e "${rw_hong}MySQL 容器不存在或未运行${rw_bai}"
+				echo -e "${rw_hong}MySQL 容器不存在或未运行${rw_lv}"
 			fi
 			;;
 		9)
 			send_stats "卸载MySQL"
 			root_use
-			echo -e "${rw_hong}⚠️  卸载将删除MySQL容器和数据，此操作不可逆！${rw_bai}"
+			echo -e "${rw_hong}⚠️  卸载将删除MySQL容器和数据，此操作不可逆！${rw_lv}"
 			read -e -p "确认卸载MySQL？输入 YES 继续: " _uninstall_confirm
 			if [ "$_uninstall_confirm" = "YES" ]; then
-				echo -e "${rw_huang}正在卸载MySQL...${rw_bai}"
+				echo -e "${rw_huang}正在卸载MySQL...${rw_lv}"
 				docker stop mysql mariadb 2>/dev/null
 				docker rm -f mysql mariadb 2>/dev/null
 				docker images --filter=reference="*mysql*" -q | xargs docker rmi 2>/dev/null
 				docker images --filter=reference="*mariadb*" -q | xargs docker rmi 2>/dev/null
-				echo -e "${rw_huang}注意: 数据目录 /home/web/mysql 已保留${rw_bai}"
-				echo -e "${rw_lv}MySQL 已卸载${rw_bai}"
+				echo -e "${rw_huang}注意: 数据目录 /home/web/mysql 已保留${rw_lv}"
+				echo -e "${rw_lv}MySQL 已卸载${rw_lv}"
 			else
-				echo -e "${rw_huang}已取消卸载${rw_bai}"
+				echo -e "${rw_huang}已取消卸载${rw_lv}"
 			fi
 			;;
 		0)
 			break
 			;;
 		*)
-			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
 	break_end
@@ -9327,57 +9355,57 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _php_stat="${rw_hong}未安装${rw_bai}" _php_ver="" _php74_ver="" _php_img=""
+	local _php_stat="${rw_hong}未安装${rw_lv}" _php_ver="" _php74_ver="" _php_img=""
 	local _php_modules=""
 
 	if docker inspect php &>/dev/null 2>&1; then
 		if docker inspect -f '{{.State.Running}}' php 2>/dev/null | grep -q true; then
-			_php_stat="${rw_lv}运行中${rw_bai}"
+			_php_stat="${rw_lv}运行中${rw_lv}"
 		else
-			_php_stat="${rw_huang}已停止${rw_bai}"
+			_php_stat="${rw_huang}已停止${rw_lv}"
 		fi
 		_php_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
 		_php_img=$(docker inspect --format='{{.Config.Image}}' php 2>/dev/null)
 		_php_modules=$(docker exec php php -m 2>/dev/null | head -20 | tr '\n' ' ' | sed 's/ *$//')
 	fi
-	local _php74_stat="${rw_hong}未安装${rw_bai}"
+	local _php74_stat="${rw_hong}未安装${rw_lv}"
 	if docker inspect php74 &>/dev/null 2>&1; then
 		_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
 		if docker inspect -f '{{.State.Running}}' php74 2>/dev/null | grep -q true; then
-			_php74_stat="${rw_lv}运行中${rw_bai}"
+			_php74_stat="${rw_lv}运行中${rw_lv}"
 		else
-			_php74_stat="${rw_huang}已停止${rw_bai}"
+			_php74_stat="${rw_huang}已停止${rw_lv}"
 		fi
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  PHP 管理  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " PHP ${_php_stat}  v${_php_ver:-?}  镜像 ${rw_lv}${_php_img:-?}${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  PHP 管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " PHP ${_php_stat}  v${_php_ver:-?}  镜像 ${rw_lv}${_php_img:-?}${rw_lv}"
 	[ -n "$_php74_ver" ] && echo -e " PHP74 ${_php74_stat}  v${_php74_ver}"
 	echo ""
-	echo -e " ${rw_cheng}──── 服务${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  安装PHP             ${rw_huang}2${rw_bai}  启动"
-	echo -e " ${rw_huang}3${rw_bai}  停止                ${rw_huang}4${rw_bai}  重启"
+	echo -e " ${rw_cheng}──── 服务${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  安装PHP             ${rw_huang}2${rw_lv}  启动"
+	echo -e " ${rw_huang}3${rw_lv}  停止                ${rw_huang}4${rw_lv}  重启"
 	echo ""
-	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
-	echo -e " ${rw_huang}5${rw_bai}  更新PHP             ${rw_huang}6${rw_bai}  切换PHP版本"
+	echo -e " ${rw_cheng}──── 版本管理${rw_lv}"
+	echo -e " ${rw_huang}5${rw_lv}  更新PHP             ${rw_huang}6${rw_lv}  切换PHP版本"
 	echo ""
-	echo -e " ${rw_cheng}──── 信息${rw_bai}"
-	echo -e " ${rw_huang}7${rw_bai}  查看已安装模块      ${rw_huang}8${rw_bai}  查看php.ini配置"
+	echo -e " ${rw_cheng}──── 信息${rw_lv}"
+	echo -e " ${rw_huang}7${rw_lv}  查看已安装模块      ${rw_huang}8${rw_lv}  查看php.ini配置"
 	echo ""
-	echo -e " ${rw_cheng}──── 卸载${rw_bai}"
-	echo -e " ${rw_huang}9${rw_bai}  卸载PHP"
+	echo -e " ${rw_cheng}──── 卸载${rw_lv}"
+	echo -e " ${rw_huang}9${rw_lv}  卸载PHP"
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _php_choice
 
 	case $_php_choice in
 		1)
 			send_stats "安装PHP"
 			root_use
-			echo -e "${rw_huang}正在安装PHP...${rw_bai}"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_huang}正在安装PHP...${rw_lv}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			install_dependency
 			install_docker
 			install_ldnmp_conf
@@ -9392,49 +9420,49 @@ while true; do
 			local _ins_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
 			local _ins_php_img=$(docker inspect --format='{{.Config.Image}}' php 2>/dev/null)
 			echo ""
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-			echo -e "${rw_lv}PHP 安装完成！${rw_bai}"
-			[ -n "$_ins_php_ver" ] && echo -e "  PHP 版本:      ${rw_huang}v${_ins_php_ver}${rw_bai}"
-			[ -n "$_ins_php74_ver" ] && echo -e "  PHP74 版本:    ${rw_huang}v${_ins_php74_ver}${rw_bai}"
-			[ -n "$_ins_php_img" ] && echo -e "  镜像:          ${rw_huang}${_ins_php_img}${rw_bai}"
-			echo -e "  容器名:        ${rw_huang}php / php74${rw_bai}"
-			echo -e "  网站根目录:    ${rw_huang}/home/web/html${rw_bai}"
-			echo -e "  fpm配置:       ${rw_huang}/usr/local/etc/php-fpm.d/www.conf${rw_bai}"
-			echo -e "  管理命令:      ${rw_huang}docker exec -it php bash${rw_bai}"
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+			echo -e "${rw_lv}PHP 安装完成！${rw_lv}"
+			[ -n "$_ins_php_ver" ] && echo -e "  PHP 版本:      ${rw_huang}v${_ins_php_ver}${rw_lv}"
+			[ -n "$_ins_php74_ver" ] && echo -e "  PHP74 版本:    ${rw_huang}v${_ins_php74_ver}${rw_lv}"
+			[ -n "$_ins_php_img" ] && echo -e "  镜像:          ${rw_huang}${_ins_php_img}${rw_lv}"
+			echo -e "  容器名:        ${rw_huang}php / php74${rw_lv}"
+			echo -e "  网站根目录:    ${rw_huang}/home/web/html${rw_lv}"
+			echo -e "  fpm配置:       ${rw_huang}/usr/local/etc/php-fpm.d/www.conf${rw_lv}"
+			echo -e "  管理命令:      ${rw_huang}docker exec -it php bash${rw_lv}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			read -e -p "按回车返回菜单: "
 			;;
 		2)
 			send_stats "启动PHP"
 			if docker inspect php &>/dev/null 2>&1; then
-				docker start php php74 2>/dev/null && echo -e "${rw_lv}PHP 已启动${rw_bai}" || echo -e "${rw_hong}PHP 启动失败${rw_bai}"
+				docker start php php74 2>/dev/null && echo -e "${rw_lv}PHP 已启动${rw_lv}" || echo -e "${rw_hong}PHP 启动失败${rw_lv}"
 			else
-				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_lv}"
 			fi
 			;;
 		3)
 			send_stats "停止PHP"
 			if docker inspect php &>/dev/null 2>&1; then
-				docker stop php php74 2>/dev/null && echo -e "${rw_lv}PHP 已停止${rw_bai}"
+				docker stop php php74 2>/dev/null && echo -e "${rw_lv}PHP 已停止${rw_lv}"
 			else
-				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在${rw_lv}"
 			fi
 			;;
 		4)
 			send_stats "重启PHP"
 			if docker inspect php &>/dev/null 2>&1; then
-				docker restart php php74 2>/dev/null && echo -e "${rw_lv}PHP 已重启${rw_bai}"
+				docker restart php php74 2>/dev/null && echo -e "${rw_lv}PHP 已重启${rw_lv}"
 			else
-				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在${rw_lv}"
 			fi
 			;;
 		5)
 			send_stats "更新PHP"
 			root_use
 			if ! docker inspect php &>/dev/null 2>&1; then
-				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在，请先安装${rw_lv}"
 			else
-				echo -e "${rw_huang}正在更新PHP...${rw_bai}"
+				echo -e "${rw_huang}正在更新PHP...${rw_lv}"
 				cd /home/web/
 				docker stop php php74 2>/dev/null
 				docker rm php php74 2>/dev/null
@@ -9446,23 +9474,23 @@ while true; do
 				docker restart php php74 2>/dev/null
 				local _new_php_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
 				local _new_php74_ver=$(docker exec php74 php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
-				echo -e "${rw_lv}PHP 更新完成！${rw_bai}"
-				[ -n "$_new_php_ver" ] && echo -e "PHP 版本: ${rw_huang}v${_new_php_ver}${rw_bai}"
-				[ -n "$_new_php74_ver" ] && echo -e "PHP74 版本: ${rw_huang}v${_new_php74_ver}${rw_bai}"
+				echo -e "${rw_lv}PHP 更新完成！${rw_lv}"
+				[ -n "$_new_php_ver" ] && echo -e "PHP 版本: ${rw_huang}v${_new_php_ver}${rw_lv}"
+				[ -n "$_new_php74_ver" ] && echo -e "PHP74 版本: ${rw_huang}v${_new_php74_ver}${rw_lv}"
 			fi
 			;;
 		6)
 			send_stats "切换PHP版本"
 			root_use
 			if [ ! -f /home/web/docker-compose.yml ]; then
-				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_bai}"
+				echo -e "${rw_hong}未找到 docker-compose.yml，请先安装LDNMP环境${rw_lv}"
 			else
-				echo -e "${rw_huang}可选PHP版本:${rw_bai}"
-				echo -e "  ${rw_huang}1${rw_bai}  PHP 7.4"
-				echo -e "  ${rw_huang}2${rw_bai}  PHP 8.0"
-				echo -e "  ${rw_huang}3${rw_bai}  PHP 8.1"
-				echo -e "  ${rw_huang}4${rw_bai}  PHP 8.2"
-				echo -e "  ${rw_huang}5${rw_bai}  PHP 8.3"
+				echo -e "${rw_huang}可选PHP版本:${rw_lv}"
+				echo -e "  ${rw_huang}1${rw_lv}  PHP 7.4"
+				echo -e "  ${rw_huang}2${rw_lv}  PHP 8.0"
+				echo -e "  ${rw_huang}3${rw_lv}  PHP 8.1"
+				echo -e "  ${rw_huang}4${rw_lv}  PHP 8.2"
+				echo -e "  ${rw_huang}5${rw_lv}  PHP 8.3"
 				echo ""
 				read -e -p "请选择PHP主版本: " _php_ver_choice
 				local _new_php_img=""
@@ -9472,9 +9500,9 @@ while true; do
 					3) _new_php_img="php:8.1-fpm" ;;
 					4) _new_php_img="php:8.2-fpm" ;;
 					5) _new_php_img="php:8.3-fpm" ;;
-					*) echo -e "${rw_hong}无效选择${rw_bai}" ; continue ;;
+					*) echo -e "${rw_hong}无效选择${rw_lv}" ; continue ;;
 				esac
-				echo -e "${rw_huang}正在切换PHP到 ${_new_php_img}...${rw_bai}"
+				echo -e "${rw_huang}正在切换PHP到 ${_new_php_img}...${rw_lv}"
 				docker stop php php74 2>/dev/null
 				docker rm php php74 2>/dev/null
 				# 修改 docker-compose.yml 中的PHP镜像
@@ -9485,50 +9513,50 @@ while true; do
 				fix_phpfpm_conf php74 2>/dev/null
 				docker restart php php74 2>/dev/null
 				local _switched_ver=$(docker exec php php -v 2>/dev/null | sed -n -E 's/.*PHP ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -1)
-				echo -e "${rw_lv}PHP 版本切换完成！${rw_bai}"
-				[ -n "$_switched_ver" ] && echo -e "当前版本: ${rw_huang}v${_switched_ver}${rw_bai}"
+				echo -e "${rw_lv}PHP 版本切换完成！${rw_lv}"
+				[ -n "$_switched_ver" ] && echo -e "当前版本: ${rw_huang}v${_switched_ver}${rw_lv}"
 			fi
 			;;
 		7)
 			send_stats "查看PHP模块"
 			if docker inspect php &>/dev/null 2>&1; then
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 				docker exec php php -m 2>/dev/null | sort
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			else
-				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在${rw_lv}"
 			fi
 			;;
 		8)
 			send_stats "查看php.ini配置"
 			if docker inspect php &>/dev/null 2>&1; then
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 				docker exec php php -i 2>/dev/null | grep -E "^(php.ini|Configuration File|Loaded Configuration|memory_limit|max_execution_time|upload_max_filesize|post_max_size|display_errors)" | head -20
-				echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+				echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			else
-				echo -e "${rw_hong}PHP 容器不存在${rw_bai}"
+				echo -e "${rw_hong}PHP 容器不存在${rw_lv}"
 			fi
 			;;
 		9)
 			send_stats "卸载PHP"
 			root_use
-			echo -e "${rw_hong}⚠️  卸载将删除PHP容器，此操作不可逆！${rw_bai}"
+			echo -e "${rw_hong}⚠️  卸载将删除PHP容器，此操作不可逆！${rw_lv}"
 			read -e -p "确认卸载PHP？输入 YES 继续: " _php_uninstall_confirm
 			if [ "$_php_uninstall_confirm" = "YES" ]; then
-				echo -e "${rw_huang}正在卸载PHP...${rw_bai}"
+				echo -e "${rw_huang}正在卸载PHP...${rw_lv}"
 				docker stop php php74 2>/dev/null
 				docker rm -f php php74 2>/dev/null
 				docker images --filter=reference="*php*fpm*" -q | xargs docker rmi 2>/dev/null
-				echo -e "${rw_lv}PHP 已卸载${rw_bai}"
+				echo -e "${rw_lv}PHP 已卸载${rw_lv}"
 			else
-				echo -e "${rw_huang}已取消卸载${rw_bai}"
+				echo -e "${rw_huang}已取消卸载${rw_lv}"
 			fi
 			;;
 		0)
 			break
 			;;
 		*)
-			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
 	break_end
@@ -9538,8 +9566,8 @@ done
 ldnmp_proxy_ip_port() {
   clear
   send_stats "站点反向代理+IP+端口"
-  echo -e "${rw_huang}站点反向代理+IP+端口${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}站点反向代理+IP+端口${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例：域名 blog.example.com，反向代理到后端 192.168.1.10:8080"
   echo ""
   read -e -p "请输入域名或IP（回车默认本机IP）: " proxy_domain
@@ -9567,8 +9595,8 @@ PROXYEOF
   sed -i "s/DOMAIN_PLACEHOLDER/${proxy_domain}/g" /home/web/conf.d/${proxy_domain}.conf
   sed -i "s/TARGET_IP:TARGET_PORT/${target_ip}:${target_port}/g" /home/web/conf.d/${proxy_domain}.conf
   nginx_upgrade
-  echo -e "${rw_lv}反向代理站点 ${proxy_domain} 创建成功！${rw_bai}"
-  echo -e "代理地址: ${rw_huang}http://${proxy_domain} -> http://${target_ip}:${target_port}${rw_bai}"
+  echo -e "${rw_lv}反向代理站点 ${proxy_domain} 创建成功！${rw_lv}"
+  echo -e "代理地址: ${rw_huang}http://${proxy_domain} -> http://${target_ip}:${target_port}${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
@@ -9576,25 +9604,25 @@ ldnmp_site_data_manage() {
   while true; do
     clear
     send_stats "站点数据管理"
-    echo -e "${rw_huang}站点数据管理${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}站点数据管理${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     echo ""
-    echo -e "${rw_huang}请选择操作：${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}查看所有站点"
-    echo -e "${rw_huang}2.   ${rw_bai}查看站点配置"
-    echo -e "${rw_huang}3.   ${rw_bai}删除站点"
-    echo -e "${rw_huang}4.   ${rw_bai}备份站点数据"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}返回上级菜单"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}查看所有站点"
+    echo -e "${rw_huang}2.   ${rw_lv}查看站点配置"
+    echo -e "${rw_huang}3.   ${rw_lv}删除站点"
+    echo -e "${rw_huang}4.   ${rw_lv}备份站点数据"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
         clear
-        echo -e "${rw_huang}所有站点列表：${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}所有站点列表：${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -d /home/web/conf.d ]; then
           for conf in /home/web/conf.d/*.conf; do
             [ -f "$conf" ] || continue
@@ -9612,13 +9640,13 @@ ldnmp_site_data_manage() {
         clear
         read -e -p "请输入要查看的站点域名: " view_domain
         if [ -f "/home/web/conf.d/${view_domain}.conf" ]; then
-          echo -e "${rw_huang}${view_domain} 配置文件内容：${rw_bai}"
-          echo -e "${rw_cheng}------------------------${rw_bai}"
+          echo -e "${rw_huang}${view_domain} 配置文件内容：${rw_lv}"
+          echo -e "${rw_cheng}------------------------${rw_lv}"
           cat "/home/web/conf.d/${view_domain}.conf"
           echo ""
           read -e -p "按回车继续..."
         else
-          echo -e "${rw_hong}站点配置文件不存在${rw_bai}"
+          echo -e "${rw_hong}站点配置文件不存在${rw_lv}"
           sleep 1
         fi
         ;;
@@ -9631,7 +9659,7 @@ ldnmp_site_data_manage() {
         read -e -p "请输入要备份的站点域名（回车备份所有站点）: " backup_domain
         backup_domain=${backup_domain:-ALL}
         backup_path="/home/web_backup_$(date +%Y%m%d_%H%M%S)"
-        echo -e "${rw_huang}正在备份到 ${backup_path} ...${rw_bai}"
+        echo -e "${rw_huang}正在备份到 ${backup_path} ...${rw_lv}"
         if [ "$backup_domain" = "ALL" ]; then
           cp -r /home/web "$backup_path" 2>/dev/null
         else
@@ -9640,9 +9668,9 @@ ldnmp_site_data_manage() {
           cp -r "/home/web/html/${backup_domain}" "$backup_path/html/" 2>/dev/null
         fi
         if [ $? -eq 0 ]; then
-          echo -e "${rw_lv}备份完成：$backup_path${rw_bai}"
+          echo -e "${rw_lv}备份完成：$backup_path${rw_lv}"
         else
-          echo -e "${rw_hong}备份失败${rw_bai}"
+          echo -e "${rw_hong}备份失败${rw_lv}"
         fi
         sleep 1
         ;;
@@ -9657,51 +9685,51 @@ ldnmp_scheduled_backup() {
   while true; do
     clear
     send_stats "定时远程备份"
-    echo -e "${rw_huang}定时远程备份${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}定时远程备份${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     echo ""
-    echo -e "${rw_huang}请选择操作：${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}配置rclone远程存储"
-    echo -e "${rw_huang}2.   ${rw_bai}设置定时备份任务"
-    echo -e "${rw_huang}3.   ${rw_bai}查看当前备份任务"
-    echo -e "${rw_huang}4.   ${rw_bai}立即执行一次备份"
-    echo -e "${rw_huang}5.   ${rw_bai}删除备份任务"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}返回上级菜单"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}配置rclone远程存储"
+    echo -e "${rw_huang}2.   ${rw_lv}设置定时备份任务"
+    echo -e "${rw_huang}3.   ${rw_lv}查看当前备份任务"
+    echo -e "${rw_huang}4.   ${rw_lv}立即执行一次备份"
+    echo -e "${rw_huang}5.   ${rw_lv}删除备份任务"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
         clear
-        echo -e "${rw_huang}配置rclone远程存储${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}配置rclone远程存储${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if ! command -v rclone &>/dev/null; then
           echo "正在安装rclone..."
           curl -sSL https://rclone.org/install.sh | bash 2>/dev/null || echo "rclone安装失败，请手动安装"
         fi
-        echo -e "${rw_huang}请按提示配置远程存储，配置完成后按回车继续${rw_bai}"
+        echo -e "${rw_huang}请按提示配置远程存储，配置完成后按回车继续${rw_lv}"
         rclone config
         ;;
       2)
         clear
-        echo -e "${rw_huang}设置定时备份任务${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}设置定时备份任务${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         read -e -p "请输入rclone远程路径（如 gdrive:backup）: " remote_path
         read -e -p "请输入备份频率Cron表达式（回车默认每天2点: 0 2 * * *）: " cron_expr
         cron_expr=${cron_expr:-"0 2 * * *"}
         cron_job="$cron_expr rclone sync /home/web $remote_path >> /var/log/ldnmp_backup.log 2>&1"
         (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
-        echo -e "${rw_lv}备份任务已设置${rw_bai}"
+        echo -e "${rw_lv}备份任务已设置${rw_lv}"
         echo "  Cron: $cron_expr"
         echo "  远程: $remote_path"
         sleep 1
         ;;
       3)
         clear
-        echo -e "${rw_huang}当前备份任务：${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}当前备份任务：${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         crontab -l 2>/dev/null | grep "rclone.*sync.*backup" || echo "  暂无备份任务"
         echo ""
         read -e -p "按回车继续..."
@@ -9710,16 +9738,16 @@ ldnmp_scheduled_backup() {
         clear
         read -e -p "请输入rclone远程路径（如 gdrive:backup）: " remote_path
         if [ -n "$remote_path" ]; then
-          echo -e "${rw_huang}正在执行备份...${rw_bai}"
+          echo -e "${rw_huang}正在执行备份...${rw_lv}"
           rclone sync /home/web "$remote_path" -P 2>&1 | tail -5
-          echo -e "${rw_lv}备份执行完毕${rw_bai}"
+          echo -e "${rw_lv}备份执行完毕${rw_lv}"
         fi
         sleep 1
         ;;
       5)
         clear
-        echo -e "${rw_huang}删除备份任务${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}删除备份任务${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         crontab -l 2>/dev/null | grep -n "rclone.*sync.*backup" || echo "  暂无备份任务"
         read -e -p "确认删除所有备份任务？(Y/N，回车默认N): " confirm
         confirm=${confirm:-N}
@@ -9740,25 +9768,25 @@ ldnmp_protect_env() {
   while true; do
     clear
     send_stats "防护LDNMP环境"
-    echo -e "${rw_huang}防护LDNMP环境${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}防护LDNMP环境${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     echo ""
-    echo -e "${rw_huang}请选择操作：${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}安装fail2ban登录防护"
-    echo -e "${rw_huang}2.   ${rw_bai}配置防火墙（开放80/443端口）"
-    echo -e "${rw_huang}3.   ${rw_bai}隐藏Nginx版本号"
-    echo -e "${rw_huang}4.   ${rw_bai}禁用不安全HTTP方法"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}返回上级菜单"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}安装fail2ban登录防护"
+    echo -e "${rw_huang}2.   ${rw_lv}配置防火墙（开放80/443端口）"
+    echo -e "${rw_huang}3.   ${rw_lv}隐藏Nginx版本号"
+    echo -e "${rw_huang}4.   ${rw_lv}禁用不安全HTTP方法"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
         clear
-        echo -e "${rw_huang}安装fail2ban登录防护${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}安装fail2ban登录防护${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if command -v dnf &>/dev/null; then
           dnf install -y fail2ban 2>/dev/null
         elif command -v yum &>/dev/null; then
@@ -9768,13 +9796,13 @@ ldnmp_protect_env() {
         fi
         systemctl enable fail2ban 2>/dev/null
         systemctl start fail2ban 2>/dev/null
-        echo -e "${rw_lv}fail2ban安装完成${rw_bai}"
+        echo -e "${rw_lv}fail2ban安装完成${rw_lv}"
         sleep 1
         ;;
       2)
         clear
-        echo -e "${rw_huang}配置防火墙（开放80/443端口）${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}配置防火墙（开放80/443端口）${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if command -v firewall-cmd &>/dev/null; then
           firewall-cmd --permanent --add-port=80/tcp 2>/dev/null
           firewall-cmd --permanent --add-port=443/tcp 2>/dev/null
@@ -9795,13 +9823,13 @@ ldnmp_protect_env() {
         ;;
       3)
         clear
-        echo -e "${rw_huang}隐藏Nginx版本号${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}隐藏Nginx版本号${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -f /home/web/nginx.conf ]; then
           sed -i 's/^server_tokens .*/server_tokens off;/' /home/web/nginx.conf 2>/dev/null
           sed -i 's/^server_names_hash_bucket_size.*/server_names_hash_bucket_size 512;/' /home/web/nginx.conf 2>/dev/null
           docker exec nginx nginx -s reload 2>/dev/null
-          echo -e "${rw_lv}已隐藏Nginx版本号${rw_bai}"
+          echo -e "${rw_lv}已隐藏Nginx版本号${rw_lv}"
         else
           echo "Nginx配置文件不存在"
         fi
@@ -9809,14 +9837,14 @@ ldnmp_protect_env() {
         ;;
       4)
         clear
-        echo -e "${rw_huang}禁用不安全HTTP方法${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}禁用不安全HTTP方法${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -f /home/web/nginx.conf ]; then
           if ! grep -q "if (\$request_method !~" /home/web/nginx.conf; then
             sed -i '/http {/a\    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) { return 444; }' /home/web/nginx.conf
           fi
           docker exec nginx nginx -s reload 2>/dev/null
-          echo -e "${rw_lv}已禁用不安全HTTP方法${rw_bai}"
+          echo -e "${rw_lv}已禁用不安全HTTP方法${rw_lv}"
         else
           echo "Nginx配置文件不存在"
         fi
@@ -9832,18 +9860,18 @@ ldnmp_protect_env() {
 ldnmp_update_env() {
   clear
   send_stats "更新LDNMP环境"
-  echo -e "${rw_huang}更新LDNMP环境${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}更新LDNMP环境${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   if [ ! -f /home/web/docker-compose.yml ]; then
-    echo -e "${rw_hong}LDNMP环境未安装，请先安装${rw_bai}"
+    echo -e "${rw_hong}LDNMP环境未安装，请先安装${rw_lv}"
     sleep 1
     return
   fi
   cd /home/web
-  echo -e "${rw_huang}正在更新LDNMP环境...${rw_bai}"
+  echo -e "${rw_huang}正在更新LDNMP环境...${rw_lv}"
   docker compose pull 2>/dev/null
   docker compose up -d 2>/dev/null
-  echo -e "${rw_lv}LDNMP环境更新完成${rw_bai}"
+  echo -e "${rw_lv}LDNMP环境更新完成${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
@@ -9851,31 +9879,31 @@ ldnmp_optimize_env() {
   while true; do
     clear
     send_stats "优化LDNMP环境"
-    echo -e "${rw_huang}优化LDNMP环境${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}优化LDNMP环境${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     echo ""
-    echo -e "${rw_huang}请选择操作：${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}开启Gzip压缩"
-    echo -e "${rw_huang}2.   ${rw_bai}开启Brotli压缩"
-    echo -e "${rw_huang}3.   ${rw_bai}配置缓存策略"
-    echo -e "${rw_huang}4.   ${rw_bai}优化PHP配置"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}返回上级菜单"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}开启Gzip压缩"
+    echo -e "${rw_huang}2.   ${rw_lv}开启Brotli压缩"
+    echo -e "${rw_huang}3.   ${rw_lv}配置缓存策略"
+    echo -e "${rw_huang}4.   ${rw_lv}优化PHP配置"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
         clear
-        echo -e "${rw_huang}开启Gzip压缩${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}开启Gzip压缩${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -f /home/web/nginx.conf ]; then
           sed -i 's/# gzip on;/gzip on;/' /home/web/nginx.conf 2>/dev/null
           sed -i 's/# gzip_vary on;/gzip_vary on;/' /home/web/nginx.conf 2>/dev/null
           sed -i 's/# gzip_proxied any;/gzip_proxied any;/' /home/web/nginx.conf 2>/dev/null
           docker exec nginx nginx -s reload 2>/dev/null
-          echo -e "${rw_lv}已开启Gzip压缩${rw_bai}"
+          echo -e "${rw_lv}已开启Gzip压缩${rw_lv}"
         else
           echo "Nginx配置文件不存在"
         fi
@@ -9883,12 +9911,12 @@ ldnmp_optimize_env() {
         ;;
       2)
         clear
-        echo -e "${rw_huang}开启Brotli压缩${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}开启Brotli压缩${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -f /home/web/nginx.conf ]; then
           sed -i 's/# brotli on;/brotli on;/' /home/web/nginx.conf 2>/dev/null
           docker exec nginx nginx -s reload 2>/dev/null
-          echo -e "${rw_lv}已开启Brotli压缩${rw_bai}"
+          echo -e "${rw_lv}已开启Brotli压缩${rw_lv}"
         else
           echo "Nginx配置文件不存在"
         fi
@@ -9896,12 +9924,12 @@ ldnmp_optimize_env() {
         ;;
       3)
         clear
-        echo -e "${rw_huang}配置缓存策略${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}配置缓存策略${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -f /home/web/nginx.conf ]; then
           sed -i 's/# proxy_cache_path/proxy_cache_path/' /home/web/nginx.conf 2>/dev/null
           docker exec nginx nginx -s reload 2>/dev/null
-          echo -e "${rw_lv}已配置缓存策略${rw_bai}"
+          echo -e "${rw_lv}已配置缓存策略${rw_lv}"
         else
           echo "Nginx配置文件不存在"
         fi
@@ -9909,14 +9937,14 @@ ldnmp_optimize_env() {
         ;;
       4)
         clear
-        echo -e "${rw_huang}优化PHP配置${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}优化PHP配置${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if docker ps --filter "name=php" --filter "status=running" | grep -q php; then
           docker exec php sed -i 's/memory_limit = .*/memory_limit = 256M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null ||             docker exec php bash -c 'echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/zzz-custom.ini'
           docker exec php sed -i 's/upload_max_filesize = .*/upload_max_filesize = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
           docker exec php sed -i 's/post_max_size = .*/post_max_size = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
           docker exec php php-fpm 2>/dev/null
-          echo -e "${rw_lv}已优化PHP配置${rw_bai}"
+          echo -e "${rw_lv}已优化PHP配置${rw_lv}"
         else
           echo "PHP容器未运行"
         fi
@@ -9932,30 +9960,30 @@ ldnmp_optimize_env() {
 ldnmp_restore_full() {
   clear
   send_stats "还原全站数据"
-  echo -e "${rw_huang}还原全站数据${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
-  echo -e "${rw_hong}警告：这将覆盖当前 /home/web 数据！${rw_bai}"
+  echo -e "${rw_huang}还原全站数据${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
+  echo -e "${rw_hong}警告：这将覆盖当前 /home/web 数据！${rw_lv}"
   echo ""
   echo -e "可用的备份列表："
   ls -d /home/web_backup_* 2>/dev/null | head -10
   echo ""
   read -e -p "请输入要恢复的备份目录路径（如 /home/web_backup_20240101_120000）: " restore_path
   if [ -d "$restore_path" ]; then
-    read -e -p "$(echo -e "${rw_hong}确认恢复？(Y/N，回车默认N): ${rw_bai}")" confirm
+    read -e -p "$(echo -e "${rw_hong}确认恢复？(Y/N，回车默认N): ${rw_lv}")" confirm
     confirm=${confirm:-N}
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
       rm -rf /home/web 2>/dev/null
       cp -r "$restore_path" /home/web 2>/dev/null
       if [ $? -eq 0 ]; then
-        echo -e "${rw_lv}恢复完成！${rw_bai}"
+        echo -e "${rw_lv}恢复完成！${rw_lv}"
         echo -e "正在重启LDNMP环境..."
         cd /home/web && docker compose restart 2>/dev/null
       else
-        echo -e "${rw_hong}恢复失败${rw_bai}"
+        echo -e "${rw_hong}恢复失败${rw_lv}"
       fi
     fi
   else
-    echo -e "${rw_hong}错误：备份目录不存在${rw_bai}"
+    echo -e "${rw_hong}错误：备份目录不存在${rw_lv}"
   fi
   sleep 1
   read -e -p "按回车返回菜单: "
@@ -9964,15 +9992,15 @@ ldnmp_restore_full() {
 ldnmp_custom_static() {
   clear
   send_stats "自定义静态站点"
-  echo -e "${rw_huang}自定义静态站点${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}自定义静态站点${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例域名：static.example.com"
   echo ""
   add_yuming
   if [ -z "$yuming" ]; then return; fi
   repeat_add_yuming
   mkdir -p /home/web/html/${yuming}
-  echo -e "${rw_huang}请输入静态页面内容（输入空行结束）：${rw_bai}"
+  echo -e "${rw_huang}请输入静态页面内容（输入空行结束）：${rw_lv}"
   static_content=""
   while IFS= read -r line; do
     [[ -z "$line" ]] && break
@@ -10006,16 +10034,16 @@ HTMLEOF
   sed -i "s/yuming.com/${yuming}/g" /home/web/conf.d/${yuming}.conf
   nginx_http_on
   nginx_upgrade
-  echo -e "${rw_lv}静态站点 ${yuming} 创建成功！${rw_bai}"
-  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_bai}"
+  echo -e "${rw_lv}静态站点 ${yuming} 创建成功！${rw_lv}"
+  echo -e "访问地址: ${rw_huang}http://${yuming}${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
 ldnmp_proxy_load_balance() {
   clear
   send_stats "站点反向代理-负载均衡"
-  echo -e "${rw_huang}站点反向代理-负载均衡${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}站点反向代理-负载均衡${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例：域名 app.example.com，后端服务器 192.168.1.10:80 和 192.168.1.11:80"
   echo ""
   read -e -p "请输入域名: " lb_domain
@@ -10048,16 +10076,16 @@ LBEOF
   sed -i "s/BACKEND2_PLACEHOLDER/${backend2}/g" /home/web/conf.d/${lb_domain}.conf
   sed -i "s/BACKEND_PLACEHOLDER/BACKEND_PLACEHOLDER/g" /home/web/conf.d/${lb_domain}.conf
   nginx_upgrade
-  echo -e "${rw_lv}负载均衡站点 ${lb_domain} 创建成功！${rw_bai}"
-  echo -e "访问地址: ${rw_huang}http://${lb_domain}${rw_bai}"
+  echo -e "${rw_lv}负载均衡站点 ${lb_domain} 创建成功！${rw_lv}"
+  echo -e "访问地址: ${rw_huang}http://${lb_domain}${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
 ldnmp_proxy_domain() {
   clear
   send_stats "站点反向代理+域名"
-  echo -e "${rw_huang}站点反向代理+域名${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}站点反向代理+域名${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例：域名 api.example.com，反向代理到 https://api.backend.com"
   echo ""
   read -e -p "请输入域名: " proxy_domain
@@ -10088,16 +10116,16 @@ PDEOF
   sed -i "s/TARGET_PLACEHOLDER/${target_domain}/g" /home/web/conf.d/${proxy_domain}.conf
   sed -i "s/TARGET_PORT_PLACEHOLDER/${target_port}/g" /home/web/conf.d/${proxy_domain}.conf
   nginx_upgrade
-  echo -e "${rw_lv}反向代理站点 ${proxy_domain} -> ${proto}://${target_domain}:${target_port} 创建成功！${rw_bai}"
-  echo -e "访问地址: ${rw_huang}http://${proxy_domain}${rw_bai}"
+  echo -e "${rw_lv}反向代理站点 ${proxy_domain} -> ${proto}://${target_domain}:${target_port} 创建成功！${rw_lv}"
+  echo -e "访问地址: ${rw_huang}http://${proxy_domain}${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
 ldnmp_site_redirect() {
   clear
   send_stats "站点重定向"
-  echo -e "${rw_huang}站点重定向${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}站点重定向${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo -e "示例：旧域名 old.example.com 重定向到新域名 new.example.com"
   echo ""
   read -e -p "请输入源域名（重定向来源）: " src_domain
@@ -10119,7 +10147,7 @@ REOF
   sed -i "s/DST_PLACEHOLDER/${dst_domain}/g" /home/web/conf.d/${src_domain}.conf
   sed -i "s/REDIRECT_TYPE_PLACEHOLDER/${redirect_type}/g" /home/web/conf.d/${src_domain}.conf
   nginx_upgrade
-  echo -e "${rw_lv}重定向规则已创建：${src_domain} -> ${dst_domain} (${redirect_type})${rw_bai}"
+  echo -e "${rw_lv}重定向规则已创建：${src_domain} -> ${dst_domain} (${redirect_type})${rw_lv}"
   read -e -p "按回车返回菜单: "
 }
 
@@ -10129,74 +10157,74 @@ ldnmp_nginx_manage() {
     send_stats "Nginx管理"
 
     # ── 状态探测 ──
-    local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}"
+    local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_lv}"
     if docker inspect nginx &>/dev/null; then
       _ngx_ver=$(docker exec nginx nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
-      docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
+      docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_lv}" || _ngx_stat="${rw_hong}异常${rw_lv}"
     elif command -v nginx &>/dev/null; then
       _ngx_ver=$(nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
-      pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
+      pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_lv}" || _ngx_stat="${rw_hong}未运行${rw_lv}"
     else
-      _ngx_stat="${rw_hong}未安装${rw_bai}"
+      _ngx_stat="${rw_hong}未安装${rw_lv}"
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_bai}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_lv}"
     echo -e " ${_ngx_stat}  v${_ngx_ver:-?}"
     echo ""
-    echo -e " ${rw_lan}──── 控制${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  启动    ${rw_huang}2${rw_bai}  停止    ${rw_huang}3${rw_bai}  重启    ${rw_huang}4${rw_bai}  重载    ${rw_huang}5${rw_bai}  测试配置"
+    echo -e " ${rw_lv}──── 控制${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  启动    ${rw_huang}2${rw_lv}  停止    ${rw_huang}3${rw_lv}  重启    ${rw_huang}4${rw_lv}  重载    ${rw_huang}5${rw_lv}  测试配置"
     echo ""
-    echo -e " ${rw_lan}──── 日志${rw_bai}"
-    echo -e " ${rw_huang}6${rw_bai}  访问日志    ${rw_huang}7${rw_bai}  错误日志    ${rw_huang}8${rw_bai}  进程    ${rw_huang}9${rw_bai}  监听端口"
+    echo -e " ${rw_lv}──── 日志${rw_lv}"
+    echo -e " ${rw_huang}6${rw_lv}  访问日志    ${rw_huang}7${rw_lv}  错误日志    ${rw_huang}8${rw_lv}  进程    ${rw_huang}9${rw_lv}  监听端口"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回上级菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
     sub_choice=${sub_choice:-0}
     case $sub_choice in
       1)
         send_stats "启动Nginx"
         if docker inspect nginx &>/dev/null; then
-          cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_bai}"
+          cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_lv}"
         elif command -v nginx &>/dev/null; then
           nginx_start
-          echo -e "${rw_lv}Nginx 启动完成${rw_bai}"
+          echo -e "${rw_lv}Nginx 启动完成${rw_lv}"
         else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_lv}"
         fi
         ;;
       2)
         send_stats "停止Nginx"
         if docker inspect nginx &>/dev/null; then
-          cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+          cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_lv}"
         elif command -v nginx &>/dev/null; then
           nginx_stop
-          echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+          echo -e "${rw_lv}Nginx 已停止${rw_lv}"
         else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_lv}"
         fi
         ;;
       3)
         send_stats "重启Nginx"
         if docker inspect nginx &>/dev/null; then
-          cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_bai}"
+          cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_lv}"
         elif command -v nginx &>/dev/null; then
           nginx_stop; sleep 1; nginx_start
-          echo -e "${rw_lv}Nginx 重启完成${rw_bai}"
+          echo -e "${rw_lv}Nginx 重启完成${rw_lv}"
         else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_lv}"
         fi
         ;;
       4)
         send_stats "重新加载Nginx配置"
         if docker inspect nginx &>/dev/null; then
-          docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+          docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_lv}" || echo -e "${rw_hong}重载失败${rw_lv}"
         elif command -v nginx &>/dev/null; then
           nginx -s reload 2>&1
-          [ $? -eq 0 ] && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+          [ $? -eq 0 ] && echo -e "${rw_lv}配置已重载${rw_lv}" || echo -e "${rw_hong}重载失败${rw_lv}"
         else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_lv}"
         fi
         ;;
       5)
@@ -10206,7 +10234,7 @@ ldnmp_nginx_manage() {
         elif command -v nginx &>/dev/null; then
           nginx -t 2>&1
         else
-          echo -e "${rw_hong}Nginx 未安装${rw_bai}"
+          echo -e "${rw_hong}Nginx 未安装${rw_lv}"
         fi
         ;;
       6)
@@ -10216,7 +10244,7 @@ ldnmp_nginx_manage() {
         elif [ -f /var/log/nginx/access.log ]; then
           tail -n 50 /var/log/nginx/access.log
         else
-          echo -e "${rw_hong}未找到访问日志${rw_bai}"
+          echo -e "${rw_hong}未找到访问日志${rw_lv}"
         fi
         ;;
       7)
@@ -10226,7 +10254,7 @@ ldnmp_nginx_manage() {
         elif [ -f /var/log/nginx/error.log ]; then
           tail -n 50 /var/log/nginx/error.log
         else
-          echo -e "${rw_hong}未找到错误日志${rw_bai}"
+          echo -e "${rw_hong}未找到错误日志${rw_lv}"
         fi
         ;;
       8)
@@ -10236,7 +10264,7 @@ ldnmp_nginx_manage() {
         elif pgrep -x nginx &>/dev/null; then
           ps aux | grep nginx | grep -v grep
         else
-          echo -e "${rw_hong}Nginx 未运行${rw_bai}"
+          echo -e "${rw_hong}Nginx 未运行${rw_lv}"
         fi
         ;;
       9)
@@ -10246,11 +10274,11 @@ ldnmp_nginx_manage() {
         elif command -v netstat &>/dev/null; then
           netstat -tlnp | grep nginx
         else
-          echo -e "${rw_hong}未找到 ss 或 netstat${rw_bai}"
+          echo -e "${rw_hong}未找到 ss 或 netstat${rw_lv}"
         fi
         ;;
       0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
     break_end
   done
@@ -10280,26 +10308,26 @@ moltbot_menu() {
 		fi
 
 		if [ "$local_version" != "$remote_version" ]; then
-			echo "${rw_huang}检测到新版本:$remote_version${rw_bai}"
+			echo "${rw_huang}检测到新版本:$remote_version${rw_lv}"
 		else
-			echo "${rw_lv}当前版本已是最新:$local_version${rw_bai}"
+			echo "${rw_lv}当前版本已是最新:$local_version${rw_lv}"
 		fi
 	}
 
 
 	get_install_status() {
 		if command -v openclaw >/dev/null 2>&1; then
-			echo "${rw_lv}已安装${rw_bai}"
+			echo "${rw_lv}已安装${rw_lv}"
 		else
-			echo "${rw_lv}未安装${rw_bai}"
+			echo "${rw_lv}未安装${rw_lv}"
 		fi
 	}
 
 	get_running_status() {		
 		if pgrep -f "openclaw.*gateway" >/dev/null 2>&1; then
-			echo "${rw_lv}运行中${rw_bai}"
+			echo "${rw_lv}运行中${rw_lv}"
 		else
-			echo "${rw_lv}未运行${rw_bai}"
+			echo "${rw_lv}未运行${rw_lv}"
 		fi
 	}
 
@@ -10313,15 +10341,15 @@ moltbot_menu() {
 		local running_status=$(get_running_status)
 		local update_message=$(check_openclaw_update)
 
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		echo -e "🦞 OPENCLAW 管理工具 by Riou 🦞"
 		echo -e "💡 终端执行 \033[1;33mk claw\033[0m 快速进入菜单"
 		echo -e "$install_status $running_status $update_message"
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		echo "1.  安装"
 		echo "2.  启动"
 		echo "3.  停止"
-		echo -e "${rw_cheng}--------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------${rw_lv}"
 		echo "4.  状态日志查看"
 		echo "5.  换模型"
 		echo "6.  API管理"
@@ -10336,13 +10364,13 @@ moltbot_menu() {
 		echo "15. 记忆/Memory"
 		echo "16. 权限管理"
 		echo "17. 多智能体管理"
-		echo -e "${rw_cheng}--------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------${rw_lv}"
 		echo "18. 备份与还原"
 		echo "19. 更新"
 		echo "20. 卸载"
-		echo -e "${rw_cheng}--------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}--------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------${rw_lv}"
 		printf "请输入选项并回车: "
 	}
 
@@ -10952,7 +10980,7 @@ EOF
 
 	add-openclaw-provider-interactive() {
 		send_stats "OpenClaw API添加"
-		echo -e "${rw_cheng}=== 交互式添加 OpenClaw Provider (全量模型) ===${rw_bai}"
+		echo -e "${rw_cheng}=== 交互式添加 OpenClaw Provider (全量模型) ===${rw_lv}"
 
 		# 1. Provider 名称
 		read -erp "请输入 Provider 名称 (如: deepseek): " provider_name
@@ -10992,7 +11020,7 @@ EOF
 			if [[ -n "$available_models" ]]; then
 				model_count=$(echo "$available_models" | wc -l)
 				echo "✅ 发现 $model_count 个可用模型："
-				echo -e "${rw_cheng}--------------------------------${rw_bai}"
+				echo -e "${rw_cheng}--------------------------------${rw_lv}"
 				# 全部显示，带序号
 				i=1
 				model_list=()
@@ -11001,7 +11029,7 @@ EOF
 					model_list+=("$model")
 					((i++))
 				done <<< "$available_models"
-				echo -e "${rw_cheng}--------------------------------${rw_bai}"
+				echo -e "${rw_cheng}--------------------------------${rw_lv}"
 			fi
 		fi
 
@@ -11021,13 +11049,13 @@ EOF
 
 		# 6. 确认信息
 		echo
-		echo -e "${rw_cheng}====== 确认信息 ======${rw_bai}"
+		echo -e "${rw_cheng}====== 确认信息 ======${rw_lv}"
 		echo "Provider    : $provider_name"
 		echo "Base URL    : $base_url"
 		echo "API Key     : ${api_key:0:8}****"
 		echo "默认模型    : $default_model"
 		echo "模型总数    : $model_count"
-		echo -e "${rw_cheng}======================${rw_bai}"
+		echo -e "${rw_cheng}======================${rw_lv}"
 
 		read -erp "是否同时添加其他所有可用模型？(y/N): " confirm
 
@@ -11075,7 +11103,7 @@ openclaw_api_manage_list() {
 					unchecked) latency_color="$rw_bai" ;;
 				esac
 
-				printf '%b\n' "[$idx] ${name} | API: ${base_url} | 协议: ${api_type} | 模型数量: ${rw_huang}${model_count}${rw_bai} | 延迟/状态: ${latency_color}${latency_txt}${rw_bai}"
+				printf '%b\n' "[$idx] ${name} | API: ${base_url} | 协议: ${api_type} | 模型数量: ${rw_huang}${model_count}${rw_lv} | 延迟/状态: ${latency_color}${latency_txt}${rw_lv}"
 				;;
 		esac
 	done < <(python3 - "$config_file" <<-'PY'
@@ -11667,57 +11695,57 @@ PY
 
 		clear
 		echo ""
-		echo -e "${rw_huang}╔════════════════════════════════════════════════════════════╗${rw_bai}"
-		echo -e "${rw_huang}║${rw_bai}            ${rw_huang}🌟 API 厂商推荐列表${rw_bai}                          ${rw_huang}║${rw_bai}"
-		echo -e "${rw_huang}║${rw_bai}            ${rw_huang}部分入口含 AFF${rw_bai}                            ${rw_huang}║${rw_bai}"
-		echo -e "${rw_huang}╚════════════════════════════════════════════════════════════╝${rw_bai}"
+		echo -e "${rw_huang}╔════════════════════════════════════════════════════════════╗${rw_lv}"
+		echo -e "${rw_huang}║${rw_lv}            ${rw_huang}🌟 API 厂商推荐列表${rw_lv}                          ${rw_huang}║${rw_lv}"
+		echo -e "${rw_huang}║${rw_lv}            ${rw_huang}部分入口含 AFF${rw_lv}                            ${rw_huang}║${rw_lv}"
+		echo -e "${rw_huang}╚════════════════════════════════════════════════════════════╝${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● DeepSeek${rw_bai}"
-		echo -e "    ${rw_huang}https://api-docs.deepseek.com/${rw_bai}"
+		echo -e "  ${rw_lv}● DeepSeek${rw_lv}"
+		echo -e "    ${rw_huang}https://api-docs.deepseek.com/${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● OpenRouter${rw_bai}"
-		echo -e "    ${rw_huang}https://openrouter.ai/${rw_bai}"
+		echo -e "  ${rw_lv}● OpenRouter${rw_lv}"
+		echo -e "    ${rw_huang}https://openrouter.ai/${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● Kimi${rw_bai}"
-		echo -e "    ${rw_huang}https://platform.moonshot.cn/docs/guide/start-using-kimi-api${rw_bai}"
+		echo -e "  ${rw_lv}● Kimi${rw_lv}"
+		echo -e "    ${rw_huang}https://platform.moonshot.cn/docs/guide/start-using-kimi-api${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● 超算互联网${rw_bai}"
-		echo -e "    ${rw_huang}https://www.scnet.cn/${rw_bai}"
+		echo -e "  ${rw_lv}● 超算互联网${rw_lv}"
+		echo -e "    ${rw_huang}https://www.scnet.cn/${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● 优云智算${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://passport.compshare.cn/register?referral_code=4mscFZXfutfFi8swMVsPuf${rw_bai}"
+		echo -e "  ${rw_huang}● 优云智算${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://passport.compshare.cn/register?referral_code=4mscFZXfutfFi8swMVsPuf${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● 硅基流动${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://cloud.siliconflow.cn/i/irWVdPic${rw_bai}"
+		echo -e "  ${rw_huang}● 硅基流动${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://cloud.siliconflow.cn/i/irWVdPic${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● 智谱 GLM${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://www.bigmodel.cn/glm-coding?ic=HYOTDOAJMR${rw_bai}"
+		echo -e "  ${rw_huang}● 智谱 GLM${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://www.bigmodel.cn/glm-coding?ic=HYOTDOAJMR${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● PackyAPI${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://www.packyapi.com/register?aff=wHri${rw_bai}"
+		echo -e "  ${rw_huang}● PackyAPI${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://www.packyapi.com/register?aff=wHri${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● 云雾 API${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://yunwu.ai/register?aff=ZuyK${rw_bai}"
+		echo -e "  ${rw_huang}● 云雾 API${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://yunwu.ai/register?aff=ZuyK${rw_lv}"
 		echo ""
-		echo -e "  ${rw_huang}● 柏拉图AI${rw_bai} ${rw_huang}[AFF]${rw_bai}"
-		echo -e "    ${rw_huang}https://api.bltcy.ai/register?aff=TBzb114019${rw_bai}"
+		echo -e "  ${rw_huang}● 柏拉图AI${rw_lv} ${rw_huang}[AFF]${rw_lv}"
+		echo -e "    ${rw_huang}https://api.bltcy.ai/register?aff=TBzb114019${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● MiniMax${rw_bai}"
-		echo -e "    ${rw_huang}https://www.minimaxi.com/${rw_bai}"
+		echo -e "  ${rw_lv}● MiniMax${rw_lv}"
+		echo -e "    ${rw_huang}https://www.minimaxi.com/${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● NVIDIA${rw_bai}"
-		echo -e "    ${rw_huang}https://build.nvidia.com/settings/api-keys${rw_bai}"
+		echo -e "  ${rw_lv}● NVIDIA${rw_lv}"
+		echo -e "    ${rw_huang}https://build.nvidia.com/settings/api-keys${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● Ollama${rw_bai}"
-		echo -e "    ${rw_huang}https://ollama.com/${rw_bai}"
+		echo -e "  ${rw_lv}● Ollama${rw_lv}"
+		echo -e "    ${rw_huang}https://ollama.com/${rw_lv}"
 		echo ""
-		echo -e "  ${rw_lv}● 白山云${rw_bai}"
-		echo -e "    ${rw_huang}https://ai.baishan.com/${rw_bai}"
+		echo -e "  ${rw_lv}● 白山云${rw_lv}"
+		echo -e "    ${rw_huang}https://ai.baishan.com/${rw_lv}"
 		echo ""
-		echo -e "${rw_huang}────────────────────────────────────────────────────────────${rw_bai}"
-		echo -e "  ${rw_huang}图例：${rw_lv}● 官方入口${rw_bai}  ${rw_huang}● AFF 推荐入口${rw_bai}"
+		echo -e "${rw_huang}────────────────────────────────────────────────────────────${rw_lv}"
+		echo -e "  ${rw_huang}图例：${rw_lv}● 官方入口${rw_lv}  ${rw_huang}● AFF 推荐入口${rw_lv}"
 		echo ""
-		echo -e "${rw_huang}提示：复制链接到浏览器打开即可访问${rw_bai}"
+		echo -e "${rw_huang}提示：复制链接到浏览器打开即可访问${rw_lv}"
 		echo ""
 		read -erp "按回车键返回..." dummy
 	}
@@ -11726,18 +11754,18 @@ PY
 		send_stats "OpenClaw API入口"
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw API 管理"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_api_manage_list
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			echo "1. 添加API"
 			echo "2. 同步API供应商模型列表"
 			echo "3. 切换 API 类型（completions / responses）"
 			echo "4. 删除API"
 			echo "5. API 厂商推荐"
 			echo "0. 退出"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -erp "请输入你的选择: " api_choice
 
 			case "$api_choice" in
@@ -12044,7 +12072,7 @@ PYTHON_EOF
 				echo "--- 模型管理 ---"
 				echo "当前可用模型:"
 				jq -r '.agents.defaults.models | if type == "object" then keys[] else .[] end' "$oc_config" 2>/dev/null | sed '/^\s*$/d'
-				echo -e "${rw_cheng}----------------${rw_bai}"
+				echo -e "${rw_cheng}----------------${rw_lv}"
 				read -e -p "请输入要设置的模型名称 (例如 openrouter/openai/gpt-4o)（输入 0 退出）： " selected_model
 
 				if [ "$selected_model" = "0" ]; then
@@ -12363,14 +12391,14 @@ PYTHON_EOF
 		send_stats "插件管理"
 		while true; do
 			clear
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			echo "            插件管理 (安装/删除)            "
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			echo "当前插件列表:"
 			openclaw plugins list
-			echo -e "${rw_cheng}--------------------------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}--------------------------------------------------------${rw_lv}"
 			echo "推荐的常用插件 ID (直接复制括号内的 ID 即可):"
-			echo -e "${rw_cheng}--------------------------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}--------------------------------------------------------${rw_lv}"
 			echo "📱 通讯渠道:"
 			echo "  - [feishu]       	# 飞书/Lark 集成"
 			echo "  - [telegram]     	# Telegram 机器人"
@@ -12388,7 +12416,7 @@ PYTHON_EOF
 			echo "  - [lobster]      	# 审批流 (带人工确认)"
 			echo "  - [voice-call]   	# 语音通话能力"
 			echo "  - [nostr]        	# 加密隐私聊天"
-			echo -e "${rw_cheng}--------------------------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}--------------------------------------------------------${rw_lv}"
 
 			echo "1) 安装/启用插件"
 			echo "2) 删除/禁用插件"
@@ -12475,7 +12503,7 @@ PYTHON_EOF
 			done
 
 			echo ""
-			echo -e "${rw_cheng}====== 操作汇总 ======${rw_bai}"
+			echo -e "${rw_cheng}====== 操作汇总 ======${rw_lv}"
 			echo "✅ 成功:$success_list"
 			[ -n "$failed_list" ] && echo "❌ 失败:$failed_list"
 			[ -n "$skipped_list" ] && echo "⏭️ 跳过:$skipped_list"
@@ -12493,12 +12521,12 @@ PYTHON_EOF
 		send_stats "技能管理"
 		while true; do
 			clear
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			echo "            技能管理 (安装/删除)            "
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			echo "当前已安装技能:"
 			openclaw skills list
-			echo -e "${rw_cheng}----------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}----------------------------------------${rw_lv}"
 
 			# 输出推荐的实用技能列表
 			echo "推荐的实用技能（可直接复制名称输入）："
@@ -12516,7 +12544,7 @@ PYTHON_EOF
 			echo "video-frames       # 视频抽帧与短片剪辑 (ffmpeg 驱动)"
 			echo "openai-whisper     # 本地音频转文字 (离线隐私保护)"
 			echo "coding-agent       # 自动运行 Claude Code/Codex 等编程助手"
-			echo -e "${rw_cheng}----------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}----------------------------------------${rw_lv}"
 
 			echo "1) 安装技能"
 			echo "2) 删除技能"
@@ -12593,7 +12621,7 @@ PYTHON_EOF
 			done
 
 			echo ""
-			echo -e "${rw_cheng}====== 操作汇总 ======${rw_bai}"
+			echo -e "${rw_cheng}====== 操作汇总 ======${rw_lv}"
 			echo "✅ 成功:$success_list"
 			[ -n "$failed_list" ] && echo "❌ 失败:$failed_list"
 			[ -n "$skipped_list" ] && echo "⏭️ 跳过:$skipped_list"
@@ -12684,9 +12712,9 @@ openclaw_json_get_bool() {
 	openclaw_colorize_bot_status() {
 		local status="$1"
 		case "$status" in
-			已连接) echo -e "${rw_lv}${status}${rw_bai}" ;;
-			已配置) echo -e "${rw_huang}${status}${rw_bai}" ;;
-			异常) echo -e "${rw_hong}${status}${rw_bai}" ;;
+			已连接) echo -e "${rw_lv}${status}${rw_lv}" ;;
+			已配置) echo -e "${rw_huang}${status}${rw_lv}" ;;
+			异常) echo -e "${rw_hong}${status}${rw_lv}" ;;
 			*) echo "$status" ;;
 		esac
 	}
@@ -12834,19 +12862,19 @@ openclaw_json_get_bool() {
 		send_stats "机器人对接"
 		while true; do
 			clear
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			echo "            机器人连接对接            "
-			echo -e "${rw_cheng}========================================${rw_bai}"
+			echo -e "${rw_cheng}========================================${rw_lv}"
 			openclaw_show_bot_local_status_block
-			echo -e "${rw_cheng}----------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}----------------------------------------${rw_lv}"
 			echo "1. Telegram 机器人对接"
 			echo "2. 飞书 (Lark) 机器人对接"
 			echo "3. WhatsApp 机器人对接"
 			echo "4. QQ 机器人对接"
 			echo "5. 微信机器人对接"
-			echo -e "${rw_cheng}----------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}----------------------------------------${rw_lv}"
 			echo "0. 返回上一级选单"
-			echo -e "${rw_cheng}----------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}----------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " bot_choice
 
 			case $bot_choice in
@@ -13906,7 +13934,7 @@ PY
 	}
 
 	openclaw_memory_render_auto_summary() {
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 		echo "✅ 环境就绪"
 		echo "方案: ${OPENCLAW_MEMORY_AUTO_SCHEME:-unknown}"
 		if [ "$OPENCLAW_MEMORY_CONFIG_ONLY" = "true" ]; then
@@ -13936,7 +13964,7 @@ PY
 		fi
 		echo "最终状态:"
 		openclaw_memory_render_status
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 	}
 
 	openclaw_memory_auto_confirm() {
@@ -14146,14 +14174,14 @@ EOF
 	openclaw_memory_auto_setup_menu() {
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "记忆方案自动部署"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "1. QMD"
 			echo "2. Local"
 			echo "3. Auto（自动选择）"
 			echo "0. 返回上一级"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " auto_choice
 			case "$auto_choice" in
 				1)
@@ -14229,9 +14257,9 @@ EOF
 			echo "   可切换 Local，或安装 bun + qmd 后再试。"
 		fi
 		include_dm=$(openclaw config get memory.qmd.includeDefaultMemory 2>/dev/null)
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		echo "索引修复诊断"
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		echo "当前 includeDefaultMemory: ${include_dm:-未设置}"
 		echo ""
 		if [ "$include_dm" = "false" ]; then
@@ -14269,9 +14297,9 @@ EOF
 	openclaw_memory_scheme_menu() {
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw 记忆方案"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			local backend current_label
 			backend=$(openclaw_memory_get_backend)
 			case "$backend" in
@@ -14284,12 +14312,12 @@ EOF
 			echo "QMD  : 轻量索引，依赖 qmd 命令（适合网络受限）"
 			echo "Local: 本地向量检索，依赖 embedding 模型文件"
 			echo "Auto : 自动推荐（基于可用性 + 网络探测）"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			echo "1. 切换 QMD（自动部署/已装则跳过）"
 			echo "2. 切换 Local（自动部署/已装则跳过）"
 			echo "3. Auto（自动推荐并自动部署）"
 			echo "0. 返回上一级"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " scheme_choice
 			case "$scheme_choice" in
 				1)
@@ -14348,7 +14376,7 @@ EOF
 			return 0
 		fi
 		echo "编号 | 归属 | 大小 | 修改时间"
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 		local i file rel size mtime
 		for i in "${!OPENCLAW_MEMORY_FILES[@]}"; do
 			file="${OPENCLAW_MEMORY_FILES[$i]}"
@@ -14400,19 +14428,19 @@ EOF
 			echo "(空文件)"
 			return 0
 		fi
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 		sed -n "${start_line},${end_line}p" "$file"
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 	}
 
 	openclaw_memory_files_menu() {
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw 记忆文件"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_memory_file_render_list
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入文件编号查看（0 返回）: " file_choice
 			if [ "$file_choice" = "0" ]; then
 				return 0
@@ -14458,9 +14486,9 @@ EOF
 		send_stats "OpenClaw记忆管理"
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw 记忆管理"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_memory_render_status
 			echo "1. 更新记忆索引"
 			echo "2. 查看记忆文件"
@@ -14469,7 +14497,7 @@ EOF
 			echo "5. 搜索测试（验证索引是否工作）"
 			echo "6. 深度状态探测（检查嵌入模型）"
 			echo "0. 返回上一级"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " memory_choice
 			case "$memory_choice" in
 				1)
@@ -14756,7 +14784,7 @@ print(json.dumps(data, indent=2))
 	openclaw_permission_render_status() {
 		echo "应用层配置: ~/.openclaw/openclaw.json"
 		echo "宿主机审批: ~/.openclaw/exec-approvals.json"
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 		local current_profile current_sec current_ask current_elevated
 		current_profile=$(openclaw config get tools.profile 2>/dev/null | head -n 1 | sed 's/^"//;s/"$//')
 		current_sec=$(openclaw config get tools.exec.security 2>/dev/null | head -n 1 | sed 's/^"//;s/"$//')
@@ -14779,14 +14807,14 @@ print(json.dumps(data, indent=2))
 			current_mode="\033[1;36m官方沙盒兜底\033[0m"
 		fi
 		echo -e "  当前综合安全等级: ${current_mode}"
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
-		echo -e "${rw_huang}[应用层 Tool Policy 状态]${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
+		echo -e "${rw_huang}[应用层 Tool Policy 状态]${rw_lv}"
 		echo "  Profile (预设): ${current_profile:-(unset)}"
 		echo "  Exec 限制: ${current_sec:-(unset)}"
 		echo "  审批提示: ${current_ask:-(unset)}"
 		echo "  提权开关: ${current_elevated:-(unset)}"
 
-		echo -e "\n${rw_huang}[底层 Exec Approvals 状态]${rw_bai}"
+		echo -e "\n${rw_huang}[底层 Exec Approvals 状态]${rw_lv}"
 		if openclaw_has_command openclaw; then
 			local approvals_json
 			approvals_json=$(openclaw approvals get --json 2>/dev/null)
@@ -14849,7 +14877,7 @@ except Exception:
 		openclaw_permission_update_exec_approvals "allowlist" "on-miss" "deny"
 
 		openclaw_permission_restart_gateway
-		echo -e "${rw_lv}✅ 已切换为标准安全模式 (所有危险命令将通过UI/TG请求你的审批)${rw_bai}"
+		echo -e "${rw_lv}✅ 已切换为标准安全模式 (所有危险命令将通过UI/TG请求你的审批)${rw_lv}"
 	}
 
 	openclaw_permission_apply_developer() {
@@ -14867,7 +14895,7 @@ except Exception:
 		openclaw_permission_update_exec_approvals "allowlist" "on-miss" "deny"
 
 		openclaw_permission_restart_gateway
-		echo -e "${rw_lv}✅ 已切换为开发增强模式 (允许提权，但常规危险命令依然需要审批)${rw_bai}"
+		echo -e "${rw_lv}✅ 已切换为开发增强模式 (允许提权，但常规危险命令依然需要审批)${rw_lv}"
 	}
 
 	openclaw_permission_apply_full() {
@@ -14886,7 +14914,7 @@ except Exception:
 		openclaw_permission_update_exec_approvals "full" "off" "full"
 
 		openclaw_permission_restart_gateway
-		echo -e "${rw_lv}✅ 已切换为完全开放模式 (警告：所有宿主机命令拦截已失效，智能体具有最高权限)${rw_bai}"
+		echo -e "${rw_lv}✅ 已切换为完全开放模式 (警告：所有宿主机命令拦截已失效，智能体具有最高权限)${rw_lv}"
 	}
 
 	openclaw_permission_restore_official_defaults() {
@@ -14909,19 +14937,19 @@ except Exception:
 		fi
 
 		openclaw_permission_restart_gateway
-		echo -e "${rw_lv}✅ 已恢复到 OpenClaw 官方安全沙盒防御机制${rw_bai}"
+		echo -e "${rw_lv}✅ 已恢复到 OpenClaw 官方安全沙盒防御机制${rw_lv}"
 	}
 
 	openclaw_permission_run_audit() {
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		echo "运行 OpenClaw 官方安全审计与体检..."
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		openclaw security audit
-		echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 		read -e -p "是否尝试自动修复发现的安全隐患？(y/n): " fix_choice
 		if [[ "$fix_choice" == "y" || "$fix_choice" == "Y" || "$fix_choice" == "yes" ]]; then
 			openclaw security audit --fix
-			echo -e "${rw_lv}✅ 自动修复完成。${rw_bai}"
+			echo -e "${rw_lv}✅ 自动修复完成。${rw_lv}"
 		fi
 		echo "按任意键返回..."
 		read -n 1 -s
@@ -14931,9 +14959,9 @@ except Exception:
 	openclaw_permission_manage_allowlist() {
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo " Exec 命令白名单管理"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "当前白名单："
 			local allowlist_json
 			allowlist_json=$(openclaw approvals get --json 2>/dev/null)
@@ -14960,11 +14988,11 @@ except Exception as e:
 			else
 				echo "  (无法获取)"
 			fi
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			echo "1. 添加白名单规则"
 			echo "2. 移除白名单规则"
 			echo "0. 返回"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请选择: " al_choice
 			case "$al_choice" in
 				1)
@@ -14991,19 +15019,19 @@ except Exception as e:
 		send_stats "OpenClaw权限管理"
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo " OpenClaw 权限管理 (双层架构深度适配)"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_permission_render_status
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
-			echo -e "${rw_huang}1.   ${rw_bai}${rw_lv} 切换为标准安全模式（日常推荐，弹卡片审批）${rw_bai}"
-			echo -e "${rw_huang}2.   ${rw_bai}${rw_lv} 切换为开发增强模式（允许智能体申请提权）${rw_bai}"
-			echo -e "${rw_huang}3.   ${rw_bai}${rw_lv} 切换为完全开放模式（${rw_bai}${rw_hong}高风险！彻底解除所有宿主机拦截${rw_bai}）"
-			echo -e "${rw_huang}4.   ${rw_bai}${rw_lv} 恢复官方默认沙盒防御策略${rw_bai}"
-			echo -e "${rw_huang}5.   ${rw_bai}${rw_lv} 运行底层安全审计与自动修复${rw_bai}"
-			echo -e "${rw_huang}6.   ${rw_bai}${rw_lv} 管理 Exec 命令白名单${rw_bai}"
-			echo -e "${rw_huang}0.   ${rw_bai}${rw_lv} 返回上一级${rw_bai}"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
+			echo -e "${rw_huang}1.   ${rw_lv}${rw_lv} 切换为标准安全模式（日常推荐，弹卡片审批）${rw_lv}"
+			echo -e "${rw_huang}2.   ${rw_lv}${rw_lv} 切换为开发增强模式（允许智能体申请提权）${rw_lv}"
+			echo -e "${rw_huang}3.   ${rw_lv}${rw_lv} 切换为完全开放模式（${rw_lv}${rw_hong}高风险！彻底解除所有宿主机拦截${rw_lv}）"
+			echo -e "${rw_huang}4.   ${rw_lv}${rw_lv} 恢复官方默认沙盒防御策略${rw_lv}"
+			echo -e "${rw_huang}5.   ${rw_lv}${rw_lv} 运行底层安全审计与自动修复${rw_lv}"
+			echo -e "${rw_huang}6.   ${rw_lv}${rw_lv} 管理 Exec 命令白名单${rw_lv}"
+			echo -e "${rw_huang}0.   ${rw_lv}${rw_lv} 返回上一级${rw_lv}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " perm_choice
 			case "$perm_choice" in
 				1)
@@ -15019,7 +15047,7 @@ except Exception as e:
 					break_end
 					;;
 				3)
-					echo -e "${rw_hong}⚠️ 完全开放模式会彻底瓦解 exec 审批并自动放行高危代码。${rw_bai}"
+					echo -e "${rw_hong}⚠️ 完全开放模式会彻底瓦解 exec 审批并自动放行高危代码。${rw_lv}"
 					read -e -p "输入 FULL 确认继续: " confirm
 					if [ "$confirm" = "FULL" ]; then openclaw_permission_apply_full; else echo "已取消"; fi
 					break_end
@@ -15456,11 +15484,11 @@ print("✅ 多智能体健康检查完成")
 		send_stats "OpenClaw多智能体管理"
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw 多智能体管理"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_multiagent_render_status
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			echo "1. 新增智能体"
 			echo "2. 删除智能体"
 			echo "3. 查看路由绑定"
@@ -15471,7 +15499,7 @@ print("✅ 多智能体健康检查完成")
 			echo "8. 修改智能体身份（名称/Emoji）"
 			echo "9. 清理过期会话"
 			echo "0. 返回上一级"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " multi_choice
 			case "$multi_choice" in
 				1) openclaw_multiagent_add_agent; break_end ;;
@@ -15495,18 +15523,18 @@ openclaw_backup_restore_menu() {
 		send_stats "OpenClaw备份与还原"
 		while true; do
 			clear
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			echo "OpenClaw 备份与还原"
-			echo -e "${rw_cheng}=======================================${rw_bai}"
+			echo -e "${rw_cheng}=======================================${rw_lv}"
 			openclaw_backup_render_file_list
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			echo "1. 备份记忆全量"
 			echo "2. 还原记忆全量"
 			echo "3. 备份 OpenClaw 项目（默认安全模式）"
 			echo "4. 还原 OpenClaw 项目（高级/高风险）"
 			echo "5. 删除备份文件"
 			echo "0. 返回上一级"
-			echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}---------------------------------------${rw_lv}"
 			read -e -p "请输入你的选择: " backup_choice
 
 			case "$backup_choice" in
@@ -15589,7 +15617,7 @@ openclaw_backup_restore_menu() {
 	openclaw_show_webui_addr() {
 		local local_ip token domains
 
-		echo -e "${rw_cheng}==================================${rw_bai}"
+		echo -e "${rw_cheng}==================================${rw_lv}"
 		echo "OpenClaw WebUI 访问地址"
 		local_ip="127.0.0.1"
 
@@ -15610,7 +15638,7 @@ openclaw_backup_restore_menu() {
 			done
 		fi
 
-		echo -e "${rw_cheng}==================================${rw_bai}"
+		echo -e "${rw_cheng}==================================${rw_lv}"
 	}
 
 
@@ -15631,7 +15659,7 @@ openclaw_backup_restore_menu() {
 		echo "https://${yuming}/#token=$token"
 		echo "先访问URL触发设备ID，然后回车下一步进行配对。"
 		read
-		echo -e "${rw_huang}正在加载设备列表……${rw_bai}"
+		echo -e "${rw_huang}正在加载设备列表……${rw_lv}"
 		# 自动添加域名到 allowedOrigins
 		config_file=$(openclaw_get_config_file)
 		if [ -f "$config_file" ]; then
@@ -15640,7 +15668,7 @@ openclaw_backup_restore_menu() {
 			if command -v jq >/dev/null 2>&1; then
 				tmp_json=$(mktemp)
 				jq 'if .gateway.controlUi == null then .gateway.controlUi = {"allowedOrigins": ["http://127.0.0.1"]} else . end | if (.gateway.controlUi.allowedOrigins | contains([$origin]) | not) then .gateway.controlUi.allowedOrigins += [$origin] else . end' --arg origin "$new_origin" "$config_file" > "$tmp_json" && mv "$tmp_json" "$config_file"
-				echo -e "${rw_huang}已将域名 ${yuming} 加入 allowedOrigins 配置${rw_bai}"
+				echo -e "${rw_huang}已将域名 ${yuming} 加入 allowedOrigins 配置${rw_lv}"
 				openclaw gateway restart >/dev/null 2>&1
 			fi
 		fi
@@ -15751,20 +15779,20 @@ local sub_choice="$1"
 clear
 cd ~
 send_stats "应用市场"
-echo -e "${rw_huang}应用市场${rw_bai}"
-echo -e "${rw_cheng}------------------------${rw_bai}"
+echo -e "${rw_huang}应用市场${rw_lv}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
 echo ""
-echo -e "${rw_huang}功能说明:${rw_bai}"
-echo -e "${rw_huang}  提供各种实用应用程序的一键安装，包括:${rw_bai}"
-echo -e "${rw_huang}  • 网站程序: WordPress, Discuz, 可道云等${rw_bai}"
-echo -e "${rw_huang}  • 开发工具: VS Code Server, Jupyter等${rw_bai}"
-echo -e "${rw_huang}  • 系统工具: 监控面板, 管理面板等${rw_bai}"
-echo -e "${rw_huang}  • 媒体工具: Jellyfin, 下载器等${rw_bai}"
+echo -e "${rw_huang}功能说明:${rw_lv}"
+echo -e "${rw_huang}  提供各种实用应用程序的一键安装，包括:${rw_lv}"
+echo -e "${rw_huang}  • 网站程序: WordPress, Discuz, 可道云等${rw_lv}"
+echo -e "${rw_huang}  • 开发工具: VS Code Server, Jupyter等${rw_lv}"
+echo -e "${rw_huang}  • 系统工具: 监控面板, 管理面板等${rw_lv}"
+echo -e "${rw_huang}  • 媒体工具: Jellyfin, 下载器等${rw_lv}"
 echo ""
-echo -e "${rw_huang}提示: 应用列表将自动更新，请稍等...${rw_bai}"
+echo -e "${rw_huang}提示: 应用列表将自动更新，请稍等...${rw_lv}"
 echo ""
 install git
-echo -e "${rw_huang}正在更新应用列表请稍等……${rw_bai}"
+echo -e "${rw_huang}正在更新应用列表请稍等……${rw_lv}"
 if [ ! -d apps/.git ]; then
 	timeout 10s git clone ${gh_proxy}github.com/riwi/apps.git
 else
@@ -15778,7 +15806,7 @@ while true; do
 	if [ -z "$sub_choice" ]; then
 	  clear
 	  echo -e "应用市场"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 
 	  local app_numbers=$([ -f /home/docker/appno.txt ] && cat /home/docker/appno.txt || echo "")
 
@@ -15787,7 +15815,7 @@ while true; do
 		  if echo "$app_numbers" | grep -q "^$i$"; then
 			  declare "color$i=${rw_lv}"
 		  else
-			  declare "color$i=${rw_bai}"
+			  declare "color$i=${rw_lv}"
 		  fi
 	  done
 
@@ -15796,73 +15824,73 @@ while true; do
 	  echo -e "${rw_huang}5.   ${color5}OpenList多存储文件列表程序          ${rw_huang}6.   ${color6}Ubuntu远程桌面网页版"
 	  echo -e "${rw_huang}7.   ${color7}哪吒探针VPS监控面板                 ${rw_huang}8.   ${color8}QB离线BT磁力下载面板"
 	  echo -e "${rw_huang}9.   ${color9}Poste.io邮件服务器程序              ${rw_huang}10.  ${color10}RocketChat多人在线聊天系统"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}11.  ${color11}禅道项目管理软件                    ${rw_huang}12.  ${color12}青龙面板定时任务管理平台"
-	  echo -e "${rw_huang}13.  ${color13}Cloudreve网盘 ${rw_huang}★${rw_bai}                     ${rw_huang}14.  ${color14}简单图床图片管理程序"
+	  echo -e "${rw_huang}13.  ${color13}Cloudreve网盘 ${rw_huang}★${rw_lv}                     ${rw_huang}14.  ${color14}简单图床图片管理程序"
 	  echo -e "${rw_huang}15.  ${color15}emby多媒体管理系统                  ${rw_huang}16.  ${color16}Speedtest测速面板"
 	  echo -e "${rw_huang}17.  ${color17}AdGuardHome去广告软件               ${rw_huang}18.  ${color18}onlyoffice在线办公OFFICE"
 	  echo -e "${rw_huang}19.  ${color19}雷池WAF防火墙面板                   ${rw_huang}20.  ${color20}portainer容器管理面板"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}21.  ${color21}VScode网页版                        ${rw_huang}22.  ${color22}UptimeKuma监控工具"
-	  echo -e "${rw_huang}23.  ${color23}Memos网页备忘录                     ${rw_huang}24.  ${color24}Webtop远程桌面网页版 ${rw_huang}★${rw_bai}"
+	  echo -e "${rw_huang}23.  ${color23}Memos网页备忘录                     ${rw_huang}24.  ${color24}Webtop远程桌面网页版 ${rw_huang}★${rw_lv}"
 	  echo -e "${rw_huang}25.  ${color25}Nextcloud网盘                       ${rw_huang}26.  ${color26}QD-Today定时任务管理框架"
 	  echo -e "${rw_huang}27.  ${color27}Dockge容器堆栈管理面板              ${rw_huang}28.  ${color28}LibreSpeed测速工具"
-	  echo -e "${rw_huang}29.  ${color29}searxng聚合搜索站 ${rw_huang}★${rw_bai}                 ${rw_huang}30.  ${color30}PhotoPrism私有相册系统"
-	  echo -e "${rw_lan}-------------------------"
-	  echo -e "${rw_huang}31.  ${color31}StirlingPDF工具大全                 ${rw_huang}32.  ${color32}drawio免费的在线图表软件 ${rw_huang}★${rw_bai}"
+	  echo -e "${rw_huang}29.  ${color29}searxng聚合搜索站 ${rw_huang}★${rw_lv}                 ${rw_huang}30.  ${color30}PhotoPrism私有相册系统"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}31.  ${color31}StirlingPDF工具大全                 ${rw_huang}32.  ${color32}drawio免费的在线图表软件 ${rw_huang}★${rw_lv}"
 	  echo -e "${rw_huang}33.  ${color33}Sun-Panel导航面板                   ${rw_huang}34.  ${color34}Pingvin-Share文件分享平台"
 	  echo -e "${rw_huang}35.  ${color35}极简朋友圈                          ${rw_huang}36.  ${color36}LobeChatAI聊天聚合网站"
-	  echo -e "${rw_huang}37.  ${color37}MyIP工具箱 ${rw_huang}★${rw_bai}                        ${rw_huang}38.  ${color38}小雅alist全家桶"
+	  echo -e "${rw_huang}37.  ${color37}MyIP工具箱 ${rw_huang}★${rw_lv}                        ${rw_huang}38.  ${color38}小雅alist全家桶"
 	  echo -e "${rw_huang}39.  ${color39}Bililive直播录制工具                ${rw_huang}40.  ${color40}webssh网页版SSH连接工具"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}41.  ${color41}耗子管理面板                	 ${rw_huang}42.  ${color42}Nexterm远程连接工具"
-	  echo -e "${rw_huang}43.  ${color43}RustDesk远程桌面(服务端) ${rw_huang}★${rw_bai}          ${rw_huang}44.  ${color44}RustDesk远程桌面(中继端) ${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}45.  ${color45}Docker加速站            		 ${rw_huang}46.  ${color46}GitHub加速站 ${rw_huang}★${rw_bai}"
+	  echo -e "${rw_huang}43.  ${color43}RustDesk远程桌面(服务端) ${rw_huang}★${rw_lv}          ${rw_huang}44.  ${color44}RustDesk远程桌面(中继端) ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}45.  ${color45}Docker加速站            		 ${rw_huang}46.  ${color46}GitHub加速站 ${rw_huang}★${rw_lv}"
 	  echo -e "${rw_huang}47.  ${color47}普罗米修斯监控			 ${rw_huang}48.  ${color48}普罗米修斯(主机监控)"
 	  echo -e "${rw_huang}49.  ${color49}普罗米修斯(容器监控)		 ${rw_huang}50.  ${color50}补货监控工具"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}51.  ${color51}PVE开小鸡面板			 ${rw_huang}52.  ${color52}DPanel容器管理面板"
 	  echo -e "${rw_huang}53.  ${color53}llama3聊天AI大模型                  ${rw_huang}54.  ${color54}AMH主机建站管理面板"
-	  echo -e "${rw_huang}55.  ${color55}FRP内网穿透(服务端) ${rw_huang}★${rw_bai}	         ${rw_huang}56.  ${color56}FRP内网穿透(客户端) ${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}57.  ${color57}Deepseek聊天AI大模型                ${rw_huang}58.  ${color58}Dify大模型知识库 ${rw_huang}★${rw_bai}"
+	  echo -e "${rw_huang}55.  ${color55}FRP内网穿透(服务端) ${rw_huang}★${rw_lv}	         ${rw_huang}56.  ${color56}FRP内网穿透(客户端) ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}57.  ${color57}Deepseek聊天AI大模型                ${rw_huang}58.  ${color58}Dify大模型知识库 ${rw_huang}★${rw_lv}"
 	  echo -e "${rw_huang}59.  ${color59}NewAPI大模型资产管理                ${rw_huang}60.  ${color60}JumpServer开源堡垒机"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}61.  ${color61}在线翻译服务器			 ${rw_huang}62.  ${color62}RAGFlow大模型知识库"
-	  echo -e "${rw_huang}63.  ${color63}OpenWebUI自托管AI平台 ${rw_huang}★${rw_bai}             ${rw_huang}64.  ${color64}it-tools工具箱"
-	  echo -e "${rw_huang}65.  ${color65}n8n自动化工作流平台 ${rw_huang}★${rw_bai}               ${rw_huang}66.  ${color66}yt-dlp视频下载工具"
-	  echo -e "${rw_huang}67.  ${color67}ddns-go动态DNS管理工具 ${rw_huang}★${rw_bai}            ${rw_huang}68.  ${color68}AllinSSL证书管理平台"
+	  echo -e "${rw_huang}63.  ${color63}OpenWebUI自托管AI平台 ${rw_huang}★${rw_lv}             ${rw_huang}64.  ${color64}it-tools工具箱"
+	  echo -e "${rw_huang}65.  ${color65}n8n自动化工作流平台 ${rw_huang}★${rw_lv}               ${rw_huang}66.  ${color66}yt-dlp视频下载工具"
+	  echo -e "${rw_huang}67.  ${color67}ddns-go动态DNS管理工具 ${rw_huang}★${rw_lv}            ${rw_huang}68.  ${color68}AllinSSL证书管理平台"
 	  echo -e "${rw_huang}69.  ${color69}SFTPGo文件传输工具                  ${rw_huang}70.  ${color70}AstrBot聊天机器人框架"
-	  echo -e "${rw_lan}-------------------------"
-	  echo -e "${rw_huang}71.  ${color71}Navidrome私有音乐服务器             ${rw_huang}72.  ${color72}bitwarden密码管理器 ${rw_huang}★${rw_bai}"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}71.  ${color71}Navidrome私有音乐服务器             ${rw_huang}72.  ${color72}bitwarden密码管理器 ${rw_huang}★${rw_lv}"
 	  echo -e "${rw_huang}73.  ${color73}LibreTV私有影视                     ${rw_huang}74.  ${color74}MoonTV私有影视"
 	  echo -e "${rw_huang}75.  ${color75}Melody音乐精灵                      ${rw_huang}76.  ${color76}在线DOS老游戏"
 	  echo -e "${rw_huang}77.  ${color77}迅雷离线下载工具                    ${rw_huang}78.  ${color78}PandaWiki智能文档管理系统"
 	  echo -e "${rw_huang}79.  ${color79}Beszel服务器监控                    ${rw_huang}80.  ${color80}linkwarden书签管理"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}81.  ${color81}JitsiMeet视频会议                   ${rw_huang}82.  ${color82}gpt-load高性能AI透明代理"
 	  echo -e "${rw_huang}83.  ${color83}komari服务器监控工具                ${rw_huang}84.  ${color84}Wallos个人财务管理工具"
 	  echo -e "${rw_huang}85.  ${color85}immich图片视频管理器                ${rw_huang}86.  ${color86}jellyfin媒体管理系统"
 	  echo -e "${rw_huang}87.  ${color87}SyncTV一起看片神器                  ${rw_huang}88.  ${color88}Owncast自托管直播平台"
 	  echo -e "${rw_huang}89.  ${color89}FileCodeBox文件快递                 ${rw_huang}90.  ${color90}matrix去中心化聊天协议"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}91.  ${color91}gitea私有代码仓库                   ${rw_huang}92.  ${color92}FileBrowser文件管理器"
 	  echo -e "${rw_huang}93.  ${color93}Dufs极简静态文件服务器              ${rw_huang}94.  ${color94}Gopeed高速下载工具"
 	  echo -e "${rw_huang}95.  ${color95}paperless文档管理平台               ${rw_huang}96.  ${color96}2FAuth自托管二步验证器"
 	  echo -e "${rw_huang}97.  ${color97}WireGuard组网(服务端)               ${rw_huang}98.  ${color98}WireGuard组网(客户端)"
 	  echo -e "${rw_huang}99.  ${color99}DSM群晖虚拟机                       ${rw_huang}100. ${color100}Syncthing点对点文件同步工具"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}101. ${color101}AI视频生成工具                      ${rw_huang}102. ${color102}VoceChat多人在线聊天系统"
 	  echo -e "${rw_huang}103. ${color103}Umami网站统计工具                   ${rw_huang}104. ${color104}Stream四层代理转发工具"
 	  echo -e "${rw_huang}105. ${color105}思源笔记                            ${rw_huang}106. ${color106}Drawnix开源白板工具"
 	  echo -e "${rw_huang}107. ${color107}PanSou网盘搜索                      ${rw_huang}108. ${color108}LangBot聊天机器人"
 	  echo -e "${rw_huang}109. ${color109}ZFile在线网盘                       ${rw_huang}110. ${color110}Karakeep书签管理"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}111. ${color111}多格式文件转换工具                  ${rw_huang}112. ${color112}Lucky大内网穿透工具"
-	  echo -e "${rw_huang}113. ${color113}Firefox浏览器                       ${rw_huang}114. ${color114}OpenClaw机器人管理工具${rw_huang}★${rw_bai}"
-	  echo -e "${rw_huang}115. ${color115}Hermes机器人管理工具${rw_huang}★${rw_bai}"
-	  echo -e "${rw_lan}-------------------------"
+	  echo -e "${rw_huang}113. ${color113}Firefox浏览器                       ${rw_huang}114. ${color114}OpenClaw机器人管理工具${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}115. ${color115}Hermes机器人管理工具${rw_huang}★${rw_lv}"
+	  echo -e "${rw_lv}-------------------------"
 	  echo -e "${rw_huang}第三方应用列表"
-  	  echo -e "${rw_huang}想要让你的应用出现在这里？查看开发者指南: ${rw_huang}https://dev.riwi.sh/${rw_bai}"
+  	  echo -e "${rw_huang}想要让你的应用出现在这里？查看开发者指南: ${rw_huang}https://dev.riwi.sh/${rw_lv}"
 
 	  for f in "$HOME"/apps/*.conf; do
 		  [ -e "$f" ] || continue
@@ -15874,20 +15902,20 @@ while true; do
 		  # 这里假设 appno.txt 中记录的是 base_name (即文件名)
 		  if echo "$app_numbers" | grep -q "^$base_name$"; then
 			  # 如果已安装：显示 base_name - 描述 [已安装] (绿色)
-			  echo -e "${rw_huang}$base_name${rw_bai} - ${rw_lv}$app_text [已安装]${rw_bai}"
+			  echo -e "${rw_huang}$base_name${rw_lv} - ${rw_lv}$app_text [已安装]${rw_lv}"
 		  else
 			  # 如果未安装：正常显示
-			  echo -e "${rw_huang}$base_name${rw_bai} - $app_text"
+			  echo -e "${rw_huang}$base_name${rw_lv} - $app_text"
 		  fi
 	  done
 
 
 
-	  echo -e "${rw_lan}-------------------------"
-	  echo -e "${rw_huang}b.   ${rw_bai}备份全部应用数据                    ${rw_huang}r.   ${rw_bai}还原全部应用数据"
-	  echo -e "${rw_lan}------------------------"
-	  echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	  echo -e "${rw_cheng}------------------------${rw_bai}"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}b.   ${rw_lv}备份全部应用数据                    ${rw_huang}r.   ${rw_lv}还原全部应用数据"
+	  echo -e "${rw_lv}------------------------"
+	  echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回主菜单${rw_lv}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
 	  read -e -p "请输入你的选择: " sub_choice
 	fi
 
@@ -16092,11 +16120,11 @@ while true; do
 				check_docker_app_ip
 			fi
 			echo ""
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "1. 使用"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "0. 返回上一级选单"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			read -e -p "输入你的选择: " choice
 
 			case $choice in
@@ -16173,9 +16201,9 @@ while true; do
 			port=25
 			timeout=3
 			if echo "quit" | timeout $timeout telnet smtp.qq.com $port | grep 'Connected'; then
-			  echo -e "${rw_lv}端口 $port 当前可用${rw_bai}"
+			  echo -e "${rw_lv}端口 $port 当前可用${rw_lv}"
 			else
-			  echo -e "${rw_hong}端口 $port 当前不可用${rw_bai}"
+			  echo -e "${rw_hong}端口 $port 当前不可用${rw_lv}"
 			fi
 			echo ""
 
@@ -16185,11 +16213,11 @@ while true; do
 				echo "https://$yuming"
 			fi
 
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "1. 安装           2. 更新           3. 卸载"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "0. 返回上一级选单"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			read -e -p "输入你的选择: " choice
 
 			case $choice in
@@ -16199,7 +16227,7 @@ while true; do
 					read -e -p "请设置邮箱域名 例如 mail.yuming.com : " yuming
 					mkdir -p /home/docker
 					echo "$yuming" > /home/docker/mail.txt
-					echo -e "${rw_cheng}------------------------${rw_bai}"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
 					ip_address
 					echo "先解析这些DNS记录"
 					echo "A           mail            $ipv4_address"
@@ -16210,7 +16238,7 @@ while true; do
 					echo "TXT         @               v=spf1 mx ~all"
 					echo "TXT         ?               ?"
 					echo ""
-					echo -e "${rw_cheng}------------------------${rw_bai}"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
 					echo "按任意键继续..."
 					read -n 1 -s -r -p ""
 
@@ -16231,7 +16259,7 @@ while true; do
 
 					clear
 					echo "poste.io已经安装完成"
-					echo -e "${rw_cheng}------------------------${rw_bai}"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
 					echo "您可以使用以下地址访问poste.io:"
 					echo "https://$yuming"
 					echo ""
@@ -16256,7 +16284,7 @@ while true; do
 
 					clear
 					echo "poste.io已经安装完成"
-					echo -e "${rw_cheng}------------------------${rw_bai}"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
 					echo "您可以使用以下地址访问poste.io:"
 					echo "https://$yuming"
 					echo ""
@@ -16581,11 +16609,11 @@ while true; do
 			fi
 			echo ""
 
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "1. 安装           2. 更新           3. 重置密码           4. 卸载"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			echo "0. 返回上一级选单"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			read -e -p "输入你的选择: " choice
 
 			case $choice in
@@ -18933,18 +18961,18 @@ while true; do
 
 		sleep 2
 		echo
-		echo -e "${rw_huang}所有客户端二维码配置: ${rw_bai}"
+		echo -e "${rw_huang}所有客户端二维码配置: ${rw_lv}"
 		docker exec wireguard bash -c 'for i in $(ls /config | grep peer_ | sed "s/peer_//"); do echo "--- $i ---"; /app/show-peer $i; done'
 		sleep 2
 		echo
-		echo -e "${rw_huang}所有客户端配置代码: ${rw_bai}"
+		echo -e "${rw_huang}所有客户端配置代码: ${rw_lv}"
 		docker exec wireguard sh -c 'for d in /config/peer_*; do echo "# $(basename $d) "; cat $d/*.conf; echo; done'
 		sleep 2
-		echo -e "${rw_lv}${COUNT}个客户端配置全部输出，使用方法如下：${rw_bai}"
-		echo -e "${rw_lv}1. 手机下载wg的APP，扫描上方二维码，可以快速连接网络${rw_bai}"
-		echo -e "${rw_lv}2. Windows下载客户端，复制配置代码连接网络。${rw_bai}"
-		echo -e "${rw_lv}3. Linux用脚本部署WG客户端，复制配置代码连接网络。${rw_bai}"
-		echo -e "${rw_lv}官方客户端下载方式: https://www.wireguard.com/install/${rw_bai}"
+		echo -e "${rw_lv}${COUNT}个客户端配置全部输出，使用方法如下：${rw_lv}"
+		echo -e "${rw_lv}1. 手机下载wg的APP，扫描上方二维码，可以快速连接网络${rw_lv}"
+		echo -e "${rw_lv}2. Windows下载客户端，复制配置代码连接网络。${rw_lv}"
+		echo -e "${rw_lv}3. Linux用脚本部署WG客户端，复制配置代码连接网络。${rw_lv}"
+		echo -e "${rw_lv}官方客户端下载方式: https://www.wireguard.com/install/${rw_lv}"
 		break_end
 
 		}
@@ -19536,7 +19564,7 @@ discourse,yunsou,ahhhhfs,nsgame,gying" \
 	  	send_stats "全部应用备份"
 
 	  	local backup_filename="app_$(date +"%Y%m%d%H%M%S").tar.gz"
-	  	echo -e "${rw_huang}正在备份 $backup_filename ...${rw_bai}"
+	  	echo -e "${rw_huang}正在备份 $backup_filename ...${rw_lv}"
 	  	cd / && tar czvf "$backup_filename" home
 
 	  	while true; do
@@ -19572,7 +19600,7 @@ discourse,yunsou,ahhhhfs,nsgame,gying" \
 	  	root_use
 	  	send_stats "全部应用还原"
 	  	echo "可用的应用备份"
-	  	echo -e "${rw_cheng}-------------------------${rw_bai}"
+	  	echo -e "${rw_cheng}-------------------------${rw_lv}"
 	  	ls -lt /app*.gz | awk '{print $NF}'
 	  	echo ""
 	  	read -e -p  "回车键还原最新的备份，输入备份文件名还原指定的备份，输入0退出：" filename
@@ -19588,7 +19616,7 @@ discourse,yunsou,ahhhhfs,nsgame,gying" \
 	  	fi
 
 	  	if [ -n "$filename" ]; then
-		  	  echo -e "${rw_huang}正在解压 $filename ...${rw_bai}"
+		  	  echo -e "${rw_huang}正在解压 $filename ...${rw_lv}"
 		  	  cd / && tar -xzf "$filename"
 			  echo "应用数据已还原，目前请手动进入指定应用菜单，更新应用，即可还原应用。"
 	  	else
@@ -19614,7 +19642,7 @@ discourse,yunsou,ahhhhfs,nsgame,gying" \
 		if [ -f "$custom_app" ]; then
 			. "$custom_app"
 		else
-			echo -e "${rw_hong}错误: 未找到编号为 ${sub_choice} 的应用配置${rw_bai}"
+			echo -e "${rw_hong}错误: 未找到编号为 ${sub_choice} 的应用配置${rw_lv}"
 		fi
 		  ;;
 	esac
@@ -19631,56 +19659,56 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _tmux_stat="${rw_hong}未安装${rw_bai}" _tmux_ver="" _session_count=0 _session_list=""
-	local _sshd_stat="${rw_hong}关闭${rw_bai}"
+	local _tmux_stat="${rw_hong}未安装${rw_lv}" _tmux_ver="" _session_count=0 _session_list=""
+	local _sshd_stat="${rw_hong}关闭${rw_lv}"
 
 	if command -v tmux &>/dev/null; then
 		_tmux_ver=$(tmux -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+).*/\1/p' | head -1)
 		if pgrep -x tmux &>/dev/null; then
-			_tmux_stat="${rw_lv}运行中${rw_bai}"
+			_tmux_stat="${rw_lv}运行中${rw_lv}"
 		else
-			_tmux_stat="${rw_huang}已安装${rw_bai}"
+			_tmux_stat="${rw_huang}已安装${rw_lv}"
 		fi
 		_session_list=$(tmux list-sessions 2>/dev/null)
 		_session_count=$(echo "$_session_list" | grep -c . 2>/dev/null || echo 0)
 		[ "$_session_count" -le 0 ] && _session_count=0
 	fi
 	if grep -q 'tmux attach-session -t sshd || tmux new-session -s sshd' ~/.bashrc 2>/dev/null; then
-		_sshd_stat="${rw_lv}开启${rw_bai}"
+		_sshd_stat="${rw_lv}开启${rw_lv}"
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  后台工作区  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " tmux ${_tmux_stat}  v${_tmux_ver:-?}  会话 ${rw_lv}${_session_count}${rw_bai}  SSH常驻 ${_sshd_stat}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  后台工作区  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " tmux ${_tmux_stat}  v${_tmux_ver:-?}  会话 ${rw_lv}${_session_count}${rw_lv}  SSH常驻 ${_sshd_stat}"
 	echo ""
-	echo -e " ${rw_cheng}──── 快速进入${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  1号工作区        ${rw_huang}2${rw_bai}  2号工作区        ${rw_huang}3${rw_bai}  3号工作区"
-	echo -e " ${rw_huang}4${rw_bai}  4号工作区        ${rw_huang}5${rw_bai}  5号工作区        ${rw_huang}6${rw_bai}  6号工作区"
-	echo -e " ${rw_huang}7${rw_bai}  7号工作区        ${rw_huang}8${rw_bai}  8号工作区        ${rw_huang}9${rw_bai}  9号工作区"
-	echo -e " ${rw_huang}10${rw_bai} 10号工作区"
+	echo -e " ${rw_cheng}──── 快速进入${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  1号工作区        ${rw_huang}2${rw_lv} 2号工作区        ${rw_huang}3${rw_lv}  3号工作区"
+	echo -e " ${rw_huang}4${rw_lv}  4号工作区        ${rw_huang}5${rw_lv} 5号工作区        ${rw_huang}6${rw_lv}  6号工作区"
+	echo -e " ${rw_huang}7${rw_lv}  7号工作区        ${rw_huang}8${rw_lv} 8号工作区        ${rw_huang}9${rw_lv}  9号工作区"
+	echo -e " ${rw_huang}10${rw_lv} 10号工作区"
 	echo ""
-	echo -e " ${rw_cheng}──── 工作区管理${rw_bai}"
-	echo -e " ${rw_huang}11${rw_bai} 创建/进入工作区    ${rw_huang}12${rw_bai} 删除指定工作区"
-	echo -e " ${rw_huang}13${rw_bai} 注入命令到后台      ${rw_huang}14${rw_bai} 查看会话列表"
+	echo -e " ${rw_cheng}──── 工作区管理${rw_lv}"
+	echo -e " ${rw_huang}11${rw_lv} 创建/进入工作区     ${rw_huang}12${rw_lv} 删除指定工作区"
+	echo -e " ${rw_huang}13${rw_lv} 注入命令到后台      ${rw_huang}14${rw_lv} 查看会话列表"
 	echo ""
-	echo -e " ${rw_cheng}──── SSH常驻模式${rw_bai}"
-	echo -e " ${rw_huang}15${rw_bai} 开启SSH常驻        ${rw_huang}16${rw_bai} 关闭SSH常驻"
+	echo -e " ${rw_cheng}──── SSH常驻模式${rw_lv}"
+	echo -e " ${rw_huang}15${rw_lv} 开启SSH常驻        ${rw_huang}16${rw_lv} 关闭SSH常驻"
 	echo ""
-	echo -e " ${rw_cheng}──── 操作提示${rw_bai}"
-	echo -e " ${rw_lan}退出工作区: Ctrl+b d   切换窗口: Ctrl+b n${rw_bai}"
+	echo -e " ${rw_cheng}──── 操作提示${rw_lv}"
+	echo -e " ${rw_lv}退出工作区: Ctrl+b d   切换窗口: Ctrl+b n${rw_lv}"
 
 	# ── 显示当前会话列表 ──
 	if [ "$_session_count" -gt 0 ]; then
 		echo ""
-		echo -e " ${rw_cheng}──── 当前会话${rw_bai}"
+		echo -e " ${rw_cheng}──── 当前会话${rw_lv}"
 		echo "$_session_list" | while IFS= read -r _line; do
-			echo -e " ${rw_lan}$_line${rw_bai}"
+			echo -e " ${rw_lv}$_line${rw_lv}"
 		done
 	fi
 
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _wk_choice
 
 	case $_wk_choice in
@@ -19700,8 +19728,8 @@ while true; do
 		12)
 			read -e -p "请输入要删除的工作区名称: " gongzuoqu_name
 			tmux kill-session -t "$gongzuoqu_name" 2>/dev/null && \
-				echo -e "${rw_lv}工作区 ${gongzuoqu_name} 已删除${rw_bai}" || \
-				echo -e "${rw_hong}工作区 ${gongzuoqu_name} 不存在或删除失败${rw_bai}"
+				echo -e "${rw_lv}工作区 ${gongzuoqu_name} 已删除${rw_lv}" || \
+				echo -e "${rw_hong}工作区 ${gongzuoqu_name} 不存在或删除失败${rw_lv}"
 			send_stats "删除工作区"
 			;;
 		13)
@@ -19712,13 +19740,13 @@ while true; do
 			;;
 		14)
 			clear
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			if command -v tmux &>/dev/null; then
-				tmux list-sessions 2>/dev/null || echo -e "${rw_huang}当前无活跃会话${rw_bai}"
+				tmux list-sessions 2>/dev/null || echo -e "${rw_huang}当前无活跃会话${rw_lv}"
 			else
-				echo -e "${rw_hong}tmux 未安装${rw_bai}"
+				echo -e "${rw_hong}tmux 未安装${rw_lv}"
 			fi
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			send_stats "查看会话列表"
 			;;
 		15)
@@ -19734,13 +19762,13 @@ while true; do
 			send_stats "关闭SSH常驻模式"
 			sed -i '/# 自动进入 tmux 会话/,+4d' ~/.bashrc
 			tmux kill-session -t sshd 2>/dev/null
-			echo -e "${rw_lv}SSH常驻模式已关闭${rw_bai}"
+			echo -e "${rw_lv}SSH常驻模式已关闭${rw_lv}"
 			;;
 		0)
 			riwi
 			;;
 		*)
-			echo -e "${rw_hong}无效的输入!${rw_bai}"
+			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
 	break_end
@@ -19818,19 +19846,19 @@ fail2ban_panel() {
 				echo -e "SSH防御程序 $check_f2b_status"
 				echo "fail2ban是一个SSH防止暴力破解工具"
 				echo "官网介绍: ${gh_proxy}github.com/fail2ban/fail2ban"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "1. 安装防御程序"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "2. 查看SSH拦截记录"
 				echo "3. 日志实时监控"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "4. 基础参数配置（封禁时长/时间窗口/重试次数）"
 				echo "5. 编辑配置文件（nano）"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "9. 卸载防御程序"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				read -e -p "请输入你的选择: " sub_choice
 				case $sub_choice in
 					1)
@@ -19840,9 +19868,9 @@ fail2ban_panel() {
 						break_end
 						;;
 					2)
-						echo -e "${rw_cheng}------------------------${rw_bai}"
+						echo -e "${rw_cheng}------------------------${rw_lv}"
 						f2b_sshd
-						echo -e "${rw_cheng}------------------------${rw_bai}"
+						echo -e "${rw_cheng}------------------------${rw_lv}"
 						break_end
 						;;
 					3)
@@ -19881,29 +19909,29 @@ net_menu() {
 
 	send_stats "网卡管理工具"
 	show_nics() {
-		echo -e "${rw_cheng}================ 当前网卡信息 ================${rw_bai}"
+		echo -e "${rw_cheng}================ 当前网卡信息 ================${rw_lv}"
 		printf "%-18s %-12s %-20s %-26s\n" "网卡名" "状态" "IP地址" "MAC地址"
-		echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 		for nic in $(ls /sys/class/net); do
 			state=$(cat /sys/class/net/$nic/operstate 2>/dev/null)
 			ipaddr=$(ip -4 addr show $nic | awk '/inet /{print $2}' | head -n1)
 			mac=$(cat /sys/class/net/$nic/address 2>/dev/null)
 			printf "%-15s %-10s %-18s %-20s\n" "$nic" "$state" "${ipaddr:-无}" "$mac"
 		done
-		echo -e "${rw_cheng}================================================${rw_bai}"
+		echo -e "${rw_cheng}================================================${rw_lv}"
 	}
 
 	while true; do
 		clear
 		show_nics
 		echo
-		echo -e "${rw_cheng}=========== 网卡管理菜单 ===========${rw_bai}"
+		echo -e "${rw_cheng}=========== 网卡管理菜单 ===========${rw_lv}"
 		echo "1. 启用网卡"
 		echo "2. 禁用网卡"
 		echo "3. 查看网卡详细信息"
 		echo "4. 刷新网卡信息"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}====================================${rw_bai}"
+		echo -e "${rw_cheng}====================================${rw_lv}"
 		read -erp "请选择操作: " choice
 
 		case $choice in
@@ -19931,7 +19959,7 @@ net_menu() {
 				send_stats "查看网卡详情"
 				read -erp "请输入要查看的网卡名: " nic
 				if ip link show "$nic" &>/dev/null; then
-					echo -e "${rw_cheng}========== $nic 详细信息 ==========${rw_bai}"
+					echo -e "${rw_cheng}========== $nic 详细信息 ==========${rw_lv}"
 					ip addr show "$nic"
 					ethtool "$nic" 2>/dev/null | head -n 10
 				else
@@ -19956,7 +19984,7 @@ log_menu() {
 	send_stats "系统日志管理工具"
 
 	show_log_overview() {
-		echo -e "${rw_cheng}============= 系统日志概览 =============${rw_bai}"
+		echo -e "${rw_cheng}============= 系统日志概览 =============${rw_lv}"
 		echo "主机名: $(hostname)"
 		echo "系统时间: $(date)"
 		echo
@@ -19965,21 +19993,21 @@ log_menu() {
 		echo
 		echo "[ journal 日志占用 ]"
 		journalctl --disk-usage 2>/dev/null
-		echo -e "${rw_cheng}========================================${rw_bai}"
+		echo -e "${rw_cheng}========================================${rw_lv}"
 	}
 
 	while true; do
 		clear
 		show_log_overview
 		echo
-		echo -e "${rw_cheng}=========== 系统日志管理菜单 ===========${rw_bai}"
+		echo -e "${rw_cheng}=========== 系统日志管理菜单 ===========${rw_lv}"
 		echo "1. 查看最近系统日志（journal）"
 		echo "2. 查看指定服务日志"
 		echo "3. 查看登录/安全日志"
 		echo "4. 实时跟踪日志"
 		echo "5. 清理旧 journal 日志"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}=======================================${rw_bai}"
+		echo -e "${rw_cheng}=======================================${rw_lv}"
 		read -erp "请选择操作: " choice
 
 		case $choice in
@@ -20002,10 +20030,10 @@ log_menu() {
 				;;
 			3)
 				send_stats "查看登录/安全日志"
-				echo -e "${rw_cheng}====== 最近登录日志 ======${rw_bai}"
+				echo -e "${rw_cheng}====== 最近登录日志 ======${rw_lv}"
 				last -n 10
 				echo
-				echo -e "${rw_cheng}====== 认证日志 ======${rw_bai}"
+				echo -e "${rw_cheng}====== 认证日志 ======${rw_lv}"
 				if [ -f /var/log/secure ]; then
 					tail -n 20 /var/log/secure
 				elif [ -f /var/log/auth.log ]; then
@@ -20064,9 +20092,9 @@ env_menu() {
 	show_env_vars() {
 		clear
 		send_stats "当前已生效环境变量"
-		echo -e "${rw_cheng}========== 当前已生效环境变量（节选） ==========${rw_bai}"
+		echo -e "${rw_cheng}========== 当前已生效环境变量（节选） ==========${rw_lv}"
 		printf "%-20s %s\n" "变量名" "值"
-		echo -e "${rw_cheng}-----------------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}-----------------------------------------------${rw_lv}"
 		for v in USER HOME SHELL LANG PWD; do
 			printf "%-20s %s\n" "$v" "${!v}"
 		done
@@ -20076,7 +20104,7 @@ env_menu() {
 		echo "$PATH" | tr ':' '\n' | nl -ba
 
 		echo
-		echo -e "${rw_cheng}========== 配置文件中定义的变量（解析） ==========${rw_bai}"
+		echo -e "${rw_cheng}========== 配置文件中定义的变量（解析） ==========${rw_lv}"
 
 		parse_file_vars() {
 			local file="$1"
@@ -20084,7 +20112,7 @@ env_menu() {
 
 			echo
 			echo ">>> 来源文件：$file"
-			echo -e "${rw_cheng}-----------------------------------------------${rw_bai}"
+			echo -e "${rw_cheng}-----------------------------------------------${rw_lv}"
 
 			# 提取 export VAR=xxx 或 VAR=xxx
 			grep -Ev '^\s*#|^\s*$' "$file" \
@@ -20100,7 +20128,7 @@ env_menu() {
 		parse_file_vars "$HOME/.profile"
 
 		echo
-		echo -e "${rw_cheng}===============================================${rw_bai}"
+		echo -e "${rw_cheng}===============================================${rw_lv}"
 		read -erp "按回车继续..."
 	}
 
@@ -20110,9 +20138,9 @@ env_menu() {
 		send_stats "查看变量文件 $file"
 		clear
 		if [ -f "$file" ]; then
-			echo -e "${rw_cheng}========== 查看文件：$file ==========${rw_bai}"
+			echo -e "${rw_cheng}========== 查看文件：$file ==========${rw_lv}"
 			cat -n "$file"
-			echo -e "${rw_cheng}====================================${rw_bai}"
+			echo -e "${rw_cheng}====================================${rw_lv}"
 		else
 			echo "文件不存在：$file"
 		fi
@@ -20137,18 +20165,18 @@ env_menu() {
 
 	while true; do
 		clear
-		echo -e "${rw_cheng}=========== 系统环境变量管理 ==========${rw_bai}"
+		echo -e "${rw_cheng}=========== 系统环境变量管理 ==========${rw_lv}"
 		echo "当前用户：$USER"
-		echo -e "${rw_cheng}--------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------------------------${rw_lv}"
 		echo "1. 查看当前常用环境变量"
 		echo "2. 查看 ~/.bashrc"
 		echo "3. 查看 ~/.profile"
 		echo "4. 编辑 ~/.bashrc"
 		echo "5. 编辑 ~/.profile"
 		echo "6. 重新加载环境变量（source）"
-		echo -e "${rw_cheng}--------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------------------------${rw_lv}"
 		echo "0. 返回上一级选单"
-		echo -e "${rw_cheng}--------------------------------------${rw_bai}"
+		echo -e "${rw_cheng}--------------------------------------${rw_lv}"
 		read -erp "请选择操作: " choice
 
 		case "$choice" in
@@ -20261,75 +20289,75 @@ linux_Settings() {
         refresh_status_cache
     fi
     
-    local _fw_stat="${rw_hong}未运行${rw_bai}"
-    local _ssh_stat="${rw_hong}未运行${rw_bai}"
-    local _bbr_stat="${rw_hong}未开启${rw_bai}"
+    local _fw_stat="${rw_hong}未运行${rw_lv}"
+    local _ssh_stat="${rw_hong}未运行${rw_lv}"
+    local _bbr_stat="${rw_hong}未开启${rw_lv}"
     local _swap_size="0"
 
     # 防火墙状态（使用缓存）
     if $_CACHE_FIREWALLD_ACTIVE; then
-      _fw_stat="${rw_lv}firewalld运行中${rw_bai}"
+      _fw_stat="${rw_lv}firewalld运行中${rw_lv}"
     elif $_CACHE_UFW_ACTIVE; then
-      _fw_stat="${rw_lv}ufw运行中${rw_bai}"
+      _fw_stat="${rw_lv}ufw运行中${rw_lv}"
     fi
 
     # SSH 状态（使用缓存）
     if $_CACHE_SSHD_ACTIVE; then
-      _ssh_stat="${rw_lv}运行中${rw_bai}"
+      _ssh_stat="${rw_lv}运行中${rw_lv}"
     fi
 
     # BBR 状态（这个不依赖 systemctl，保持原样）
     if grep -q "bbr" /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null; then
-      _bbr_stat="${rw_lv}已开启${rw_bai}"
+      _bbr_stat="${rw_lv}已开启${rw_lv}"
     fi
 
     # 虚拟内存（这个不依赖 systemctl，保持原样）
     _swap_size=$(free -m 2>/dev/null | grep Swap | awk '{print $2}')
     if [ "$_swap_size" = "0" ] || [ -z "$_swap_size" ]; then
-      _swap_size="${rw_hong}未设置${rw_bai}"
+      _swap_size="${rw_hong}未设置${rw_lv}"
     else
-      _swap_size="${rw_lv}${_swap_size}MB${rw_bai}"
+      _swap_size="${rw_lv}${_swap_size}MB${rw_lv}"
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  系统工具  ━━━━━━━━━━━━${rw_bai}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  系统工具  ━━━━━━━━━━━━${rw_lv}"
     echo -e " 防火墙 ${_fw_stat}  SSH ${_ssh_stat}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}"
     echo ""
-    echo -e " ${rw_cheng}──── 系统配置${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  基础设置              ${rw_huang}9${rw_bai}  修改主机名"
-    echo -e " ${rw_huang}7${rw_bai}  系统时区调整          ${rw_huang}16${rw_bai} 切换系统语言"
-    echo -e " ${rw_huang}10${rw_bai} 切换系统更新源"
+    echo -e " ${rw_cheng}──── 系统配置${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  基础设置              ${rw_huang}9${rw_lv}  修改主机名"
+    echo -e " ${rw_huang}7${rw_lv}  系统时区调整          ${rw_huang}16${rw_lv} 切换系统语言"
+    echo -e " ${rw_huang}10${rw_lv} 切换系统更新源"
     echo ""
-    echo -e " ${rw_cheng}──── 网络管理${rw_bai}"
-    echo -e " ${rw_huang}2${rw_bai}  优化DNS地址          ${rw_huang}4${rw_bai} 切换优先ipv4/ipv6"
-    echo -e " ${rw_huang}11${rw_bai} 本机host解析         ${rw_huang}8${rw_bai} 防火墙高级管理器"
+    echo -e " ${rw_cheng}──── 网络管理${rw_lv}"
+    echo -e " ${rw_huang}2${rw_lv}  优化DNS地址          ${rw_huang}4${rw_lv} 切换优先ipv4/ipv6"
+    echo -e " ${rw_huang}11${rw_lv} 本机host解析         ${rw_huang}8${rw_lv} 防火墙高级管理器"
     echo ""
-    echo -e " ${rw_cheng}──── 用户管理${rw_bai}"
-    echo -e " ${rw_huang}5${rw_bai}  用户管理              ${rw_huang}6${rw_bai} 用户/密码生成器"
-    echo -e " ${rw_huang}19${rw_bai} ssh远程连接工具"
+    echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
+    echo -e " ${rw_huang}5${rw_lv}  用户管理              ${rw_huang}6${rw_lv} 用户/密码生成器"
+    echo -e " ${rw_huang}19${rw_lv} ssh远程连接工具"
     echo ""
-    echo -e " ${rw_cheng}──── 系统优化${rw_bai}"
-    echo -e " ${rw_huang}66${rw_bai} 一条龙系统调优        ${rw_huang}12${rw_bai} 限流自动关机"
-    echo -e " ${rw_huang}18${rw_bai} 设置系统回收站        ${rw_huang}14${rw_bai} 红帽系Linux内核升级"
+    echo -e " ${rw_cheng}──── 系统优化${rw_lv}"
+    echo -e " ${rw_huang}66${rw_lv} 一条龙系统调优        ${rw_huang}12${rw_lv} 限流自动关机"
+    echo -e " ${rw_huang}18${rw_lv} 设置系统回收站        ${rw_huang}14${rw_lv} 红帽系Linux内核升级"
     echo ""
-    echo -e " ${rw_cheng}──── 安全工具${rw_bai}"
-    echo -e " ${rw_huang}15${rw_bai} 病毒扫描工具          ${rw_huang}13${rw_bai} 修复OpenSSH高危漏洞"
-    echo -e " ${rw_huang}100${rw_bai} 隐私与安全"
+    echo -e " ${rw_cheng}──── 安全工具${rw_lv}"
+    echo -e " ${rw_huang}15${rw_lv} 病毒扫描工具          ${rw_huang}13${rw_lv} 修复OpenSSH高危漏洞"
+    echo -e " ${rw_huang}100${rw_lv} 隐私与安全"
     echo ""
-    echo -e " ${rw_cheng}──── 高级工具${rw_bai}"
-    echo -e " ${rw_huang}17${rw_bai} 命令行美化工具        ${rw_huang}20${rw_bai} 命令行历史记录"
-    echo -e " ${rw_huang}21${rw_bai} 命令收藏夹            ${rw_huang}22${rw_bai} 系统变量管理工具"
-    echo -e " ${rw_huang}101${rw_bai} r命令高级用法"
+    echo -e " ${rw_cheng}──── 高级工具${rw_lv}"
+    echo -e " ${rw_huang}17${rw_lv} 命令行美化工具        ${rw_huang}20${rw_lv} 命令行历史记录"
+    echo -e " ${rw_huang}21${rw_lv} 命令收藏夹            ${rw_huang}22${rw_lv} 系统变量管理工具"
+    echo -e " ${rw_huang}101${rw_lv} r命令高级用法"
     echo ""
-    echo -e " ${rw_cheng}──── 系统维护${rw_bai}"
-    echo -e " ${rw_huang}3${rw_bai}  一键重装系统          ${rw_huang}99${rw_bai} 重启服务器"
-    echo -e " ${rw_huang}102${rw_bai} 卸载Riou脚本"
+    echo -e " ${rw_cheng}──── 系统维护${rw_lv}"
+    echo -e " ${rw_huang}3${rw_lv}  一键重装系统          ${rw_huang}99${rw_lv} 重启服务器"
+    echo -e " ${rw_huang}102${rw_lv} 卸载Riou脚本"
     echo ""
-    echo -e " ${rw_cheng}──── 其他${rw_bai}"
-    echo -e " ${rw_huang}61${rw_bai} 留言板"
+    echo -e " ${rw_cheng}──── 其他${rw_lv}"
+    echo -e " ${rw_huang}61${rw_lv} 留言板"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
@@ -20351,21 +20379,21 @@ linux_Settings() {
 			while true; do
 				clear
 				echo "设置v4/v6优先级"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 
 
 				if grep -Eq '^[[:space:]]*precedence[[:space:]]+::ffff:0:0/96[[:space:]]+100[[:space:]]*$' /etc/gai.conf 2>/dev/null; then
-					echo -e "当前网络优先级设置: ${rw_huang}IPv4${rw_bai} 优先"
+					echo -e "当前网络优先级设置: ${rw_huang}IPv4${rw_lv} 优先"
 				else
-					echo -e "当前网络优先级设置: ${rw_huang}IPv6${rw_bai} 优先"
+					echo -e "当前网络优先级设置: ${rw_huang}IPv6${rw_lv} 优先"
 				fi
 
 				echo ""
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "1. IPv4 优先          2. IPv6 优先          3. IPv6 修复工具"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				read -e -p "选择优先的网络: " choice
 
 				case $choice in
@@ -20398,7 +20426,7 @@ linux_Settings() {
 				root_use
 				send_stats "用户管理"
 				echo "用户列表"
-				echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_bai}"
+				echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_lv}"
 				printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
 				while IFS=: read -r username _ userid groupid _ _ homedir shell; do
 					local groups=$(groups "$username" | cut -d : -f 2)
@@ -20414,15 +20442,15 @@ linux_Settings() {
 
 				  echo ""
 				  echo "账户操作"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "1. 创建普通用户             2. 创建高级用户"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "3. 赋予最高权限             4. 取消最高权限"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "5. 删除账号"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  read -e -p "请输入你的选择: " sub_choice
 
 				  case $sub_choice in
@@ -20472,7 +20500,7 @@ EOF
 			clear
 			send_stats "用户信息生成器"
 			echo "随机用户名"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			for i in {1..5}; do
 				username="user$(< /dev/urandom tr -dc _a-z0-9 | head -c6)"
 				echo "随机用户名 $i: $username"
@@ -20480,7 +20508,7 @@ EOF
 
 			echo ""
 			echo "随机姓名"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			local first_names=("John" "Jane" "Michael" "Emily" "David" "Sophia" "William" "Olivia" "James" "Emma" "Ava" "Liam" "Mia" "Noah" "Isabella")
 			local last_names=("Smith" "Johnson" "Brown" "Davis" "Wilson" "Miller" "Jones" "Garcia" "Martinez" "Williams" "Lee" "Gonzalez" "Rodriguez" "Hernandez")
 
@@ -20494,7 +20522,7 @@ EOF
 
 			echo ""
 			echo "随机UUID"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			for i in {1..5}; do
 				uuid=$(cat /proc/sys/kernel/random/uuid)
 				echo "随机UUID $i: $uuid"
@@ -20502,7 +20530,7 @@ EOF
 
 			echo ""
 			echo "16位随机密码"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			for i in {1..5}; do
 				local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
 				echo "随机密码 $i: $password"
@@ -20510,7 +20538,7 @@ EOF
 
 			echo ""
 			echo "32位随机密码"
-			echo -e "${rw_cheng}------------------------${rw_bai}"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
 			for i in {1..5}; do
 				local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
 				echo "随机密码 $i: $password"
@@ -20538,28 +20566,28 @@ EOF
 
 				echo ""
 				echo "时区切换"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "亚洲"
 				echo "1.  中国上海时间             2.  中国香港时间"
 				echo "3.  日本东京时间             4.  韩国首尔时间"
 				echo "5.  新加坡时间               6.  印度加尔各答时间"
 				echo "7.  阿联酋迪拜时间           8.  澳大利亚悉尼时间"
 				echo "9.  泰国曼谷时间"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "欧洲"
 				echo "11. 英国伦敦时间             12. 法国巴黎时间"
 				echo "13. 德国柏林时间             14. 俄罗斯莫斯科时间"
 				echo "15. 荷兰尤特赖赫特时间       16. 西班牙马德里时间"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "美洲"
 				echo "21. 美国西部时间             22. 美国东部时间"
 				echo "23. 加拿大时间               24. 墨西哥时间"
 				echo "25. 巴西时间                 26. 阿根廷时间"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "31. UTC全球标准时间"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				read -e -p "请输入你的选择: " sub_choice
 
 
@@ -20603,8 +20631,8 @@ EOF
 		  while true; do
 			  clear
 			  local current_hostname=$(uname -n)
-			  echo -e "当前主机名: ${rw_huang}$current_hostname${rw_bai}"
-			  echo -e "${rw_cheng}------------------------${rw_bai}"
+			  echo -e "当前主机名: ${rw_huang}$current_hostname${rw_lv}"
+			  echo -e "${rw_cheng}------------------------${rw_lv}"
 			  read -e -p "请输入新的主机名（输入0退出）: " new_hostname
 			  if [ -n "$new_hostname" ] && [ "$new_hostname" != "0" ]; then
 				  if [ -f /etc/alpine-release ]; then
@@ -20646,11 +20674,11 @@ EOF
 		  clear
 		  echo "选择更新源区域"
 		  echo "接入LinuxMirrors切换系统更新源"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "1. 中国大陆【默认】          2. 中国大陆【教育网】          3. 海外地区          4. 智能切换更新源"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  echo "0. 返回上一级选单"
-		  echo -e "${rw_cheng}------------------------${rw_bai}"
+		  echo -e "${rw_cheng}------------------------${rw_lv}"
 		  read -e -p "输入你的选择: " choice
 
 		  case $choice in
@@ -20689,11 +20717,11 @@ EOF
 				  cat /etc/hosts
 				  echo ""
 				  echo "操作"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "1. 添加新的解析              2. 删除解析地址"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------${rw_lv}"
 				  read -e -p "请输入你的选择: " host_dns
 
 				  case $host_dns in
@@ -20722,31 +20750,31 @@ EOF
 				clear
 				echo "限流关机功能"
 				echo "视频介绍: https://www.bilibili.com/video/BV1mC411j7Qd?t=0.1"
-				echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				echo "当前流量使用情况，重启服务器流量计算会清零！"
 				output_status
-				echo -e "${rw_huang}${rw_huang}总接收${rw_huang}: ${rw_bai}$rx"
-				echo -e "${rw_huang}${rw_huang}总发送${rw_huang}: ${rw_bai}$tx"
+				echo -e "${rw_huang}${rw_huang}总接收${rw_huang}: ${rw_lv}$rx"
+				echo -e "${rw_huang}${rw_huang}总发送${rw_huang}: ${rw_lv}$tx"
 
 				# 检查是否存在 Limiting_Shut_down.sh 文件
 				if [ -f ~/Limiting_Shut_down.sh ]; then
 					# 获取 threshold_gb 的值
 					local rx_threshold_gb=$(sed -n 's/.*rx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
 					local tx_threshold_gb=$(sed -n 's/.*tx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
-					echo -e "${rw_lv}当前设置的进站限流阈值为: ${rw_huang}${rx_threshold_gb}${rw_lv}G${rw_bai}"
-					echo -e "${rw_lv}当前设置的出站限流阈值为: ${rw_huang}${tx_threshold_gb}${rw_lv}GB${rw_bai}"
+					echo -e "${rw_lv}当前设置的进站限流阈值为: ${rw_huang}${rx_threshold_gb}${rw_lv}G${rw_lv}"
+					echo -e "${rw_lv}当前设置的出站限流阈值为: ${rw_huang}${tx_threshold_gb}${rw_lv}GB${rw_lv}"
 				else
-					echo -e "${rw_lv}当前未启用限流关机功能${rw_bai}"
+					echo -e "${rw_lv}当前未启用限流关机功能${rw_lv}"
 				fi
 
 				echo
-				echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				echo "系统每分钟会检测实际流量是否到达阈值，到达后会自动关闭服务器！"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "1. 开启限流关机功能          2. 停用限流关机功能"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_bai}"
+				echo -e "${rw_cheng}------------------------${rw_lv}"
 				read -e -p "请输入你的选择: " Limiting
 
 				case "$Limiting" in
@@ -20856,76 +20884,76 @@ EOF
 			  root_use
 			  send_stats "一条龙调优"
 			  echo "一条龙系统调优"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 			  echo "将对以下内容进行操作与优化"
 			  echo "1. 优化系统更新源，更新系统到最新"
 			  echo "2. 清理系统垃圾文件"
-			  echo -e "3. 设置虚拟内存${rw_huang}1G${rw_bai}"
-			  echo -e "4. 设置SSH端口号为${rw_huang}5522${rw_bai}"
+			  echo -e "3. 设置虚拟内存${rw_huang}1G${rw_lv}"
+			  echo -e "4. 设置SSH端口号为${rw_huang}5522${rw_lv}"
 			  echo -e "5. 启动fail2ban防御SSH暴力破解"
 			  echo -e "6. 开放所有端口"
-			  echo -e "7. 开启${rw_huang}BBR${rw_bai}加速"
-			  echo -e "8. 设置时区到${rw_huang}上海${rw_bai}"
-			  echo -e "9. 自动优化DNS地址${rw_huang}海外: 1.1.1.1 8.8.8.8  国内: 223.5.5.5 ${rw_bai}"
-		  	  echo -e "10. 设置网络为${rw_huang}ipv4优先${rw_bai}"
-			  echo -e "11. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_bai}"
-			  echo -e "12. Linux系统内核参数优化${rw_huang}自动根据网络环境调优${rw_bai}"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+			  echo -e "7. 开启${rw_huang}BBR${rw_lv}加速"
+			  echo -e "8. 设置时区到${rw_huang}上海${rw_lv}"
+			  echo -e "9. 自动优化DNS地址${rw_huang}海外: 1.1.1.1 8.8.8.8  国内: 223.5.5.5 ${rw_lv}"
+		  	  echo -e "10. 设置网络为${rw_huang}ipv4优先${rw_lv}"
+			  echo -e "11. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
+			  echo -e "12. Linux系统内核参数优化${rw_huang}自动根据网络环境调优${rw_lv}"
+			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 			  read -e -p "确定一键保养吗？(Y/N): " choice
 
 			  case "$choice" in
 				[Yy])
 				  clear
 				  send_stats "一条龙调优启动"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  switch_mirror false false
 				  linux_update
-				  echo -e "[${rw_lv}OK${rw_bai}] 1/12. 更新系统到最新"
+				  echo -e "[${rw_lv}OK${rw_lv}] 1/12. 更新系统到最新"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  linux_clean
-				  echo -e "[${rw_lv}OK${rw_bai}] 2/12. 清理系统垃圾文件"
+				  echo -e "[${rw_lv}OK${rw_lv}] 2/12. 清理系统垃圾文件"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  add_swap 1024
-				  echo -e "[${rw_lv}OK${rw_bai}] 3/12. 设置虚拟内存${rw_huang}1G${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 3/12. 设置虚拟内存${rw_huang}1G${rw_lv}"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  new_ssh_port 5522
-				  echo -e "[${rw_lv}OK${rw_bai}] 4/12. 设置SSH端口号为${rw_huang}5522${rw_bai}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 4/12. 设置SSH端口号为${rw_huang}5522${rw_lv}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  f2b_install_sshd
 				  cd ~
 				  f2b_status
-				  echo -e "[${rw_lv}OK${rw_bai}] 5/12. 启动fail2ban防御SSH暴力破解"
+				  echo -e "[${rw_lv}OK${rw_lv}] 5/12. 启动fail2ban防御SSH暴力破解"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
-				  echo -e "[${rw_lv}OK${rw_bai}] 6/12. 开放所有端口"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 6/12. 开放所有端口"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  bbr_on
-				  echo -e "[${rw_lv}OK${rw_bai}] 7/12. 开启${rw_huang}BBR${rw_bai}加速"
+				  echo -e "[${rw_lv}OK${rw_lv}] 7/12. 开启${rw_huang}BBR${rw_lv}加速"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  set_timedate Asia/Shanghai
-				  echo -e "[${rw_lv}OK${rw_bai}] 8/12. 设置时区到${rw_huang}上海${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 8/12. 设置时区到${rw_huang}上海${rw_lv}"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  auto_optimize_dns
-				  echo -e "[${rw_lv}OK${rw_bai}] 9/12. 自动优化DNS地址${rw_huang}${rw_bai}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 9/12. 自动优化DNS地址${rw_huang}${rw_lv}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  prefer_ipv4
-				  echo -e "[${rw_lv}OK${rw_bai}] 10/12. 设置网络为${rw_huang}ipv4优先${rw_bai}}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 10/12. 设置网络为${rw_huang}ipv4优先${rw_lv}}"
 
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 				  install_docker
 				  install wget sudo tar unzip socat btop nano vim
-				  echo -e "[${rw_lv}OK${rw_bai}] 11/12. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_bai}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 11/12. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
+				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 
 				  curl -sS ${gh_proxy}raw.githubusercontent.com/riwi/sh/refs/heads/main/network-optimize.sh | bash
-				  echo -e "[${rw_lv}OK${rw_bai}] 12/12. Linux系统内核参数优化"
-				  echo -e "${rw_lv}一条龙系统调优已完成${rw_bai}"
+				  echo -e "[${rw_lv}OK${rw_lv}] 12/12. Linux系统内核参数优化"
+				  echo -e "${rw_lv}一条龙系统调优已完成${rw_lv}"
 
 				  ;;
 				[Nn])
@@ -20949,9 +20977,9 @@ EOF
 			while true; do
 			  clear
 			  if grep -q '^ENABLE_STATS="true"' /usr/local/bin/r > /dev/null 2>&1; then
-			  	local status_message="${rw_lv}正在采集数据${rw_bai}"
+			  	local status_message="${rw_lv}正在采集数据${rw_lv}"
 			  elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/r > /dev/null 2>&1; then
-			  	local status_message="${rw_lv}采集已关闭${rw_bai}"
+			  	local status_message="${rw_lv}采集已关闭${rw_lv}"
 			  else
 			  	local status_message="无法确定的状态"
 			  fi
@@ -20959,14 +20987,14 @@ EOF
 			  echo "隐私与安全"
 			  echo "脚本将收集用户使用功能的数据，优化脚本体验，制作更多好玩好用的功能"
 			  echo "将收集脚本版本号，使用的时间，系统版本，CPU架构，机器所属国家和使用的功能的名称，"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 			  echo -e "当前状态: $status_message"
-			  echo -e "${rw_cheng}--------------------${rw_bai}"
+			  echo -e "${rw_cheng}--------------------${rw_lv}"
 			  echo "1. 开启采集"
 			  echo "2. 关闭采集"
-			  echo -e "${rw_cheng}--------------------${rw_bai}"
+			  echo -e "${rw_cheng}--------------------${rw_lv}"
 			  echo "0. 返回上一级选单"
-			  echo -e "${rw_cheng}--------------------${rw_bai}"
+			  echo -e "${rw_cheng}--------------------${rw_lv}"
 			  read -e -p "请输入你的选择: " sub_choice
 			  case $sub_choice in
 				  1)
@@ -20999,7 +21027,7 @@ EOF
 			  clear
 			  send_stats "卸载Riou脚本"
 			  echo "卸载Riou脚本"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
 			  echo "将彻底卸载riwi脚本，不影响你其他功能"
 			  read -e -p "确定继续吗？(Y/N): " choice
 
@@ -21050,23 +21078,23 @@ linux_file() {
 	while true; do
 		clear
 		echo "文件管理器"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "当前路径"
 		pwd
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		ls --color=auto -x
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "1.  进入目录           2.  创建目录             3.  修改目录权限         4.  重命名目录"
 		echo "5.  删除目录           6.  返回上一级选单目录"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "11. 创建文件           12. 编辑文件             13. 修改文件权限         14. 重命名文件"
 		echo "15. 删除文件"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "21. 压缩文件目录       22. 解压文件目录         23. 移动文件目录         24. 复制文件目录"
 		echo "25. 传文件至其他服务器"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		echo "0.  返回上一级选单"
-		echo -e "${rw_cheng}------------------------${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
 		read -e -p "请输入你的选择: " Limiting
 
 		case "$Limiting" in
@@ -21293,7 +21321,7 @@ run_commands_on_servers() {
 		local username=${SERVER_ARRAY[i+3]}
 		local password=${SERVER_ARRAY[i+4]}
 		echo
-		echo -e "${rw_huang}连接到 $name ($hostname)...${rw_bai}"
+		echo -e "${rw_huang}连接到 $name ($hostname)...${rw_lv}"
 		# 使用sshpass自动输入密码，通过SSH在远程服务器执行命令（旧版本，无-t参数）
 		# sshpass -p "$password" ssh -o StrictHostKeyChecking=no "$username@$hostname" -p "$port" "$1"
 		# 使用sshpass自动输入密码，通过SSH在远程服务器执行命令
@@ -21314,18 +21342,18 @@ basic_settings_menu() {
   while true; do
     clear
     send_stats "基础设置"
-    echo -e "${rw_huang}基础设置${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}基础设置${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     echo ""
-    echo -e "${rw_huang}请选择操作:${rw_bai}"
-    echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}设置脚本启动快捷键${rw_bai}"
-    echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}修改登录密码${rw_bai}"
-    echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}用户密码登录模式${rw_bai}"
-    echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}安装Python指定版本${rw_bai}"
-    echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}开放所有端口${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回上级菜单${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}请选择操作:${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}设置脚本启动快捷键${rw_lv}"
+    echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}修改登录密码${rw_lv}"
+    echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}用户密码登录模式${rw_lv}"
+    echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}安装Python指定版本${rw_lv}"
+    echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}开放所有端口${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回上级菜单${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择: " basic_choice
 
     case $basic_choice in
@@ -21367,14 +21395,14 @@ basic_settings_menu() {
         send_stats "py版本管理"
         echo "python版本管理"
         echo "视频介绍: https://www.bilibili.com/video/BV1Pm42157cK?t=0.1"
-        echo -e "${rw_cheng}---------------------------------------${rw_bai}"
+        echo -e "${rw_cheng}---------------------------------------${rw_lv}"
         echo "该功能可无缝安装python官方支持的任何版本！"
         local VERSION=$(python3 -V 2>&1 | awk '{print $2}')
-        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
-        echo -e "${rw_cheng}------------${rw_bai}"
+        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_lv}"
+        echo -e "${rw_cheng}------------${rw_lv}"
         echo "推荐版本:  3.12    3.11    3.10    3.9    3.8    2.7"
         echo "查询更多版本: https://www.python.org/downloads/"
-        echo -e "${rw_cheng}------------${rw_bai}"
+        echo -e "${rw_cheng}------------${rw_lv}"
         read -e -p "输入你要安装的python版本号（输入0退出）: " py_new_v
 
         if [[ "$py_new_v" == "0" ]]; then
@@ -21440,7 +21468,7 @@ EOF
         rm -rf $(pyenv root)/cache/*
 
         local VERSION=$(python -V 2>&1 | awk '{print $2}')
-        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_bai}"
+        echo -e "当前python版本号: ${rw_huang}$VERSION${rw_lv}"
         send_stats "脚本PY版本切换"
         break_end
         ;;
@@ -21460,7 +21488,7 @@ EOF
         ;;
 
       *)
-        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        echo -e "${rw_hong}无效的输入!${rw_lv}"
         ;;
     esac
   done
@@ -21479,28 +21507,28 @@ linux_security() {
         refresh_status_cache
     fi
 
-    local _ssh_stat="${rw_hong}未运行${rw_bai}"
-    local _fw_stat="${rw_hong}未运行${rw_bai}"
+    local _ssh_stat="${rw_hong}未运行${rw_lv}"
+    local _fw_stat="${rw_hong}未运行${rw_lv}"
     local _user_cnt=0
 
     # 使用缓存值
-    $_CACHE_SSHD_ACTIVE && _ssh_stat="${rw_lv}运行中${rw_bai}"
-    ( $_CACHE_FIREWALLD_ACTIVE || $_CACHE_UFW_ACTIVE ) && _fw_stat="${rw_lv}运行中${rw_bai}"
+    $_CACHE_SSHD_ACTIVE && _ssh_stat="${rw_lv}运行中${rw_lv}"
+    ( $_CACHE_FIREWALLD_ACTIVE || $_CACHE_UFW_ACTIVE ) && _fw_stat="${rw_lv}运行中${rw_lv}"
     _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  安全优化  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " SSH ${_ssh_stat}  防火墙 ${_fw_stat}  普通用户 ${rw_lv}${_user_cnt}${rw_bai} 个"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  安全优化  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " SSH ${_ssh_stat}  防火墙 ${_fw_stat}  普通用户 ${rw_lv}${_user_cnt}${rw_lv} 个"
     echo ""
-    echo -e " ${rw_cheng}──── 用户权限${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  用户权限管理"
+    echo -e " ${rw_cheng}──── 用户权限${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  用户权限管理"
     echo ""
-    echo -e " ${rw_cheng}──── 系统安全${rw_bai}"
-    echo -e " ${rw_huang}2${rw_bai}  SSH安全配置        ${rw_huang}3${rw_bai}  防火墙管理"
-    echo -e " ${rw_huang}4${rw_bai}  失败锁定           ${rw_huang}5${rw_bai}  安全审计"
+    echo -e " ${rw_cheng}──── 系统安全${rw_lv}"
+    echo -e " ${rw_huang}2${rw_lv}  SSH安全配置        ${rw_huang}3${rw_lv}  防火墙管理"
+    echo -e " ${rw_huang}4${rw_lv}  失败锁定           ${rw_huang}5${rw_lv}  安全审计"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
@@ -21508,7 +21536,7 @@ linux_security() {
         user_permissions_menu
         ;;
       2)
-        echo -e "${rw_huang}SSH安全配置${rw_bai}"
+        echo -e "${rw_huang}SSH安全配置${rw_lv}"
         echo "  1. 修改默认端口"
         echo "  2. 禁用密码登录，仅密钥"
         echo "  3. 禁用root远程登录"
@@ -21520,33 +21548,33 @@ linux_security() {
             sed -i "s/^#Port 22/Port $ssh_port/" /etc/ssh/sshd_config
             sed -i "s/^Port 22/Port $ssh_port/" /etc/ssh/sshd_config
             systemctl restart sshd
-            echo -e "${rw_lv}SSH端口已修改为 $ssh_port${rw_bai}"
+            echo -e "${rw_lv}SSH端口已修改为 $ssh_port${rw_lv}"
             break_end
             ;;
           2)
-            echo -e "${rw_huang}请先确保已配置SSH密钥登录${rw_bai}"
+            echo -e "${rw_huang}请先确保已配置SSH密钥登录${rw_lv}"
             read -e -p "确认禁用密码登录? (y/N): " confirm
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
               sed -i 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
               systemctl restart sshd
-              echo -e "${rw_lv}已禁用密码登录${rw_bai}"
+              echo -e "${rw_lv}已禁用密码登录${rw_lv}"
             fi
             break_end
             ;;
           3)
             sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
             systemctl restart sshd
-            echo -e "${rw_lv}已禁用root远程登录${rw_bai}"
+            echo -e "${rw_lv}已禁用root远程登录${rw_lv}"
             break_end
             ;;
           *)
-            echo -e "${rw_hong}无效选项${rw_bai}"
+            echo -e "${rw_hong}无效选项${rw_lv}"
             sleep 1
             ;;
         esac
         ;;
       3)
-        echo -e "${rw_huang}防火墙管理${rw_bai}"
+        echo -e "${rw_huang}防火墙管理${rw_lv}"
         echo "  1. 查看防火墙状态"
         echo "  2. 开放端口"
         echo "  3. 关闭端口"
@@ -21562,45 +21590,45 @@ linux_security() {
             read -e -p "请输入要开放的端口: " port
             firewall-cmd --add-port=$port/tcp --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
             ufw allow $port/tcp 2>/dev/null
-            echo -e "${rw_lv}端口 $port 已开放${rw_bai}"
+            echo -e "${rw_lv}端口 $port 已开放${rw_lv}"
             break_end
             ;;
           3)
             read -e -p "请输入要关闭的端口: " port
             firewall-cmd --remove-port=$port/tcp --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
             ufw deny $port/tcp 2>/dev/null
-            echo -e "${rw_lv}端口 $port 已关闭${rw_bai}"
+            echo -e "${rw_lv}端口 $port 已关闭${rw_lv}"
             break_end
             ;;
           4)
             read -e -p "请输入要放行的IP: " ip
             firewall-cmd --add-source=$ip --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
             iptables -A INPUT -s $ip -j ACCEPT 2>/dev/null
-            echo -e "${rw_lv}IP $ip 已放行${rw_bai}"
+            echo -e "${rw_lv}IP $ip 已放行${rw_lv}"
             break_end
             ;;
           5)
             read -e -p "请输入要阻止的IP: " ip
             firewall-cmd --add-rich-rule="rule source ipset='$ip' drop" --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
             iptables -A INPUT -s $ip -j DROP 2>/dev/null
-            echo -e "${rw_lv}IP $ip 已阻止${rw_bai}"
+            echo -e "${rw_lv}IP $ip 已阻止${rw_lv}"
             break_end
             ;;
           *)
-            echo -e "${rw_hong}无效选项${rw_bai}"
+            echo -e "${rw_hong}无效选项${rw_lv}"
             sleep 1
             ;;
         esac
         ;;
       4)
-        echo -e "${rw_huang}失败锁定 (fail2ban)${rw_bai}"
+        echo -e "${rw_huang}失败锁定 (fail2ban)${rw_lv}"
         install fail2ban
         systemctl enable --now fail2ban 2>/dev/null
-        echo -e "${rw_lv}fail2ban 已安装并启动${rw_bai}"
+        echo -e "${rw_lv}fail2ban 已安装并启动${rw_lv}"
         break_end
         ;;
       5)
-        echo -e "${rw_huang}安全审计${rw_bai}"
+        echo -e "${rw_huang}安全审计${rw_lv}"
         echo "  最近登录记录:"
         last -n 20 2>/dev/null || echo "  无法获取登录记录"
         echo ""
@@ -21612,7 +21640,7 @@ linux_security() {
         riwi
         ;;
       *)
-        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        echo -e "${rw_hong}无效的输入!${rw_lv}"
         sleep 1
         ;;
     esac
@@ -21628,204 +21656,204 @@ user_permissions_menu() {
     _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
     _sudo_cnt=$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | wc -l | tr -d ' ')
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  用户权限  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " 普通用户 ${rw_lv}${_user_cnt}${rw_bai} 个  sudo权限 ${rw_lv}${_sudo_cnt}${rw_bai} 个"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  用户权限  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 普通用户 ${rw_lv}${_user_cnt}${rw_lv} 个  sudo权限 ${rw_lv}${_sudo_cnt}${rw_lv} 个"
     echo ""
-    echo -e " ${rw_cheng}──── 密码管理${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  设置用户密码"
+    echo -e " ${rw_cheng}──── 密码管理${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  设置用户密码"
     echo ""
-    echo -e " ${rw_cheng}──── 权限管理${rw_bai}"
-    echo -e " ${rw_huang}2${rw_bai}  添加sudo权限       ${rw_huang}3${rw_bai}  查看所有用户"
+    echo -e " ${rw_cheng}──── 权限管理${rw_lv}"
+    echo -e " ${rw_huang}2${rw_lv}  添加sudo权限       ${rw_huang}3${rw_lv}  查看所有用户"
     echo ""
-    echo -e " ${rw_cheng}──── 用户管理${rw_bai}"
-    echo -e " ${rw_huang}4${rw_bai}  创建新用户         ${rw_huang}5${rw_bai}  删除用户"
+    echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
+    echo -e " ${rw_huang}4${rw_lv}  创建新用户         ${rw_huang}5${rw_lv}  删除用户"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回安全优化"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回安全优化"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
       1)
         clear
         send_stats "设置普通用户密码"
-        echo -e "${rw_huang}设置普通用户密码${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}设置普通用户密码${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_bai}"
-        echo -e "${rw_huang}  为服务器上的普通用户设置或修改密码${rw_bai}"
-        echo -e "${rw_huang}  注意: 无法修改root用户密码${rw_bai}"
+        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
+        echo -e "${rw_huang}  为服务器上的普通用户设置或修改密码${rw_lv}"
+        echo -e "${rw_huang}  注意: 无法修改root用户密码${rw_lv}"
         echo ""
-        echo -e "${rw_huang}  当前系统用户列表:${rw_bai}"
+        echo -e "${rw_huang}  当前系统用户列表:${rw_lv}"
         awk -F: '$3 >= 1000 && $3 < 65534 {print "  用户名: "$1"  |  UID: "$3"   | 主目录: "$6}' /etc/passwd
         echo ""
         read -e -p "请输入要设置密码的用户名 [示例:owen]: " username
         if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_bai}"
+          echo -e "${rw_hong}用户名不能为空${rw_lv}"
           break_end
           continue
         fi
         if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_bai}"
+          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
           break_end
           continue
         fi
         if [ "$username" = "root" ]; then
-          echo -e "${rw_hong}无法修改root用户密码，请使用passwd命令${rw_bai}"
+          echo -e "${rw_hong}无法修改root用户密码，请使用passwd命令${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}请为用户 $username 设置密码:${rw_bai}"
+        echo -e "${rw_huang}请为用户 $username 设置密码:${rw_lv}"
         while true; do
           read -s -p "请输入新密码: " password1
           echo ""
           if [ -z "$password1" ]; then
-            echo -e "${rw_hong}密码不能为空${rw_bai}"
+            echo -e "${rw_hong}密码不能为空${rw_lv}"
             continue
           fi
           read -s -p "请确认新密码: " password2
           echo ""
           if [ "$password1" != "$password2" ]; then
-            echo -e "${rw_hong}两次输入的密码不一致，请重新输入${rw_bai}"
+            echo -e "${rw_hong}两次输入的密码不一致，请重新输入${rw_lv}"
             continue
           fi
           break
         done
         echo "$username:$password1" | chpasswd
-        echo -e "${rw_lv}✓ 用户 $username 的密码已设置成功${rw_bai}"
+        echo -e "${rw_lv}✓ 用户 $username 的密码已设置成功${rw_lv}"
         break_end
         ;;
 
       2)
         clear
         send_stats "添加sudo权限"
-        echo -e "${rw_huang}添加sudo权限${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}添加sudo权限${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_bai}"
-        echo -e "${rw_huang}  为普通用户添加sudo权限，允许其执行需要root权限的命令${rw_bai}"
-        echo -e "${rw_huang}  添加后用户可以使用sudo命令执行系统管理操作${rw_bai}"
+        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
+        echo -e "${rw_huang}  为普通用户添加sudo权限，允许其执行需要root权限的命令${rw_lv}"
+        echo -e "${rw_huang}  添加后用户可以使用sudo命令执行系统管理操作${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_bai}"
-        echo -e "${rw_huang}  输入用户名: owen${rw_bai}"
-        echo -e "${rw_huang}  确认后用户将可以使用sudo命令${rw_bai}"
+        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
+        echo -e "${rw_huang}  输入用户名: owen${rw_lv}"
+        echo -e "${rw_huang}  确认后用户将可以使用sudo命令${rw_lv}"
         echo ""
-        echo -e "${rw_huang}当前具有sudo权限的用户:${rw_bai}"
+        echo -e "${rw_huang}当前具有sudo权限的用户:${rw_lv}"
         getent group sudo | cut -d: -f4 | tr ',' '\n' | awk '{print "  ✓ "$1}'
         getent group wheel | cut -d: -f4 | tr ',' '\n' | awk '{print "  ✓ "$1}'
         echo ""
         read -e -p "请输入要添加sudo权限的用户名 [示例:owen]: " username
         if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_bai}"
+          echo -e "${rw_hong}用户名不能为空${rw_lv}"
           break_end
           continue
         fi
         if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_bai}"
+          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在为用户 $username 添加sudo权限...${rw_bai}"
+        echo -e "${rw_huang}正在为用户 $username 添加sudo权限...${rw_lv}"
         usermod -aG sudo "$username"
-        echo -e "${rw_lv}✓ 用户 $username 已成功添加sudo权限${rw_bai}"
-        echo -e "${rw_huang}  现在用户 $username 可以使用 sudo 命令执行系统管理操作${rw_bai}"
+        echo -e "${rw_lv}✓ 用户 $username 已成功添加sudo权限${rw_lv}"
+        echo -e "${rw_huang}  现在用户 $username 可以使用 sudo 命令执行系统管理操作${rw_lv}"
         break_end
         ;;
 
       3)
         clear
         send_stats "查看所有用户"
-        echo -e "${rw_huang}查看所有用户${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}查看所有用户${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_bai}"
-        echo -e "${rw_huang}  显示系统中所有用户的信息，包括用户名、UID、用户类型等${rw_bai}"
+        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
+        echo -e "${rw_huang}  显示系统中所有用户的信息，包括用户名、UID、用户类型等${rw_lv}"
         echo ""
-        echo -e "${rw_huang}用户类型说明:${rw_bai}"
-        echo -e "${rw_huang}  • UID 0: root用户（系统管理员）${rw_bai}"
-        echo -e "${rw_huang}  • UID 1-999: 系统用户（服务账户）${rw_bai}"
-        echo -e "${rw_huang}  • UID 1000+: 普通用户${rw_bai}"
+        echo -e "${rw_huang}用户类型说明:${rw_lv}"
+        echo -e "${rw_huang}  • UID 0: root用户（系统管理员）${rw_lv}"
+        echo -e "${rw_huang}  • UID 1-999: 系统用户（服务账户）${rw_lv}"
+        echo -e "${rw_huang}  • UID 1000+: 普通用户${rw_lv}"
         echo ""
-        echo -e "${rw_huang}系统用户列表 (UID 0-999):${rw_bai}"
+        echo -e "${rw_huang}系统用户列表 (UID 0-999):${rw_lv}"
         awk -F: 'NR==1 {print "  用户名          UID    主目录"} {print "  "$1"          "$3"    "$6}' /etc/passwd | head -20
         echo ""
-        echo -e "${rw_huang}普通用户列表 (UID 1000+):${rw_bai}"
+        echo -e "${rw_huang}普通用户列表 (UID 1000+):${rw_lv}"
         awk -F: '$3 >= 1000 {print "  用户名: "$1"  |  UID: "$3"  |  主目录: "$6"  |  Shell: "$7}' /etc/passwd
         echo ""
-        echo -e "${rw_lv}✓ 共发现 $(awk -F: '$3 >= 1000' /etc/passwd | wc -l) 个普通用户${rw_bai}"
+        echo -e "${rw_lv}✓ 共发现 $(awk -F: '$3 >= 1000' /etc/passwd | wc -l) 个普通用户${rw_lv}"
         break_end
         ;;
 
       4)
         clear
         send_stats "创建新用户"
-        echo -e "${rw_huang}创建新用户${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}创建新用户${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_bai}"
-        echo -e "${rw_huang}  在服务器上创建一个新的普通用户${rw_bai}"
-        echo -e "${rw_huang}  新用户创建后可设置密码和添加权限${rw_bai}"
+        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
+        echo -e "${rw_huang}  在服务器上创建一个新的普通用户${rw_lv}"
+        echo -e "${rw_huang}  新用户创建后可设置密码和添加权限${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_bai}"
-        echo -e "${rw_huang}  输入新用户名: newuser${rw_bai}"
-        echo -e "${rw_huang}  设置密码后即可登录使用${rw_bai}"
+        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
+        echo -e "${rw_huang}  输入新用户名: newuser${rw_lv}"
+        echo -e "${rw_huang}  设置密码后即可登录使用${rw_lv}"
         echo ""
         read -e -p "请输入新用户名 [示例:newuser]: " username
         if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_bai}"
+          echo -e "${rw_hong}用户名不能为空${rw_lv}"
           break_end
           continue
         fi
         if id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 已存在${rw_bai}"
+          echo -e "${rw_hong}用户 $username 已存在${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在创建用户 $username ...${rw_bai}"
+        echo -e "${rw_huang}正在创建用户 $username ...${rw_lv}"
         useradd -m -s /bin/bash "$username"
-        echo -e "${rw_lv}✓ 用户 $username 创建成功${rw_bai}"
-        echo -e "${rw_huang}  现在可以为该用户设置密码和添加权限${rw_bai}"
+        echo -e "${rw_lv}✓ 用户 $username 创建成功${rw_lv}"
+        echo -e "${rw_huang}  现在可以为该用户设置密码和添加权限${rw_lv}"
         break_end
         ;;
 
       5)
         clear
         send_stats "删除用户"
-        echo -e "${rw_huang}删除用户${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}删除用户${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_bai}"
-        echo -e "${rw_huang}  从服务器上删除一个普通用户${rw_bai}"
-        echo -e "${rw_huang}  注意: 删除后用户数据将无法恢复${rw_bai}"
+        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
+        echo -e "${rw_huang}  从服务器上删除一个普通用户${rw_lv}"
+        echo -e "${rw_huang}  注意: 删除后用户数据将无法恢复${rw_lv}"
         echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_bai}"
-        echo -e "${rw_huang}  输入用户名: olduser${rw_bai}"
-        echo -e "${rw_huang}  确认后用户将被删除${rw_bai}"
+        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
+        echo -e "${rw_huang}  输入用户名: olduser${rw_lv}"
+        echo -e "${rw_huang}  确认后用户将被删除${rw_lv}"
         echo ""
-        echo -e "${rw_huang}当前普通用户列表:${rw_bai}"
+        echo -e "${rw_huang}当前普通用户列表:${rw_lv}"
         awk -F: '$3 >= 1000 && $3 < 65534 {print "  • "$1}' /etc/passwd
         echo ""
         read -e -p "请输入要删除的用户名 [示例:olduser]: " username
         if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_bai}"
+          echo -e "${rw_hong}用户名不能为空${rw_lv}"
           break_end
           continue
         fi
         if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_bai}"
+          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
           break_end
           continue
         fi
         if [ "$username" = "root" ]; then
-          echo -e "${rw_hong}无法删除root用户${rw_bai}"
+          echo -e "${rw_hong}无法删除root用户${rw_lv}"
           break_end
           continue
         fi
         read -e -p "确认删除用户 $username ? (y/N): " confirm
         if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-          userdel -r "$username" 2>/dev/null && echo -e "${rw_lv}✓ 用户 $username 已删除${rw_bai}" || echo -e "${rw_hong}删除失败${rw_bai}"
+          userdel -r "$username" 2>/dev/null && echo -e "${rw_lv}✓ 用户 $username 已删除${rw_lv}" || echo -e "${rw_hong}删除失败${rw_lv}"
         else
-          echo -e "${rw_huang}已取消操作${rw_bai}"
+          echo -e "${rw_huang}已取消操作${rw_lv}"
         fi
         break_end
         ;;
@@ -21835,7 +21863,7 @@ user_permissions_menu() {
         ;;
 
       *)
-        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        echo -e "${rw_hong}无效的输入!${rw_lv}"
         sleep 1
         ;;
     esac
@@ -21845,13 +21873,13 @@ riwi_Affiliates() {
 
 clear
 send_stats "热门专栏"
-echo -e "${rw_huang}热门专栏${rw_bai}"
-echo -e "${rw_cheng}------------------------${rw_bai}"
+echo -e "${rw_huang}热门专栏${rw_lv}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
 echo ""
-echo -e "${rw_huang}欢迎访问我的仓库!${rw_bai}"
-echo -e "${rw_huang}  • 网站地址: https://github.com/riwi002/mybox${rw_bai}"
+echo -e "${rw_huang}欢迎访问我的仓库!${rw_lv}"
+echo -e "${rw_huang}  • 网站地址: https://github.com/riwi002/mybox${rw_lv}"
 echo ""
-echo -e "${rw_huang}提示: 按任意键返回主菜单${rw_bai}"
+echo -e "${rw_huang}提示: 按任意键返回主菜单${rw_lv}"
 echo ""
 read -n 1
 }
@@ -21869,34 +21897,34 @@ linux_cluster() {
     local _server_cnt=0
     [ -f ~/cluster/servers.py ] && _server_cnt=$(grep -c '"name"' ~/cluster/servers.py 2>/dev/null || echo 0)
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  服务器集群控制  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " 集群服务器数量 ${rw_lv}${_server_cnt}${rw_bai} 台  配置文件 ${rw_huang}~/cluster/servers.py${rw_bai}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  服务器集群控制  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 集群服务器数量 ${rw_lv}${_server_cnt}${rw_lv} 台  配置文件 ${rw_huang}~/cluster/servers.py${rw_lv}"
     echo ""
-    echo -e " ${rw_cheng}──── 服务器管理${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  添加服务器           ${rw_huang}2${rw_bai}  删除服务器"
-    echo -e " ${rw_huang}3${rw_bai}  查看服务器列表       ${rw_huang}4${rw_bai}  测试连接"
-    echo -e " ${rw_huang}5${rw_bai}  编辑服务器配置"
+    echo -e " ${rw_cheng}──── 服务器管理${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  添加服务器           ${rw_huang}2${rw_lv}  删除服务器"
+    echo -e " ${rw_huang}3${rw_lv}  查看服务器列表       ${rw_huang}4${rw_lv}  测试连接"
+    echo -e " ${rw_huang}5${rw_lv}  编辑服务器配置"
     echo ""
-    echo -e " ${rw_cheng}──── 批量执行任务${rw_bai}"
-    echo -e " ${rw_huang}11${rw_bai} 批量执行命令         ${rw_huang}12${rw_bai} 批量上传文件"
-    echo -e " ${rw_huang}13${rw_bai} 批量下载文件         ${rw_huang}14${rw_bai} 批量安装软件"
-    echo -e " ${rw_huang}15${rw_bai} 查看集群状态"
+    echo -e " ${rw_cheng}──── 批量执行任务${rw_lv}"
+    echo -e " ${rw_huang}11${rw_lv} 批量执行命令         ${rw_huang}12${rw_lv} 批量上传文件"
+    echo -e " ${rw_huang}13${rw_lv} 批量下载文件         ${rw_huang}14${rw_lv} 批量安装软件"
+    echo -e " ${rw_huang}15${rw_lv} 查看集群状态"
     echo ""
-    echo -e " ${rw_cheng}──── 集群监控${rw_bai}"
-    echo -e " ${rw_huang}21${rw_bai} 实时监控             ${rw_huang}22${rw_bai} 资源统计"
-    echo -e " ${rw_huang}23${rw_bai} 告警设置"
+    echo -e " ${rw_cheng}──── 集群监控${rw_lv}"
+    echo -e " ${rw_huang}21${rw_lv} 实时监控             ${rw_huang}22${rw_lv} 资源统计"
+    echo -e " ${rw_huang}23${rw_lv} 告警设置"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
       1)
         clear
         send_stats "添加服务器"
-        echo -e "${rw_huang}添加服务器到集群${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}添加服务器到集群${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         read -e -p "请输入服务器名称 [示例:web01]: " server_name
         read -e -p "请输入服务器IP地址 [示例:192.168.1.10]: " server_ip
@@ -21906,12 +21934,12 @@ linux_cluster() {
         ssh_user=${ssh_user:-root}
 
         if [ -z "$server_name" ] || [ -z "$server_ip" ]; then
-          echo -e "${rw_hong}服务器名称和IP不能为空${rw_bai}"
+          echo -e "${rw_hong}服务器名称和IP不能为空${rw_lv}"
           break_end
           continue
         fi
 
-        echo -e "${rw_huang}正在添加服务器 $server_name ...${rw_bai}"
+        echo -e "${rw_huang}正在添加服务器 $server_name ...${rw_lv}"
         mkdir -p ~/cluster
         if [ ! -f ~/cluster/servers.py ]; then
           cat > ~/cluster/servers.py << 'EOF'
@@ -21923,47 +21951,47 @@ EOF
 
         # 添加服务器到配置文件
         cat >> ~/cluster/servers.py <<< "  {\"name\": \"$server_name\", \"ip\": \"$server_ip\", \"port\": $ssh_port, \"user\": \"$ssh_user\"},"
-        echo -e "${rw_lv}✓ 服务器 $server_name 添加成功${rw_bai}"
+        echo -e "${rw_lv}✓ 服务器 $server_name 添加成功${rw_lv}"
         break_end
         ;;
 
       2)
         clear
         send_stats "删除服务器"
-        echo -e "${rw_huang}从集群删除服务器${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}从集群删除服务器${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          echo -e "${rw_hong}没有服务器配置${rw_bai}"
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}当前服务器列表:${rw_bai}"
+        echo -e "${rw_huang}当前服务器列表:${rw_lv}"
         grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/'
         echo ""
         read -e -p "请输入要删除的服务器名称: " server_name
         if [ -z "$server_name" ]; then
-          echo -e "${rw_hong}服务器名称不能为空${rw_bai}"
+          echo -e "${rw_hong}服务器名称不能为空${rw_lv}"
           break_end
           continue
         fi
         sed -i "/\"name\": \"$server_name\"/d" ~/cluster/servers.py
-        echo -e "${rw_lv}✓ 服务器 $server_name 已删除${rw_bai}"
+        echo -e "${rw_lv}✓ 服务器 $server_name 已删除${rw_lv}"
         break_end
         ;;
 
       3)
         clear
         send_stats "查看服务器列表"
-        echo -e "${rw_huang}集群服务器列表${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}集群服务器列表${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          echo -e "${rw_hong}没有服务器配置${rw_bai}"
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_lv}服务器列表:${rw_bai}"
+        echo -e "${rw_lv}服务器列表:${rw_lv}"
         grep -A 3 '"name"' ~/cluster/servers.py | grep -E '"name"|"ip"|"port"|"user"' | sed 's/.*"name": "\(.*\)",.*/  名称: \1/' | sed 's/.*"ip": "\(.*\)",.*/  IP: \1/' | sed 's/.*"port": \([0-9]*\),.*/  端口: \1/' | sed 's/.*"user": "\(.*\)",.*/  用户: \1/'
         echo ""
         break_end
@@ -21972,22 +22000,22 @@ EOF
       4)
         clear
         send_stats "测试连接"
-        echo -e "${rw_huang}测试集群服务器连接${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}测试集群服务器连接${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          echo -e "${rw_hong}没有服务器配置${rw_bai}"
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在测试连接...${rw_bai}"
+        echo -e "${rw_huang}正在测试连接...${rw_lv}"
         grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
           server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           echo -e " 测试 $server_name ($server_ip)..."
           if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
-            echo -e "    ${rw_lv}✓ 连接正常${rw_bai}"
+            echo -e "    ${rw_lv}✓ 连接正常${rw_lv}"
           else
-            echo -e "    ${rw_hong}✗ 连接失败${rw_bai}"
+            echo -e "    ${rw_hong}✗ 连接失败${rw_lv}"
           fi
         done
         echo ""
@@ -21997,21 +22025,21 @@ EOF
       5)
         clear
         send_stats "编辑服务器配置"
-        echo -e "${rw_huang}编辑服务器配置文件${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}编辑服务器配置文件${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          echo -e "${rw_hong}配置文件不存在${rw_bai}"
+          echo -e "${rw_hong}配置文件不存在${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在打开配置文件...${rw_bai}"
+        echo -e "${rw_huang}正在打开配置文件...${rw_lv}"
         if command -v vim &>/dev/null; then
           vim ~/cluster/servers.py
         elif command -v nano &>/dev/null; then
           nano ~/cluster/servers.py
         else
-          echo -e "${rw_hong}未找到编辑器 (vim/nano)${rw_bai}"
+          echo -e "${rw_hong}未找到编辑器 (vim/nano)${rw_lv}"
         fi
         break_end
         ;;
@@ -22019,22 +22047,22 @@ EOF
       11)
         clear
         send_stats "批量执行命令"
-        echo -e "${rw_huang}批量在集群服务器执行命令${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}批量在集群服务器执行命令${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         read -e -p "请输入要执行的命令: " cmd
         if [ -z "$cmd" ]; then
-          echo -e "${rw_hong}命令不能为空${rw_bai}"
+          echo -e "${rw_hong}命令不能为空${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在执行命令: $cmd${rw_bai}"
+        echo -e "${rw_huang}正在执行命令: $cmd${rw_lv}"
         grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
           server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
           server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
-          echo -e "${rw_huang}在 $server_name 上执行...${rw_bai}"
-          ssh -p "$server_port" "$server_user@$server_ip" "$cmd" 2>/dev/null || echo -e "${rw_hong}执行失败${rw_bai}"
+          echo -e "${rw_huang}在 $server_name 上执行...${rw_lv}"
+          ssh -p "$server_port" "$server_user@$server_ip" "$cmd" 2>/dev/null || echo -e "${rw_hong}执行失败${rw_lv}"
         done
         echo ""
         break_end
@@ -22043,28 +22071,28 @@ EOF
       12)
         clear
         send_stats "批量上传文件"
-        echo -e "${rw_huang}批量上传文件到集群服务器${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}批量上传文件到集群服务器${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         read -e -p "请输入本地文件路径: " local_file
         read -e -p "请输入远程目标路径: " remote_file
         if [ -z "$local_file" ] || [ -z "$remote_file" ]; then
-          echo -e "${rw_hong}路径不能为空${rw_bai}"
+          echo -e "${rw_hong}路径不能为空${rw_lv}"
           break_end
           continue
         fi
         if [ ! -f "$local_file" ]; then
-          echo -e "${rw_hong}本地文件不存在${rw_bai}"
+          echo -e "${rw_hong}本地文件不存在${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在上传文件...${rw_bai}"
+        echo -e "${rw_huang}正在上传文件...${rw_lv}"
         grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
           server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
           server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
           echo -e "  上传到 $server_name ..."
-          scp -P "$server_port" "$local_file" "$server_user@$server_ip:$remote_file" 2>/dev/null && echo -e "${rw_lv}✓ 成功${rw_bai}" || echo -e "${rw_hong}✗ 失败${rw_bai}"
+          scp -P "$server_port" "$local_file" "$server_user@$server_ip:$remote_file" 2>/dev/null && echo -e "${rw_lv}✓ 成功${rw_lv}" || echo -e "${rw_hong}✗ 失败${rw_lv}"
         done
         echo ""
         break_end
@@ -22072,41 +22100,41 @@ EOF
       13)
         clear
         send_stats "批量下载文件"
-        echo -e "${rw_huang}批量从集群服务器下载文件${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}批量从集群服务器下载文件${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_hong}功能开发中...${rw_bai}"
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       14)
         clear
         send_stats "批量安装软件"
-        echo -e "${rw_huang}批量在集群服务器安装软件${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}批量在集群服务器安装软件${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_hong}功能开发中...${rw_bai}"
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       15)
         clear
         send_stats "查看集群状态"
-        echo -e "${rw_huang}查看集群服务器状态${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}查看集群服务器状态${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          echo -e "${rw_hong}没有服务器配置${rw_bai}"
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_lv}集群状态:${rw_bai}"
+        echo -e "${rw_lv}集群状态:${rw_lv}"
         grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/' | while read server_name; do
           server_ip=$(grep -A 1 ""name": "$server_name"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
           if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
-            echo -e "  $server_name ($server_ip): ${rw_lv}在线${rw_bai}"
+            echo -e "  $server_name ($server_ip): ${rw_lv}在线${rw_lv}"
           else
-            echo -e "  $server_name ($server_ip): ${rw_hong}离线${rw_bai}"
+            echo -e "  $server_name ($server_ip): ${rw_hong}离线${rw_lv}"
           fi
         done
         echo ""
@@ -22116,30 +22144,30 @@ EOF
       21)
         clear
         send_stats "实时监控"
-        echo -e "${rw_huang}集群服务器实时监控${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}集群服务器实时监控${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_hong}功能开发中...${rw_bai}"
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       22)
         clear
         send_stats "资源统计"
-        echo -e "${rw_huang}集群服务器资源统计${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}集群服务器资源统计${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_hong}功能开发中...${rw_bai}"
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       23)
         clear
         send_stats "告警设置"
-        echo -e "${rw_huang}集群告警设置${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}集群告警设置${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        echo -e "${rw_hong}功能开发中...${rw_bai}"
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
@@ -22149,7 +22177,7 @@ EOF
         ;;
 
       *)
-        echo -e "${rw_hong}无效的输入!${rw_bai}"
+        echo -e "${rw_hong}无效的输入!${rw_lv}"
         sleep 1
         ;;
     esac
@@ -22181,22 +22209,22 @@ cd ~
 while true; do
 	clear
 	echo "更新日志"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "全部日志: ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/riwi_sh_log.txt"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 
 	curl -s --max-time 15 ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/riwi_sh_log.txt | tail -n 30
 	# 只下载前5行获取版本号，避免下载整个脚本
 	local sh_v_new=$(curl -s --max-time 15 -r 0-200 ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/riwi.sh | grep -o 'sh_v="[0-9.]*"' | head -1 | cut -d '"' -f 2)
 
 	if [ -z "$sh_v_new" ]; then
-		echo -e "${rw_hong}无法获取最新版本信息，请检查网络连接${rw_bai}"
+		echo -e "${rw_hong}无法获取最新版本信息，请检查网络连接${rw_lv}"
 	elif [ "$sh_v" = "$sh_v_new" ]; then
-		echo -e "${rw_lv}你已经是最新版本！${rw_huang}v$sh_v${rw_bai}"
+		echo -e "${rw_lv}你已经是最新版本！${rw_huang}v$sh_v${rw_lv}"
 		send_stats "脚本已经最新了，无需更新"
 	else
 		echo "发现新版本！"
-		echo -e "当前版本 v$sh_v        最新版本 ${rw_huang}v$sh_v_new${rw_bai}"
+		echo -e "当前版本 v$sh_v        最新版本 ${rw_huang}v$sh_v_new${rw_lv}"
 	fi
 
 
@@ -22204,15 +22232,15 @@ while true; do
 	local existing_cron=$(crontab -l 2>/dev/null | grep -F "$cron_job")
 
 	if [ -n "$existing_cron" ]; then
-		echo -e "${rw_cheng}------------------------${rw_bai}"
-		echo -e "${rw_lv}自动更新已开启，每天凌晨2点脚本会自动更新！${rw_bai}"
+		echo -e "${rw_cheng}------------------------${rw_lv}"
+		echo -e "${rw_lv}自动更新已开启，每天凌晨2点脚本会自动更新！${rw_lv}"
 	fi
 
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "1. 现在更新            2. 开启自动更新            3. 关闭自动更新"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	echo "0. 返回主菜单"
-	echo -e "${rw_cheng}------------------------${rw_bai}"
+	echo -e "${rw_cheng}------------------------${rw_lv}"
 	read -e -p "请输入你的选择: " choice
 	case "$choice" in
 		1)
@@ -22240,7 +22268,7 @@ while true; do
 				yinsiyuanquan2
 				cp -f ~/riwi.sh /usr/local/bin/r > /dev/null 2>&1
 				ln -sf /usr/local/bin/r /usr/bin/r > /dev/null 2>&1
-				echo -e "${rw_lv}脚本已更新到最新版本！${rw_huang}v$sh_v_new${rw_bai}"
+				echo -e "${rw_lv}脚本已更新到最新版本！${rw_huang}v$sh_v_new${rw_lv}"
 				send_stats "脚本已经最新$sh_v_new"
 			else
 				rm -f "$tmp_file"
@@ -22248,7 +22276,7 @@ while true; do
 				if [ -f ~/riwi.sh.bak ]; then
 					mv -f ~/riwi.sh.bak ~/riwi.sh
 				fi
-				echo -e "${rw_hong}更新失败！下载出错或文件校验不通过，已恢复原版本${rw_bai}"
+				echo -e "${rw_hong}更新失败！下载出错或文件校验不通过，已恢复原版本${rw_lv}"
 				send_stats "脚本更新失败"
 			fi
 			break_end
@@ -22287,14 +22315,14 @@ while true; do
 			check_crontab_installed
 			(crontab -l | grep -v "riwi.sh") | crontab -
 			(crontab -l 2>/dev/null; echo "$(shuf -i 0-59 -n 1) 2 * * * bash -c '$SH_Update_task'") | crontab -
-			echo -e "${rw_lv}自动更新已开启，每天凌晨2点脚本会自动更新！${rw_bai}"
+			echo -e "${rw_lv}自动更新已开启，每天凌晨2点脚本会自动更新！${rw_lv}"
 			send_stats "开启脚本自动更新"
 			break_end
 			;;
 		3)
 			clear
 			(crontab -l | grep -v "riwi.sh") | crontab -
-			echo -e "${rw_lv}自动更新已关闭${rw_bai}"
+			echo -e "${rw_lv}自动更新已关闭${rw_lv}"
 			send_stats "关闭脚本自动更新"
 			break_end
 			;;
@@ -22322,10 +22350,10 @@ while true; do
 
     # ── 状态探测 ──
     local _ssh_port="22"
-    local _bbr_stat="${rw_hong}未开启${rw_bai}"
+    local _bbr_stat="${rw_hong}未开启${rw_lv}"
     local _swap_size="0"
-    local _f2b_stat="${rw_hong}未安装${rw_bai}"
-    local _root_login="${rw_lv}允许${rw_bai}"
+    local _f2b_stat="${rw_hong}未安装${rw_lv}"
+    local _root_login="${rw_lv}允许${rw_lv}"
 
     # SSH 端口
     _ssh_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
@@ -22333,56 +22361,56 @@ while true; do
 
     # BBR 状态
     if grep -q "bbr" /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null; then
-      _bbr_stat="${rw_lv}已开启${rw_bai}"
+      _bbr_stat="${rw_lv}已开启${rw_lv}"
     fi
 
     # 虚拟内存
     _swap_size=$(free -m 2>/dev/null | grep Swap | awk '{print $2}')
     if [ "$_swap_size" = "0" ] || [ -z "$_swap_size" ]; then
-      _swap_size="${rw_hong}未设置${rw_bai}"
+      _swap_size="${rw_hong}未设置${rw_lv}"
     else
-      _swap_size="${rw_lv}${_swap_size}MB${rw_bai}"
+      _swap_size="${rw_lv}${_swap_size}MB${rw_lv}"
     fi
 
     # fail2ban 状态（使用缓存）
     if $_CACHE_FAIL2BAN_ACTIVE; then
-      _f2b_stat="${rw_lv}运行中${rw_bai}"
+      _f2b_stat="${rw_lv}运行中${rw_lv}"
     elif command -v fail2ban-client &>/dev/null; then
-      _f2b_stat="${rw_huang}已安装未运行${rw_bai}"
+      _f2b_stat="${rw_huang}已安装未运行${rw_lv}"
     fi
 
     # Root 登录状态
     if grep -q "^PermitRootLogin no" /etc/ssh/sshd_config 2>/dev/null; then
-      _root_login="${rw_huang}已禁用${rw_bai}"
+      _root_login="${rw_huang}已禁用${rw_lv}"
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  日常维护  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " SSH端口 ${rw_lv}${_ssh_port}${rw_bai}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}  fail2ban ${_f2b_stat}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  日常维护  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " SSH端口 ${rw_lv}${_ssh_port}${rw_lv}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}  fail2ban ${_f2b_stat}"
     echo -e " Root登录 ${_root_login}"
     echo ""
-    echo -e " ${rw_cheng}──── 安全加固${rw_bai}"
-    echo -e "  ${rw_huang}1${rw_bai} 修改SSH端口           ${rw_huang}2${rw_bai} 禁用ROOT创建"
-    echo -e "  ${rw_huang}3${rw_bai} 用户密钥登录          ${rw_huang}4${rw_bai} SSH防御程序"
+    echo -e " ${rw_cheng}──── 安全加固${rw_lv}"
+    echo -e "  ${rw_lv}1${rw_lv} 修改SSH端口           ${rw_lv}2${rw_lv} 禁用ROOT创建"
+    echo -e "  ${rw_lv}3${rw_lv} 用户密钥登录          ${rw_lv}4${rw_lv} SSH防御程序"
     echo ""
-    echo -e " ${rw_cheng}──── 性能优化${rw_bai}"
-    echo -e "  ${rw_huang}5${rw_bai} 设置BBR3加速          ${rw_huang}6${rw_bai} 内核参数优化"
-    echo -e "  ${rw_huang}7${rw_bai} 修改虚拟内存大小"
+    echo -e " ${rw_cheng}──── 性能优化${rw_lv}"
+    echo -e "  ${rw_lv}5${rw_lv} 设置BBR3加速          ${rw_lv}6${rw_lv} 内核参数优化"
+    echo -e "  ${rw_lv}7${rw_lv} 修改虚拟内存大小"
     echo ""
-    echo -e " ${rw_cheng}──── 监控排查${rw_bai}"
-    echo -e "  ${rw_huang}8${rw_bai} 查看端口              ${rw_huang}9${rw_bai} 网卡管理"
-    echo -e " ${rw_huang}10${rw_bai} 系统日志             ${rw_huang}11${rw_bai} TG-bot预警"
+    echo -e " ${rw_cheng}──── 监控排查${rw_lv}"
+    echo -e "  ${rw_lv}8${rw_lv} 查看端口              ${rw_lv}9${rw_lv} 网卡管理"
+    echo -e " ${rw_lv}10${rw_lv} 系统日志             ${rw_lv}11${rw_lv} TG-bot预警"
     echo ""
-    echo -e " ${rw_cheng}──── 数据管理${rw_bai}"
-    echo -e " ${rw_huang}12${rw_bai} 文件管理器           ${rw_huang}13${rw_bai} rsync同步"
-    echo -e " ${rw_huang}14${rw_bai} 备份与恢复           ${rw_huang}15${rw_bai} 定时任务管理"
+    echo -e " ${rw_cheng}──── 数据管理${rw_lv}"
+    echo -e " ${rw_lv}12${rw_lv} 文件管理器           ${rw_lv}13${rw_lv} rsync同步"
+    echo -e " ${rw_lv}14${rw_lv} 备份与恢复           ${rw_lv}15${rw_lv} 定时任务管理"
     echo ""
-    echo -e " ${rw_cheng}──── 系统维护${rw_bai}"
-    echo -e " ${rw_huang}16${rw_bai} 硬盘分区             ${rw_huang}17${rw_bai} 系统更新"
-    echo -e " ${rw_huang}18${rw_bai} 系统清理"
+    echo -e " ${rw_cheng}──── 系统维护${rw_lv}"
+    echo -e " ${rw_lv}16${rw_lv} 硬盘分区             ${rw_lv}17${rw_lv} 系统更新"
+    echo -e " ${rw_lv}18${rw_lv} 系统清理"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_lv}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " choice
 
   case $choice in
@@ -22393,8 +22421,8 @@ while true; do
         clear
         sed -i 's/^[[:space:]]*#\?[[:space:]]*Port/Port/' /etc/ssh/sshd_config
         local current_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config | awk '{print $2}')
-        echo -e "当前的 SSH 端口号是:  ${rw_huang}$current_port ${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "当前的 SSH 端口号是:  ${rw_huang}$current_port ${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "端口号范围1到65535之间的数字。（输入0退出）"
         read -e -p "请输入新的 SSH 端口号: " new_port
         if [[ $new_port =~ ^[0-9]+$ ]]; then
@@ -22451,12 +22479,12 @@ while true; do
         local swap_used=$(free -m | awk 'NR==3{print $3}')
         local swap_total=$(free -m | awk 'NR==3{print $2}')
         local swap_info=$(free -m | awk 'NR==3{used=$3; total=$2; if (total == 0) {percentage=0} else {percentage=used*100/total}; printf "%dM/%dM (%d%%)", used, total, percentage}')
-        echo -e "当前虚拟内存: ${rw_huang}$swap_info${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "当前虚拟内存: ${rw_huang}$swap_info${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "1. 分配1024M         2. 分配2048M         3. 分配4096M         4. 自定义大小"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "0. 返回上一级选单"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         read -e -p "请输入你的选择: " vm_choice
         case "$vm_choice" in
           1) send_stats "已设置1G虚拟内存" ; add_swap 1024 ;;
@@ -22484,10 +22512,10 @@ while true; do
       send_stats "电报预警"
       echo "TG-bot监控预警功能"
       echo "视频介绍: https://youtu.be/vLL-eb3Z_TY"
-      echo -e "${rw_cheng}------------------------------------------------${rw_bai}"
+      echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
       echo "您需要配置tg机器人API和接收预警的用户ID，即可实现本机CPU，内存，硬盘，流量，SSH登录的实时监控预警"
       echo "到达阈值后会向用户发预警消息"
-      echo -e "${rw_lan}-关于流量，重启服务器将重新计算-${rw_bai}"
+      echo -e "${rw_lv}-关于流量，重启服务器将重新计算-${rw_lv}"
       read -e -p "确定继续吗？(Y/N): " tg_choice
       case "$tg_choice" in
         [Yy])
@@ -22520,7 +22548,7 @@ while true; do
           source ~/.profile
           clear
           echo "TG-bot预警系统已启动"
-          echo -e "${rw_lv}你还可以将root目录中的TG-check-notify.sh预警文件放到其他机器上直接使用！${rw_bai}"
+          echo -e "${rw_lv}你还可以将root目录中的TG-check-notify.sh预警文件放到其他机器上直接使用！${rw_lv}"
           ;;
         [Nn]) echo "已取消" ;;
         *) echo "无效的选择，请输入 Y 或 N。" ;;
@@ -22545,19 +22573,19 @@ while true; do
         crontab -l
         echo ""
         echo "操作"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "1. 添加定时任务              2. 删除定时任务              3. 编辑定时任务"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "0. 返回上一级选单"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         read -e -p "请输入你的选择: " cron_sub_choice
         case $cron_sub_choice in
           1)
             read -e -p "请输入新任务的执行命令: " newquest
-            echo -e "${rw_cheng}------------------------${rw_bai}"
+            echo -e "${rw_cheng}------------------------${rw_lv}"
             echo "1. 每月任务                 2. 每周任务"
             echo "3. 每天任务                 4. 每小时任务"
-            echo -e "${rw_cheng}------------------------${rw_bai}"
+            echo -e "${rw_cheng}------------------------${rw_lv}"
             read -e -p "请输入你的选择: " dingshi
             case $dingshi in
               1) read -e -p "选择每月的几号执行任务？ (1-30): " day ; (crontab -l ; echo "0 0 $day * * $newquest") | crontab - > /dev/null 2>&1 ;;
@@ -22592,22 +22620,22 @@ riwi_sh() {
 # ── 首次运行许可协议检查 ──
 if [ ! -f ~/.riwi_license_agreed ]; then
 	clear
-	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_bai}"
-	echo -e "${rw_lv}  欢迎使用 Riou 脚本工具箱${rw_bai}"
-	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	echo -e "${rw_lv}  欢迎使用 Riou 脚本工具箱${rw_lv}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 	echo ""
 	echo -e "  首次使用脚本，请先阅读并同意用户许可协议。"
 	echo ""
-	echo -e "  用户许可协议: ${rw_huang}https://github.com/riwi002/mybox/blob/main/LICENSE${rw_bai}"
-	echo -e "${rw_cheng}────────────────────────────────────────────────${rw_bai}"
+	echo -e "  用户许可协议: ${rw_huang}https://github.com/riwi002/mybox/blob/main/LICENSE${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────${rw_lv}"
 	echo ""
 	read -e -p "  是否同意以上条款？(y/n): " _license_agree
 	if [ "$_license_agree" = "y" ] || [ "$_license_agree" = "Y" ]; then
 		touch ~/.riwi_license_agreed
-		echo -e "\n  ${rw_lv}感谢同意！即将进入脚本...${rw_bai}"
+		echo -e "\n  ${rw_lv}感谢同意！即将进入脚本...${rw_lv}"
 		sleep 1
 	else
-		echo -e "\n  ${rw_hong}未同意许可协议，脚本退出。${rw_bai}"
+		echo -e "\n  ${rw_hong}未同意许可协议，脚本退出。${rw_lv}"
 		exit 1
 	fi
 fi
@@ -22615,24 +22643,24 @@ fi
 while true; do
 clear
 echo -e "$(orange "Riou脚本工具箱 v$sh_v")"
-echo -e "命令行输入$(orange "r")可快速启动脚本${rw_bai}"
-echo -e "${rw_cheng}------------------------${rw_bai}"
-echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}系统查询${rw_bai}"
-echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}日常维护${rw_bai}"
-echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}安装环境${rw_bai}"
-echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}GitHub管理器${rw_bai}"
-echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}Docker全管理${rw_bai}"
-echo -e "${rw_huang}6.   ${rw_bai}${rw_lv}LDNMP建站${rw_bai}"
-echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}应用市场${rw_bai}"
-echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}后台工作区${rw_bai}"
-echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}系统工具${rw_bai}"
-echo -e "${rw_huang}10.  ${rw_bai}${rw_lv}服务器集群控制${rw_bai}"
-echo -e "${rw_huang}11.  ${rw_bai}${rw_lv}安全优化${rw_bai}"
-echo -e "${rw_huang}12.  ${rw_bai}${rw_lv}热门专栏${rw_bai}"
-echo -e "${rw_huang}13.  ${rw_bai}${rw_lv}其他管理${rw_bai}"
-echo -e "${rw_cheng}------------------------${rw_bai}"
-echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}退出脚本${rw_bai}"
-echo -e "${rw_cheng}------------------------${rw_bai}"
+echo -e "命令行输入$(orange "r")可快速启动脚本${rw_lv}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
+echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}系统查询${rw_lv}"
+echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}日常维护${rw_lv}"
+echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}安装环境${rw_lv}"
+echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}GitHub管理器${rw_lv}"
+echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}Docker全管理${rw_lv}"
+echo -e "${rw_huang}6.   ${rw_lv}${rw_lv}LDNMP建站${rw_lv}"
+echo -e "${rw_huang}7.   ${rw_lv}${rw_lv}应用市场${rw_lv}"
+echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}后台工作区${rw_lv}"
+echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}系统工具${rw_lv}"
+echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}服务器集群控制${rw_lv}"
+echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}安全优化${rw_lv}"
+echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}热门专栏${rw_lv}"
+echo -e "${rw_huang}13.  ${rw_lv}${rw_lv}其他管理${rw_lv}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
+echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}退出脚本${rw_lv}"
+echo -e "${rw_cheng}------------------------${rw_lv}"
 read -e -p "请输入你的选择: " choice
 
 case $choice in
@@ -22665,14 +22693,14 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_bai}" _site_cnt=0 _br="" _gz="" _zs="" _waf=""
+	local _ngx_ver="" _ngx_stat="${rw_hong}未运行${rw_lv}" _site_cnt=0 _br="" _gz="" _zs="" _waf=""
 	if docker inspect nginx &>/dev/null; then
 		_ngx_ver=$(docker exec nginx nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
-		docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
+		docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_lv}" || _ngx_stat="${rw_hong}异常${rw_lv}"
 		_site_cnt=$(ls /home/web/conf.d/*.conf 2>/dev/null | grep -vc 'map\|default')
 	elif command -v nginx &>/dev/null; then
 		_ngx_ver=$(nginx -v 2>&1 | sed -n -E 's/.*nginx\/([0-9.]+).*/\1/p')
-		pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}未运行${rw_bai}"
+		pgrep -x nginx &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_lv}" || _ngx_stat="${rw_hong}未运行${rw_lv}"
 	fi
 	# 压缩 / WAF 状态
 	if [ -f /home/web/nginx.conf ]; then
@@ -22681,62 +22709,62 @@ while true; do
 		grep -qE '^[[:space:]]*zstd[[:space:]]+on;' /home/web/nginx.conf && _zs=" zstd"
 		grep -qE '^[[:space:]]*modsecurity[[:space:]]+on;' /home/web/nginx.conf && _waf=" WAF"
 	fi
-	local _comp="${rw_lv}${_gz}${_br}${_zs}${_waf}${rw_bai}"
+	local _comp="${rw_lv}${_gz}${_br}${_zs}${_waf}${rw_lv}"
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " ${_ngx_stat}  v${_ngx_ver:-?}  站点 ${rw_lv}${_site_cnt}${rw_bai}  ${_comp}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  Nginx 管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " ${_ngx_stat}  v${_ngx_ver:-?}  站点 ${rw_lv}${_site_cnt}${rw_lv}  ${_comp}"
 	echo ""
-	echo -e " ${rw_cheng}──── 服务${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  启动    ${rw_huang}2${rw_bai}  停止    ${rw_huang}3${rw_bai}  重启    ${rw_huang}4${rw_bai}  重载"
-	echo -e " ${rw_huang}5${rw_bai}  测试配置"
+	echo -e " ${rw_cheng}──── 服务${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  启动    ${rw_huang}2${rw_lv}  停止    ${rw_huang}3${rw_lv}  重启    ${rw_huang}4${rw_lv}  重载"
+	echo -e " ${rw_huang}5${rw_lv}  测试配置"
 	echo ""
-	echo -e " ${rw_cheng}──── 站点${rw_bai}"
-	echo -e " ${rw_huang}6${rw_bai}  站点列表         ${rw_huang}7${rw_bai}  编辑站点配置"
-	echo -e " ${rw_huang}8${rw_bai}  编辑全局配置     ${rw_huang}9${rw_bai}  证书管理"
+	echo -e " ${rw_cheng}──── 站点${rw_lv}"
+	echo -e " ${rw_huang}6${rw_lv}  站点列表         ${rw_huang}7${rw_lv}  编辑站点配置"
+	echo -e " ${rw_huang}8${rw_lv}  编辑全局配置     ${rw_huang}9${rw_lv}  证书管理"
 	echo ""
-	echo -e " ${rw_cheng}──── 反代${rw_bai}"
-	echo -e " ${rw_huang}10${rw_bai} 添加反向代理    ${rw_huang}11${rw_bai} 添加负载均衡"
-	echo -e " ${rw_huang}12${rw_bai} Stream四层代理"
+	echo -e " ${rw_cheng}──── 反代${rw_lv}"
+	echo -e " ${rw_huang}10${rw_lv} 添加反向代理    ${rw_huang}11${rw_lv} 添加负载均衡"
+	echo -e " ${rw_huang}12${rw_lv} Stream四层代理"
 	echo ""
-	echo -e " ${rw_cheng}──── 优化${rw_bai}"
-	echo -e " ${rw_huang}13${rw_bai} 压缩/性能       ${rw_huang}14${rw_bai} 安全防御"
-	echo -e " ${rw_huang}15${rw_bai} 更新Nginx"
+	echo -e " ${rw_cheng}──── 优化${rw_lv}"
+	echo -e " ${rw_huang}13${rw_lv} 压缩/性能       ${rw_huang}14${rw_lv} 安全防御"
+	echo -e " ${rw_huang}15${rw_lv} 更新Nginx"
 	echo ""
-	echo -e " ${rw_cheng}──── 日志${rw_bai}"
-	echo -e " ${rw_huang}16${rw_bai} 访问日志        ${rw_huang}17${rw_bai} 错误日志    ${rw_huang}18${rw_bai} 监听端口"
+	echo -e " ${rw_cheng}──── 日志${rw_lv}"
+	echo -e " ${rw_huang}16${rw_lv} 访问日志        ${rw_huang}17${rw_lv} 错误日志    ${rw_huang}18${rw_lv} 监听端口"
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " ngx_choice
 
 	case $ngx_choice in
 	  1)
 		if docker inspect nginx &>/dev/null; then
-			cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_bai}"
+			cd /home/web && docker compose start nginx && echo -e "${rw_lv}Nginx 已启动${rw_lv}"
 		else
-			systemctl start nginx 2>/dev/null || service nginx start 2>/dev/null || echo -e "${rw_hong}启动失败${rw_bai}"
+			systemctl start nginx 2>/dev/null || service nginx start 2>/dev/null || echo -e "${rw_hong}启动失败${rw_lv}"
 		fi
 		;;
 	  2)
 		if docker inspect nginx &>/dev/null; then
-			cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_bai}"
+			cd /home/web && docker compose stop nginx && echo -e "${rw_lv}Nginx 已停止${rw_lv}"
 		else
-			systemctl stop nginx 2>/dev/null || service nginx stop 2>/dev/null || echo -e "${rw_hong}停止失败${rw_bai}"
+			systemctl stop nginx 2>/dev/null || service nginx stop 2>/dev/null || echo -e "${rw_hong}停止失败${rw_lv}"
 		fi
 		;;
 	  3)
 		if docker inspect nginx &>/dev/null; then
-			cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_bai}"
+			cd /home/web && docker compose restart nginx && echo -e "${rw_lv}Nginx 已重启${rw_lv}"
 		else
-			systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || echo -e "${rw_hong}重启失败${rw_bai}"
+			systemctl restart nginx 2>/dev/null || service nginx restart 2>/dev/null || echo -e "${rw_hong}重启失败${rw_lv}"
 		fi
 		;;
 	  4)
 		if docker inspect nginx &>/dev/null; then
-			docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_bai}" || echo -e "${rw_hong}重载失败${rw_bai}"
+			docker exec nginx nginx -s reload && echo -e "${rw_lv}配置已重载${rw_lv}" || echo -e "${rw_hong}重载失败${rw_lv}"
 		else
-			nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || echo -e "${rw_hong}重载失败${rw_bai}"
+			nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || echo -e "${rw_hong}重载失败${rw_lv}"
 		fi
 		;;
 	  5)
@@ -22762,10 +22790,10 @@ while true; do
 				read -e -p " 是否重载Nginx? (y/N): " _rl
 				[[ "$_rl" =~ ^[Yy]$ ]] && docker exec nginx nginx -s reload
 			else
-				echo -e "${rw_hong}配置文件不存在${rw_bai}"
+				echo -e "${rw_hong}配置文件不存在${rw_lv}"
 			fi
 		else
-			echo -e "${rw_hong}未找到站点配置目录${rw_bai}"
+			echo -e "${rw_hong}未找到站点配置目录${rw_lv}"
 		fi
 		;;
 	  8)
@@ -22775,7 +22803,7 @@ while true; do
 			read -e -p " 是否重载Nginx? (y/N): " _rl
 			[[ "$_rl" =~ ^[Yy]$ ]] && { docker exec nginx nginx -s reload 2>/dev/null || nginx -s reload 2>/dev/null; }
 		else
-			echo -e "${rw_huang}Nginx编译参数:${rw_bai}"
+			echo -e "${rw_huang}Nginx编译参数:${rw_lv}"
 			if docker inspect nginx &>/dev/null; then
 				docker exec nginx nginx -V 2>&1 | grep "configure arguments"
 			else
@@ -22788,7 +22816,7 @@ while true; do
 	  9)
 		if [ -d /home/web/certs ]; then
 			echo -e "SSL 证书到期时间:"
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			for _cert in /home/web/certs/*_cert.pem; do
 				[ -f "$_cert" ] || continue
 				local _dom=$(basename "$_cert" | sed 's/_cert.pem//')
@@ -22800,7 +22828,7 @@ while true; do
 			read -e -p " 输入域名申请/更新证书 (留空跳过): " _cert_domain
 			[ -n "$_cert_domain" ] && { install_certbot; install_ssltls; certs_status; }
 		else
-			echo -e "${rw_hong}未找到证书目录${rw_bai}"
+			echo -e "${rw_hong}未找到证书目录${rw_lv}"
 		fi
 		;;
 	  10)
@@ -22821,9 +22849,9 @@ while true; do
 	  15)
 		if docker inspect nginx &>/dev/null; then
 			nginx_upgrade
-			echo -e "${rw_lv}Nginx 已更新${rw_bai}"
+			echo -e "${rw_lv}Nginx 已更新${rw_lv}"
 		else
-			echo -e "${rw_huang}Nginx未通过Docker安装，请手动升级${rw_bai}"
+			echo -e "${rw_huang}Nginx未通过Docker安装，请手动升级${rw_lv}"
 		fi
 		;;
 	  16)
@@ -22832,7 +22860,7 @@ while true; do
 		elif [ -f /var/log/nginx/access.log ]; then
 			tail -n 50 /var/log/nginx/access.log
 		else
-			echo -e "${rw_hong}未找到访问日志${rw_bai}"
+			echo -e "${rw_hong}未找到访问日志${rw_lv}"
 		fi
 		;;
 	  17)
@@ -22841,7 +22869,7 @@ while true; do
 		elif [ -f /var/log/nginx/error.log ]; then
 			tail -n 50 /var/log/nginx/error.log
 		else
-			echo -e "${rw_hong}未找到错误日志${rw_bai}"
+			echo -e "${rw_hong}未找到错误日志${rw_lv}"
 		fi
 		;;
 	  18)
@@ -22854,7 +22882,7 @@ while true; do
 		fi
 		;;
 	  0) return ;;
-	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 	esac
 	break_end
 done
@@ -22941,12 +22969,12 @@ switch_git_mirror() {
     echo -e "${rw_huang}║         Git 镜像源切换                 ║${rw_huang}"
     echo -e "${rw_huang}╚════════════════════════════════════════╝${rw_huang}"
     echo ""
-    echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}手动切换源${rw_bai}"
-    echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}自动切换最快的源${rw_bai}"
-    echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}源测速${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
-    echo -e "${rw_huang}0.   ${rw_bai}${rw_lv}返回上一级${rw_bai}"
-    echo -e "${rw_cheng}------------------------${rw_bai}"
+    echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}手动切换源${rw_lv}"
+    echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}自动切换最快的源${rw_lv}"
+    echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}源测速${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回上一级${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
     read -e -p "请输入你的选择: " mirror_choice
 
     case $mirror_choice in
@@ -22963,7 +22991,7 @@ switch_git_mirror() {
         return
         ;;
       *)
-        echo -e "${rw_hong}无效的输入！${rw_bai}"
+        echo -e "${rw_hong}无效的输入！${rw_lv}"
         sleep 1
         ;;
     esac
@@ -22973,10 +23001,10 @@ switch_git_mirror() {
 # 测试镜像源速度函数
 test_mirror_speed() {
   clear
-  echo -e "${rw_huang}源测速${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}源测速${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo ""
-  echo -e "${rw_huang}正在测试各个镜像源的速度...${rw_bai}"
+  echo -e "${rw_huang}正在测试各个镜像源的速度...${rw_lv}"
   echo ""
 
   # 定义镜像源列表
@@ -22992,7 +23020,7 @@ test_mirror_speed() {
     local name=$(echo "$mirror" | cut -d'|' -f1)
     local url=$(echo "$mirror" | cut -d'|' -f2)
 
-    echo -e "${rw_huang}正在测试 $name...${rw_bai}"
+    echo -e "${rw_huang}正在测试 $name...${rw_lv}"
 
     # 使用 curl 测试连接时间，设置超时时间
     if command -v curl &>/dev/null; then
@@ -23001,7 +23029,7 @@ test_mirror_speed() {
       
       # 检查 duration 是否为有效的数字
       if ! [[ $duration =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        echo -e "  ${rw_hong}✗ $name - 无法连接${rw_bai}"
+        echo -e "  ${rw_hong}✗ $name - 无法连接${rw_lv}"
         continue
       fi
 
@@ -23009,18 +23037,18 @@ test_mirror_speed() {
       local duration_ms=$(awk "BEGIN {print int($duration * 1000)}")
 
       if [ $duration_ms -lt 10000 ]; then
-        echo -e "  ${rw_lv}✓ $name - ${duration_ms}ms${rw_bai}"
+        echo -e "  ${rw_lv}✓ $name - ${duration_ms}ms${rw_lv}"
       else
-        echo -e "  ${rw_hong}✗ $name - 超时${rw_bai}"
+        echo -e "  ${rw_hong}✗ $name - 超时${rw_lv}"
       fi
     else
-      echo -e "  ${rw_hong}未安装 curl，无法测速${rw_bai}"
+      echo -e "  ${rw_hong}未安装 curl，无法测速${rw_lv}"
       break
     fi
   done
 
   echo ""
-  echo -e "${rw_lv}测速完成！${rw_bai}"
+  echo -e "${rw_lv}测速完成！${rw_lv}"
   echo ""
   read -e -p "按回车继续..."
 }
@@ -23028,17 +23056,17 @@ test_mirror_speed() {
 # 手动切换镜像源函数
 manual_switch_mirror() {
   clear
-  echo -e "${rw_huang}手动切换源${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}手动切换源${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo ""
-  echo -e "${rw_huang}可用的镜像源:${rw_bai}"
-  echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}GitHub 官方源 (https://github.com)${rw_bai}"
-  echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}GitClone 镜像 (https://gitclone.com)${rw_bai}"
-  echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}GitHub 加速 (https://mirror.ghproxy.com)${rw_bai}"
-  echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}FastGit 镜像 (https://hub.fastgit.xyz)${rw_bai}"
-  echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}自定义源${rw_bai}"
+  echo -e "${rw_huang}可用的镜像源:${rw_lv}"
+  echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}GitHub 官方源 (https://github.com)${rw_lv}"
+  echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}GitClone 镜像 (https://gitclone.com)${rw_lv}"
+  echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}GitHub 加速 (https://mirror.ghproxy.com)${rw_lv}"
+  echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}FastGit 镜像 (https://hub.fastgit.xyz)${rw_lv}"
+  echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}自定义源${rw_lv}"
   echo ""
-  echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+  echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
   echo ""
 
   read -e -p "请选择要切换的源 [1-5]: " source_choice
@@ -23063,7 +23091,7 @@ manual_switch_mirror() {
       if [ "$mirror_url" = "0" ]; then return; fi
       ;;
     *)
-      echo -e "${rw_hong}无效的选择！${rw_bai}"
+      echo -e "${rw_hong}无效的选择！${rw_lv}"
       read -e -p "按回车继续..."
       return
       ;;
@@ -23071,12 +23099,12 @@ manual_switch_mirror() {
 
   # 检查是否在 git 仓库中
   if [ ! -d ".git" ]; then
-    echo -e "${rw_hong}当前目录不是 git 仓库${rw_bai}"
-    echo -e "${rw_huang}正在设置全局 git URL 替换...${rw_bai}"
+    echo -e "${rw_hong}当前目录不是 git 仓库${rw_lv}"
+    echo -e "${rw_huang}正在设置全局 git URL 替换...${rw_lv}"
     git config --global url."${mirror_url}/".insteadOf "https://github.com/"
-    echo -e "${rw_lv}已设置全局 URL 替换: ${mirror_url}/ -> https://github.com/${rw_bai}"
+    echo -e "${rw_lv}已设置全局 URL 替换: ${mirror_url}/ -> https://github.com/${rw_lv}"
   else
-    echo -e "${rw_huang}当前 git 仓库的远程配置:${rw_bai}"
+    echo -e "${rw_huang}当前 git 仓库的远程配置:${rw_lv}"
     git remote -v
     echo ""
     read -e -p "请输入要修改的远程仓库名称 (默认 origin): " remote_name
@@ -23088,7 +23116,7 @@ manual_switch_mirror() {
     # 获取当前远程仓库的完整 URL
     local current_url=$(git remote get-url $remote_name 2>/dev/null)
     if [ $? -ne 0 ]; then
-      echo -e "${rw_hong}远程仓库 $remote_name 不存在${rw_bai}"
+      echo -e "${rw_hong}远程仓库 $remote_name 不存在${rw_lv}"
       read -e -p "按回车继续..."
       return
     fi
@@ -23098,9 +23126,9 @@ manual_switch_mirror() {
       local repo_path=$(echo "$current_url" | sed -E 's|.*github.com[/:]([^/]+)/([^/.]+)(\.git)?|\1/\2|')
       local new_url="${mirror_url}/${repo_path}.git"
       git remote set-url "$remote_name" "$new_url"
-      echo -e "${rw_lv}已将 $remote_name 切换到: $new_url${rw_bai}"
+      echo -e "${rw_lv}已将 $remote_name 切换到: $new_url${rw_lv}"
     else
-      echo -e "${rw_hong}当前远程仓库不是 GitHub 仓库${rw_bai}"
+      echo -e "${rw_hong}当前远程仓库不是 GitHub 仓库${rw_lv}"
     fi
   fi
 
@@ -23111,10 +23139,10 @@ manual_switch_mirror() {
 # 自动切换最快镜像源函数
 auto_switch_fastest_mirror() {
   clear
-  echo -e "${rw_huang}自动切换最快的源${rw_bai}"
-  echo -e "${rw_cheng}------------------------${rw_bai}"
+  echo -e "${rw_huang}自动切换最快的源${rw_lv}"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
   echo ""
-  echo -e "${rw_huang}正在测试各个镜像源的速度...${rw_bai}"
+  echo -e "${rw_huang}正在测试各个镜像源的速度...${rw_lv}"
   echo ""
 
   # 定义镜像源列表
@@ -23134,7 +23162,7 @@ auto_switch_fastest_mirror() {
     local name=$(echo "$mirror" | cut -d'|' -f1)
     local url=$(echo "$mirror" | cut -d'|' -f2)
 
-    echo -e "${rw_huang}正在测试 $name...${rw_bai}"
+    echo -e "${rw_huang}正在测试 $name...${rw_lv}"
 
     # 使用 curl 测试连接时间，设置超时时间
     if command -v curl &>/dev/null; then
@@ -23143,7 +23171,7 @@ auto_switch_fastest_mirror() {
       
       # 检查 duration 是否为有效的数字
       if ! [[ $duration =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        echo -e "  ${rw_hong}✗ $name - 无法连接${rw_bai}"
+        echo -e "  ${rw_hong}✗ $name - 无法连接${rw_lv}"
         continue
       fi
 
@@ -23157,12 +23185,12 @@ auto_switch_fastest_mirror() {
       fi
 
       if [ $duration_ms -lt 10000 ]; then
-        echo -e "  ${rw_lv}✓ $name - ${duration_ms}ms${rw_bai}"
+        echo -e "  ${rw_lv}✓ $name - ${duration_ms}ms${rw_lv}"
       else
-        echo -e "  ${rw_hong}✗ $name - 超时${rw_bai}"
+        echo -e "  ${rw_hong}✗ $name - 超时${rw_lv}"
       fi
     else
-      echo -e "  ${rw_hong}未安装 curl，跳过速度测试${rw_bai}"
+      echo -e "  ${rw_hong}未安装 curl，跳过速度测试${rw_lv}"
       fastest_mirror="GitHub官方"
       fastest_url="https://github.com"
       break
@@ -23171,21 +23199,21 @@ auto_switch_fastest_mirror() {
 
   echo ""
   if [ -z "$fastest_mirror" ]; then
-    echo -e "${rw_hong}所有镜像源都不可用，使用 GitHub 官方源${rw_bai}"
+    echo -e "${rw_hong}所有镜像源都不可用，使用 GitHub 官方源${rw_lv}"
     fastest_mirror="GitHub官方"
     fastest_url="https://github.com"
   fi
 
-  echo -e "${rw_lv}最快的源: $fastest_mirror (${fastest_time}ms)${rw_bai}"
+  echo -e "${rw_lv}最快的源: $fastest_mirror (${fastest_time}ms)${rw_lv}"
   echo ""
 
   # 应用最快的源
   if [ ! -d ".git" ]; then
-    echo -e "${rw_huang}当前目录不是 git 仓库，正在设置全局 git URL 替换...${rw_bai}"
+    echo -e "${rw_huang}当前目录不是 git 仓库，正在设置全局 git URL 替换...${rw_lv}"
     git config --global url."${fastest_url}/".insteadOf "https://github.com/"
-    echo -e "${rw_lv}已设置全局 URL 替换: ${fastest_url}/ -> https://github.com/${rw_bai}"
+    echo -e "${rw_lv}已设置全局 URL 替换: ${fastest_url}/ -> https://github.com/${rw_lv}"
   else
-    echo -e "${rw_huang}当前 git 仓库的远程配置:${rw_bai}"
+    echo -e "${rw_huang}当前 git 仓库的远程配置:${rw_lv}"
     git remote -v
     echo ""
     read -e -p "请输入要修改的远程仓库名称 (默认 origin): " remote_name
@@ -23197,7 +23225,7 @@ auto_switch_fastest_mirror() {
     # 获取当前远程仓库的完整 URL
     local current_url=$(git remote get-url $remote_name 2>/dev/null)
     if [ $? -ne 0 ]; then
-      echo -e "${rw_hong}远程仓库 $remote_name 不存在${rw_bai}"
+      echo -e "${rw_hong}远程仓库 $remote_name 不存在${rw_lv}"
       read -e -p "按回车继续..."
       return
     fi
@@ -23207,9 +23235,9 @@ auto_switch_fastest_mirror() {
       local repo_path=$(echo "$current_url" | sed -E 's|.*github.com[/:]([^/]+)/([^/.]+)(\.git)?|\1/\2|')
       local new_url="${fastest_url}/${repo_path}.git"
       git remote set-url "$remote_name" "$new_url"
-      echo -e "${rw_lv}已将 $remote_name 切换到最快源: $new_url${rw_bai}"
+      echo -e "${rw_lv}已将 $remote_name 切换到最快源: $new_url${rw_lv}"
     else
-      echo -e "${rw_hong}当前远程仓库不是 GitHub 仓库${rw_bai}"
+      echo -e "${rw_hong}当前远程仓库不是 GitHub 仓库${rw_lv}"
     fi
   fi
 
@@ -23232,11 +23260,11 @@ git_hooks_deploy() {
     echo ""
 
     # 路径选择
-    echo -e "${rw_huang}当前路径: ${rw_lv}$(pwd)${rw_bai}"
+    echo -e "${rw_huang}当前路径: ${rw_lv}$(pwd)${rw_lv}"
     echo ""
-    echo -e "${rw_lv}操作实例: ${rw_hong}/home/user/my-project ${rw_lv}或 ${rw_hong}/var/www/html${rw_bai}"
+    echo -e "${rw_lv}操作实例: ${rw_hong}/home/user/my-project ${rw_lv}或 ${rw_hong}/var/www/html${rw_lv}"
     echo ""
-    echo -e "${rw_huang}提示: 输入 0 返回上一级${rw_bai}"
+    echo -e "${rw_huang}提示: 输入 0 返回上一级${rw_lv}"
     echo ""
     echo -e "请输入 git 仓库路径 (回车默认): \c"
     read -e repo_path
@@ -23251,8 +23279,8 @@ git_hooks_deploy() {
     # 检查是否是 git 仓库
     if [ ! -d "$repo_path/.git" ]; then
       echo ""
-      echo -e "${rw_hong}错误: $repo_path 不是有效的 git 仓库${rw_bai}"
-      echo -e "${rw_huang}提示: 请先在该目录执行 git init 或克隆一个仓库${rw_bai}"
+      echo -e "${rw_hong}错误: $repo_path 不是有效的 git 仓库${rw_lv}"
+      echo -e "${rw_huang}提示: 请先在该目录执行 git init 或克隆一个仓库${rw_lv}"
       echo ""
       read -e -p "按回车继续..."
       continue
@@ -23266,39 +23294,39 @@ git_hooks_deploy() {
       echo -e "${rw_huang}║         Git Hooks 自动部署             ║${rw_huang}"
       echo -e "${rw_huang}╚════════════════════════════════════════╝${rw_huang}"
       echo ""
-      echo -e "${rw_huang}当前仓库: $repo_path${rw_bai}"
-      echo -e "${rw_lv}Hooks 目录: $hooks_dir ${rw_huang}[默认]${rw_bai}"
+      echo -e "${rw_huang}当前仓库: $repo_path${rw_lv}"
+      echo -e "${rw_lv}Hooks 目录: $hooks_dir ${rw_huang}[默认]${rw_lv}"
       echo ""
-      echo -e "${rw_huang}${rw_huang}常用 Hooks${rw_bai}"
-      echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}pre-commit      ${rw_bai}${rw_huang}- 提交前自动检查${rw_bai}"
-      echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}post-merge      ${rw_bai}${rw_huang}- 合并后自动更新依赖${rw_bai}"
-      echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}pre-push        ${rw_bai}${rw_huang}- 推送前运行测试${rw_bai}"
-      echo -e "${rw_huang}4.   ${rw_bai}${rw_lv}post-receive    ${rw_bai}${rw_huang}- 接收推送后自动部署${rw_bai}"
-      echo -e "${rw_huang}5.   ${rw_bai}${rw_lv}commit-msg      ${rw_bai}${rw_huang}- 提交信息格式检查${rw_bai}"
+      echo -e "${rw_huang}${rw_huang}常用 Hooks${rw_lv}"
+      echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}pre-commit      ${rw_lv}${rw_huang}- 提交前自动检查${rw_lv}"
+      echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}post-merge      ${rw_lv}${rw_huang}- 合并后自动更新依赖${rw_lv}"
+      echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}pre-push        ${rw_lv}${rw_huang}- 推送前运行测试${rw_lv}"
+      echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}post-receive    ${rw_lv}${rw_huang}- 接收推送后自动部署${rw_lv}"
+      echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}commit-msg      ${rw_lv}${rw_huang}- 提交信息格式检查${rw_lv}"
       echo ""
-      echo -e "${rw_cheng}------------------------${rw_bai}"
-      echo -e "${rw_huang}6.  ${rw_lv}一键安装所有 Hooks${rw_bai}"
-      echo -e "${rw_huang}7.   ${rw_bai}${rw_lv}查看已安装的 Hooks${rw_bai}"
-      echo -e "${rw_huang}8.   ${rw_bai}${rw_lv}删除指定 Hook${rw_bai}"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      echo -e "${rw_huang}6.  ${rw_lv}一键安装所有 Hooks${rw_lv}"
+      echo -e "${rw_huang}7.   ${rw_lv}${rw_lv}查看已安装的 Hooks${rw_lv}"
+      echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}删除指定 Hook${rw_lv}"
       echo ""
-      echo -e "${rw_cheng}------------------------${rw_bai}"
-      echo -e "${rw_huang}9.   ${rw_bai}${rw_lv}切换仓库路径${rw_bai}"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}切换仓库路径${rw_lv}"
       echo -e "${rw_huang}0.  返回主菜单"
-      echo -e "${rw_cheng}------------------------${rw_bai}"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
       read -e -p "请输入你的选择: " hook_choice
 
       case $hook_choice in
         1)
           echo ""
-          echo -e "${rw_lv}正在部署 pre-commit hook...${rw_bai}"
+          echo -e "${rw_lv}正在部署 pre-commit hook...${rw_lv}"
           cat > "$hooks_dir/pre-commit" << 'HOOK_EOF'
 #!/bin/bash
 # pre-commit hook - 提交前自动检查
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-commit: 提交前检查"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 检查是否有尾随空格
 echo "[1/3] 检查尾随空格..."
@@ -23326,26 +23354,26 @@ if [ -n "$console_logs" ]; then
   echo "  建议清理后再提交"
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-commit 检查完成"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
           chmod +x "$hooks_dir/pre-commit"
-          echo -e "${rw_lv}pre-commit hook 部署成功${rw_bai}"
-          echo -e "${rw_huang}功能: 检查尾随空格、大文件警告、console.log 检查${rw_bai}"
+          echo -e "${rw_lv}pre-commit hook 部署成功${rw_lv}"
+          echo -e "${rw_huang}功能: 检查尾随空格、大文件警告、console.log 检查${rw_lv}"
           ;;
 
         2)
           echo ""
-          echo -e "${rw_lv}正在部署 post-merge hook...${rw_bai}"
+          echo -e "${rw_lv}正在部署 post-merge hook...${rw_lv}"
           cat > "$hooks_dir/post-merge" << 'HOOK_EOF'
 #!/bin/bash
 # post-merge hook - 合并后自动更新依赖
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  post-merge: 合并后自动更新"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 检测包管理器并自动安装依赖
 if [ -f "package.json" ] && [ -f "package-lock.json" ]; then
@@ -23376,26 +23404,26 @@ else
   echo "未检测到已知依赖文件，跳过自动安装"
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  post-merge 更新完成"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
           chmod +x "$hooks_dir/post-merge"
-          echo -e "${rw_lv}post-merge hook 部署成功${rw_bai}"
-          echo -e "${rw_huang}功能: 自动检测并安装 npm/yarn/pip/composer/go/cargo 依赖${rw_bai}"
+          echo -e "${rw_lv}post-merge hook 部署成功${rw_lv}"
+          echo -e "${rw_huang}功能: 自动检测并安装 npm/yarn/pip/composer/go/cargo 依赖${rw_lv}"
           ;;
 
         3)
           echo ""
-          echo -e "${rw_lv}正在部署 pre-push hook...${rw_bai}"
+          echo -e "${rw_lv}正在部署 pre-push hook...${rw_lv}"
           cat > "$hooks_dir/pre-push" << 'HOOK_EOF'
 #!/bin/bash
 # pre-push hook - 推送前运行测试
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-push: 推送前测试"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 检测测试框架并自动运行
 if [ -f "package.json" ]; then
@@ -23432,18 +23460,18 @@ else
   echo "未检测到测试配置，跳过测试"
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-push 测试通过"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
           chmod +x "$hooks_dir/pre-push"
-          echo -e "${rw_lv}pre-push hook 部署成功${rw_bai}"
-          echo -e "${rw_huang}功能: 推送前自动运行 npm/pytest/go/cargo 测试${rw_bai}"
+          echo -e "${rw_lv}pre-push hook 部署成功${rw_lv}"
+          echo -e "${rw_huang}功能: 推送前自动运行 npm/pytest/go/cargo 测试${rw_lv}"
           ;;
 
         4)
           echo ""
-          echo -e "${rw_lv}正在部署 post-receive hook...${rw_bai}"
+          echo -e "${rw_lv}正在部署 post-receive hook...${rw_lv}"
           cat > "$hooks_dir/post-receive" << 'HOOK_EOF'
 #!/bin/bash
 # post-receive hook - 接收推送后自动部署
@@ -23453,12 +23481,12 @@ HOOK_EOF
 read oldrev newrev refname
 branch=$(echo "$refname" | sed 's|refs/heads/||')
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  post-receive: 自动部署"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "分支: $branch"
 echo "提交: $newrev"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 设置部署目录（修改为你的实际部署路径）
 DEPLOY_DIR="/var/www/html"
@@ -23481,17 +23509,17 @@ else
   echo "请修改此 hook 中的 DEPLOY_DIR 变量"
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
           chmod +x "$hooks_dir/post-receive"
-          echo -e "${rw_lv}post-receive hook 部署成功${rw_bai}"
-          echo -e "${rw_huang}功能: 接收推送后自动部署到指定目录${rw_bai}"
-          echo -e "${rw_huang}注意: 此 hook 用于服务器端裸仓库，需修改 DEPLOY_DIR${rw_bai}"
+          echo -e "${rw_lv}post-receive hook 部署成功${rw_lv}"
+          echo -e "${rw_huang}功能: 接收推送后自动部署到指定目录${rw_lv}"
+          echo -e "${rw_huang}注意: 此 hook 用于服务器端裸仓库，需修改 DEPLOY_DIR${rw_lv}"
           ;;
 
         5)
           echo ""
-          echo -e "${rw_lv}正在部署 commit-msg hook...${rw_bai}"
+          echo -e "${rw_lv}正在部署 commit-msg hook...${rw_lv}"
           cat > "$hooks_dir/commit-msg" << 'HOOK_EOF'
 #!/bin/bash
 # commit-msg hook - 提交信息格式检查
@@ -23500,9 +23528,9 @@ HOOK_EOF
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  commit-msg: 提交信息检查"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 检查提交信息长度
 if [ ${#COMMIT_MSG} -lt 5 ]; then
@@ -23529,20 +23557,20 @@ else
   fi
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
           chmod +x "$hooks_dir/commit-msg"
-          echo -e "${rw_lv}commit-msg hook 部署成功${rw_bai}"
-          echo -e "${rw_huang}功能: 检查提交信息长度和格式（约定式提交）${rw_bai}"
+          echo -e "${rw_lv}commit-msg hook 部署成功${rw_lv}"
+          echo -e "${rw_huang}功能: 检查提交信息长度和格式（约定式提交）${rw_lv}"
           ;;
 
         6)
           echo ""
-          echo -e "${rw_lv}正在一键安装所有常用 Hooks...${rw_bai}"
+          echo -e "${rw_lv}正在一键安装所有常用 Hooks...${rw_lv}"
           # 依次安装所有 hooks
           for hook_name in pre-commit post-merge pre-push commit-msg; do
             echo ""
-            echo -e "${rw_huang}安装 $hook_name...${rw_bai}"
+            echo -e "${rw_huang}安装 $hook_name...${rw_lv}"
             case $hook_name in
               pre-commit)
                 cat > "$hooks_dir/pre-commit" << 'HOOK_EOF'
@@ -23550,9 +23578,9 @@ HOOK_EOF
 # pre-commit hook - 提交前自动检查
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-commit: 提交前检查"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 # 检查是否有尾随空格
 echo "[1/3] 检查尾随空格..."
@@ -23580,9 +23608,9 @@ if [ -n "$console_logs" ]; then
   echo "  建议清理后再提交"
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-commit 检查完成"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
                 ;;
               post-merge)
@@ -23591,9 +23619,9 @@ HOOK_EOF
 # post-merge hook - 合并后自动更新依赖
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  post-merge: 合并后自动更新"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 if [ -f "package.json" ] && [ -f "package-lock.json" ]; then
   echo "[npm] 正在执行 npm ci..."
@@ -23621,9 +23649,9 @@ elif [ -f "Cargo.toml" ]; then
   cargo build
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  post-merge 更新完成"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
                 ;;
               pre-push)
@@ -23632,9 +23660,9 @@ HOOK_EOF
 # pre-push hook - 推送前运行测试
 # 自动部署生成
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-push: 推送前测试"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 if [ -f "package.json" ] && grep -q '"test"' package.json 2>/dev/null; then
   echo "[npm] 正在运行 npm test..."
@@ -23666,9 +23694,9 @@ elif [ -f "Cargo.toml" ]; then
   fi
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  pre-push 测试通过"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
                 ;;
               commit-msg)
@@ -23680,9 +23708,9 @@ HOOK_EOF
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 echo "  commit-msg: 提交信息检查"
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 
 if [ ${#COMMIT_MSG} -lt 5 ]; then
   echo "错误: 提交信息太短（至少5个字符）"
@@ -23703,20 +23731,20 @@ else
   fi
 fi
 
-echo -e "${rw_cheng}========================================${rw_bai}"
+echo -e "${rw_cheng}========================================${rw_lv}"
 HOOK_EOF
                 ;;
             esac
             chmod +x "$hooks_dir/$hook_name"
-            echo -e "${rw_lv}$hook_name 安装完成${rw_bai}"
+            echo -e "${rw_lv}$hook_name 安装完成${rw_lv}"
           done
           echo ""
-          echo -e "${rw_lv}所有常用 Hooks 一键安装完成！${rw_bai}"
+          echo -e "${rw_lv}所有常用 Hooks 一键安装完成！${rw_lv}"
           ;;
 
         7)
           echo ""
-          echo -e "${rw_huang}已安装的 Hooks:${rw_bai}"
+          echo -e "${rw_huang}已安装的 Hooks:${rw_lv}"
           if [ -d "$hooks_dir" ]; then
             local found=0
             for hook in "$hooks_dir"/*; do
@@ -23725,20 +23753,20 @@ HOOK_EOF
                 # 跳过 sample 文件
                 if [[ "$name" == *.sample ]]; then continue; fi
                 found=1
-                echo -e "${rw_huang}  ${rw_lv}$name${rw_bai}"
+                echo -e "${rw_huang}  ${rw_lv}$name${rw_lv}"
               fi
             done
             if [ $found -eq 0 ]; then
-              echo -e "${rw_hong}  尚未安装任何自定义 hooks${rw_bai}"
+              echo -e "${rw_hong}  尚未安装任何自定义 hooks${rw_lv}"
             fi
           else
-            echo -e "${rw_hong}  Hooks 目录不存在${rw_bai}"
+            echo -e "${rw_hong}  Hooks 目录不存在${rw_lv}"
           fi
           ;;
 
         8)
           echo ""
-          echo -e "${rw_huang}已安装的 Hooks:${rw_bai}"
+          echo -e "${rw_huang}已安装的 Hooks:${rw_lv}"
           local hooks_list=()
           local idx=1
           for hook in "$hooks_dir"/*; do
@@ -23751,14 +23779,14 @@ HOOK_EOF
             fi
           done
           if [ ${#hooks_list[@]} -eq 0 ]; then
-            echo -e "${rw_hong}  没有可删除的 hooks${rw_bai}"
+            echo -e "${rw_hong}  没有可删除的 hooks${rw_lv}"
           else
             echo ""
             read -e -p "请输入要删除的 Hook 编号 (0 取消): " del_idx
             if [ "$del_idx" != "0" ] && [ "$del_idx" -ge 1 ] && [ "$del_idx" -le ${#hooks_list[@]} ] 2>/dev/null; then
               local del_name="${hooks_list[$((del_idx-1))]}"
               rm -f "$hooks_dir/$del_name"
-              echo -e "${rw_lv}已删除 $del_name${rw_bai}"
+              echo -e "${rw_lv}已删除 $del_name${rw_lv}"
             fi
           fi
           ;;
@@ -23772,7 +23800,7 @@ HOOK_EOF
           ;;
 
         *)
-          echo -e "${rw_hong}无效的输入!${rw_bai}"
+          echo -e "${rw_hong}无效的输入!${rw_lv}"
           ;;
       esac
 
@@ -23788,65 +23816,65 @@ github_manager() {
     send_stats "GitHub管理器"
 
     # ── 状态探测 ──
-    local _git_repo="${rw_hong}未初始化${rw_bai}"
-    local _git_branch="" _git_status="${rw_lv}干净${rw_bai}"
-    local _git_remote="${rw_hong}无${rw_bai}"
+    local _git_repo="${rw_hong}未初始化${rw_lv}"
+    local _git_branch="" _git_status="${rw_lv}干净${rw_lv}"
+    local _git_remote="${rw_hong}无${rw_lv}"
 
     if git rev-parse --is-inside-work-tree &>/dev/null; then
-        _git_repo="${rw_lv}已初始化${rw_bai}"
+        _git_repo="${rw_lv}已初始化${rw_lv}"
         _git_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
         # 检查工作区状态
         if ! git diff-index --quiet HEAD -- 2>/dev/null; then
-            _git_status="${rw_huang}已修改${rw_bai}"
+            _git_status="${rw_huang}已修改${rw_lv}"
         fi
         # 检查远程仓库
         local _remote_url=$(git remote get-url origin 2>/dev/null)
         if [ -n "$_remote_url" ]; then
-            _git_remote="${rw_lv}${_remote_url##*/}${rw_bai}"
+            _git_remote="${rw_lv}${_remote_url##*/}${rw_lv}"
         fi
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  GitHub 管理器  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " 仓库 ${_git_repo}  分支 ${rw_huang}${_git_branch:-?}${rw_bai}  状态 ${_git_status}  远程 ${_git_remote}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  GitHub 管理器  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 仓库 ${_git_repo}  分支 ${rw_huang}${_git_branch:-?}${rw_lv}  状态 ${_git_status}  远程 ${_git_remote}"
     echo ""
-    echo -e " ${rw_cheng}──── 仓库操作${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  克隆仓库             ${rw_huang}2${rw_bai}  初始化本地仓库"
+    echo -e " ${rw_cheng}──── 仓库操作${rw_lv}"
+    echo -e "  ${rw_huang}1${rw_lv} 克隆仓库             ${rw_huang}2${rw_lv} 初始化本地仓库"
     echo ""
-    echo -e " ${rw_cheng}──── 分支管理${rw_bai}"
-    echo -e " ${rw_huang}3${rw_bai}  列出本地分支         ${rw_huang}4${rw_bai}  创建新分支"
-    echo -e " ${rw_huang}5${rw_bai}  切换分支             ${rw_huang}6${rw_bai}  删除分支"
+    echo -e " ${rw_cheng}──── 分支管理${rw_lv}"
+    echo -e "  ${rw_huang}3${rw_lv} 列出本地分支         ${rw_huang}4${rw_lv} 创建新分支"
+    echo -e "  ${rw_huang}5${rw_lv} 切换分支             ${rw_huang}6${rw_lv} 删除分支"
     echo ""
-    echo -e " ${rw_cheng}──── 文件操作${rw_bai}"
-    echo -e " ${rw_huang}7${rw_bai}  查看状态             ${rw_huang}8${rw_bai}  暂存所有文件"
-    echo -e " ${rw_huang}9${rw_bai}  暂存指定文件         ${rw_huang}10${rw_bai} 取消暂存文件"
+    echo -e " ${rw_cheng}──── 文件操作${rw_lv}"
+    echo -e       " ${rw_huang}7${rw_lv} 查看状态              ${rw_huang}8${rw_lv} 暂存所有文件"
+    echo -e       " ${rw_huang}9${rw_lv} 暂存指定文件         ${rw_huang}10${rw_lv} 取消暂存文件"
     echo ""
-    echo -e " ${rw_cheng}──── 提交与推送${rw_bai}"
-    echo -e " ${rw_huang}11${rw_bai} 提交全部文件         ${rw_huang}12${rw_bai} 自定义提交"
-    echo -e " ${rw_huang}13${rw_bai} 推送到远程           ${rw_huang}14${rw_bai} 拉取远程更新"
+    echo -e " ${rw_cheng}──── 提交与推送${rw_lv}"
+    echo -e " ${rw_huang}11${rw_lv} 提交全部文件         ${rw_huang}12${rw_lv} 自定义提交"
+    echo -e " ${rw_huang}13${rw_lv} 推送到远程           ${rw_huang}14${rw_lv} 拉取远程更新"
     echo ""
-    echo -e " ${rw_cheng}──── 远程仓库${rw_bai}"
-    echo -e " ${rw_huang}15${rw_bai} 查看远程仓库         ${rw_huang}16${rw_bai} 添加远程仓库"
-    echo -e " ${rw_huang}17${rw_bai} 移除远程仓库         ${rw_huang}18${rw_bai} 移除远程分支"
+    echo -e " ${rw_cheng}──── 远程仓库${rw_lv}"
+    echo -e " ${rw_huang}15${rw_lv} 查看远程仓库         ${rw_huang}16${rw_lv} 添加远程仓库"
+    echo -e " ${rw_huang}17${rw_lv} 移除远程仓库         ${rw_huang}18${rw_lv} 移除远程分支"
     echo ""
-    echo -e " ${rw_cheng}──── 其他${rw_bai}"
-    echo -e " ${rw_huang}19${rw_bai} 切换Git源"
+    echo -e " ${rw_cheng}──── 其他${rw_lv}"
+    echo -e " ${rw_huang}19${rw_lv} 切换Git源"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
       1)
         clear
         install git
-        echo -e "${rw_huang}克隆仓库${rw_bai}"
+        echo -e "${rw_huang}克隆仓库${rw_lv}"
         echo "示例: https://github.com/username/repo.git"
         echo "示例: git@github.com:username/repo.git"
         echo ""
-        echo -e "${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_bai}"
+        echo -e "${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "请输入仓库URL: " repo_url
         if [ "$repo_url" = "0" ]; then continue; fi
@@ -23863,17 +23891,17 @@ github_manager() {
           git clone "$repo_url" "$target_dir"
         fi
         echo ""
-        echo -e "${rw_lv}操作完成！${rw_bai}"
+        echo -e "${rw_lv}操作完成！${rw_lv}"
         read -e -p "按回车继续..."
         ;;
       2)
         clear
         install git
-        echo -e "${rw_huang}初始化本地仓库${rw_bai}"
-        echo -e "目录路径示例: ${rw_hong}./myproject${rw_bai}, ${rw_hong}/home/user/projects/newrepo${rw_bai}"
+        echo -e "${rw_huang}初始化本地仓库${rw_lv}"
+        echo -e "目录路径示例: ${rw_hong}./myproject${rw_lv}, ${rw_hong}/home/user/projects/newrepo${rw_lv}"
         echo -e "直接回车使用当前目录"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "请输入仓库目录（回车使用当前目录）: " repo_dir
         if [ "$repo_dir" = "0" ]; then continue; fi
@@ -23882,179 +23910,179 @@ github_manager() {
         fi
         cd "$repo_dir" || { echo "目录不存在!"; read -e -p "按回车继续..."; continue; }
         git init
-        echo -e "${rw_lv}仓库已初始化！${rw_bai}"
+        echo -e "${rw_lv}仓库已初始化！${rw_lv}"
         read -e -p "按回车继续..."
         cd ~
         ;;
       3)
         clear
-        echo -e "${rw_huang}列出本地分支${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}列出本地分支${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -d ".git" ]; then
           git branch -a
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         echo ""
-        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "按回车继续..." input_choice
         if [ "$input_choice" = "0" ]; then continue; fi
         ;;
       4)
         clear
-        echo -e "${rw_huang}创建新分支${rw_bai}"
-        echo -e "分支名称示例: ${rw_hong}main${rw_bai}, ${rw_hong}dev${rw_bai}, ${rw_hong}feature/login${rw_bai}, ${rw_hong}bugfix/issue-123${rw_bai}"
+        echo -e "${rw_huang}创建新分支${rw_lv}"
+        echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}, ${rw_hong}bugfix/issue-123${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "请输入新分支名称: " branch_name
         if [ "$branch_name" = "0" ]; then continue; fi
         if [ -d ".git" ]; then
           git checkout -b "$branch_name"
-          echo -e "${rw_lv}分支 $branch_name 已创建并切换！${rw_bai}"
+          echo -e "${rw_lv}分支 $branch_name 已创建并切换！${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       5)
         clear
-        echo -e "${rw_huang}切换分支${rw_bai}"
+        echo -e "${rw_huang}切换分支${rw_lv}"
         if [ -d ".git" ]; then
           git branch
           echo ""
-          echo -e "分支名称示例: ${rw_hong}main${rw_bai}, ${rw_hong}dev${rw_bai}, ${rw_hong}feature/login${rw_bai}"
+          echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
           read -e -p "请输入要切换的分支名称: " branch_name
           if [ "$branch_name" = "0" ]; then continue; fi
           git checkout "$branch_name"
-          echo -e "${rw_lv}已切换到分支 $branch_name${rw_bai}"
+          echo -e "${rw_lv}已切换到分支 $branch_name${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       6)
         clear
-        echo -e "${rw_huang}删除分支${rw_bai}"
+        echo -e "${rw_huang}删除分支${rw_lv}"
         if [ -d ".git" ]; then
           git branch
           echo ""
-          echo -e "分支名称示例: ${rw_hong}feature/login${rw_bai}, ${rw_hong}bugfix/issue-123${rw_bai}"
+          echo -e "分支名称示例: ${rw_hong}feature/login${rw_lv}, ${rw_hong}bugfix/issue-123${rw_lv}"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
           read -e -p "请输入要删除的分支名称: " branch_name
           if [ "$branch_name" = "0" ]; then continue; fi
           read -e -p "确定要删除分支 $branch_name 吗? (y/n): " confirm
           if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
             git branch -d "$branch_name"
-            echo -e "${rw_lv}分支已删除${rw_bai}"
+            echo -e "${rw_lv}分支已删除${rw_lv}"
           else
-            echo -e "${rw_huang}已取消操作${rw_bai}"
+            echo -e "${rw_huang}已取消操作${rw_lv}"
           fi
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       7)
         clear
-        echo -e "${rw_huang}查看状态${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
+        echo -e "${rw_huang}查看状态${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
         if [ -d ".git" ]; then
           translate_git_status
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         echo ""
-        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "按回车继续..." input_choice
         if [ "$input_choice" = "0" ]; then continue; fi
         ;;
       8)
         clear
-        echo -e "${rw_huang}暂存所有文件${rw_bai}"
+        echo -e "${rw_huang}暂存所有文件${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "按回车继续..." input_choice
         if [ "$input_choice" = "0" ]; then continue; fi
         if [ -d ".git" ]; then
           git add .
-          echo -e "${rw_lv}所有文件已暂存${rw_bai}"
+          echo -e "${rw_lv}所有文件已暂存${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       9)
         clear
-        echo -e "${rw_huang}暂存指定文件${rw_bai}"
-        echo -e "文件路径示例: ${rw_hong}README.md${rw_bai}, ${rw_hong}src/main.py${rw_bai}, ${rw_hong}*.txt${rw_bai}"
-        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_bai}"
+        echo -e "${rw_huang}暂存指定文件${rw_lv}"
+        echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}, ${rw_hong}*.txt${rw_lv}"
+        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         if [ -d ".git" ]; then
           read -e -p "请输入要暂存的文件名（多个用空格分隔）: " files
           if [ "$files" = "0" ]; then continue; fi
           git add $files
-          echo -e "${rw_lv}文件已暂存${rw_bai}"
+          echo -e "${rw_lv}文件已暂存${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       10)
         clear
-        echo -e "${rw_huang}取消暂存文件${rw_bai}"
-        echo -e "文件路径示例: ${rw_hong}README.md${rw_bai}, ${rw_hong}src/main.py${rw_bai}"
-        echo -e "取消所有暂存: ${rw_hong}.${rw_bai}"
-        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_bai}"
+        echo -e "${rw_huang}取消暂存文件${rw_lv}"
+        echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}"
+        echo -e "取消所有暂存: ${rw_hong}.${rw_lv}"
+        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         if [ -d ".git" ]; then
           read -e -p "请输入要取消暂存的文件名（多个用空格分隔，. 表示全部）: " files
           if [ "$files" = "0" ]; then continue; fi
           git reset HEAD $files
-          echo -e "${rw_lv}文件已取消暂存${rw_bai}"
+          echo -e "${rw_lv}文件已取消暂存${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       12)
         clear
-        echo -e "${rw_huang}自定义提交${rw_bai}"
+        echo -e "${rw_huang}自定义提交${rw_lv}"
         if [ -d ".git" ]; then
-          echo -e "文件路径示例: ${rw_hong}README.md${rw_bai}, ${rw_hong}src/main.py${rw_bai}, ${rw_hong}*.txt${rw_bai}"
-          echo -e "文件夹路径示例: ${rw_hong}src/${rw_bai}, ${rw_hong}docs/${rw_bai}"
+          echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}, ${rw_hong}*.txt${rw_lv}"
+          echo -e "文件夹路径示例: ${rw_hong}src/${rw_lv}, ${rw_hong}docs/${rw_lv}"
           echo -e "多个文件/文件夹用空格分隔，支持通配符"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
           read -e -p "请输入要提交的文件或文件夹: " files
           if [ "$files" = "0" ]; then continue; fi
           if [ -z "$files" ]; then
-            echo -e "${rw_hong}文件列表不能为空${rw_bai}"
+            echo -e "${rw_hong}文件列表不能为空${rw_lv}"
             read -e -p "按回车继续..."
             continue
           fi
 
           git add $files
-          echo -e "${rw_lv}指定文件已暂存: ${rw_bai}$files"
+          echo -e "${rw_lv}指定文件已暂存: ${rw_lv}$files"
           echo ""
 
-          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_bai}"
-          echo -e "                  ${rw_hong}fix: 修复bug${rw_bai}"
+          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_lv}"
+          echo -e "                  ${rw_hong}fix: 修复bug${rw_lv}"
           echo ""
-          echo -e "${rw_huang}默认:${rw_bai}${rw_lv}不填写-自带时间提交${rw_bai}"
+          echo -e "${rw_huang}默认:${rw_lv}${rw_lv}不填写-自带时间提交${rw_lv}"
           echo ""
           read -e -p "请输入提交信息: " commit_msg
           if [ "$commit_msg" = "0" ]; then continue; fi
@@ -24063,25 +24091,25 @@ github_manager() {
           fi
           git commit -m "$commit_msg"
           if [ $? -ne 0 ]; then
-            echo -e "${rw_hong}提交失败${rw_bai}"
+            echo -e "${rw_hong}提交失败${rw_lv}"
           else
-            echo -e "${rw_lv}提交成功${rw_bai}"
+            echo -e "${rw_lv}提交成功${rw_lv}"
           fi
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       11)
         clear
-        echo -e "${rw_huang}提交全部文件${rw_bai}"
+        echo -e "${rw_huang}提交全部文件${rw_lv}"
         if [ -d ".git" ]; then
           local current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无提交）")
-          echo -e "${rw_huang}位于分支 ${rw_lv}$current_branch${rw_bai}"
+          echo -e "${rw_huang}位于分支 ${rw_lv}$current_branch${rw_lv}"
           echo ""
           
           if [ ! -f ".gitignore" ]; then
-            echo -e "${rw_lv}检测到新仓库，自动创建 .gitignore 排除系统目录...${rw_bai}"
+            echo -e "${rw_lv}检测到新仓库，自动创建 .gitignore 排除系统目录...${rw_lv}"
             cat > .gitignore << 'GITIGNORE_EOF'
 # macOS System Files
 .DS_Store
@@ -24098,7 +24126,7 @@ Documents/
 Desktop/
 Downloads/
 GITIGNORE_EOF
-            echo -e "${rw_lv}.gitignore 已创建${rw_bai}"
+            echo -e "${rw_lv}.gitignore 已创建${rw_lv}"
             echo ""
           fi
           
@@ -24109,32 +24137,32 @@ GITIGNORE_EOF
           
           if [ $has_head -eq 1 ]; then
             if git diff --cached --quiet 2>/dev/null; then
-              echo -e "${rw_lv}没有可提交的内容，工作区是干净的${rw_bai}"
+              echo -e "${rw_lv}没有可提交的内容，工作区是干净的${rw_lv}"
               echo ""
               read -e -p "按回车继续..."
               continue
             fi
           else
             if [ -z "$(git diff --cached --name-only 2>/dev/null)" ]; then
-              echo -e "${rw_lv}没有可提交的内容${rw_bai}"
+              echo -e "${rw_lv}没有可提交的内容${rw_lv}"
               echo ""
               read -e -p "按回车继续..."
               continue
             fi
           fi
           
-          echo -e "${rw_lv}所有文件已暂存${rw_bai}"
+          echo -e "${rw_lv}所有文件已暂存${rw_lv}"
           echo ""
-          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_bai}"
-          echo -e "                  ${rw_hong}fix: 修复bug${rw_bai}"
-          echo -e "                  ${rw_hong}docs: 更新文档${rw_bai}"
-          echo -e "                  ${rw_hong}style: 代码格式调整${rw_bai}"
-          echo -e "                  ${rw_hong}refactor: 代码重构${rw_bai}"
-          echo -e "                  ${rw_hong}chore: 构建/工具更新${rw_bai}"
+          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_lv}"
+          echo -e "                  ${rw_hong}fix: 修复bug${rw_lv}"
+          echo -e "                  ${rw_hong}docs: 更新文档${rw_lv}"
+          echo -e "                  ${rw_hong}style: 代码格式调整${rw_lv}"
+          echo -e "                  ${rw_hong}refactor: 代码重构${rw_lv}"
+          echo -e "                  ${rw_hong}chore: 构建/工具更新${rw_lv}"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
-          echo -e "${rw_huang}默认:${rw_bai}${rw_lv}不填写-自带时间提交${rw_bai}"
+          echo -e "${rw_huang}默认:${rw_lv}${rw_lv}不填写-自带时间提交${rw_lv}"
           echo ""
           read -e -p "请输入提交信息: " commit_msg
           if [ "$commit_msg" = "0" ]; then continue; fi
@@ -24143,19 +24171,19 @@ GITIGNORE_EOF
           fi
           git commit -m "$commit_msg"
           if [ $? -ne 0 ]; then
-            echo -e "${rw_hong}提交失败${rw_bai}"
-            echo -e "${rw_huang}提示: 没有可提交的更改${rw_bai}"
+            echo -e "${rw_hong}提交失败${rw_lv}"
+            echo -e "${rw_huang}提示: 没有可提交的更改${rw_lv}"
           else
-            echo -e "${rw_lv}提交成功${rw_bai}"
+            echo -e "${rw_lv}提交成功${rw_lv}"
           fi
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       13)
         clear
-        echo -e "${rw_huang}推送到远程${rw_bai}"
+        echo -e "${rw_huang}推送到远程${rw_lv}"
         if [ -d ".git" ]; then
           git remote -v
           echo ""
@@ -24163,14 +24191,14 @@ GITIGNORE_EOF
           if [ -z "$current_remote" ]; then
             current_remote="（无远程）"
           fi
-          echo -e "${rw_huang}当前远程: ${rw_lv}$current_remote${rw_bai}"
+          echo -e "${rw_huang}当前远程: ${rw_lv}$current_remote${rw_lv}"
           echo ""
           current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
-          echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_bai}"
+          echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_lv}"
           echo ""
-          echo -e "远程仓库名称示例: ${rw_hong}origin${rw_bai}, upstream, myrepo"
+          echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv}, upstream, myrepo"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
           read -e -p "请输入远程仓库名称: " remote_name
           if [ "$remote_name" = "0" ]; then continue; fi
@@ -24178,94 +24206,94 @@ GITIGNORE_EOF
             remote_name="origin"
           fi
           echo ""
-          echo -e "分支名称示例: ${rw_hong}main${rw_bai}, ${rw_hong}master${rw_bai}, ${rw_hong}dev${rw_bai}, ${rw_hong}feature/login${rw_bai}"
+          echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}master${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}"
           read -e -p "请输入分支名称（默认当前分支）: " branch_name
           if [ "$branch_name" = "0" ]; then continue; fi
           if [ -z "$branch_name" ]; then
             branch_name=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无分支）")
           fi
           
-          echo -e "${rw_lv}正在推送到 ${remote_name}/${branch_name}...${rw_bai}"
+          echo -e "${rw_lv}正在推送到 ${remote_name}/${branch_name}...${rw_lv}"
           run_with_timeout 60 git push "$remote_name" "$branch_name"
           push_result=$?
           
           if [ $push_result -eq 124 ]; then
-            echo -e "${rw_hong}推送超时（60秒）${rw_bai}"
-            echo -e "${rw_huang}提示: 请检查网络连接或远程仓库地址${rw_bai}"
+            echo -e "${rw_hong}推送超时（60秒）${rw_lv}"
+            echo -e "${rw_huang}提示: 请检查网络连接或远程仓库地址${rw_lv}"
           elif [ $push_result -ne 0 ]; then
-            echo -e "${rw_hong}推送失败${rw_bai}"
+            echo -e "${rw_hong}推送失败${rw_lv}"
             echo ""
-            echo -e "${rw_huang}错误原因: 本地分支落后于远程分支 (non-fast-forward)${rw_bai}"
+            echo -e "${rw_huang}错误原因: 本地分支落后于远程分支 (non-fast-forward)${rw_lv}"
             echo ""
-            echo -e "${rw_huang}解决方案:${rw_bai}"
-            echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}拉取并合并远程更新 (git pull)${rw_bai}"
-            echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}拉取并变基 (git pull --rebase) - 保持线性历史${rw_bai}"
-            echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}强制推送 (git push --force) - 会覆盖远程分支，有风险${rw_bai}"
+            echo -e "${rw_huang}解决方案:${rw_lv}"
+            echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}拉取并合并远程更新 (git pull)${rw_lv}"
+            echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}拉取并变基 (git pull --rebase) - 保持线性历史${rw_lv}"
+            echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}强制推送 (git push --force) - 会覆盖远程分支，有风险${rw_lv}"
             echo ""
             read -e -p "请选择解决方案 (1/2/3): " solution_choice
             if [ "$solution_choice" = "0" ]; then continue; fi
             
             case $solution_choice in
               1)
-                echo -e "${rw_lv}正在拉取远程更新...${rw_bai}"
+                echo -e "${rw_lv}正在拉取远程更新...${rw_lv}"
                 run_with_timeout 60 git pull "$remote_name" "$branch_name"
                 if [ $? -eq 0 ]; then
-                  echo -e "${rw_lv}拉取成功，重新推送...${rw_bai}"
+                  echo -e "${rw_lv}拉取成功，重新推送...${rw_lv}"
                   run_with_timeout 60 git push "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
-                    echo -e "${rw_lv}推送成功${rw_bai}"
+                    echo -e "${rw_lv}推送成功${rw_lv}"
                   else
-                    echo -e "${rw_hong}重新推送失败，请手动处理冲突${rw_bai}"
+                    echo -e "${rw_hong}重新推送失败，请手动处理冲突${rw_lv}"
                   fi
                 else
-                  echo -e "${rw_hong}拉取失败，可能存在冲突需要手动处理${rw_bai}"
+                  echo -e "${rw_hong}拉取失败，可能存在冲突需要手动处理${rw_lv}"
                 fi
                 ;;
               2)
-                echo -e "${rw_lv}正在拉取并变基...${rw_bai}"
+                echo -e "${rw_lv}正在拉取并变基...${rw_lv}"
                 run_with_timeout 60 git pull --rebase "$remote_name" "$branch_name"
                 if [ $? -eq 0 ]; then
-                  echo -e "${rw_lv}变基成功，重新推送...${rw_bai}"
+                  echo -e "${rw_lv}变基成功，重新推送...${rw_lv}"
                   run_with_timeout 60 git push "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
-                    echo -e "${rw_lv}推送成功${rw_bai}"
+                    echo -e "${rw_lv}推送成功${rw_lv}"
                   else
-                    echo -e "${rw_hong}重新推送失败${rw_bai}"
+                    echo -e "${rw_hong}重新推送失败${rw_lv}"
                   fi
                 else
-                  echo -e "${rw_hong}变基失败，可能存在冲突需要手动处理${rw_bai}"
+                  echo -e "${rw_hong}变基失败，可能存在冲突需要手动处理${rw_lv}"
                 fi
                 ;;
               3)
-                read -e -p "$(echo -e "${rw_hong}警告: ${rw_bai}强制推送会覆盖远程分支，请确认是否继续? (y/N): ")" force_confirm
+                read -e -p "$(echo -e "${rw_hong}警告: ${rw_lv}强制推送会覆盖远程分支，请确认是否继续? (y/N): ")" force_confirm
                 if [ "$force_confirm" = "0" ]; then continue; fi
                 if [ "$force_confirm" = "y" ] || [ "$force_confirm" = "Y" ]; then
-                  echo -e "${rw_lv}正在强制推送...${rw_bai}"
+                  echo -e "${rw_lv}正在强制推送...${rw_lv}"
                   run_with_timeout 60 git push --force "$remote_name" "$branch_name"
                   if [ $? -eq 0 ]; then
-                    echo -e "${rw_lv}强制推送成功${rw_bai}"
+                    echo -e "${rw_lv}强制推送成功${rw_lv}"
                   else
-                    echo -e "${rw_hong}强制推送失败${rw_bai}"
+                    echo -e "${rw_hong}强制推送失败${rw_lv}"
                   fi
                 else
-                  echo -e "${rw_huang}已取消强制推送${rw_bai}"
+                  echo -e "${rw_huang}已取消强制推送${rw_lv}"
                 fi
                 ;;
               *)
-                echo -e "${rw_huang}未选择解决方案${rw_bai}"
+                echo -e "${rw_huang}未选择解决方案${rw_lv}"
                 ;;
             esac
           else
-            echo -e "${rw_lv}推送成功${rw_bai}"
+            echo -e "${rw_lv}推送成功${rw_lv}"
           fi
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       14)
         clear
-        echo -e "${rw_huang}拉取远程更新${rw_bai}"
+        echo -e "${rw_huang}拉取远程更新${rw_lv}"
         if [ -d ".git" ]; then
           git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
             git config --global --unset "$key" 2>/dev/null
@@ -24274,12 +24302,12 @@ GITIGNORE_EOF
           echo "远程仓库列表:"
           git remote -v
           echo ""
-          echo -e "${rw_huang}请选择操作:${rw_bai}"
-          echo -e "${rw_huang}1.   ${rw_bai}${rw_lv}拉取当前分支${rw_bai}"
-          echo -e "${rw_huang}2.   ${rw_bai}${rw_lv}拉取指定分支${rw_bai}"
-          echo -e "${rw_huang}3.   ${rw_bai}${rw_lv}拉取所有分支${rw_bai}"
+          echo -e "${rw_huang}请选择操作:${rw_lv}"
+          echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}拉取当前分支${rw_lv}"
+          echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}拉取指定分支${rw_lv}"
+          echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}拉取所有分支${rw_lv}"
           echo ""
-          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
           echo ""
           read -e -p "请输入你的选择（默认1）: " pull_choice
           
@@ -24288,114 +24316,114 @@ GITIGNORE_EOF
           
           case $pull_choice in
             1)
-              echo -e "${rw_huang}正在拉取当前分支...${rw_bai}"
+              echo -e "${rw_huang}正在拉取当前分支...${rw_lv}"
               current_branch=$(git branch --show-current 2>/dev/null)
               if [ -z "$current_branch" ]; then
                 current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
               fi
               
               if [ -n "$current_branch" ]; then
-                echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_bai}"
+                echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_lv}"
                 if git pull origin "$current_branch" 2>/dev/null; then
-                  echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                  echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
                 elif git pull 2>/dev/null; then
-                  echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                  echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
                 else
-                  echo -e "${rw_huang}提示: 当前分支未设置上游跟踪${rw_bai}"
-                  echo -e "${rw_huang}建议: 输入 2 手动指定分支和远程仓库${rw_bai}"
-                  echo -e "${rw_huang}是否自动设置上游分支？(Y/N)${rw_bai}"
+                  echo -e "${rw_huang}提示: 当前分支未设置上游跟踪${rw_lv}"
+                  echo -e "${rw_huang}建议: 输入 2 手动指定分支和远程仓库${rw_lv}"
+                  echo -e "${rw_huang}是否自动设置上游分支？(Y/N)${rw_lv}"
                   read -e -p "请输入你的选择: " set_upstream
                   if [ "$set_upstream" = "Y" ] || [ "$set_upstream" = "y" ]; then
                     if git branch --set-upstream-to=origin/"$current_branch" 2>/dev/null; then
-                      echo -e "${rw_lv}✓ 已设置上游分支为 origin/$current_branch${rw_bai}"
-                      echo -e "${rw_huang}正在重新拉取...${rw_bai}"
+                      echo -e "${rw_lv}✓ 已设置上游分支为 origin/$current_branch${rw_lv}"
+                      echo -e "${rw_huang}正在重新拉取...${rw_lv}"
                       if git pull; then
-                        echo -e "${rw_lv}✓ 拉取成功${rw_bai}"
+                        echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
                       else
-                        echo -e "${rw_hong}✗ 拉取失败${rw_bai}"
+                        echo -e "${rw_hong}✗ 拉取失败${rw_lv}"
                       fi
                     else
-                      echo -e "${rw_hong}✗ 设置上游分支失败，可能远程不存在该分支${rw_bai}"
+                      echo -e "${rw_hong}✗ 设置上游分支失败，可能远程不存在该分支${rw_lv}"
                     fi
                   else
-                    echo -e "${rw_huang}已取消，可输入 2 手动指定分支${rw_bai}"
+                    echo -e "${rw_huang}已取消，可输入 2 手动指定分支${rw_lv}"
                   fi
                 fi
               else
-                echo -e "${rw_hong}✗ 无法获取当前分支名称${rw_bai}"
-                echo -e "${rw_huang}提示: 请手动切换到分支后再拉取${rw_bai}"
+                echo -e "${rw_hong}✗ 无法获取当前分支名称${rw_lv}"
+                echo -e "${rw_huang}提示: 请手动切换到分支后再拉取${rw_lv}"
               fi
               ;;
             2)
-              echo -e "${rw_huang}当前分支: $(git branch --show-current)${rw_bai}"
-              echo -e "${rw_huang}可用的远程分支:${rw_bai}"
+              echo -e "${rw_huang}当前分支: $(git branch --show-current)${rw_lv}"
+              echo -e "${rw_huang}可用的远程分支:${rw_lv}"
               git branch -r | head -10
               echo ""
               read -e -p "请输入要拉取的分支名称（如 master 或 main）: " branch_name
               if [ -n "$branch_name" ]; then
-                echo -e "${rw_huang}请输入远程仓库名称（默认 origin）: ${rw_bai}"
+                echo -e "${rw_huang}请输入远程仓库名称（默认 origin）: ${rw_lv}"
                 read -e -p "请输入远程仓库名称: " remote_name
                 if [ -z "$remote_name" ]; then remote_name="origin"; fi
                 
-                echo -e "${rw_huang}正在拉取 $remote_name/$branch_name ...${rw_bai}"
+                echo -e "${rw_huang}正在拉取 $remote_name/$branch_name ...${rw_lv}"
                 git pull "$remote_name" "$branch_name"
                 if [ $? -eq 0 ]; then
-                  echo -e "${rw_lv}拉取成功${rw_bai}"
+                  echo -e "${rw_lv}拉取成功${rw_lv}"
                 else
-                  echo -e "${rw_hong}拉取失败，请检查分支名称和仓库状态${rw_bai}"
+                  echo -e "${rw_hong}拉取失败，请检查分支名称和仓库状态${rw_lv}"
                 fi
               else
-                echo -e "${rw_hong}分支名称不能为空${rw_bai}"
+                echo -e "${rw_hong}分支名称不能为空${rw_lv}"
               fi
               ;;
             3)
-              echo -e "${rw_huang}正在拉取所有分支...${rw_bai}"
+              echo -e "${rw_huang}正在拉取所有分支...${rw_lv}"
               git fetch --all
               if [ $? -eq 0 ]; then
-                echo -e "${rw_lv}获取所有分支成功${rw_bai}"
-                echo -e "${rw_huang}提示: 使用 'git checkout' 切换到其他分支${rw_bai}"
+                echo -e "${rw_lv}获取所有分支成功${rw_lv}"
+                echo -e "${rw_huang}提示: 使用 'git checkout' 切换到其他分支${rw_lv}"
               else
-                echo -e "${rw_hong}获取失败${rw_bai}"
+                echo -e "${rw_hong}获取失败${rw_lv}"
               fi
               ;;
             *)
-              echo -e "${rw_huang}无效选择，正在拉取当前分支...${rw_bai}"
+              echo -e "${rw_huang}无效选择，正在拉取当前分支...${rw_lv}"
               git pull
               if [ $? -eq 0 ]; then
-                echo -e "${rw_lv}拉取成功${rw_bai}"
+                echo -e "${rw_lv}拉取成功${rw_lv}"
               else
-                echo -e "${rw_hong}拉取失败${rw_bai}"
+                echo -e "${rw_hong}拉取失败${rw_lv}"
               fi
               ;;
           esac
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       15)
         clear
-        echo -e "${rw_huang}查看远程仓库${rw_bai}"
-        echo -e "远程仓库通常包括: ${rw_hong}origin${rw_bai} (主仓库), ${rw_hong}upstream${rw_bai} (上游仓库)"
+        echo -e "${rw_huang}查看远程仓库${rw_lv}"
+        echo -e "远程仓库通常包括: ${rw_hong}origin${rw_lv} (主仓库), ${rw_hong}upstream${rw_lv} (上游仓库)"
         echo ""
         if [ -d ".git" ]; then
           git remote -v
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         echo ""
-        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         read -e -p "按回车继续..." input_choice
         if [ "$input_choice" = "0" ]; then continue; fi
         ;;
       16)
         clear
-        echo -e "${rw_huang}添加远程仓库${rw_bai}"
-        echo -e "${rw_cheng}------------------------${rw_bai}"
-        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_bai} (默认), upstream, myrepo"
+        echo -e "${rw_huang}添加远程仓库${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv} (默认), upstream, myrepo"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         if [ -d ".git" ]; then
           read -e -p "请输入远程仓库名称（如 origin）: " remote_name
@@ -24409,18 +24437,18 @@ GITIGNORE_EOF
           if [ "$remote_url" = "0" ]; then continue; fi
           git remote add "$remote_name" "$remote_url"
           echo ""
-          echo -e "${rw_lv}远程仓库已添加${rw_bai}"
+          echo -e "${rw_lv}远程仓库已添加${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       17)
         clear
-        echo -e "${rw_huang}移除远程仓库${rw_bai}"
-        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_bai}, ${rw_hong}upstream${rw_bai}, ${rw_hong}myrepo${rw_bai}"
+        echo -e "${rw_huang}移除远程仓库${rw_lv}"
+        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv}, ${rw_hong}upstream${rw_lv}, ${rw_hong}myrepo${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         if [ -d ".git" ]; then
           git remote -v
@@ -24428,17 +24456,17 @@ GITIGNORE_EOF
           read -e -p "请输入要移除的远程仓库名称: " remote_name
           if [ "$remote_name" = "0" ]; then continue; fi
           git remote remove "$remote_name"
-          echo -e "${rw_lv}远程仓库已移除${rw_bai}"
+          echo -e "${rw_lv}远程仓库已移除${rw_lv}"
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
       18)
-        echo -e "${rw_huang}移除远程分支${rw_bai}"
-        echo -e "示例: ${rw_hong}git push origin --delete feature-branch${rw_bai}"
+        echo -e "${rw_huang}移除远程分支${rw_lv}"
+        echo -e "示例: ${rw_hong}git push origin --delete feature-branch${rw_lv}"
         echo ""
-        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_bai}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
         echo ""
         if [ -d ".git" ]; then
           git remote -v
@@ -24450,16 +24478,16 @@ GITIGNORE_EOF
           read -e -p "请输入要删除的远程分支名称: " branch_name
           if [ "$branch_name" = "0" ]; then continue; fi
           echo ""
-          echo -e "${rw_hong}警告: 即将删除远程仓库 ${remote_name} 的分支 ${branch_name}${rw_bai}"
+          echo -e "${rw_hong}警告: 即将删除远程仓库 ${remote_name} 的分支 ${branch_name}${rw_lv}"
           read -e -p "确认删除？(y/n): " confirm
           if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
             git push "$remote_name" --delete "$branch_name"
-            echo -e "${rw_lv}远程分支 ${branch_name} 已删除${rw_bai}"
+            echo -e "${rw_lv}远程分支 ${branch_name} 已删除${rw_lv}"
           else
-            echo -e "${rw_huang}操作已取消${rw_bai}"
+            echo -e "${rw_huang}操作已取消${rw_lv}"
           fi
         else
-          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_bai}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         read -e -p "按回车继续..."
         ;;
@@ -24471,7 +24499,7 @@ GITIGNORE_EOF
         return
         ;;
       *)
-        echo -e "${rw_hong}无效的输入！${rw_bai}"
+        echo -e "${rw_hong}无效的输入！${rw_lv}"
         sleep 1
         ;;
     esac
@@ -24487,32 +24515,51 @@ docker_manager_menu() {
         refresh_status_cache
     fi
 
-    local _dr=0 _da=0 _di=0 _docker_stat="${rw_hong}未安装${rw_bai}"
+    local _dr=$_CACHE_DOCKER_CONTAINER_RUNNING _da=$_CACHE_DOCKER_CONTAINER_ALL _di=$_CACHE_DOCKER_IMAGE_COUNT
+    local _docker_stat="${rw_hong}未安装${rw_lv}"
     if command -v docker &>/dev/null; then
-        _docker_stat="${rw_lv}已安装${rw_bai}"
-        _dr=$(docker ps -q 2>/dev/null | wc -l | tr -d ' ')
-        _da=$(docker ps -aq 2>/dev/null | wc -l | tr -d ' ')
-        _di=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
-        if ! $_CACHE_DOCKER_ACTIVE; then
-            _docker_stat="${rw_huang}已安装但未运行${rw_bai}"
+        _docker_stat="${rw_lv}已安装${rw_lv}"
+        if $_CACHE_DOCKER_ACTIVE; then
+            # 使用缓存值（60秒有效），缓存过期后 refresh_status_cache 会自动刷新
+            _dr=$_CACHE_DOCKER_CONTAINER_RUNNING
+            _da=$_CACHE_DOCKER_CONTAINER_ALL
+            _di=$_CACHE_DOCKER_IMAGE_COUNT
+        else
+            _docker_stat="${rw_huang}已安装但未运行${rw_lv}"
+            # 未运行时不执行 docker 命令，避免卡住
+            _dr=0; _da=0; _di=0
         fi
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 全管理  ━━━━━━━━━━━━${rw_bai}"
-    echo -e " 状态 ${_docker_stat}  容器 ${rw_lv}${_dr}${rw_bai}运行/${rw_huang}$(( _da - _dr ))${rw_bai}停止  镜像 ${rw_lv}${_di}${rw_bai}"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 全管理  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 状态 ${_docker_stat}  容器 ${rw_lv}${_dr}${rw_lv}运行/${rw_huang}$(( _da - _dr ))${rw_lv}停止  镜像 ${rw_lv}${_di}${rw_lv}"
     echo ""
-    echo -e " ${rw_cheng}──── 容器管理${rw_bai}"
-    echo -e " ${rw_huang}1${rw_bai}  容器管理            ${rw_huang}2${rw_bai}  镜像管理"
-    echo -e " ${rw_huang}3${rw_bai}  Compose管理         ${rw_huang}4${rw_bai}  进入容器Shell"
+    echo -e " ${rw_cheng}──── 容器管理${rw_lv}"
+    echo -e " ${rw_huang}1${rw_lv}  容器管理            ${rw_huang}2${rw_lv}  镜像管理"
+    echo -e " ${rw_huang}3${rw_lv}  Compose管理         ${rw_huang}4${rw_lv}  进入容器Shell"
     echo ""
-    echo -e " ${rw_cheng}──── 维护工具${rw_bai}"
-    echo -e " ${rw_huang}5${rw_bai}  健康诊断            ${rw_huang}6${rw_bai}  备份&还原"
-    echo -e " ${rw_huang}7${rw_bai}  数据迁移            ${rw_huang}8${rw_bai}  安装&升级"
-    echo -e " ${rw_huang}9${rw_bai}  磁盘清理            ${rw_huang}10${rw_bai} 版本信息"
+    echo -e " ${rw_cheng}──── 维护工具${rw_lv}"
+    echo -e " ${rw_huang}5${rw_lv}  健康诊断            ${rw_huang}6${rw_lv}  备份&还原"
+    echo -e " ${rw_huang}7${rw_lv}  数据迁移            ${rw_huang}8${rw_lv}  安装&升级"
+    echo -e " ${rw_huang}9${rw_lv}  磁盘清理            ${rw_huang}10${rw_lv} 版本信息"
     echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+
+    # ── Colima 状态探测（使用缓存）──
+    local _colima_stat="${rw_hong}未安装${rw_lv}"
+    if $_CACHE_COLIMA_ACTIVE; then
+        _colima_stat="${rw_lv}运行中${rw_lv}"
+    elif command -v colima &>/dev/null; then
+        _colima_stat="${rw_huang}已安装未运行${rw_lv}"
+    fi
+
+    echo -e " ${rw_cheng}──── Colima 管理${rw_lv}"
+    echo -e " 状态 ${_colima_stat}"
+    echo -e " ${rw_huang}11${rw_lv} 查看运行状态        ${rw_huang}12${rw_lv} 停止容器环境"
+    echo -e " ${rw_huang}13${rw_lv} 重启服务            ${rw_huang}14${rw_lv} 删除实例"
+    echo ""
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     read -e -p " 请选择: " docker_choice
 
     case $docker_choice in
@@ -24526,8 +24573,72 @@ docker_manager_menu() {
       8) docker_install_upgrade ;;
       9) docker_system_clean ;;
       10) docker_version_show ;;
+      11)
+        send_stats "Colima查看运行状态"
+        if command -v colima &>/dev/null; then
+            echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+            colima status
+            echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+            echo ""
+            echo -e "${rw_lv}Colima 详细信息:${rw_lv}"
+            colima list 2>/dev/null || echo "  无运行实例"
+        else
+            echo -e "${rw_hong}Colima 未安装${rw_lv}"
+            echo -e "${rw_huang}提示: macOS 用户可使用 colima 替代 Docker Desktop${rw_lv}"
+            echo -e "${rw_huang}安装: ${rw_lv}brew install colima docker docker-compose"
+        fi
+        ;;
+      12)
+        send_stats "Colima停止容器环境"
+        if command -v colima &>/dev/null; then
+            echo -e "${rw_huang}正在停止 Colima 容器环境...${rw_lv}"
+            colima stop
+            if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}Colima 已停止${rw_lv}"
+            else
+                echo -e "${rw_hong}停止失败${rw_lv}"
+            fi
+        else
+            echo -e "${rw_hong}Colima 未安装${rw_lv}"
+        fi
+        ;;
+      13)
+        send_stats "Colima重启服务"
+        if command -v colima &>/dev/null; then
+            echo -e "${rw_huang}正在重启 Colima 服务...${rw_lv}"
+            colima restart
+            if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}Colima 已重启${rw_lv}"
+            else
+                echo -e "${rw_hong}重启失败${rw_lv}"
+            fi
+        else
+            echo -e "${rw_hong}Colima 未安装${rw_lv}"
+        fi
+        ;;
+      14)
+        send_stats "Colima删除实例"
+        if command -v colima &>/dev/null; then
+            echo -e "${rw_hong}警告: 这将删除 Colima 虚拟机实例！${rw_lv}"
+            echo -e "${rw_huang}提示: 删除后所有容器和数据将丢失${rw_lv}"
+            read -e -p " 确认删除？(输入 YES 确认): " _colima_confirm
+            if [ "$_colima_confirm" = "YES" ]; then
+                echo -e "${rw_huang}正在删除 Colima 实例...${rw_lv}"
+                colima delete
+                if [ $? -eq 0 ]; then
+                    echo -e "${rw_lv}Colima 实例已删除${rw_lv}"
+                else
+                    echo -e "${rw_hong}删除失败${rw_lv}"
+                fi
+            else
+                echo -e "${rw_huang}已取消${rw_lv}"
+            fi
+        else
+            echo -e "${rw_hong}Colima 未安装${rw_lv}"
+        fi
+        ;;
       0) return ;;
-      *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+      *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
     esac
   done
 }
@@ -24535,15 +24646,15 @@ docker_manager_menu() {
 docker_container_manage() {
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━━━━━${rw_lv}"
 docker ps -a --format " {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null \
-  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_bai}"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 启动   ${rw_huang}2${rw_bai} 停止   ${rw_huang}3${rw_bai} 重启   ${rw_huang}4${rw_bai} 删除"
-echo -e " ${rw_huang}5${rw_bai} 日志   ${rw_huang}6${rw_bai} 详情   ${rw_huang}7${rw_bai} 重命名 ${rw_huang}8${rw_bai} 清理已停止"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_lv}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 启动   ${rw_huang}2${rw_lv} 停止   ${rw_huang}3${rw_lv} 重启   ${rw_huang}4${rw_lv} 删除"
+echo -e " ${rw_huang}5${rw_lv} 日志   ${rw_huang}6${rw_lv} 详情   ${rw_huang}7${rw_lv} 重命名 ${rw_huang}8${rw_lv} 清理已停止"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 _dc_pick() {
@@ -24555,7 +24666,7 @@ _dc_pick() {
   fi
   read -e -p "$prompt (0=取消): " _picked
   [ "$_picked" = "0" ] && return 1
-  [ -z "$_picked" ] && { echo -e "${rw_hong}未输入${rw_bai}"; return 1; }
+  [ -z "$_picked" ] && { echo -e "${rw_hong}未输入${rw_lv}"; return 1; }
   echo "$_picked"
 }
 
@@ -24564,21 +24675,21 @@ case $choice in
     docker ps -a --filter "status=exited" --format " {{.Names}}  [{{.Image}}]" 2>/dev/null
     read -e -p " 容器名 (0=取消): " cname
     [ "$cname" = "0" ] || [ -z "$cname" ] && continue
-    docker start "$cname" && echo -e "${rw_lv}✓ 已启动 $cname${rw_bai}" || echo -e "${rw_hong}启动失败${rw_bai}"
+    docker start "$cname" && echo -e "${rw_lv}✓ 已启动 $cname${rw_lv}" || echo -e "${rw_hong}启动失败${rw_lv}"
     break_end
     ;;
   2)
     docker ps --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
     read -e -p " 容器名 (0=取消): " cname
     [ "$cname" = "0" ] || [ -z "$cname" ] && continue
-    docker stop "$cname" && echo -e "${rw_lv}✓ 已停止 $cname${rw_bai}" || echo -e "${rw_hong}停止失败${rw_bai}"
+    docker stop "$cname" && echo -e "${rw_lv}✓ 已停止 $cname${rw_lv}" || echo -e "${rw_hong}停止失败${rw_lv}"
     break_end
     ;;
   3)
     docker ps --format " {{.Names}}  [{{.Status}}]" 2>/dev/null
     read -e -p " 容器名 (0=取消): " cname
     [ "$cname" = "0" ] || [ -z "$cname" ] && continue
-    docker restart "$cname" && echo -e "${rw_lv}✓ 已重启 $cname${rw_bai}" || echo -e "${rw_hong}重启失败${rw_bai}"
+    docker restart "$cname" && echo -e "${rw_lv}✓ 已重启 $cname${rw_lv}" || echo -e "${rw_hong}重启失败${rw_lv}"
     break_end
     ;;
   4)
@@ -24587,7 +24698,7 @@ case $choice in
     [ "$cname" = "0" ] || [ -z "$cname" ] && continue
     read -e -p " 确认删除 $cname ? (y/N): " confirm
     [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] || continue
-    docker rm -f "$cname" && echo -e "${rw_lv}✓ 已删除${rw_bai}" || echo -e "${rw_hong}删除失败${rw_bai}"
+    docker rm -f "$cname" && echo -e "${rw_lv}✓ 已删除${rw_lv}" || echo -e "${rw_hong}删除失败${rw_lv}"
     break_end
     ;;
   5)
@@ -24640,21 +24751,21 @@ except Exception as e:
     [ "$oldname" = "0" ] || [ -z "$oldname" ] && continue
     read -e -p " 新名称: " newname
     [ -z "$newname" ] && continue
-    docker rename "$oldname" "$newname" && echo -e "${rw_lv}✓ 已重命名为 $newname${rw_bai}" || echo -e "${rw_hong}重命名失败${rw_bai}"
+    docker rename "$oldname" "$newname" && echo -e "${rw_lv}✓ 已重命名为 $newname${rw_lv}" || echo -e "${rw_hong}重命名失败${rw_lv}"
     break_end
     ;;
   8)
     _cnt=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ')
     if [ "$_cnt" -eq 0 ]; then
-      echo -e " ${rw_lv}没有已停止的容器${rw_bai}"
+      echo -e " ${rw_lv}没有已停止的容器${rw_lv}"
     else
       read -e -p " 清理 $_cnt 个已停止容器? (y/N): " confirm
-      [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker container prune -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+      [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker container prune -f && echo -e "${rw_lv}✓ 已清理${rw_lv}"
     fi
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -24665,24 +24776,24 @@ done
 docker_image_manage() {
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━━━━━${rw_lv}"
 docker images --format " {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}" 2>/dev/null \
-  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_bai}"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 拉取镜像   ${rw_huang}2${rw_bai} 搜索镜像"
-echo -e " ${rw_huang}3${rw_bai} 删除镜像   ${rw_huang}4${rw_bai} 清理悬空镜像"
-echo -e " ${rw_huang}5${rw_bai} 清理未使用 ${rw_huang}6${rw_bai} 导出 tar"
-echo -e " ${rw_huang}7${rw_bai} 导入 tar   ${rw_huang}8${rw_bai} 查看层信息"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+  | column -t || echo -e " ${rw_hong}Docker 未运行${rw_lv}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 拉取镜像   ${rw_huang}2${rw_lv} 搜索镜像"
+echo -e " ${rw_huang}3${rw_lv} 删除镜像   ${rw_huang}4${rw_lv} 清理悬空镜像"
+echo -e " ${rw_huang}5${rw_lv} 清理未使用 ${rw_huang}6${rw_lv} 导出 tar"
+echo -e " ${rw_huang}7${rw_lv} 导入 tar   ${rw_huang}8${rw_lv} 查看层信息"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 case $choice in
   1)
     read -e -p " 镜像名 (如 nginx:latest, 0=取消): " img
     [ "$img" = "0" ] || [ -z "$img" ] && continue
-    docker pull "$img" && echo -e "${rw_lv}✓ 拉取成功${rw_bai}" || echo -e "${rw_hong}拉取失败${rw_bai}"
+    docker pull "$img" && echo -e "${rw_lv}✓ 拉取成功${rw_lv}" || echo -e "${rw_hong}拉取失败${rw_lv}"
     break_end
     ;;
   2)
@@ -24692,7 +24803,7 @@ case $choice in
     limit=${limit:-10}
     [ "$limit" -gt 25 ] 2>/dev/null && limit=25
     docker search --limit "$limit" "$keyword" --format "table {{.Name}}\t{{.StarCount}}\t{{.IsOfficial}}" 2>/dev/null \
-      || echo -e "${rw_hong}搜索失败，请检查网络${rw_bai}"
+      || echo -e "${rw_hong}搜索失败，请检查网络${rw_lv}"
     break_end
     ;;
   3)
@@ -24701,20 +24812,20 @@ case $choice in
     [ "$img" = "0" ] || [ -z "$img" ] && continue
     read -e -p " 确认删除 $img ? (y/N): " confirm
     [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && \
-      docker rmi -f "$img" && echo -e "${rw_lv}✓ 已删除${rw_bai}" || echo -e "${rw_hong}删除失败${rw_bai}"
+      docker rmi -f "$img" && echo -e "${rw_lv}✓ 已删除${rw_lv}" || echo -e "${rw_hong}删除失败${rw_lv}"
     break_end
     ;;
   4)
     _cnt=$(docker images -f "dangling=true" -q 2>/dev/null | wc -l | tr -d ' ')
-    [ "$_cnt" -eq 0 ] && { echo -e " ${rw_lv}没有悬空镜像${rw_bai}"; break_end; continue; }
+    [ "$_cnt" -eq 0 ] && { echo -e " ${rw_lv}没有悬空镜像${rw_lv}"; break_end; continue; }
     read -e -p " 清理 $_cnt 个悬空镜像? (y/N): " confirm
-    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -f && echo -e "${rw_lv}✓ 已清理${rw_lv}"
     break_end
     ;;
   5)
     _cnt=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
     read -e -p " 清理所有未被使用的镜像 ($_cnt 个)? (y/N): " confirm
-    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -a -f && echo -e "${rw_lv}✓ 已清理${rw_bai}"
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker image prune -a -f && echo -e "${rw_lv}✓ 已清理${rw_lv}"
     break_end
     ;;
   6)
@@ -24724,16 +24835,16 @@ case $choice in
     safe_name=$(echo "$img" | tr '/:' '_')
     output_file="${safe_name}_$(date +%Y%m%d_%H%M%S).tar"
     docker save -o "$output_file" "$img" \
-      && echo -e "${rw_lv}✓ 已导出: $(pwd)/$output_file  $(du -h "$output_file" | cut -f1)${rw_bai}" \
-      || echo -e "${rw_hong}导出失败${rw_bai}"
+      && echo -e "${rw_lv}✓ 已导出: $(pwd)/$output_file  $(du -h "$output_file" | cut -f1)${rw_lv}" \
+      || echo -e "${rw_hong}导出失败${rw_lv}"
     break_end
     ;;
   7)
     ls -lh *.tar 2>/dev/null || echo " 当前目录无 tar 文件"
     read -e -p " tar 文件路径 (0=取消): " tarfile
     [ "$tarfile" = "0" ] || [ -z "$tarfile" ] && continue
-    [ ! -f "$tarfile" ] && { echo -e "${rw_hong}文件不存在${rw_bai}"; break_end; continue; }
-    docker load -i "$tarfile" && echo -e "${rw_lv}✓ 导入成功${rw_bai}" || echo -e "${rw_hong}导入失败${rw_bai}"
+    [ ! -f "$tarfile" ] && { echo -e "${rw_hong}文件不存在${rw_lv}"; break_end; continue; }
+    docker load -i "$tarfile" && echo -e "${rw_lv}✓ 导入成功${rw_lv}" || echo -e "${rw_hong}导入失败${rw_lv}"
     break_end
     ;;
   8)
@@ -24744,7 +24855,7 @@ case $choice in
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -24764,24 +24875,24 @@ fi
 
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 管理  ━━━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 管理  ━━━━━━━━━━━━${rw_lv}"
 if [ -n "$COMPOSE_CMD" ]; then
-  echo -e " 命令: ${rw_lv}$COMPOSE_CMD${rw_bai}"
+  echo -e " 命令: ${rw_lv}$COMPOSE_CMD${rw_lv}"
   docker ps --filter "label=com.docker.compose.project" \
     --format " {{.Label \"com.docker.compose.project\"}}\t{{.Names}}\t{{.Status}}" 2>/dev/null \
     | column -t | head -10
 else
-  echo -e " ${rw_hong}Docker Compose 未安装，请先执行菜单 8 安装${rw_bai}"
+  echo -e " ${rw_hong}Docker Compose 未安装，请先执行菜单 8 安装${rw_lv}"
 fi
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 粘贴 yml 创建并运行"
-echo -e " ${rw_huang}2${rw_bai} 管理现有项目 (启动/停止/重启/状态)"
-echo -e " ${rw_huang}3${rw_bai} 查看项目列表"
-echo -e " ${rw_huang}4${rw_bai} 查看项目日志"
-echo -e " ${rw_huang}5${rw_bai} 删除项目"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 粘贴 yml 创建并运行"
+echo -e " ${rw_huang}2${rw_lv} 管理现有项目 (启动/停止/重启/状态)"
+echo -e " ${rw_huang}3${rw_lv} 查看项目列表"
+echo -e " ${rw_huang}4${rw_lv} 查看项目日志"
+echo -e " ${rw_huang}5${rw_lv} 删除项目"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 _get_proj_dir() {
@@ -24801,45 +24912,45 @@ _get_proj_dir() {
 
 case $choice in
   1)
-    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_lv}"; break_end; continue; }
     read -e -p " 项目名称 (0=取消): " projname
     [ "$projname" = "0" ] || [ -z "$projname" ] && continue
     projdir="$HOME/docker-compose-projects/$projname"
     mkdir -p "$projdir"
     compose_file="$projdir/docker-compose.yml"
-    echo -e " ${rw_huang}粘贴 docker-compose.yml 内容，输入 @EOF 结束:${rw_bai}"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e " ${rw_huang}粘贴 docker-compose.yml 内容，输入 @EOF 结束:${rw_lv}"
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
     > "$compose_file"
     while IFS= read -r line; do
       [ "$line" = "@EOF" ] && break
       echo "$line" >> "$compose_file"
     done
     if [ ! -s "$compose_file" ]; then
-      echo -e "${rw_hong}内容为空，操作取消${rw_bai}"
+      echo -e "${rw_hong}内容为空，操作取消${rw_lv}"
       rm -rf "$projdir"; break_end; continue
     fi
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
     cat -n "$compose_file"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-    echo -e " 已保存到: ${rw_lv}$compose_file${rw_bai}"
+    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " 已保存到: ${rw_lv}$compose_file${rw_lv}"
     read -e -p " 立即启动? (y/N): " startnow
     if [ "$startnow" = "y" ] || [ "$startnow" = "Y" ]; then
       cd "$projdir" && $COMPOSE_CMD up -d
-      [ $? -eq 0 ] && echo -e "${rw_lv}✓ 项目 $projname 启动成功${rw_bai}" && $COMPOSE_CMD ps \
-        || echo -e "${rw_hong}启动失败，检查 yml 配置${rw_bai}"
+      [ $? -eq 0 ] && echo -e "${rw_lv}✓ 项目 $projname 启动成功${rw_lv}" && $COMPOSE_CMD ps \
+        || echo -e "${rw_hong}启动失败，检查 yml 配置${rw_lv}"
     else
       echo -e " 启动命令: cd $projdir && $COMPOSE_CMD up -d"
     fi
     break_end
     ;;
   2)
-    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_lv}"; break_end; continue; }
     projdir=$(_get_proj_dir) || continue
     if [ ! -f "$projdir/docker-compose.yml" ] && [ ! -f "$projdir/docker-compose.yaml" ]; then
-      echo -e "${rw_hong}未找到 docker-compose.yml: $projdir${rw_bai}"; break_end; continue
+      echo -e "${rw_hong}未找到 docker-compose.yml: $projdir${rw_lv}"; break_end; continue
     fi
     cd "$projdir"
-    echo -e " ${rw_huang}1=启动  2=停止  3=重启  4=状态  0=取消${rw_bai}"
+    echo -e " ${rw_huang}1=启动  2=停止  3=重启  4=状态  0=取消${rw_lv}"
     read -e -p " 操作: " op
     case $op in
       1) $COMPOSE_CMD up -d ;;
@@ -24850,53 +24961,53 @@ case $choice in
     break_end
     ;;
   3)
-    echo -e "${rw_cheng}── 运行中的 Compose 项目 ──────────────${rw_bai}"
+    echo -e "${rw_cheng}── 运行中的 Compose 项目 ──────────────${rw_lv}"
     docker ps -a --filter "label=com.docker.compose.project" \
       --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null | sort -u | while read p; do
       running=$(docker ps --filter "label=com.docker.compose.project=$p" -q 2>/dev/null | wc -l | tr -d ' ')
       total=$(docker ps -a --filter "label=com.docker.compose.project=$p" -q 2>/dev/null | wc -l | tr -d ' ')
-      echo -e "  ${rw_huang}$p${rw_bai}  运行 ${rw_lv}$running${rw_bai}/$total"
+      echo -e "  ${rw_huang}$p${rw_lv}  运行 ${rw_lv}$running${rw_lv}/$total"
     done
     if [ -d "$HOME/docker-compose-projects" ]; then
-      echo -e "${rw_cheng}── 本地项目目录 ────────────────────────${rw_bai}"
+      echo -e "${rw_cheng}── 本地项目目录 ────────────────────────${rw_lv}"
       for d in "$HOME/docker-compose-projects"/*/; do
         [ -d "$d" ] || continue
         pname=$(basename "$d")
         has_yml=""
-        [ -f "$d/docker-compose.yml" ] && has_yml="${rw_lv} [yml]${rw_bai}"
-        echo -e "  ${rw_huang}$pname${rw_bai}$has_yml"
+        [ -f "$d/docker-compose.yml" ] && has_yml="${rw_lv} [yml]${rw_lv}"
+        echo -e "  ${rw_huang}$pname${rw_lv}$has_yml"
       done
     fi
     break_end
     ;;
   4)
-    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_lv}"; break_end; continue; }
     projdir=$(_get_proj_dir) || continue
     [ -f "$projdir/docker-compose.yml" ] || [ -f "$projdir/docker-compose.yaml" ] || \
-      { echo -e "${rw_hong}未找到项目${rw_bai}"; break_end; continue; }
+      { echo -e "${rw_hong}未找到项目${rw_lv}"; break_end; continue; }
     read -e -p " 行数 (默认50): " lines
     cd "$projdir" && $COMPOSE_CMD logs --tail "${lines:-50}"
     ;;
   5)
-    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_bai}"; break_end; continue; }
+    [ -z "$COMPOSE_CMD" ] && { echo -e "${rw_hong}Compose 未安装${rw_lv}"; break_end; continue; }
     projdir=$(_get_proj_dir) || continue
     [ -f "$projdir/docker-compose.yml" ] || [ -f "$projdir/docker-compose.yaml" ] || \
-      { echo -e "${rw_hong}未找到项目${rw_bai}"; break_end; continue; }
+      { echo -e "${rw_hong}未找到项目${rw_lv}"; break_end; continue; }
     pname=$(basename "$projdir")
-    echo -e "${rw_hong} ⚠  将删除 $pname 的所有容器、网络、数据卷${rw_bai}"
+    echo -e "${rw_hong} ⚠  将删除 $pname 的所有容器、网络、数据卷${rw_lv}"
     read -e -p " 输入项目名确认 ($pname) 或 0=取消: " confirm
     if [ "$confirm" = "$pname" ]; then
       cd "$projdir" && $COMPOSE_CMD down -v
-      echo -e "${rw_lv}✓ 项目已停止并删除${rw_bai}"
+      echo -e "${rw_lv}✓ 项目已停止并删除${rw_lv}"
       read -e -p " 同时删除项目目录? (y/N): " deldir
-      [ "$deldir" = "y" ] || [ "$deldir" = "Y" ] && cd "$HOME" && rm -rf "$projdir" && echo -e "${rw_lv}✓ 目录已删除${rw_bai}"
+      [ "$deldir" = "y" ] || [ "$deldir" = "Y" ] && cd "$HOME" && rm -rf "$projdir" && echo -e "${rw_lv}✓ 目录已删除${rw_lv}"
     else
-      echo -e "${rw_huang}已取消${rw_bai}"
+      echo -e "${rw_huang}已取消${rw_lv}"
     fi
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -24906,12 +25017,12 @@ done
 # ================================================================
 docker_shell_access() {
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  进入容器 Shell  ━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  进入容器 Shell  ━━━━━━━━━━${rw_lv}"
 docker ps --format " {{.Names}}\t{{.Image}}\t{{.Status}}" 2>/dev/null | column -t
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 
 if [ "$(docker ps -q 2>/dev/null | wc -l)" -eq 0 ]; then
-  echo -e " ${rw_hong}没有运行中的容器${rw_bai}"
+  echo -e " ${rw_hong}没有运行中的容器${rw_lv}"
   break_end; return
 fi
 
@@ -24927,17 +25038,17 @@ for sh in bash sh ash; do
 done
 
 if [ -z "$shell" ]; then
-  echo -e "${rw_hong}容器内未找到可用 Shell${rw_bai}"
+  echo -e "${rw_hong}容器内未找到可用 Shell${rw_lv}"
   break_end; return
 fi
 
-echo -e " 进入 ${rw_lv}$cname${rw_bai} ($shell) — 输入 exit 退出"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e " 进入 ${rw_lv}$cname${rw_lv} ($shell) — 输入 exit 退出"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 
 if [ -t 0 ]; then
   docker exec -it "$cname" "$shell"
 else
-  echo -e "${rw_hong}终端不支持交互模式，请手动执行: docker exec -it $cname $shell${rw_bai}"
+  echo -e "${rw_hong}终端不支持交互模式，请手动执行: docker exec -it $cname $shell${rw_lv}"
 fi
 }
 
@@ -24946,39 +25057,39 @@ fi
 # ================================================================
 docker_health_check() {
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  健康诊断  ━━━━━━━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  健康诊断  ━━━━━━━━━━━━━━━━${rw_lv}"
 
 # Docker 服务（使用缓存）
 echo -n " Docker 服务: "
 if $_CACHE_DOCKER_ACTIVE || pgrep dockerd &>/dev/null; then
-  echo -e "${rw_lv}● 运行中${rw_bai}"
+  echo -e "${rw_lv}● 运行中${rw_lv}"
   docker info --format ' 容器: {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止    镜像: {{.Images}}' 2>/dev/null
 else
-  echo -e "${rw_hong}✗ 未运行${rw_bai}"
+  echo -e "${rw_hong}✗ 未运行${rw_lv}"
 fi
 echo ""
 
 # 磁盘
-echo -e "${rw_cheng}── 磁盘占用 ────────────────────────────${rw_bai}"
-docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取${rw_bai}"
+echo -e "${rw_cheng}── 磁盘占用 ────────────────────────────${rw_lv}"
+docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取${rw_lv}"
 echo ""
 
 # 容器状态
-echo -e "${rw_cheng}── 容器状态 ────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}── 容器状态 ────────────────────────────${rw_lv}"
 if [ "$(docker ps -a -q 2>/dev/null | wc -l)" -gt 0 ]; then
   docker ps -a --format "{{.Names}}|{{.Status}}" 2>/dev/null | while IFS='|' read name status; do
     health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}-{{end}}' "$name" 2>/dev/null)
     case $health in
-      healthy)   hd="${rw_lv}healthy${rw_bai}" ;;
-      unhealthy) hd="${rw_hong}unhealthy${rw_bai}" ;;
-      *)         hd="${rw_huang}$health${rw_bai}" ;;
+      healthy)   hd="${rw_lv}healthy${rw_lv}" ;;
+      unhealthy) hd="${rw_hong}unhealthy${rw_lv}" ;;
+      *)         hd="${rw_huang}$health${rw_lv}" ;;
     esac
     if echo "$status" | grep -qi "^Up"; then
-      sd="${rw_lv}running${rw_bai}"
+      sd="${rw_lv}running${rw_lv}"
     elif echo "$status" | grep -qi "Exited"; then
-      sd="${rw_hong}stopped${rw_bai}"
+      sd="${rw_hong}stopped${rw_lv}"
     else
-      sd="${rw_huang}${status:0:12}${rw_bai}"
+      sd="${rw_huang}${status:0:12}${rw_lv}"
     fi
     printf " %-25s %b  %b\n" "$name" "$sd" "$hd"
   done
@@ -24988,28 +25099,28 @@ fi
 echo ""
 
 # 资源
-echo -e "${rw_cheng}── 资源占用 Top5 ───────────────────────${rw_bai}"
+echo -e "${rw_cheng}── 资源占用 Top5 ───────────────────────${rw_lv}"
 [ "$(docker ps -q 2>/dev/null | wc -l)" -gt 0 ] \
   && docker stats --no-stream --format " {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" 2>/dev/null | head -5 | column -t \
   || echo -e " 无运行容器"
 echo ""
 
 # 问题诊断
-echo -e "${rw_cheng}── 问题诊断 ────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}── 问题诊断 ────────────────────────────${rw_lv}"
 issues=0
 _exited=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ')
 _unhealthy=$(docker ps --filter "health=unhealthy" -q 2>/dev/null | wc -l | tr -d ' ')
 _restarting=$(docker ps --filter "status=restarting" -q 2>/dev/null | wc -l | tr -d ' ')
 _docker_root=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null)
-[ "$_exited" -gt 0 ] && echo -e " ${rw_hong}⚠  $_exited 个停止的容器 (可清理)${rw_bai}" && issues=$((issues+1))
-[ "$_unhealthy" -gt 0 ] && echo -e " ${rw_hong}⚠  $_unhealthy 个不健康容器${rw_bai}" && issues=$((issues+1))
-[ "$_restarting" -gt 0 ] && echo -e " ${rw_hong}⚠  $_restarting 个反复重启的容器${rw_bai}" && issues=$((issues+1))
+[ "$_exited" -gt 0 ] && echo -e " ${rw_hong}⚠  $_exited 个停止的容器 (可清理)${rw_lv}" && issues=$((issues+1))
+[ "$_unhealthy" -gt 0 ] && echo -e " ${rw_hong}⚠  $_unhealthy 个不健康容器${rw_lv}" && issues=$((issues+1))
+[ "$_restarting" -gt 0 ] && echo -e " ${rw_hong}⚠  $_restarting 个反复重启的容器${rw_lv}" && issues=$((issues+1))
 if [ -n "$_docker_root" ]; then
   _usage=$(df -h "$_docker_root" 2>/dev/null | awk 'NR==2{print $5}' | tr -d '%')
   [ -n "$_usage" ] && [ "$_usage" -gt 80 ] 2>/dev/null && \
-    echo -e " ${rw_hong}⚠  Docker 磁盘使用率 ${_usage}%，建议清理${rw_bai}" && issues=$((issues+1))
+    echo -e " ${rw_hong}⚠  Docker 磁盘使用率 ${_usage}%，建议清理${rw_lv}" && issues=$((issues+1))
 fi
-[ "$issues" -eq 0 ] && echo -e " ${rw_lv}✓ 未发现问题${rw_bai}"
+[ "$issues" -eq 0 ] && echo -e " ${rw_lv}✓ 未发现问题${rw_lv}"
 
 echo ""
 break_end
@@ -25024,16 +25135,16 @@ mkdir -p "$backup_dir"
 
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  备份 & 还原  ━━━━━━━━━━━━━${rw_bai}"
-echo -e " 备份目录: ${rw_lv}$backup_dir${rw_bai}  占用: $(du -sh "$backup_dir" 2>/dev/null | cut -f1)"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 备份容器        ${rw_huang}2${rw_bai} 备份数据卷"
-echo -e " ${rw_huang}3${rw_bai} 还原容器        ${rw_huang}4${rw_bai} 还原数据卷"
-echo -e " ${rw_huang}5${rw_bai} 查看备份列表    ${rw_huang}6${rw_bai} 一键备份所有容器"
-echo -e " ${rw_huang}7${rw_bai} 设置定时自动备份"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  备份 & 还原  ━━━━━━━━━━━━━${rw_lv}"
+echo -e " 备份目录: ${rw_lv}$backup_dir${rw_lv}  占用: $(du -sh "$backup_dir" 2>/dev/null | cut -f1)"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 备份容器        ${rw_huang}2${rw_lv} 备份数据卷"
+echo -e " ${rw_huang}3${rw_lv} 还原容器        ${rw_huang}4${rw_lv} 还原数据卷"
+echo -e " ${rw_huang}5${rw_lv} 查看备份列表    ${rw_huang}6${rw_lv} 一键备份所有容器"
+echo -e " ${rw_huang}7${rw_lv} 设置定时自动备份"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 case $choice in
@@ -25044,16 +25155,16 @@ case $choice in
     timestamp=$(date +%Y%m%d_%H%M%S)
     bkp="$backup_dir/${cname}_backup_${timestamp}"
     mkdir -p "$bkp"
-    echo -e " ${rw_huang}[1/3] 提交并导出镜像...${rw_bai}"
+    echo -e " ${rw_huang}[1/3] 提交并导出镜像...${rw_lv}"
     docker commit "$cname" "${cname}_backup:${timestamp}" 2>/dev/null
     docker save -o "$bkp/image.tar" "${cname}_backup:${timestamp}" 2>/dev/null
     docker inspect --format='{{.Config.Image}}' "$cname" > "$bkp/original_image.txt" 2>/dev/null
-    echo -e " ${rw_huang}[2/3] 导出配置...${rw_bai}"
+    echo -e " ${rw_huang}[2/3] 导出配置...${rw_lv}"
     docker inspect "$cname" > "$bkp/container_config.json" 2>/dev/null
-    echo -e " ${rw_huang}[3/3] 导出数据卷...${rw_bai}"
+    echo -e " ${rw_huang}[3/3] 导出数据卷...${rw_lv}"
     mounts=$(docker inspect --format='{{range .Mounts}}{{.Source}}{{"\n"}}{{end}}' "$cname" 2>/dev/null)
     [ -n "$mounts" ] && tar -czf "$bkp/volumes.tar.gz" $mounts 2>/dev/null
-    echo -e " ${rw_lv}✓ 备份完成  →  $bkp  ($(du -sh "$bkp" | cut -f1))${rw_bai}"
+    echo -e " ${rw_lv}✓ 备份完成  →  $bkp  ($(du -sh "$bkp" | cut -f1))${rw_lv}"
     break_end
     ;;
   2)
@@ -25065,8 +25176,8 @@ case $choice in
     docker run --rm -v "${volname}:/data" -v "$backup_dir:/backup" alpine \
       tar -czf "/backup/volume_${volname}_${timestamp}.tar.gz" -C /data .
     [ $? -eq 0 ] && [ -f "$backup_file" ] \
-      && echo -e " ${rw_lv}✓ 备份完成: $backup_file  ($(du -h "$backup_file" | cut -f1))${rw_bai}" \
-      || echo -e " ${rw_hong}备份失败${rw_bai}"
+      && echo -e " ${rw_lv}✓ 备份完成: $backup_file  ($(du -h "$backup_file" | cut -f1))${rw_lv}" \
+      || echo -e " ${rw_hong}备份失败${rw_lv}"
     break_end
     ;;
   3)
@@ -25074,7 +25185,7 @@ case $choice in
     read -e -p " 备份目录名 (0=取消): " bkp
     [ "$bkp" = "0" ] || [ -z "$bkp" ] && continue
     restore_path="$backup_dir/$bkp"
-    [ ! -d "$restore_path" ] && { echo -e " ${rw_hong}目录不存在${rw_bai}"; break_end; continue; }
+    [ ! -d "$restore_path" ] && { echo -e " ${rw_hong}目录不存在${rw_lv}"; break_end; continue; }
     orig_name=$(echo "$bkp" | sed 's/_backup_.*//')
     read -e -p " 新容器名 (默认: ${orig_name}_restored): " newname
     newname=${newname:-${orig_name}_restored}
@@ -25090,11 +25201,11 @@ for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
     if v: print(f'-p {v[0][\"HostPort\"]}:{k}')
 " 2>/dev/null)
         docker run -d --name "$newname" $ports "${orig_name}_backup:latest" 2>/dev/null \
-          && echo -e " ${rw_lv}✓ 容器 $newname 已启动${rw_bai}" \
-          || echo -e " ${rw_hong}启动失败，请手动检查参数${rw_bai}"
+          && echo -e " ${rw_lv}✓ 容器 $newname 已启动${rw_lv}" \
+          || echo -e " ${rw_hong}启动失败，请手动检查参数${rw_lv}"
       fi
     else
-      echo -e " ${rw_hong}未找到 image.tar${rw_bai}"
+      echo -e " ${rw_hong}未找到 image.tar${rw_lv}"
     fi
     break_end
     ;;
@@ -25102,29 +25213,29 @@ for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
     ls -lh "$backup_dir"/volume_*.tar.gz 2>/dev/null || echo " 没有卷备份文件"
     read -e -p " 备份文件名 (0=取消): " volfile
     [ "$volfile" = "0" ] || [ -z "$volfile" ] && continue
-    [ ! -f "$backup_dir/$volfile" ] && [ ! -f "$volfile" ] && { echo -e " ${rw_hong}文件不存在${rw_bai}"; break_end; continue; }
+    [ ! -f "$backup_dir/$volfile" ] && [ ! -f "$volfile" ] && { echo -e " ${rw_hong}文件不存在${rw_lv}"; break_end; continue; }
     [ ! -f "$volfile" ] && volfile="$backup_dir/$volfile"
     read -e -p " 目标卷名 (0=取消): " volname
     [ "$volname" = "0" ] || [ -z "$volname" ] && continue
     docker volume create "$volname" 2>/dev/null
     docker run --rm -v "${volname}:/data" -v "$(dirname "$volfile"):/backup" alpine \
       tar -xzf "/backup/$(basename "$volfile")" -C /data
-    [ $? -eq 0 ] && echo -e " ${rw_lv}✓ 卷 $volname 还原成功${rw_bai}" || echo -e " ${rw_hong}还原失败${rw_bai}"
+    [ $? -eq 0 ] && echo -e " ${rw_lv}✓ 卷 $volname 还原成功${rw_lv}" || echo -e " ${rw_hong}还原失败${rw_lv}"
     break_end
     ;;
   5)
-    echo -e "${rw_cheng}── 容器备份 ────────────────────────────${rw_bai}"
+    echo -e "${rw_cheng}── 容器备份 ────────────────────────────${rw_lv}"
     for d in "$backup_dir"/*/; do
-      [ -d "$d" ] && echo -e "  $(basename "$d")  ${rw_huang}$(du -sh "$d" | cut -f1)${rw_bai}"
+      [ -d "$d" ] && echo -e "  $(basename "$d")  ${rw_huang}$(du -sh "$d" | cut -f1)${rw_lv}"
     done
-    echo -e "${rw_cheng}── 卷备份 ──────────────────────────────${rw_bai}"
+    echo -e "${rw_cheng}── 卷备份 ──────────────────────────────${rw_lv}"
     ls -lh "$backup_dir"/volume_*.tar.gz 2>/dev/null || echo "  (无)"
-    echo -e " 总占用: ${rw_lv}$(du -sh "$backup_dir" | cut -f1)${rw_bai}"
+    echo -e " 总占用: ${rw_lv}$(du -sh "$backup_dir" | cut -f1)${rw_lv}"
     break_end
     ;;
   6)
     running=$(docker ps -q 2>/dev/null)
-    [ -z "$running" ] && { echo -e " ${rw_huang}没有运行中的容器${rw_bai}"; break_end; continue; }
+    [ -z "$running" ] && { echo -e " ${rw_huang}没有运行中的容器${rw_lv}"; break_end; continue; }
     count=$(echo "$running" | wc -l | tr -d ' ')
     read -e -p " 备份 $count 个容器? (y/N): " confirm
     [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
@@ -25136,13 +25247,13 @@ for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
       docker commit "$cid" "${cname}_backup:${timestamp}" 2>/dev/null
       docker save -o "$bkp/image.tar" "${cname}_backup:${timestamp}" 2>/dev/null
       docker inspect "$cid" > "$bkp/container_config.json" 2>/dev/null
-      echo -e "  ${rw_lv}✓ $cname${rw_bai}"
+      echo -e "  ${rw_lv}✓ $cname${rw_lv}"
     done
-    echo -e " ${rw_lv}批量备份完成 → $backup_dir${rw_bai}"
+    echo -e " ${rw_lv}批量备份完成 → $backup_dir${rw_lv}"
     break_end
     ;;
   7)
-    echo -e " ${rw_huang}Cron 示例: 每天凌晨2点 = 0 2 * * *${rw_bai}"
+    echo -e " ${rw_huang}Cron 示例: 每天凌晨2点 = 0 2 * * *${rw_lv}"
     read -e -p " Cron 表达式 (0=取消): " cron_exp
     [ "$cron_exp" = "0" ] || [ -z "$cron_exp" ] && continue
     script_path="$HOME/docker-auto-backup.sh"
@@ -25167,12 +25278,12 @@ echo "=== 备份完成 $(date) ===" >> "$LOG"
 AUTO_BACKUP_EOF
     chmod +x "$script_path"
     (crontab -l 2>/dev/null | grep -v "docker-auto-backup"; echo "$cron_exp $script_path") | crontab -
-    echo -e " ${rw_lv}✓ 定时备份已设置  ($cron_exp)${rw_bai}"
+    echo -e " ${rw_lv}✓ 定时备份已设置  ($cron_exp)${rw_lv}"
     echo -e "   脚本: $script_path  |  自动保留最近 7 天"
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -25186,18 +25297,18 @@ mkdir -p "$migrate_dir"
 
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  数据迁移  ━━━━━━━━━━━━━━━━${rw_bai}"
-echo -e " 迁移目录: ${rw_lv}$migrate_dir${rw_bai}"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 导出容器 (打包到本地)"
-echo -e " ${rw_huang}2${rw_bai} 导入容器 (从包恢复)"
-echo -e " ${rw_huang}3${rw_bai} 跨主机迁移 (打包+SCP)"
-echo -e " ${rw_huang}4${rw_bai} 导出数据卷"
-echo -e " ${rw_huang}5${rw_bai} 导出 Compose 项目"
-echo -e " ${rw_huang}6${rw_bai} 从远端拉取备份还原"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  数据迁移  ━━━━━━━━━━━━━━━━${rw_lv}"
+echo -e " 迁移目录: ${rw_lv}$migrate_dir${rw_lv}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 导出容器 (打包到本地)"
+echo -e " ${rw_huang}2${rw_lv} 导入容器 (从包恢复)"
+echo -e " ${rw_huang}3${rw_lv} 跨主机迁移 (打包+SCP)"
+echo -e " ${rw_huang}4${rw_lv} 导出数据卷"
+echo -e " ${rw_huang}5${rw_lv} 导出 Compose 项目"
+echo -e " ${rw_huang}6${rw_lv} 从远端拉取备份还原"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 case $choice in
@@ -25208,12 +25319,12 @@ case $choice in
     timestamp=$(date +%Y%m%d_%H%M%S)
     export_path="$migrate_dir/${cname}_export_${timestamp}"
     mkdir -p "$export_path"
-    echo -e " ${rw_huang}[1/4] 导出镜像...${rw_bai}"
+    echo -e " ${rw_huang}[1/4] 导出镜像...${rw_lv}"
     docker commit "$cname" "${cname}_migrate:${timestamp}" 2>/dev/null
     docker save -o "$export_path/container.tar" "${cname}_migrate:${timestamp}"
-    echo -e " ${rw_huang}[2/4] 导出配置...${rw_bai}"
+    echo -e " ${rw_huang}[2/4] 导出配置...${rw_lv}"
     docker inspect "$cname" > "$export_path/config.json"
-    echo -e " ${rw_huang}[3/4] 生成导入脚本...${rw_bai}"
+    echo -e " ${rw_huang}[3/4] 生成导入脚本...${rw_lv}"
     cat > "$export_path/import.sh" << RUN_SCRIPT_EOF
 #!/bin/bash
 TARGET_NAME="\${1:-${cname}_imported}"
@@ -25229,10 +25340,10 @@ docker run -d --name "\$TARGET_NAME" \$PORTS "${cname}_migrate:${timestamp}" 2>/
 [ \$? -eq 0 ] && echo "✓ 启动成功" || echo "启动失败，请手动执行"
 RUN_SCRIPT_EOF
     chmod +x "$export_path/import.sh"
-    echo -e " ${rw_huang}[4/4] 打包数据卷...${rw_bai}"
+    echo -e " ${rw_huang}[4/4] 打包数据卷...${rw_lv}"
     mounts=$(docker inspect --format='{{range .Mounts}}{{if eq .Type "bind"}}{{.Source}}{{"\n"}}{{end}}{{end}}' "$cname" 2>/dev/null)
     [ -n "$mounts" ] && tar -czf "$export_path/volume_data.tar.gz" $mounts 2>/dev/null
-    echo -e " ${rw_lv}✓ 导出完成  →  $export_path  ($(du -sh "$export_path" | cut -f1))${rw_bai}"
+    echo -e " ${rw_lv}✓ 导出完成  →  $export_path  ($(du -sh "$export_path" | cut -f1))${rw_lv}"
     break_end
     ;;
   2)
@@ -25240,12 +25351,12 @@ RUN_SCRIPT_EOF
     read -e -p " 导出目录名 (0=取消): " dirname
     [ "$dirname" = "0" ] || [ -z "$dirname" ] && continue
     import_path="$migrate_dir/$dirname"
-    [ ! -d "$import_path" ] && { echo -e " ${rw_hong}目录不存在${rw_bai}"; break_end; continue; }
+    [ ! -d "$import_path" ] && { echo -e " ${rw_hong}目录不存在${rw_lv}"; break_end; continue; }
     if [ -f "$import_path/import.sh" ]; then
       read -e -p " 新容器名: " newname
       cd "$import_path" && bash import.sh "${newname:-}"
     else
-      echo -e " ${rw_hong}未找到 import.sh${rw_bai}"
+      echo -e " ${rw_hong}未找到 import.sh${rw_lv}"
     fi
     break_end
     ;;
@@ -25262,20 +25373,20 @@ RUN_SCRIPT_EOF
     docker inspect "$cname" > "$temp_dir/config.json"
     cd "$temp_dir" && tar -czf "$export_file" . && cd - > /dev/null
     rm -rf "$temp_dir"
-    echo -e " ${rw_lv}✓ 打包完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_bai}"
+    echo -e " ${rw_lv}✓ 打包完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_lv}"
     read -e -p " 目标主机 (user@host, 0=取消): " target
     [ "$target" = "0" ] || [ -z "$target" ] && continue
     read -e -p " 目标路径 (默认 /tmp): " target_path
     target_path=${target_path:-/tmp}
     scp "$export_file" "${target}:${target_path}/"
     if [ $? -eq 0 ]; then
-      echo -e " ${rw_lv}✓ 传输成功${rw_bai}"
+      echo -e " ${rw_lv}✓ 传输成功${rw_lv}"
       fname=$(basename "$export_file")
       echo -e " 目标主机还原:"
       echo "   mkdir -p /tmp/${cname}_r && cd /tmp/${cname}_r"
       echo "   tar -xzf ${target_path}/$fname && docker load -i container.tar"
     else
-      echo -e " ${rw_hong}传输失败${rw_bai}"
+      echo -e " ${rw_hong}传输失败${rw_lv}"
     fi
     break_end
     ;;
@@ -25290,7 +25401,7 @@ RUN_SCRIPT_EOF
       export_file="$migrate_dir/vol_${volname}_${timestamp}.tar.gz"
       docker run --rm -v "${volname}:/data" -v "$migrate_dir:/out" alpine \
         tar -czf "/out/vol_${volname}_${timestamp}.tar.gz" -C /data .
-      echo -e " ${rw_lv}✓ 导出完成: $export_file${rw_bai}"
+      echo -e " ${rw_lv}✓ 导出完成: $export_file${rw_lv}"
     fi
     break_end
     ;;
@@ -25299,12 +25410,12 @@ RUN_SCRIPT_EOF
     read -e -p " 项目名 (0=取消): " projname
     [ "$projname" = "0" ] || [ -z "$projname" ] && continue
     projdir="$HOME/docker-compose-projects/$projname"
-    [ ! -d "$projdir" ] && { echo -e " ${rw_hong}项目不存在${rw_bai}"; break_end; continue; }
+    [ ! -d "$projdir" ] && { echo -e " ${rw_hong}项目不存在${rw_lv}"; break_end; continue; }
     timestamp=$(date +%Y%m%d_%H%M%S)
     export_file="$migrate_dir/compose_${projname}_${timestamp}.tar.gz"
     docker compose version &>/dev/null && cd "$projdir" && docker compose down 2>/dev/null
     tar -czf "$export_file" -C "$HOME/docker-compose-projects" "$projname" 2>/dev/null
-    echo -e " ${rw_lv}✓ 导出完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_bai}"
+    echo -e " ${rw_lv}✓ 导出完成: $export_file  ($(du -h "$export_file" | cut -f1))${rw_lv}"
     echo -e " 目标主机还原: tar -xzf $export_file -C ~/docker-compose-projects/ && cd ~/docker-compose-projects/$projname && docker compose up -d"
     break_end
     ;;
@@ -25313,21 +25424,21 @@ RUN_SCRIPT_EOF
     [ "$remote_host" = "0" ] || [ -z "$remote_host" ] && continue
     read -e -p " 远端路径: " remote_path
     [ -z "$remote_path" ] && continue
-    ssh "$remote_host" "ls -lh $remote_path" 2>/dev/null || { echo -e " ${rw_hong}无法连接${rw_bai}"; break_end; continue; }
+    ssh "$remote_host" "ls -lh $remote_path" 2>/dev/null || { echo -e " ${rw_hong}无法连接${rw_lv}"; break_end; continue; }
     read -e -p " 文件名: " filename
     [ -z "$filename" ] && continue
     scp "${remote_host}:${remote_path}/${filename}" "$migrate_dir/"
     if [ $? -eq 0 ]; then
-      echo -e " ${rw_lv}✓ 已下载到 $migrate_dir/$filename${rw_bai}"
+      echo -e " ${rw_lv}✓ 已下载到 $migrate_dir/$filename${rw_lv}"
       read -e -p " 立即 docker load? (y/N): " restoreit
       [ "$restoreit" = "y" ] || [ "$restoreit" = "Y" ] && docker load -i "$migrate_dir/$filename"
     else
-      echo -e " ${rw_hong}下载失败${rw_bai}"
+      echo -e " ${rw_hong}下载失败${rw_lv}"
     fi
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -25338,31 +25449,31 @@ done
 docker_install_upgrade() {
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  安装 & 升级  ━━━━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  安装 & 升级  ━━━━━━━━━━━━━${rw_lv}"
 # 当前版本
 if command -v docker &>/dev/null; then
-  echo -e " Docker:   ${rw_lv}$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',')${rw_bai}"
+  echo -e " Docker:   ${rw_lv}$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',')${rw_lv}"
 else
-  echo -e " Docker:   ${rw_hong}未安装${rw_bai}"
+  echo -e " Docker:   ${rw_hong}未安装${rw_lv}"
 fi
 if docker compose version &>/dev/null 2>&1; then
-  echo -e " Compose:  ${rw_lv}$(docker compose version 2>/dev/null | awk '{print $NF}' | head -1)${rw_bai} (插件版)"
+  echo -e " Compose:  ${rw_lv}$(docker compose version 2>/dev/null | awk '{print $NF}' | head -1)${rw_lv} (插件版)"
 elif command -v docker-compose &>/dev/null; then
-  echo -e " Compose:  ${rw_lv}$(docker-compose --version 2>/dev/null | awk '{print $NF}' | tr -d ',')${rw_bai} (独立版)"
+  echo -e " Compose:  ${rw_lv}$(docker-compose --version 2>/dev/null | awk '{print $NF}' | tr -d ',')${rw_lv} (独立版)"
 else
-  echo -e " Compose:  ${rw_hong}未安装${rw_bai}"
+  echo -e " Compose:  ${rw_hong}未安装${rw_lv}"
 fi
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 安装/升级 Docker (官方)"
-echo -e " ${rw_huang}2${rw_bai} 安装/升级 Docker Compose"
-echo -e " ${rw_huang}3${rw_bai} 一键安装 Docker + Compose"
-echo -e " ${rw_huang}4${rw_bai} 国内镜像源安装 (阿里云)"
-echo -e " ${rw_huang}5${rw_bai} 配置镜像加速器"
-echo -e " ${rw_huang}6${rw_bai} 卸载 Docker"
-echo -e " ${rw_huang}7${rw_bai} 安装状态检查"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 安装/升级 Docker (官方)"
+echo -e " ${rw_huang}2${rw_lv} 安装/升级 Docker Compose"
+echo -e " ${rw_huang}3${rw_lv} 一键安装 Docker + Compose"
+echo -e " ${rw_huang}4${rw_lv} 国内镜像源安装 (阿里云)"
+echo -e " ${rw_huang}5${rw_lv} 配置镜像加速器"
+echo -e " ${rw_huang}6${rw_lv} 卸载 Docker"
+echo -e " ${rw_huang}7${rw_lv} 安装状态检查"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 case $choice in
@@ -25377,14 +25488,14 @@ case $choice in
     if [ $? -eq 0 ]; then
       systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
       [ "$(whoami)" != "root" ] && usermod -aG docker "$(whoami)" 2>/dev/null
-      echo -e " ${rw_lv}✓ Docker 安装成功${rw_bai}"; docker --version
+      echo -e " ${rw_lv}✓ Docker 安装成功${rw_lv}"; docker --version
     else
-      echo -e " ${rw_hong}安装失败${rw_bai}"
+      echo -e " ${rw_hong}安装失败${rw_lv}"
     fi
     break_end
     ;;
   2)
-    echo -e " ${rw_huang}1=Compose 插件版 (推荐)  2=Compose 独立版${rw_bai}"
+    echo -e " ${rw_huang}1=Compose 插件版 (推荐)  2=Compose 独立版${rw_lv}"
     read -e -p " 选择: " comp_type
     DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
     mkdir -p $DOCKER_CONFIG/cli-plugins
@@ -25398,25 +25509,25 @@ case $choice in
       curl -SL "$_gh_base/$_compose_bin" -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>/dev/null
       chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
       docker compose version &>/dev/null \
-        && echo -e " ${rw_lv}✓ Compose 插件安装成功${rw_bai}" && docker compose version \
-        || echo -e " ${rw_hong}安装失败${rw_bai}"
+        && echo -e " ${rw_lv}✓ Compose 插件安装成功${rw_lv}" && docker compose version \
+        || echo -e " ${rw_hong}安装失败${rw_lv}"
     elif [ "$comp_type" = "2" ]; then
       curl -L "$_gh_base/$_compose_bin" -o /usr/local/bin/docker-compose 2>/dev/null
       chmod +x /usr/local/bin/docker-compose
       command -v docker-compose &>/dev/null \
-        && echo -e " ${rw_lv}✓ Compose 独立版安装成功${rw_bai}" && docker-compose --version \
-        || echo -e " ${rw_hong}安装失败${rw_bai}"
+        && echo -e " ${rw_lv}✓ Compose 独立版安装成功${rw_lv}" && docker-compose --version \
+        || echo -e " ${rw_hong}安装失败${rw_lv}"
     fi
     break_end
     ;;
   3)
     read -e -p " 一键安装 Docker + Compose? (y/N): " confirm
     [ "$confirm" != "y" ] && [ "$confirm" != "Y" ] && continue
-    echo -e " ${rw_huang}[1/2] 安装 Docker...${rw_bai}"
+    echo -e " ${rw_huang}[1/2] 安装 Docker...${rw_lv}"
     [ "$canshu" = "CN" ] && curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun \
       || curl -fsSL https://get.docker.com | bash
     systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
-    echo -e " ${rw_huang}[2/2] 安装 Compose 插件...${rw_bai}"
+    echo -e " ${rw_huang}[2/2] 安装 Compose 插件...${rw_lv}"
     DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
     mkdir -p $DOCKER_CONFIG/cli-plugins
     if [ "$canshu" = "CN" ]; then
@@ -25427,11 +25538,11 @@ case $choice in
         -o $DOCKER_CONFIG/cli-plugins/docker-compose 2>/dev/null
     fi
     chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-    echo -e " ${rw_lv}✓ 安装完成${rw_bai}"
+    echo -e " ${rw_lv}✓ 安装完成${rw_lv}"
     docker --version 2>/dev/null
     docker compose version 2>/dev/null
     [ "$(whoami)" != "root" ] && usermod -aG docker "$(whoami)" 2>/dev/null \
-      && echo -e " ${rw_huang}请重新登录使 docker 组权限生效${rw_bai}"
+      && echo -e " ${rw_huang}请重新登录使 docker 组权限生效${rw_lv}"
     break_end
     ;;
   4)
@@ -25453,15 +25564,15 @@ case $choice in
           yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
           yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
           ;;
-        *) echo -e " ${rw_hong}不支持的发行版${rw_bai}"; break_end; continue ;;
+        *) echo -e " ${rw_hong}不支持的发行版${rw_lv}"; break_end; continue ;;
       esac
       systemctl start docker 2>/dev/null; systemctl enable docker 2>/dev/null
-      echo -e " ${rw_lv}✓ 安装完成${rw_bai}"; docker --version
+      echo -e " ${rw_lv}✓ 安装完成${rw_lv}"; docker --version
     fi
     break_end
     ;;
   5)
-    echo -e " ${rw_huang}1=阿里云  2=中科大  3=网易  4=自定义  5=恢复默认${rw_bai}"
+    echo -e " ${rw_huang}1=阿里云  2=中科大  3=网易  4=自定义  5=恢复默认${rw_lv}"
     read -e -p " 选择: " mirror_choice
     case $mirror_choice in
       1) registry_mirror="https://registry.cn-hangzhou.aliyuncs.com" ;;
@@ -25469,22 +25580,22 @@ case $choice in
       3) registry_mirror="https://hub-mirror.c.163.com" ;;
       4) read -e -p " 镜像地址: " registry_mirror; [ -z "$registry_mirror" ] && continue ;;
       5) registry_mirror="" ;;
-      *) echo -e " ${rw_hong}无效选择${rw_bai}"; break_end; continue ;;
+      *) echo -e " ${rw_hong}无效选择${rw_lv}"; break_end; continue ;;
     esac
     mkdir -p /etc/docker 2>/dev/null
     if [ -n "$registry_mirror" ]; then
       printf '{\n  "registry-mirrors": ["%s"]\n}\n' "$registry_mirror" > /etc/docker/daemon.json
-      echo -e " ${rw_lv}✓ 已配置加速器: $registry_mirror${rw_bai}"
+      echo -e " ${rw_lv}✓ 已配置加速器: $registry_mirror${rw_lv}"
     else
       echo '{}' > /etc/docker/daemon.json
-      echo -e " ${rw_lv}✓ 已恢复默认${rw_bai}"
+      echo -e " ${rw_lv}✓ 已恢复默认${rw_lv}"
     fi
     systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null
-    echo -e " ${rw_lv}Docker 已重启${rw_bai}"
+    echo -e " ${rw_lv}Docker 已重启${rw_lv}"
     break_end
     ;;
   6)
-    echo -e " ${rw_hong}⚠  卸载 Docker 将删除所有容器、镜像、数据卷！不可逆！${rw_bai}"
+    echo -e " ${rw_hong}⚠  卸载 Docker 将删除所有容器、镜像、数据卷！不可逆！${rw_lv}"
     read -e -p " 输入 YES 确认卸载 (0=取消): " confirm
     [ "$confirm" != "YES" ] && { echo -e " 已取消"; continue; }
     docker stop $(docker ps -q) 2>/dev/null
@@ -25499,35 +25610,35 @@ case $choice in
       esac
     fi
     rm -rf /var/lib/docker /var/lib/containerd ~/.docker /usr/local/bin/docker-compose 2>/dev/null
-    echo -e " ${rw_lv}✓ Docker 已卸载${rw_bai}"
+    echo -e " ${rw_lv}✓ Docker 已卸载${rw_lv}"
     break_end
     ;;
   7)
-    echo -e "${rw_cheng}── 安装状态 ────────────────────────────${rw_bai}"
+    echo -e "${rw_cheng}── 安装状态 ────────────────────────────${rw_lv}"
     _chk() { printf " %-20s" "$1"; }
     _chk "Docker 命令:"
-    command -v docker &>/dev/null && echo -e "${rw_lv}✓ 已安装${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"
+    command -v docker &>/dev/null && echo -e "${rw_lv}✓ 已安装${rw_lv}" || echo -e "${rw_hong}✗ 未安装${rw_lv}"
     _chk "Docker 服务:"
     ( $_CACHE_DOCKER_ACTIVE || pgrep dockerd &>/dev/null ) \
-      && echo -e "${rw_lv}✓ 运行中${rw_bai}" || echo -e "${rw_hong}✗ 未运行${rw_bai}"
+      && echo -e "${rw_lv}✓ 运行中${rw_lv}" || echo -e "${rw_hong}✗ 未运行${rw_lv}"
     _chk "Docker Compose:"
-    docker compose version &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 插件版${rw_bai}" \
-      || { command -v docker-compose &>/dev/null && echo -e "${rw_lv}✓ 独立版${rw_bai}" || echo -e "${rw_hong}✗ 未安装${rw_bai}"; }
+    docker compose version &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 插件版${rw_lv}" \
+      || { command -v docker-compose &>/dev/null && echo -e "${rw_lv}✓ 独立版${rw_lv}" || echo -e "${rw_hong}✗ 未安装${rw_lv}"; }
     _chk "开机自启:"
-    systemctl is-enabled docker &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 已启用${rw_bai}" || echo -e "${rw_huang}─ 未启用${rw_bai}"
+    systemctl is-enabled docker &>/dev/null 2>&1 && echo -e "${rw_lv}✓ 已启用${rw_lv}" || echo -e "${rw_huang}─ 未启用${rw_lv}"
     _chk "用户组权限:"
-    groups "$(whoami)" | grep -q docker && echo -e "${rw_lv}✓ 有权限${rw_bai}" || echo -e "${rw_huang}─ 需 sudo${rw_bai}"
+    groups "$(whoami)" | grep -q docker && echo -e "${rw_lv}✓ 有权限${rw_lv}" || echo -e "${rw_huang}─ 需 sudo${rw_lv}"
     _chk "镜像加速器:"
     if [ -f /etc/docker/daemon.json ]; then
       _m=$(grep -o '"https://[^"]*"' /etc/docker/daemon.json 2>/dev/null | tr -d '"')
-      [ -n "$_m" ] && echo -e "${rw_lv}$_m${rw_bai}" || echo -e "${rw_huang}未配置${rw_bai}"
+      [ -n "$_m" ] && echo -e "${rw_lv}$_m${rw_lv}" || echo -e "${rw_huang}未配置${rw_lv}"
     else
-      echo -e "${rw_huang}未配置${rw_bai}"
+      echo -e "${rw_huang}未配置${rw_lv}"
     fi
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -25538,42 +25649,42 @@ done
 docker_system_clean() {
 while true; do
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  磁盘清理  ━━━━━━━━━━━━━━━━${rw_bai}"
-docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取信息${rw_bai}"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}1${rw_bai} 清理已停止容器  ${rw_huang}2${rw_bai} 清理悬空镜像"
-echo -e " ${rw_huang}3${rw_bai} 清理未用数据卷  ${rw_huang}4${rw_bai} 清理未用网络"
-echo -e " ${rw_huang}5${rw_bai} 清理构建缓存    ${rw_huang}6${rw_bai} 一键大扫除"
-echo -e " ${rw_huang}7${rw_bai} 容器磁盘占用"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-echo -e " ${rw_huang}0${rw_bai} 返回"
-echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  磁盘清理  ━━━━━━━━━━━━━━━━${rw_lv}"
+docker system df 2>/dev/null || echo -e " ${rw_hong}无法获取信息${rw_lv}"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}1${rw_lv} 清理已停止容器  ${rw_huang}2${rw_lv} 清理悬空镜像"
+echo -e " ${rw_huang}3${rw_lv} 清理未用数据卷  ${rw_huang}4${rw_lv} 清理未用网络"
+echo -e " ${rw_huang}5${rw_lv} 清理构建缓存    ${rw_huang}6${rw_lv} 一键大扫除"
+echo -e " ${rw_huang}7${rw_lv} 容器磁盘占用"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+echo -e " ${rw_huang}0${rw_lv} 返回"
+echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 read -e -p " 请选择: " choice
 
 case $choice in
-  1) docker container prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
-  2) docker image prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  1) docker container prune -f && echo -e " ${rw_lv}✓ 已清理${rw_lv}"; break_end ;;
+  2) docker image prune -f && echo -e " ${rw_lv}✓ 已清理${rw_lv}"; break_end ;;
   3)
     read -e -p " 清理未使用的数据卷 (数据将永久删除)? (y/N): " confirm
-    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker volume prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"
+    [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && docker volume prune -f && echo -e " ${rw_lv}✓ 已清理${rw_lv}"
     break_end
     ;;
-  4) docker network prune -f && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
-  5) docker builder prune -f 2>/dev/null && echo -e " ${rw_lv}✓ 已清理${rw_bai}"; break_end ;;
+  4) docker network prune -f && echo -e " ${rw_lv}✓ 已清理${rw_lv}"; break_end ;;
+  5) docker builder prune -f 2>/dev/null && echo -e " ${rw_lv}✓ 已清理${rw_lv}"; break_end ;;
   6)
-    echo -e " ${rw_hong}⚠  清理所有未使用的资源 (停止容器/无用镜像/网络/缓存)${rw_bai}"
+    echo -e " ${rw_hong}⚠  清理所有未使用的资源 (停止容器/无用镜像/网络/缓存)${rw_lv}"
     read -e -p " 确认? (y/N): " confirm
     [ "$confirm" = "y" ] || [ "$confirm" = "Y" ] && \
-      docker system prune -a -f --volumes 2>/dev/null && echo -e " ${rw_lv}✓ 清理完成${rw_bai}"
+      docker system prune -a -f --volumes 2>/dev/null && echo -e " ${rw_lv}✓ 清理完成${rw_lv}"
     break_end
     ;;
   7)
-    echo -e "${rw_cheng}── 容器磁盘占用 ────────────────────────${rw_bai}"
+    echo -e "${rw_cheng}── 容器磁盘占用 ────────────────────────${rw_lv}"
     docker ps -a --format " {{.Names}}\t{{.Size}}" 2>/dev/null | sort -t$'\t' -k2 -h | column -t
     break_end
     ;;
   0) return ;;
-  *) echo -e "${rw_hong}无效选项${rw_bai}"; sleep 1 ;;
+  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 esac
 done
 }
@@ -25583,27 +25694,27 @@ done
 # ================================================================
 docker_version_show() {
 clear
-echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 版本信息  ━━━━━━━━━━${rw_bai}"
+echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 版本信息  ━━━━━━━━━━${rw_lv}"
 
 if ! command -v docker &>/dev/null; then
-  echo -e " ${rw_hong}Docker 未安装${rw_bai}"
+  echo -e " ${rw_hong}Docker 未安装${rw_lv}"
   break_end; return
 fi
 
-echo -e "${rw_cheng}── Docker ──────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}── Docker ──────────────────────────────${rw_lv}"
 docker version --format ' Client: {{.Client.Version}} ({{.Client.Os}}/{{.Client.Arch}})' 2>/dev/null
 docker version --format ' Server: {{.Server.Version}} ({{.Server.Os}}/{{.Server.Arch}})' 2>/dev/null
 
-echo -e "${rw_cheng}── Compose ─────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}── Compose ─────────────────────────────${rw_lv}"
 if docker compose version &>/dev/null 2>&1; then
-  echo -e " ${rw_lv}$(docker compose version 2>/dev/null | head -1)${rw_bai}  (插件版)"
+  echo -e " ${rw_lv}$(docker compose version 2>/dev/null | head -1)${rw_lv}  (插件版)"
 elif command -v docker-compose &>/dev/null; then
-  echo -e " ${rw_lv}$(docker-compose --version 2>/dev/null)${rw_bai}  (独立版)"
+  echo -e " ${rw_lv}$(docker-compose --version 2>/dev/null)${rw_lv}  (独立版)"
 else
-  echo -e " ${rw_hong}未安装${rw_bai}"
+  echo -e " ${rw_hong}未安装${rw_lv}"
 fi
 
-echo -e "${rw_cheng}── 系统信息 ────────────────────────────${rw_bai}"
+echo -e "${rw_cheng}── 系统信息 ────────────────────────────${rw_lv}"
 docker info --format ' 容器:  {{.ContainersRunning}} 运行 / {{.ContainersStopped}} 停止
  镜像:  {{.Images}}
  驱动:  {{.Driver}}
@@ -25619,7 +25730,7 @@ break_end
 
 k_info() {
 send_stats "r命令参考用例"
-echo -e "${rw_cheng}-------------------${rw_bai}"
+echo -e "${rw_cheng}-------------------${rw_lv}"
 echo "视频介绍: https://www.bilibili.com/video/BV1ib421E7it?t=0.1"
 echo "以下是r命令参考用例："
 echo "启动脚本            r"
@@ -25685,11 +25796,11 @@ while true; do
 	fi
 
 	# ── 状态探测 ──
-	local _1p_ver="" _1p_stat="${rw_hong}未安装${rw_bai}" _1p_port="" _1p_user="" _1p_url=""
+	local _1p_ver="" _1p_stat="${rw_hong}未安装${rw_lv}" _1p_port="" _1p_user="" _1p_url=""
 	local _1p_ip=""
 
 	if command -v 1pctl &>/dev/null; then
-		_1p_stat="${rw_lv}已安装${rw_bai}"
+		_1p_stat="${rw_lv}已安装${rw_lv}"
 		_1p_ver=$(1pctl version 2>/dev/null | sed -n -E 's/.*(v[0-9.]+).*/\1/p' | head -1)
 		# 获取端口和访问地址
 		local _conf_file=""
@@ -25703,136 +25814,136 @@ while true; do
 		fi
 		# 服务状态（使用缓存）
 		if $_CACHE_1PANEL_ACTIVE; then
-			_1p_stat="${rw_lv}运行中${rw_bai}"
+			_1p_stat="${rw_lv}运行中${rw_lv}"
 		else
-			_1p_stat="${rw_hong}未运行${rw_bai}"
+			_1p_stat="${rw_hong}未运行${rw_lv}"
 		fi
 		# 用户信息
 		_1p_user=$(1pctl user-info 2>/dev/null | sed -n -E 's/.*用户名:[[:space:]]*([^[:space:]]+).*/\1/p' | head -1)
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  1Panel 面板管理  ━━━━━━━━━━━━${rw_bai}"
-	echo -e " 状态 ${_1p_stat}  v${_1p_ver:-?}  端口 ${rw_lv}${_1p_port:-?}${rw_bai}  用户 ${rw_lv}${_1p_user:-?}${rw_bai}"
-	[ -n "$_1p_url" ] && echo -e " 访问 ${rw_lan}${_1p_url}${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  1Panel 面板管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 状态 ${_1p_stat}  v${_1p_ver:-?}  端口 ${rw_lv}${_1p_port:-?}${rw_lv}  用户 ${rw_lv}${_1p_user:-?}${rw_lv}"
+	[ -n "$_1p_url" ] && echo -e " 访问 ${rw_lv}${_1p_url}${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}──── 服务${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  启动        ${rw_huang}2${rw_bai}  停止        ${rw_huang}3${rw_bai}  重启        ${rw_huang}4${rw_bai}  状态详情"
+	echo -e " ${rw_cheng}──── 服务${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  启动        ${rw_huang}2${rw_lv}  停止        ${rw_huang}3${rw_lv}  重启        ${rw_huang}4${rw_lv}  状态详情"
 	echo ""
-	echo -e " ${rw_cheng}──── 失联修复${rw_bai}"
-	echo -e " ${rw_huang}5${rw_bai}  重置安全入口        ${rw_huang}6${rw_bai}  重置域名绑定"
-	echo -e " ${rw_huang}7${rw_bai}  重置HTTPS登录       ${rw_huang}8${rw_bai}  取消IP限制"
-	echo -e " ${rw_huang}9${rw_bai}  关闭两步验证(MFA)   ${rw_huang}10${rw_bai} 一键重置全部"
+	echo -e " ${rw_cheng}──── 失联修复${rw_lv}"
+	echo -e " ${rw_huang}5${rw_lv}  重置安全入口        ${rw_huang}6${rw_lv}  重置域名绑定"
+	echo -e " ${rw_huang}7${rw_lv}  重置HTTPS登录       ${rw_huang}8${rw_lv}  取消IP限制"
+	echo -e " ${rw_huang}9${rw_lv}  关闭两步验证(MFA)   ${rw_huang}10${rw_lv} 一键重置全部"
 	echo ""
-	echo -e " ${rw_cheng}──── 配置${rw_bai}"
-	echo -e " ${rw_huang}11${rw_bai} 修改端口            ${rw_huang}12${rw_bai} 修改密码"
-	echo -e " ${rw_huang}13${rw_bai} 修改用户名          ${rw_huang}14${rw_bai} 切换监听IP"
-	echo -e " ${rw_huang}15${rw_bai} 查看登录信息"
+	echo -e " ${rw_cheng}──── 配置${rw_lv}"
+	echo -e " ${rw_huang}11${rw_lv} 修改端口            ${rw_huang}12${rw_lv} 修改密码"
+	echo -e " ${rw_huang}13${rw_lv} 修改用户名          ${rw_huang}14${rw_lv} 切换监听IP"
+	echo -e " ${rw_huang}15${rw_lv} 查看登录信息"
 	echo ""
-	echo -e " ${rw_cheng}──── 防火墙${rw_bai}"
-	echo -e " ${rw_huang}16${rw_bai} 放行面板端口        ${rw_huang}17${rw_bai} 查看已放行端口"
+	echo -e " ${rw_cheng}──── 防火墙${rw_lv}"
+	echo -e " ${rw_huang}16${rw_lv} 放行面板端口        ${rw_huang}17${rw_lv} 查看已放行端口"
 	echo ""
-	echo -e " ${rw_cheng}──── 其他${rw_bai}"
-	echo -e " ${rw_huang}18${rw_bai} 查看日志            ${rw_huang}19${rw_bai} 更新1Panel"
-	echo -e " ${rw_huang}20${rw_bai} 安装1Panel          ${rw_huang}21${rw_bai} 卸载1Panel"
+	echo -e " ${rw_cheng}──── 其他${rw_lv}"
+	echo -e " ${rw_huang}18${rw_lv} 查看日志            ${rw_huang}19${rw_lv} 更新1Panel"
+	echo -e " ${rw_huang}20${rw_lv} 安装1Panel          ${rw_huang}21${rw_lv} 卸载1Panel"
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回主菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _1p_choice
 
 	case $_1p_choice in
 	  1)
 		send_stats "1Panel启动"
 		if command -v 1pctl &>/dev/null; then
-			1pctl start all && echo -e "${rw_lv}1Panel 已启动${rw_bai}"
+			1pctl start all && echo -e "${rw_lv}1Panel 已启动${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  2)
 		send_stats "1Panel停止"
 		if command -v 1pctl &>/dev/null; then
-			1pctl stop all && echo -e "${rw_lv}1Panel 已停止${rw_bai}"
+			1pctl stop all && echo -e "${rw_lv}1Panel 已停止${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  3)
 		send_stats "1Panel重启"
 		if command -v 1pctl &>/dev/null; then
-			1pctl restart all && echo -e "${rw_lv}1Panel 已重启${rw_bai}"
+			1pctl restart all && echo -e "${rw_lv}1Panel 已重启${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  4)
 		send_stats "1Panel状态详情"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			1pctl status
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			1pctl version
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			1pctl user-info
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  5)
 		send_stats "1Panel重置安全入口"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}重置安全入口（登录URL后缀）...${rw_bai}"
+			echo -e "${rw_huang}重置安全入口（登录URL后缀）...${rw_lv}"
 			1pctl reset entrance
-			echo -e "${rw_lv}安全入口已重置，现在可以直接访问面板无需URL后缀${rw_bai}"
+			echo -e "${rw_lv}安全入口已重置，现在可以直接访问面板无需URL后缀${rw_lv}"
 			1pctl user-info
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  6)
 		send_stats "1Panel重置域名绑定"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}取消域名绑定限制...${rw_bai}"
+			echo -e "${rw_huang}取消域名绑定限制...${rw_lv}"
 			1pctl reset domain
-			echo -e "${rw_lv}域名绑定已取消，可用任意域名或IP访问${rw_bai}"
+			echo -e "${rw_lv}域名绑定已取消，可用任意域名或IP访问${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  7)
 		send_stats "1Panel重置HTTPS"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}取消HTTPS强制登录...${rw_bai}"
+			echo -e "${rw_huang}取消HTTPS强制登录...${rw_lv}"
 			1pctl reset https
-			echo -e "${rw_lv}HTTPS限制已取消，可用HTTP访问${rw_bai}"
+			echo -e "${rw_lv}HTTPS限制已取消，可用HTTP访问${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  8)
 		send_stats "1Panel取消IP限制"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}取消IP访问限制...${rw_bai}"
+			echo -e "${rw_huang}取消IP访问限制...${rw_lv}"
 			1pctl reset ips
-			echo -e "${rw_lv}IP限制已取消，任意IP可访问${rw_bai}"
+			echo -e "${rw_lv}IP限制已取消，任意IP可访问${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  9)
 		send_stats "1Panel关闭MFA"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}关闭两步验证...${rw_bai}"
+			echo -e "${rw_huang}关闭两步验证...${rw_lv}"
 			1pctl reset mfa
-			echo -e "${rw_lv}两步验证已关闭${rw_bai}"
+			echo -e "${rw_lv}两步验证已关闭${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  10)
 		send_stats "1Panel一键重置全部"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_hong}警告：这将重置所有安全设置！${rw_bai}"
+			echo -e "${rw_hong}警告：这将重置所有安全设置！${rw_lv}"
 			read -e -p " 确认重置？(y/N): " _confirm
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				1pctl reset entrance
@@ -25840,14 +25951,14 @@ while true; do
 				1pctl reset https
 				1pctl reset ips
 				1pctl reset mfa
-				echo -e "${rw_lv}全部安全设置已重置！${rw_bai}"
-				echo -e "${rw_lv}现在可直接访问面板，无需安全入口/域名/HTTPS${rw_bai}"
+				echo -e "${rw_lv}全部安全设置已重置！${rw_lv}"
+				echo -e "${rw_lv}现在可直接访问面板，无需安全入口/域名/HTTPS${rw_lv}"
 				1pctl user-info
 			else
 				echo -e "已取消"
 			fi
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  11)
@@ -25857,60 +25968,60 @@ while true; do
 			[ -z "$_new_port" ] && { echo "已取消"; continue; }
 			if [[ "$_new_port" =~ ^[0-9]+$ ]] && [ "$_new_port" -ge 1 ] && [ "$_new_port" -le 65535 ]; then
 				1pctl update port <<< "$_new_port"
-				echo -e "${rw_lv}端口已修改为 ${_new_port}，重启后生效${rw_bai}"
+				echo -e "${rw_lv}端口已修改为 ${_new_port}，重启后生效${rw_lv}"
 				1pctl restart all
 			else
-				echo -e "${rw_hong}端口无效${rw_bai}"
+				echo -e "${rw_hong}端口无效${rw_lv}"
 			fi
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  12)
 		send_stats "1Panel修改密码"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}请输入新密码:${rw_bai}"
+			echo -e "${rw_huang}请输入新密码:${rw_lv}"
 			1pctl update password
-			echo -e "${rw_lv}密码已修改${rw_bai}"
+			echo -e "${rw_lv}密码已修改${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  13)
 		send_stats "1Panel修改用户名"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}请输入新用户名:${rw_bai}"
+			echo -e "${rw_huang}请输入新用户名:${rw_lv}"
 			1pctl update username
-			echo -e "${rw_lv}用户名已修改${rw_bai}"
+			echo -e "${rw_lv}用户名已修改${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  14)
 		send_stats "1Panel切换监听IP"
 		if command -v 1pctl &>/dev/null; then
-			echo -e " ${rw_huang}1${rw_bai} IPv4   ${rw_huang}2${rw_bai} IPv6"
+			echo -e " ${rw_huang}1${rw_lv} IPv4   ${rw_huang}2${rw_lv} IPv6"
 			read -e -p " 选择: " _ip_choice
 			case $_ip_choice in
-				1) 1pctl listen-ip ipv4 && echo -e "${rw_lv}已切换为IPv4监听${rw_bai}" ;;
-				2) 1pctl listen-ip ipv6 && echo -e "${rw_lv}已切换为IPv6监听${rw_bai}" ;;
-				*) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+				1) 1pctl listen-ip ipv4 && echo -e "${rw_lv}已切换为IPv4监听${rw_lv}" ;;
+				2) 1pctl listen-ip ipv6 && echo -e "${rw_lv}已切换为IPv6监听${rw_lv}" ;;
+				*) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 			esac
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  15)
 		send_stats "1Panel查看登录信息"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			1pctl user-info
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-			echo -e "${rw_lv}提示：${rw_bai}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+			echo -e "${rw_lv}提示：${rw_lv}"
 			echo "  安全入口：/opt/1panel/conf/app.yaml 中 entrance 字段"
 			echo "  端口：/opt/1panel/conf/app.yaml 中 port 字段"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  16)
@@ -25919,71 +26030,71 @@ while true; do
 			local _port="${_1p_port:-19081}"
 			read -e -p " 输入要放行的端口 (默认 ${_port}): " _fp_port
 			_fp_port=${_fp_port:-$_port}
-			echo -e "${rw_huang}放行端口 ${_fp_port} ...${rw_bai}"
+			echo -e "${rw_huang}放行端口 ${_fp_port} ...${rw_lv}"
 			# firewalld
 			if command -v firewall-cmd &>/dev/null; then
 				firewall-cmd --permanent --add-port=${_fp_port}/tcp 2>/dev/null
 				firewall-cmd --reload 2>/dev/null
-				echo -e "${rw_lv}firewalld: 端口 ${_fp_port} 已放行${rw_bai}"
+				echo -e "${rw_lv}firewalld: 端口 ${_fp_port} 已放行${rw_lv}"
 			fi
 			# ufw
 			if command -v ufw &>/dev/null; then
 				ufw allow ${_fp_port}/tcp 2>/dev/null
-				echo -e "${rw_lv}ufw: 端口 ${_fp_port} 已放行${rw_bai}"
+				echo -e "${rw_lv}ufw: 端口 ${_fp_port} 已放行${rw_lv}"
 			fi
 			# iptables
 			iptables -I INPUT -p tcp --dport ${_fp_port} -j ACCEPT 2>/dev/null
-			echo -e "${rw_lv}端口 ${_fp_port} 放行完成${rw_bai}"
+			echo -e "${rw_lv}端口 ${_fp_port} 放行完成${rw_lv}"
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  17)
 		send_stats "1Panel查看防火墙规则"
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		if command -v firewall-cmd &>/dev/null; then
-			echo -e "${rw_lv}firewalld 已放行端口:${rw_bai}"
+			echo -e "${rw_lv}firewalld 已放行端口:${rw_lv}"
 			firewall-cmd --list-ports --permanent 2>/dev/null
 		fi
 		if command -v ufw &>/dev/null; then
-			echo -e "${rw_lv}ufw 状态:${rw_bai}"
+			echo -e "${rw_lv}ufw 状态:${rw_lv}"
 			ufw status 2>/dev/null
 		fi
-		echo -e "${rw_lv}iptables 放行端口:${rw_bai}"
+		echo -e "${rw_lv}iptables 放行端口:${rw_lv}"
 		iptables -L INPUT -n 2>/dev/null | grep ACCEPT
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		;;
 	  18)
 		send_stats "1Panel查看日志"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}最近50行日志:${rw_bai}"
-			echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+			echo -e "${rw_huang}最近50行日志:${rw_lv}"
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 			if [ -f /opt/1panel/log/1panel.log ]; then
 				tail -n 50 /opt/1panel/log/1panel.log
 			elif [ -f /var/log/1panel.log ]; then
 				tail -n 50 /var/log/1panel.log
 			else
-				journalctl -u 1panel -n 50 --no-pager 2>/dev/null || echo -e "${rw_hong}未找到日志文件${rw_bai}"
+				journalctl -u 1panel -n 50 --no-pager 2>/dev/null || echo -e "${rw_hong}未找到日志文件${rw_lv}"
 			fi
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  19)
 		send_stats "1Panel更新"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_huang}正在更新 1Panel...${rw_bai}"
+			echo -e "${rw_huang}正在更新 1Panel...${rw_lv}"
 			1pctl update
-			echo -e "${rw_lv}更新完成，请重启服务${rw_bai}"
+			echo -e "${rw_lv}更新完成，请重启服务${rw_lv}"
 			1pctl restart all
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  20)
 		send_stats "1Panel安装"
-		echo -e "${rw_huang}安装 1Panel (官方一键脚本)...${rw_bai}"
-		echo -e "${rw_lan}提示：安装完成后可用本菜单管理${rw_bai}"
+		echo -e "${rw_huang}安装 1Panel (官方一键脚本)...${rw_lv}"
+		echo -e "${rw_lv}提示：安装完成后可用本菜单管理${rw_lv}"
 		read -e -p " 确认安装？(y/N): " _confirm
 		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 			bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)"
@@ -25994,7 +26105,7 @@ while true; do
 	  21)
 		send_stats "1Panel卸载"
 		if command -v 1pctl &>/dev/null; then
-			echo -e "${rw_hong}警告：卸载将删除1Panel及所有数据！${rw_bai}"
+			echo -e "${rw_hong}警告：卸载将删除1Panel及所有数据！${rw_lv}"
 			read -e -p " 确认卸载？(y/N): " _confirm
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				1pctl uninstall
@@ -26002,11 +26113,11 @@ while true; do
 				echo "已取消"
 			fi
 		else
-			echo -e "${rw_hong}1Panel 未安装${rw_bai}"
+			echo -e "${rw_hong}1Panel 未安装${rw_lv}"
 		fi
 		;;
 	  0) return ;;
-	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 	esac
 	break_end
 done
@@ -26017,70 +26128,70 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _py3_stat="${rw_hong}未安装${rw_bai}" _py3_ver="" _pip_stat="${rw_hong}未安装${rw_bai}" _pip_ver=""
-	local _py2_stat="${rw_hong}未安装${rw_bai}" _py2_ver="" _venv_stat="${rw_hong}未安装${rw_bai}"
+	local _py3_stat="${rw_hong}未安装${rw_lv}" _py3_ver="" _pip_stat="${rw_hong}未安装${rw_lv}" _pip_ver=""
+	local _py2_stat="${rw_hong}未安装${rw_lv}" _py2_ver="" _venv_stat="${rw_hong}未安装${rw_lv}"
 
 	# Python3 状态
 	if command -v python3 &>/dev/null; then
 		_py3_ver=$(python3 --version 2>/dev/null | sed 's/Python //')
-		_py3_stat="${rw_lv}${_py3_ver}${rw_bai}"
+		_py3_stat="${rw_lv}${_py3_ver}${rw_lv}"
 	fi
 
 	# Python2 状态
 	if command -v python2 &>/dev/null; then
 		_py2_ver=$(python2 --version 2>&1 | sed 's/Python //')
-		_py2_stat="${rw_lv}${_py2_ver}${rw_bai}"
+		_py2_stat="${rw_lv}${_py2_ver}${rw_lv}"
 	fi
 
 	# pip3 状态
 	if command -v pip3 &>/dev/null; then
 		_pip_ver=$(pip3 --version 2>/dev/null | sed -E 's/pip ([0-9.]+).*/\1/')
-		_pip_stat="${rw_lv}v${_pip_ver}${rw_bai}"
+		_pip_stat="${rw_lv}v${_pip_ver}${rw_lv}"
 	elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
 		_pip_ver=$(python3 -m pip --version 2>/dev/null | sed -E 's/pip ([0-9.]+).*/\1/')
-		_pip_stat="${rw_lv}v${_pip_ver}${rw_bai}"
+		_pip_stat="${rw_lv}v${_pip_ver}${rw_lv}"
 	fi
 
 	# venv 模块状态
 	if command -v python3 &>/dev/null && python3 -c "import venv" 2>/dev/null; then
-		_venv_stat="${rw_lv}可用${rw_bai}"
+		_venv_stat="${rw_lv}可用${rw_lv}"
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  Python 管理  ━━━━━━━━━━━━${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  Python 管理  ━━━━━━━━━━━━${rw_lv}"
 	echo -e " Python3 ${_py3_stat}  pip3 ${_pip_stat}  venv ${_venv_stat}"
 	[ -n "$_py2_ver" ] && echo -e " Python2 ${_py2_stat}"
 	echo ""
-	echo -e " ${rw_cheng}──── 安装与卸载${rw_bai}"
-	echo -e " ${rw_huang}1${rw_bai}  安装Python3          ${rw_huang}2${rw_bai}  安装pip3"
-	echo -e " ${rw_huang}3${rw_bai}  安装Python2           ${rw_huang}4${rw_bai}  卸载Python3"
+	echo -e " ${rw_cheng}──── 安装与卸载${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  安装Python3          ${rw_huang}2${rw_lv}  安装pip3"
+	echo -e " ${rw_huang}3${rw_lv}  安装Python2           ${rw_huang}4${rw_lv}  卸载Python3"
 	echo ""
-	echo -e " ${rw_cheng}──── 版本管理${rw_bai}"
-	echo -e " ${rw_huang}5${rw_bai}  切换Python默认版本   ${rw_huang}6${rw_bai}  查看已安装版本"
+	echo -e " ${rw_cheng}──── 版本管理${rw_lv}"
+	echo -e " ${rw_huang}5${rw_lv}  切换Python默认版本   ${rw_huang}6${rw_lv}  查看已安装版本"
 	echo ""
-	echo -e " ${rw_cheng}──── 虚拟环境${rw_bai}"
-	echo -e " ${rw_huang}7${rw_bai}  创建虚拟环境          ${rw_huang}8${rw_bai}  删除虚拟环境"
-	echo -e " ${rw_huang}9${rw_bai}  查看虚拟环境列表"
+	echo -e " ${rw_cheng}──── 虚拟环境${rw_lv}"
+	echo -e " ${rw_huang}7${rw_lv}  创建虚拟环境          ${rw_huang}8${rw_lv}  删除虚拟环境"
+	echo -e " ${rw_huang}9${rw_lv}  查看虚拟环境列表"
 	echo ""
-	echo -e " ${rw_cheng}──── 包管理${rw_bai}"
-	echo -e " ${rw_huang}10${rw_bai} 安装Python包          ${rw_huang}11${rw_bai} 卸载Python包"
-	echo -e " ${rw_huang}12${rw_bai} 查看已安装包          ${rw_huang}13${rw_bai} 升级pip"
+	echo -e " ${rw_cheng}──── 包管理${rw_lv}"
+	echo -e " ${rw_huang}10${rw_lv} 安装Python包          ${rw_huang}11${rw_lv} 卸载Python包"
+	echo -e " ${rw_huang}12${rw_lv} 查看已安装包          ${rw_huang}13${rw_lv} 升级pip"
 	echo ""
-	echo -e " ${rw_cheng}──── 信息${rw_bai}"
-	echo -e " ${rw_huang}14${rw_bai} Python环境详情        ${rw_huang}15${rw_bai} pip配置信息"
+	echo -e " ${rw_cheng}──── 信息${rw_lv}"
+	echo -e " ${rw_huang}14${rw_lv} Python环境详情        ${rw_huang}15${rw_lv} pip配置信息"
 	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e " ${rw_huang}0${rw_bai}  返回上级菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0${rw_lv}  返回上级菜单"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _py_choice
 
 	case $_py_choice in
 	  1)
 		send_stats "Python安装Python3"
-		echo -e "${rw_huang}正在安装 Python3 ...${rw_bai}"
+		echo -e "${rw_huang}正在安装 Python3 ...${rw_lv}"
 		install python3
 		# 尝试安装 pip
 		if ! command -v pip3 &>/dev/null; then
-			echo -e "${rw_huang}正在安装 pip ...${rw_bai}"
+			echo -e "${rw_huang}正在安装 pip ...${rw_lv}"
 			if command -v apt &>/dev/null; then
 				apt install -y python3-pip
 			elif command -v yum &>/dev/null; then
@@ -26096,19 +26207,19 @@ while true; do
 			apt install -y python3-venv 2>/dev/null
 		fi
 		if command -v python3 &>/dev/null; then
-			echo -e "${rw_lv}Python3 安装成功！${rw_bai}"
+			echo -e "${rw_lv}Python3 安装成功！${rw_lv}"
 			echo -e "  版本: $(python3 --version 2>/dev/null)"
 			echo -e "  路径: $(which python3 2>/dev/null)"
 		else
-			echo -e "${rw_hong}Python3 安装失败${rw_bai}"
+			echo -e "${rw_hong}Python3 安装失败${rw_lv}"
 		fi
 		;;
 	  2)
 		send_stats "Python安装pip3"
 		if ! command -v python3 &>/dev/null; then
-			echo -e "${rw_hong}请先安装 Python3${rw_bai}"
+			echo -e "${rw_hong}请先安装 Python3${rw_lv}"
 		else
-			echo -e "${rw_huang}正在安装 pip3 ...${rw_bai}"
+			echo -e "${rw_huang}正在安装 pip3 ...${rw_lv}"
 			if command -v apt &>/dev/null; then
 				apt install -y python3-pip
 			elif command -v yum &>/dev/null; then
@@ -26121,15 +26232,15 @@ while true; do
 				python3 -m ensurepip --upgrade 2>/dev/null || curl -sS https://bootstrap.pypa.io/get-pip.py | python3
 			fi
 			if command -v pip3 &>/dev/null || python3 -m pip --version &>/dev/null 2>&1; then
-				echo -e "${rw_lv}pip3 安装成功！${rw_bai}"
+				echo -e "${rw_lv}pip3 安装成功！${rw_lv}"
 			else
-				echo -e "${rw_hong}pip3 安装失败${rw_bai}"
+				echo -e "${rw_hong}pip3 安装失败${rw_lv}"
 			fi
 		fi
 		;;
 	  3)
 		send_stats "Python安装Python2"
-		echo -e "${rw_huang}正在安装 Python2 ...${rw_bai}"
+		echo -e "${rw_huang}正在安装 Python2 ...${rw_lv}"
 		if command -v apt &>/dev/null; then
 			apt install -y python2 2>/dev/null || apt install -y python 2>/dev/null
 		elif command -v yum &>/dev/null; then
@@ -26137,17 +26248,17 @@ while true; do
 		elif command -v apk &>/dev/null; then
 			apk add python2 2>/dev/null || apk add python 2>/dev/null
 		else
-			echo -e "${rw_hong}当前包管理器不支持直接安装 Python2${rw_bai}"
+			echo -e "${rw_hong}当前包管理器不支持直接安装 Python2${rw_lv}"
 		fi
 		if command -v python2 &>/dev/null; then
-			echo -e "${rw_lv}Python2 安装成功！$(python2 --version 2>&1)${rw_bai}"
+			echo -e "${rw_lv}Python2 安装成功！$(python2 --version 2>&1)${rw_lv}"
 		else
-			echo -e "${rw_hong}Python2 安装失败或已停止维护${rw_bai}"
+			echo -e "${rw_hong}Python2 安装失败或已停止维护${rw_lv}"
 		fi
 		;;
 	  4)
 		send_stats "Python卸载Python3"
-		echo -e "${rw_hong}警告：卸载Python3可能导致系统工具异常！${rw_bai}"
+		echo -e "${rw_hong}警告：卸载Python3可能导致系统工具异常！${rw_lv}"
 		read -e -p " 确认卸载？输入YES继续: " _py_confirm
 		if [ "$_py_confirm" = "YES" ]; then
 			if command -v apt &>/dev/null; then
@@ -26160,7 +26271,7 @@ while true; do
 			elif command -v apk &>/dev/null; then
 				apk del python3 py3-pip
 			fi
-			echo -e "${rw_lv}Python3 已卸载${rw_bai}"
+			echo -e "${rw_lv}Python3 已卸载${rw_lv}"
 		else
 			echo -e "已取消"
 		fi
@@ -26168,75 +26279,75 @@ while true; do
 	  5)
 		send_stats "Python切换默认版本"
 		if ! command -v python3 &>/dev/null; then
-			echo -e "${rw_hong}未安装 Python3${rw_bai}"
+			echo -e "${rw_hong}未安装 Python3${rw_lv}"
 		else
-			echo -e " ${rw_huang}1${rw_bai}  python → python3"
+			echo -e " ${rw_huang}1${rw_lv}  python → python3"
 			if command -v python2 &>/dev/null; then
-				echo -e " ${rw_huang}2${rw_bai}  python → python2"
+				echo -e " ${rw_huang}2${rw_lv}  python → python2"
 			fi
-			echo -e " ${rw_huang}3${rw_bai}  取消"
+			echo -e " ${rw_huang}3${rw_lv}  取消"
 			read -e -p " 选择: " _alt_choice
 			case $_alt_choice in
 			  1)
 				update-alternatives --install /usr/bin/python python "$(which python3)" 1 2>/dev/null
 				ln -sf "$(which python3)" /usr/bin/python 2>/dev/null
-				echo -e "${rw_lv}已将 python 指向 python3${rw_bai}"
+				echo -e "${rw_lv}已将 python 指向 python3${rw_lv}"
 				;;
 			  2)
 				if command -v python2 &>/dev/null; then
 					update-alternatives --install /usr/bin/python python "$(which python2)" 2 2>/dev/null
 					ln -sf "$(which python2)" /usr/bin/python 2>/dev/null
-					echo -e "${rw_lv}已将 python 指向 python2${rw_bai}"
+					echo -e "${rw_lv}已将 python 指向 python2${rw_lv}"
 				else
-					echo -e "${rw_hong}Python2 未安装${rw_bai}"
+					echo -e "${rw_hong}Python2 未安装${rw_lv}"
 				fi
 				;;
 			  3) ;;
-			  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+			  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 			esac
 		fi
 		;;
 	  6)
 		send_stats "Python查看已安装版本"
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-		echo -e "${rw_huang}已安装的 Python 版本:${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+		echo -e "${rw_huang}已安装的 Python 版本:${rw_lv}"
 		echo ""
 		for _py_bin in python python2 python3 python3.8 python3.9 python3.10 python3.11 python3.12 python3.13 python3.14; do
 			if command -v "$_py_bin" &>/dev/null; then
 				local _v=$("$_py_bin" --version 2>/dev/null || "$_py_bin" -V 2>/dev/null)
-				[ -n "$_v" ] && echo -e "  ${rw_lv}${_v}${rw_bai}  → $(which $_py_bin)"
+				[ -n "$_v" ] && echo -e "  ${rw_lv}${_v}${rw_lv}  → $(which $_py_bin)"
 			fi
 		done
 		echo ""
 		if command -v update-alternatives &>/dev/null; then
-			echo -e "${rw_huang}update-alternatives 配置:${rw_bai}"
+			echo -e "${rw_huang}update-alternatives 配置:${rw_lv}"
 			update-alternatives --display python 2>/dev/null || echo "  未配置"
 		fi
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		;;
 	  7)
 		send_stats "Python创建虚拟环境"
 		if ! command -v python3 &>/dev/null; then
-			echo -e "${rw_hong}请先安装 Python3${rw_bai}"
+			echo -e "${rw_hong}请先安装 Python3${rw_lv}"
 		else
 			read -e -p " 输入虚拟环境名称: " _venv_name
 			[ -z "$_venv_name" ] && { echo "已取消"; continue; }
 			read -e -p " 输入目录路径（默认当前目录）: " _venv_dir
 			_venv_dir=${_venv_dir:-.}
 			if python3 -m venv "${_venv_dir}/${_venv_name}" 2>/dev/null; then
-				echo -e "${rw_lv}虚拟环境已创建！${rw_bai}"
+				echo -e "${rw_lv}虚拟环境已创建！${rw_lv}"
 				echo -e "  路径: ${_venv_dir}/${_venv_name}"
 				echo -e "  激活: source ${_venv_dir}/${_venv_name}/bin/activate"
 				echo -e "  退出: deactivate"
 			else
-				echo -e "${rw_hong}创建失败，可能缺少 python3-venv 模块${rw_bai}"
-				echo -e "${rw_huang}尝试安装 venv 模块...${rw_bai}"
+				echo -e "${rw_hong}创建失败，可能缺少 python3-venv 模块${rw_lv}"
+				echo -e "${rw_huang}尝试安装 venv 模块...${rw_lv}"
 				if command -v apt &>/dev/null; then
 					apt install -y python3-venv
 					python3 -m venv "${_venv_dir}/${_venv_name}"
-					echo -e "${rw_lv}虚拟环境已创建！${rw_bai}"
+					echo -e "${rw_lv}虚拟环境已创建！${rw_lv}"
 				else
-					echo -e "${rw_hong}请手动安装 venv 模块后重试${rw_bai}"
+					echo -e "${rw_hong}请手动安装 venv 模块后重试${rw_lv}"
 				fi
 			fi
 		fi
@@ -26246,22 +26357,22 @@ while true; do
 		read -e -p " 输入虚拟环境路径: " _venv_del
 		[ -z "$_venv_del" ] && { echo "已取消"; continue; }
 		if [ -d "$_venv_del" ] && [ -f "${_venv_del}/bin/activate" ]; then
-			echo -e "${rw_hong}将删除虚拟环境: ${_venv_del}${rw_bai}"
+			echo -e "${rw_hong}将删除虚拟环境: ${_venv_del}${rw_lv}"
 			read -e -p " 确认删除？(y/N): " _vd_confirm
 			if [[ "$_vd_confirm" =~ ^[Yy]$ ]]; then
 				rm -rf "$_venv_del"
-				echo -e "${rw_lv}虚拟环境已删除${rw_bai}"
+				echo -e "${rw_lv}虚拟环境已删除${rw_lv}"
 			else
 				echo -e "已取消"
 			fi
 		else
-			echo -e "${rw_hong}未找到有效的虚拟环境: ${_venv_del}${rw_bai}"
+			echo -e "${rw_hong}未找到有效的虚拟环境: ${_venv_del}${rw_lv}"
 		fi
 		;;
 	  9)
 		send_stats "Python查看虚拟环境列表"
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-		echo -e "${rw_huang}搜索虚拟环境（当前目录及子目录）:${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+		echo -e "${rw_huang}搜索虚拟环境（当前目录及子目录）:${rw_lv}"
 		local _venv_count=0
 		while IFS= read -r _venv_found; do
 			_venv_count=$((_venv_count + 1))
@@ -26269,40 +26380,40 @@ while true; do
 			if [ -f "${_venv_found}/bin/python3" ]; then
 				_pv_ver=$("${_venv_found}/bin/python3" --version 2>/dev/null)
 			fi
-			echo -e "  ${rw_lv}${_venv_count}${rw_bai}. ${_venv_found}  ${rw_huang}${_pv_ver}${rw_bai}"
+			echo -e "  ${rw_lv}${_venv_count}${rw_lv}. ${_venv_found}  ${rw_huang}${_pv_ver}${rw_lv}"
 		done < <(find . -maxdepth 3 -type f -name "activate" -path "*/bin/activate" -not -path "*/\.*" 2>/dev/null | sed 's|/bin/activate$||' | sort)
-		[ $_venv_count -eq 0 ] && echo -e "  ${rw_hong}未找到虚拟环境${rw_bai}"
+		[ $_venv_count -eq 0 ] && echo -e "  ${rw_hong}未找到虚拟环境${rw_lv}"
 		# 也检查常见目录
 		for _chk_dir in ~/venvs ~/envs ~/.virtualenvs; do
 			if [ -d "$_chk_dir" ]; then
-				echo -e "\n  ${rw_huang}${_chk_dir}:${rw_bai}"
+				echo -e "\n  ${rw_huang}${_chk_dir}:${rw_lv}"
 				for _sub in "$_chk_dir"/*/; do
-					[ -f "${_sub}bin/activate" ] && echo -e "    ${rw_lv}${_sub}${rw_bai}"
+					[ -f "${_sub}bin/activate" ] && echo -e "    ${rw_lv}${_sub}${rw_lv}"
 				done
 			fi
 		done
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		;;
 	  10)
 		send_stats "Python安装包"
 		if ! command -v pip3 &>/dev/null && ! python3 -m pip --version &>/dev/null 2>&1; then
-			echo -e "${rw_hong}请先安装 pip3${rw_bai}"
+			echo -e "${rw_hong}请先安装 pip3${rw_lv}"
 		else
 			read -e -p " 输入要安装的包名（多个包用空格分隔）: " _pip_pkgs
 			[ -z "$_pip_pkgs" ] && { echo "已取消"; continue; }
-			echo -e "${rw_huang}正在安装 ${_pip_pkgs} ...${rw_bai}"
+			echo -e "${rw_huang}正在安装 ${_pip_pkgs} ...${rw_lv}"
 			if command -v pip3 &>/dev/null; then
 				pip3 install "$_pip_pkgs"
 			else
 				python3 -m pip install "$_pip_pkgs"
 			fi
-			echo -e "${rw_lv}安装完成${rw_bai}"
+			echo -e "${rw_lv}安装完成${rw_lv}"
 		fi
 		;;
 	  11)
 		send_stats "Python卸载包"
 		if ! command -v pip3 &>/dev/null && ! python3 -m pip --version &>/dev/null 2>&1; then
-			echo -e "${rw_hong}请先安装 pip3${rw_bai}"
+			echo -e "${rw_hong}请先安装 pip3${rw_lv}"
 		else
 			read -e -p " 输入要卸载的包名: " _pip_rmpkg
 			[ -z "$_pip_rmpkg" ] && { echo "已取消"; continue; }
@@ -26311,61 +26422,61 @@ while true; do
 			else
 				python3 -m pip uninstall -y "$_pip_rmpkg"
 			fi
-			echo -e "${rw_lv}卸载完成${rw_bai}"
+			echo -e "${rw_lv}卸载完成${rw_lv}"
 		fi
 		;;
 	  12)
 		send_stats "Python查看已安装包"
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		if command -v pip3 &>/dev/null; then
 			pip3 list 2>/dev/null
 		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
 			python3 -m pip list 2>/dev/null
 		else
-			echo -e "${rw_hong}pip3 未安装${rw_bai}"
+			echo -e "${rw_hong}pip3 未安装${rw_lv}"
 		fi
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		;;
 	  13)
 		send_stats "Python升级pip"
 		if ! command -v python3 &>/dev/null; then
-			echo -e "${rw_hong}Python3 未安装${rw_bai}"
+			echo -e "${rw_hong}Python3 未安装${rw_lv}"
 		else
-			echo -e "${rw_huang}正在升级 pip ...${rw_bai}"
+			echo -e "${rw_huang}正在升级 pip ...${rw_lv}"
 			if command -v pip3 &>/dev/null; then
 				pip3 install --upgrade pip
 			else
 				python3 -m pip install --upgrade pip
 			fi
-			echo -e "${rw_lv}pip 已升级到最新版本${rw_bai}"
+			echo -e "${rw_lv}pip 已升级到最新版本${rw_lv}"
 		fi
 		;;
 	  14)
 		send_stats "Python环境详情"
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
-		echo -e "${rw_huang}Python 环境详情:${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+		echo -e "${rw_huang}Python 环境详情:${rw_lv}"
 		echo ""
 		if command -v python3 &>/dev/null; then
-			echo -e "  ${rw_lv}Python3:${rw_bai}"
+			echo -e "  ${rw_lv}Python3:${rw_lv}"
 			echo -e "    版本:   $(python3 --version 2>/dev/null)"
 			echo -e "    路径:   $(which python3 2>/dev/null)"
 			echo -e "    前缀:   $(python3 -c 'import sys; print(sys.prefix)' 2>/dev/null)"
 			echo -e "    包路径: $(python3 -c 'import site; print(site.getsitepackages()[0])' 2>/dev/null)"
 		else
-			echo -e "  ${rw_hong}Python3: 未安装${rw_bai}"
+			echo -e "  ${rw_hong}Python3: 未安装${rw_lv}"
 		fi
 		echo ""
 		if command -v python2 &>/dev/null; then
-			echo -e "  ${rw_lv}Python2:${rw_bai} $(python2 --version 2>&1) → $(which python2 2>/dev/null)"
+			echo -e "  ${rw_lv}Python2:${rw_lv} $(python2 --version 2>&1) → $(which python2 2>/dev/null)"
 		fi
 		echo ""
 		if command -v pip3 &>/dev/null; then
-			echo -e "  ${rw_lv}pip3:${rw_bai}  $(pip3 --version 2>/dev/null)"
+			echo -e "  ${rw_lv}pip3:${rw_lv}  $(pip3 --version 2>/dev/null)"
 			echo -e "    路径:   $(which pip3 2>/dev/null)"
 		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
-			echo -e "  ${rw_lv}pip:${rw_bai}   $(python3 -m pip --version 2>/dev/null)"
+			echo -e "  ${rw_lv}pip:${rw_lv}   $(python3 -m pip --version 2>/dev/null)"
 		else
-			echo -e "  ${rw_hong}pip3: 未安装${rw_bai}"
+			echo -e "  ${rw_hong}pip3: 未安装${rw_lv}"
 		fi
 		echo ""
 		# 检查默认 python 指向
@@ -26374,23 +26485,23 @@ while true; do
 		else
 			echo -e "  python: 未配置默认版本"
 		fi
-		echo -e "${rw_cheng}────────────────────────────────────${rw_bai}"
+		echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
 		;;
 	  15)
 		send_stats "Python查看pip配置"
 		if command -v pip3 &>/dev/null; then
 			pip3 config list 2>/dev/null
 			echo ""
-			echo -e "${rw_huang}pip 配置文件位置:${rw_bai}"
+			echo -e "${rw_huang}pip 配置文件位置:${rw_lv}"
 			pip3 config list -v 2>/dev/null | grep -i "global\|user\|site" || echo "  使用默认配置"
 		elif command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null 2>&1; then
 			python3 -m pip config list 2>/dev/null
 		else
-			echo -e "${rw_hong}pip3 未安装${rw_bai}"
+			echo -e "${rw_hong}pip3 未安装${rw_lv}"
 		fi
 		;;
 	  0) return ;;
-	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 	esac
 	break_end
 done
@@ -26401,46 +26512,46 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _1p_stat="${rw_hong}未安装${rw_bai}" _ngx_stat="${rw_hong}未安装${rw_bai}" _gh_stat="${rw_hong}未安装${rw_bai}" _py_stat="${rw_hong}未安装${rw_bai}"
+	local _1p_stat="${rw_hong}未安装${rw_lv}" _ngx_stat="${rw_hong}未安装${rw_lv}" _gh_stat="${rw_hong}未安装${rw_lv}" _py_stat="${rw_hong}未安装${rw_lv}"
 
 	# 1Panel 状态
 	if command -v 1pctl &>/dev/null; then
-		_1p_stat="${rw_lv}已安装${rw_bai}"
-		$_CACHE_1PANEL_ACTIVE && _1p_stat="${rw_lv}运行中${rw_bai}"
+		_1p_stat="${rw_lv}已安装${rw_lv}"
+		$_CACHE_1PANEL_ACTIVE && _1p_stat="${rw_lv}运行中${rw_lv}"
 	fi
 
 	# Nginx 状态
 	if docker inspect nginx &>/dev/null || command -v nginx &>/dev/null; then
 		if docker inspect nginx &>/dev/null; then
-			docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_bai}" || _ngx_stat="${rw_hong}异常${rw_bai}"
+			docker exec nginx nginx -t &>/dev/null && _ngx_stat="${rw_lv}运行中${rw_lv}" || _ngx_stat="${rw_hong}异常${rw_lv}"
 		elif pgrep -x nginx &>/dev/null; then
-			_ngx_stat="${rw_lv}运行中${rw_bai}"
+			_ngx_stat="${rw_lv}运行中${rw_lv}"
 		else
-			_ngx_stat="${rw_hong}未运行${rw_bai}"
+			_ngx_stat="${rw_hong}未运行${rw_lv}"
 		fi
 	fi
 
 	# Python 状态
 	if command -v python3 &>/dev/null; then
-		_py_stat="${rw_lv}$(python3 --version 2>/dev/null | sed 's/Python //')${rw_bai}"
+		_py_stat="${rw_lv}$(python3 --version 2>/dev/null | sed 's/Python //')${rw_lv}"
 	fi
 
 	# GitHooks 状态（检查是否已配置）
 	if [ -d /home/githooks ] || command -v git &>/dev/null; then
-		_gh_stat="${rw_lv}可用${rw_bai}"
+		_gh_stat="${rw_lv}可用${rw_lv}"
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  其他管理面板  ━━━━━━━━━━━━${rw_bai}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  其他管理面板  ━━━━━━━━━━━━${rw_lv}"
 	echo -e " 1Panel ${_1p_stat}    Nginx ${_ngx_stat}    Python ${_py_stat}"
 	echo -e " GitHooks ${_gh_stat}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e "${rw_huang}1.  ${rw_bai}${rw_lv}1Panel 面板管理${rw_bai}"
-	echo -e "${rw_huang}2.  ${rw_bai}${rw_lv}Nginx 管理器${rw_bai}"
-	echo -e "${rw_huang}3.  ${rw_bai}${rw_lv}Python 管理${rw_bai}"
-	echo -e "${rw_huang}4.  ${rw_bai}${rw_lv}GitHooks 部署${rw_bai}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
-	echo -e "${rw_huang}0.  ${rw_bai}${rw_lv}返回主菜单${rw_bai}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_bai}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e "${rw_huang}1.  ${rw_lv}${rw_lv}1Panel 面板管理${rw_lv}"
+	echo -e "${rw_huang}2.  ${rw_lv}${rw_lv}Nginx 管理器${rw_lv}"
+	echo -e "${rw_huang}3.  ${rw_lv}${rw_lv}Python 管理${rw_lv}"
+	echo -e "${rw_huang}4.  ${rw_lv}${rw_lv}GitHooks 部署${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e "${rw_huang}0.  ${rw_lv}${rw_lv}返回主菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _op_choice
 
 	case $_op_choice in
@@ -26449,7 +26560,7 @@ while true; do
 	  3) python_manager ;;
 	  4) git_hooks_deploy ;;
 	  0) return ;;
-	  *) echo -e "${rw_hong}无效选择${rw_bai}" ;;
+	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 	esac
 	break_end
 done
