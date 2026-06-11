@@ -6311,7 +6311,7 @@ bbrv3() {
 		  if [ "$cpu_arch" = "aarch64" ]; then
 			bash <(curl -sL jhb.ovh/jb/bbrv3arm.sh)
 			break_end
-			linux_Settings
+			update_clean_menu
 		  fi
 
 		  if [ -r /etc/os-release ]; then
@@ -6319,12 +6319,12 @@ bbrv3() {
 			if [ "$ID" != "debian" ] && [ "$ID" != "ubuntu" ]; then
 				echo "当前环境不支持，仅支持Debian和Ubuntu系统"
 				break_end
-				linux_Settings
+				update_clean_menu
 			fi
 		  else
 			echo "无法确定操作系统类型"
 			break_end
-			linux_Settings
+			update_clean_menu
 		  fi
 
 		  if xanmod_installed; then
@@ -6393,7 +6393,7 @@ elrepo_install() {
 	if [[ "$os_name" != *"Red Hat"* && "$os_name" != *"AlmaLinux"* && "$os_name" != *"Rocky"* && "$os_name" != *"Oracle"* && "$os_name" != *"CentOS"* ]]; then
 		echo "不支持的操作系统：$os_name"
 		break_end
-		linux_Settings
+		update_clean_menu
 	fi
 	# 打印检测到的操作系统信息
 	echo "检测到的操作系统: $os_name $os_version"
@@ -6410,7 +6410,7 @@ elrepo_install() {
 	else
 		echo "不支持的系统版本：$os_version"
 		break_end
-		linux_Settings
+		update_clean_menu
 	fi
 	# 启用 ELRepo 内核仓库并安装最新的主线内核
 	echo "启用 ELRepo 内核仓库并安装最新的主线内核..."
@@ -20279,793 +20279,6 @@ EOF
 
 
 
-linux_Settings() {
-  while true; do
-    clear
-    send_stats "系统工具"
-
-    # ── 使用缓存的状态探测（避免每次刷新都执行 systemctl）──
-    if _should_refresh_cache; then
-        refresh_status_cache
-    fi
-    
-    local _fw_stat="${rw_hong}未运行${rw_lv}"
-    local _ssh_stat="${rw_hong}未运行${rw_lv}"
-    local _bbr_stat="${rw_hong}未开启${rw_lv}"
-    local _swap_size="0"
-
-    # 防火墙状态（使用缓存）
-    if $_CACHE_FIREWALLD_ACTIVE; then
-      _fw_stat="${rw_lv}firewalld运行中${rw_lv}"
-    elif $_CACHE_UFW_ACTIVE; then
-      _fw_stat="${rw_lv}ufw运行中${rw_lv}"
-    fi
-
-    # SSH 状态（使用缓存）
-    if $_CACHE_SSHD_ACTIVE; then
-      _ssh_stat="${rw_lv}运行中${rw_lv}"
-    fi
-
-    # BBR 状态（这个不依赖 systemctl，保持原样）
-    if grep -q "bbr" /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null; then
-      _bbr_stat="${rw_lv}已开启${rw_lv}"
-    fi
-
-    # 虚拟内存（这个不依赖 systemctl，保持原样）
-    _swap_size=$(free -m 2>/dev/null | grep Swap | awk '{print $2}')
-    if [ "$_swap_size" = "0" ] || [ -z "$_swap_size" ]; then
-      _swap_size="${rw_hong}未设置${rw_lv}"
-    else
-      _swap_size="${rw_lv}${_swap_size}MB${rw_lv}"
-    fi
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  系统工具  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " 防火墙 ${_fw_stat}  SSH ${_ssh_stat}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}"
-    echo ""
-    echo -e " ${rw_cheng}──── 系统配置${rw_lv}"
-    echo -e " ${rw_huang}1${rw_lv}  基础设置              ${rw_huang}9${rw_lv}  修改主机名"
-    echo -e " ${rw_huang}7${rw_lv}  系统时区调整          ${rw_huang}16${rw_lv} 切换系统语言"
-    echo -e " ${rw_huang}10${rw_lv} 切换系统更新源"
-    echo ""
-    echo -e " ${rw_cheng}──── 网络管理${rw_lv}"
-    echo -e " ${rw_huang}2${rw_lv}  优化DNS地址          ${rw_huang}4${rw_lv} 切换优先ipv4/ipv6"
-    echo -e " ${rw_huang}11${rw_lv} 本机host解析         ${rw_huang}8${rw_lv} 防火墙高级管理器"
-    echo ""
-    echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
-    echo -e " ${rw_huang}5${rw_lv}  用户管理              ${rw_huang}6${rw_lv} 用户/密码生成器"
-    echo -e " ${rw_huang}19${rw_lv} ssh远程连接工具"
-    echo ""
-    echo -e " ${rw_cheng}──── 系统优化${rw_lv}"
-    echo -e " ${rw_huang}66${rw_lv} 一条龙系统调优        ${rw_huang}12${rw_lv} 限流自动关机"
-    echo -e " ${rw_huang}18${rw_lv} 设置系统回收站        ${rw_huang}14${rw_lv} 红帽系Linux内核升级"
-    echo ""
-    echo -e " ${rw_cheng}──── 安全工具${rw_lv}"
-    echo -e " ${rw_huang}15${rw_lv} 病毒扫描工具          ${rw_huang}13${rw_lv} 修复OpenSSH高危漏洞"
-    echo -e " ${rw_huang}100${rw_lv} 隐私与安全"
-    echo ""
-    echo -e " ${rw_cheng}──── 高级工具${rw_lv}"
-    echo -e " ${rw_huang}17${rw_lv} 命令行美化工具        ${rw_huang}20${rw_lv} 命令行历史记录"
-    echo -e " ${rw_huang}21${rw_lv} 命令收藏夹            ${rw_huang}22${rw_lv} 系统变量管理工具"
-    echo -e " ${rw_huang}101${rw_lv} r命令高级用法"
-    echo ""
-    echo -e " ${rw_cheng}──── 系统维护${rw_lv}"
-    echo -e " ${rw_huang}3${rw_lv}  一键重装系统          ${rw_huang}99${rw_lv} 重启服务器"
-    echo -e " ${rw_huang}102${rw_lv} 卸载Riou脚本"
-    echo ""
-    echo -e " ${rw_cheng}──── 其他${rw_lv}"
-    echo -e " ${rw_huang}61${rw_lv} 留言板"
-    echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " sub_choice
-
-    case $sub_choice in
-		  1)
-			  basic_settings_menu
-			  ;;
-
-		  2)
-			set_dns_ui
-			  ;;
-
-		  3)
-
-			dd_xitong
-			  ;;
-		  4)
-			root_use
-			send_stats "设置v4/v6优先级"
-			while true; do
-				clear
-				echo "设置v4/v6优先级"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-
-
-				if grep -Eq '^[[:space:]]*precedence[[:space:]]+::ffff:0:0/96[[:space:]]+100[[:space:]]*$' /etc/gai.conf 2>/dev/null; then
-					echo -e "当前网络优先级设置: ${rw_huang}IPv4${rw_lv} 优先"
-				else
-					echo -e "当前网络优先级设置: ${rw_huang}IPv6${rw_lv} 优先"
-				fi
-
-				echo ""
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "1. IPv4 优先          2. IPv6 优先          3. IPv6 修复工具"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				read -e -p "选择优先的网络: " choice
-
-				case $choice in
-					1)
-						prefer_ipv4
-						;;
-					2)
-						rm -f /etc/gai.conf
-						echo "已切换为 IPv6 优先"
-						send_stats "已切换为 IPv6 优先"
-						;;
-
-					3)
-						clear
-						bash <(curl -L -s jhb.ovh/jb/v6.sh)
-						echo "该功能由jhb大神提供，感谢他！"
-						send_stats "ipv6修复"
-						;;
-
-					*)
-						break
-						;;
-
-				esac
-			done
-			;;
-
-		  5)
-			  while true; do
-				root_use
-				send_stats "用户管理"
-				echo "用户列表"
-				echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_lv}"
-				printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
-				while IFS=: read -r username _ userid groupid _ _ homedir shell; do
-					local groups=$(groups "$username" | cut -d : -f 2)
-					local sudo_status
-					if sudo -n -lU "$username" 2>/dev/null | grep -q "(ALL) \(NOPASSWD: \)\?ALL"; then
-						sudo_status="Yes"
-					else
-						sudo_status="No"
-					fi
-					printf "%-20s %-30s %-20s %-10s\n" "$username" "$homedir" "$groups" "$sudo_status"
-				done < /etc/passwd
-
-
-				  echo ""
-				  echo "账户操作"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "1. 创建普通用户             2. 创建高级用户"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "3. 赋予最高权限             4. 取消最高权限"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "5. 删除账号"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  read -e -p "请输入你的选择: " sub_choice
-
-				  case $sub_choice in
-					  1)
-					   # 提示用户输入新用户名
-					   read -e -p "请输入新用户名: " new_username
-					   create_user_with_sshkey $new_username false
-
-						  ;;
-
-					  2)
-					   # 提示用户输入新用户名
-					   read -e -p "请输入新用户名: " new_username
-					   create_user_with_sshkey $new_username true
-
-						  ;;
-					  3)
-					   read -e -p "请输入用户名: " username
-					   install sudo
-					   cat >"/etc/sudoers.d/$username" <<EOF
-$username ALL=(ALL) NOPASSWD:ALL
-EOF
-					  chmod 440 "/etc/sudoers.d/$username"
-
-						  ;;
-					  4)
-					   read -e -p "请输入用户名: " username
-				  	   if [[ -f "/etc/sudoers.d/$username" ]]; then
-						   grep -lR "^$username" /etc/sudoers.d/ 2>/dev/null | xargs rm -f
-					   fi
-					   sed -i "/^$username\s*ALL=(ALL)/d" /etc/sudoers
-						  ;;
-					  5)
-					   read -e -p "请输入要删除的用户名: " username
-					   userdel -r "$username"
-						  ;;
-
-					  *)
-						  break  # 跳出循环，退出菜单
-						  ;;
-				  esac
-
-			  done
-			  ;;
-
-		  6)
-			clear
-			send_stats "用户信息生成器"
-			echo "随机用户名"
-			echo -e "${rw_cheng}------------------------${rw_lv}"
-			for i in {1..5}; do
-				username="user$(< /dev/urandom tr -dc _a-z0-9 | head -c6)"
-				echo "随机用户名 $i: $username"
-			done
-
-			echo ""
-			echo "随机姓名"
-			echo -e "${rw_cheng}------------------------${rw_lv}"
-			local first_names=("John" "Jane" "Michael" "Emily" "David" "Sophia" "William" "Olivia" "James" "Emma" "Ava" "Liam" "Mia" "Noah" "Isabella")
-			local last_names=("Smith" "Johnson" "Brown" "Davis" "Wilson" "Miller" "Jones" "Garcia" "Martinez" "Williams" "Lee" "Gonzalez" "Rodriguez" "Hernandez")
-
-			# 生成5个随机用户姓名
-			for i in {1..5}; do
-				local first_name_index=$((RANDOM % ${#first_names[@]}))
-				local last_name_index=$((RANDOM % ${#last_names[@]}))
-				local user_name="${first_names[$first_name_index]} ${last_names[$last_name_index]}"
-				echo "随机用户姓名 $i: $user_name"
-			done
-
-			echo ""
-			echo "随机UUID"
-			echo -e "${rw_cheng}------------------------${rw_lv}"
-			for i in {1..5}; do
-				uuid=$(cat /proc/sys/kernel/random/uuid)
-				echo "随机UUID $i: $uuid"
-			done
-
-			echo ""
-			echo "16位随机密码"
-			echo -e "${rw_cheng}------------------------${rw_lv}"
-			for i in {1..5}; do
-				local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
-				echo "随机密码 $i: $password"
-			done
-
-			echo ""
-			echo "32位随机密码"
-			echo -e "${rw_cheng}------------------------${rw_lv}"
-			for i in {1..5}; do
-				local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
-				echo "随机密码 $i: $password"
-			done
-			echo ""
-
-			  ;;
-
-		  7)
-			root_use
-			send_stats "换时区"
-			while true; do
-				clear
-				echo "系统时间信息"
-
-				# 获取当前系统时区
-				local timezone=$(current_timezone)
-
-				# 获取当前系统时间
-				local current_time=$(date +"%Y-%m-%d %H:%M:%S")
-
-				# 显示时区和时间
-				echo "当前系统时区：$timezone"
-				echo "当前系统时间：$current_time"
-
-				echo ""
-				echo "时区切换"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "亚洲"
-				echo "1.  中国上海时间             2.  中国香港时间"
-				echo "3.  日本东京时间             4.  韩国首尔时间"
-				echo "5.  新加坡时间               6.  印度加尔各答时间"
-				echo "7.  阿联酋迪拜时间           8.  澳大利亚悉尼时间"
-				echo "9.  泰国曼谷时间"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "欧洲"
-				echo "11. 英国伦敦时间             12. 法国巴黎时间"
-				echo "13. 德国柏林时间             14. 俄罗斯莫斯科时间"
-				echo "15. 荷兰尤特赖赫特时间       16. 西班牙马德里时间"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "美洲"
-				echo "21. 美国西部时间             22. 美国东部时间"
-				echo "23. 加拿大时间               24. 墨西哥时间"
-				echo "25. 巴西时间                 26. 阿根廷时间"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "31. UTC全球标准时间"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				read -e -p "请输入你的选择: " sub_choice
-
-
-				case $sub_choice in
-					1) set_timedate Asia/Shanghai ;;
-					2) set_timedate Asia/Hong_Kong ;;
-					3) set_timedate Asia/Tokyo ;;
-					4) set_timedate Asia/Seoul ;;
-					5) set_timedate Asia/Singapore ;;
-					6) set_timedate Asia/Kolkata ;;
-					3) set_timedate Asia/Dubai ;;
-					4) set_timedate Australia/Sydney ;;
-					5) set_timedate Asia/Bangkok ;;
-					7) set_timedate Europe/London ;;
-					8) set_timedate Europe/Paris ;;
-					9) set_timedate Europe/Berlin ;;
-					10) set_timedate Europe/Moscow ;;
-					11) set_timedate Europe/Amsterdam ;;
-					12) set_timedate Europe/Madrid ;;
-					17) set_timedate America/Los_Angeles ;;
-					18) set_timedate America/New_York ;;
-					19) set_timedate America/Vancouver ;;
-					20) set_timedate America/Mexico_City ;;
-					21) set_timedate America/Sao_Paulo ;;
-					22) set_timedate America/Argentina/Buenos_Aires ;;
-					27) set_timedate UTC ;;
-					*) break ;;
-				esac
-			done
-			  ;;
-
-		  8)
-			  iptables_panel
-
-			  ;;
-
-		  9)
-		  root_use
-		  send_stats "修改主机名"
-
-		  while true; do
-			  clear
-			  local current_hostname=$(uname -n)
-			  echo -e "当前主机名: ${rw_huang}$current_hostname${rw_lv}"
-			  echo -e "${rw_cheng}------------------------${rw_lv}"
-			  read -e -p "请输入新的主机名（输入0退出）: " new_hostname
-			  if [ -n "$new_hostname" ] && [ "$new_hostname" != "0" ]; then
-				  if [ -f /etc/alpine-release ]; then
-					  # Alpine
-					  echo "$new_hostname" > /etc/hostname
-					  hostname "$new_hostname"
-				  else
-					  # 其他系统，如 Debian, Ubuntu, CentOS 等
-					  hostnamectl set-hostname "$new_hostname"
-					  sed -i "s/$current_hostname/$new_hostname/g" /etc/hostname
-					  systemctl restart systemd-hostnamed
-				  fi
-
-				  if grep -q "127.0.0.1" /etc/hosts; then
-					  sed -i "s/127.0.0.1 .*/127.0.0.1       $new_hostname localhost localhost.localdomain/g" /etc/hosts
-				  else
-					  echo "127.0.0.1       $new_hostname localhost localhost.localdomain" >> /etc/hosts
-				  fi
-
-				  if grep -q "^::1" /etc/hosts; then
-					  sed -i "s/^::1 .*/::1             $new_hostname localhost localhost.localdomain ipv6-localhost ipv6-loopback/g" /etc/hosts
-				  else
-					  echo "::1             $new_hostname localhost localhost.localdomain ipv6-localhost ipv6-loopback" >> /etc/hosts
-				  fi
-
-				  echo "主机名已更改为: $new_hostname"
-				  send_stats "主机名已更改"
-				  sleep 1
-			  else
-				  echo "已退出，未更改主机名。"
-				  break
-			  fi
-		  done
-			  ;;
-
-		  10)
-		  root_use
-		  send_stats "换系统更新源"
-		  clear
-		  echo "选择更新源区域"
-		  echo "接入LinuxMirrors切换系统更新源"
-		  echo -e "${rw_cheng}------------------------${rw_lv}"
-		  echo "1. 中国大陆【默认】          2. 中国大陆【教育网】          3. 海外地区          4. 智能切换更新源"
-		  echo -e "${rw_cheng}------------------------${rw_lv}"
-		  echo "0. 返回上一级选单"
-		  echo -e "${rw_cheng}------------------------${rw_lv}"
-		  read -e -p "输入你的选择: " choice
-
-		  case $choice in
-			  1)
-				  send_stats "中国大陆默认源"
-				  bash <(curl -sSL https://linuxmirrors.cn/main.sh)
-				  ;;
-			  2)
-				  send_stats "中国大陆教育源"
-				  bash <(curl -sSL https://linuxmirrors.cn/main.sh) --edu
-				  ;;
-			  3)
-				  send_stats "海外源"
-				  bash <(curl -sSL https://linuxmirrors.cn/main.sh) --abroad
-				  ;;
-			  4)
-				  send_stats "智能切换更新源"
-				  switch_mirror false false
-				  ;;
-
-			  *)
-				  echo "已取消"
-				  ;;
-
-		  esac
-
-			  ;;
-
-		  11)
-			  root_use
-			  send_stats "本地host解析"
-			  while true; do
-				  clear
-				  echo "本机host解析列表"
-				  echo "如果你在这里添加解析匹配，将不再使用动态解析了"
-				  cat /etc/hosts
-				  echo ""
-				  echo "操作"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "1. 添加新的解析              2. 删除解析地址"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  echo "0. 返回上一级选单"
-				  echo -e "${rw_cheng}------------------------${rw_lv}"
-				  read -e -p "请输入你的选择: " host_dns
-
-				  case $host_dns in
-					  1)
-						  read -e -p "请输入新的解析记录 格式: 110.25.5.33 riwi.pro : " addhost
-						  echo "$addhost" >> /etc/hosts
-						  send_stats "本地host解析新增"
-
-						  ;;
-					  2)
-						  read -e -p "请输入需要删除的解析内容关键字: " delhost
-						  sed -i "/$delhost/d" /etc/hosts
-						  send_stats "本地host解析删除"
-						  ;;
-					  *)
-						  break  # 跳出循环，退出菜单
-						  ;;
-				  esac
-			  done
-			  ;;
-
-		  12)
-			root_use
-			send_stats "限流关机功能"
-			while true; do
-				clear
-				echo "限流关机功能"
-				echo "视频介绍: https://www.bilibili.com/video/BV1mC411j7Qd?t=0.1"
-				echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				echo "当前流量使用情况，重启服务器流量计算会清零！"
-				output_status
-				echo -e "${rw_huang}${rw_huang}总接收${rw_huang}: ${rw_lv}$rx"
-				echo -e "${rw_huang}${rw_huang}总发送${rw_huang}: ${rw_lv}$tx"
-
-				# 检查是否存在 Limiting_Shut_down.sh 文件
-				if [ -f ~/Limiting_Shut_down.sh ]; then
-					# 获取 threshold_gb 的值
-					local rx_threshold_gb=$(sed -n 's/.*rx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
-					local tx_threshold_gb=$(sed -n 's/.*tx_threshold_gb=\([0-9]\+\).*/\1/p' ~/Limiting_Shut_down.sh)
-					echo -e "${rw_lv}当前设置的进站限流阈值为: ${rw_huang}${rx_threshold_gb}${rw_lv}G${rw_lv}"
-					echo -e "${rw_lv}当前设置的出站限流阈值为: ${rw_huang}${tx_threshold_gb}${rw_lv}GB${rw_lv}"
-				else
-					echo -e "${rw_lv}当前未启用限流关机功能${rw_lv}"
-				fi
-
-				echo
-				echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				echo "系统每分钟会检测实际流量是否到达阈值，到达后会自动关闭服务器！"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "1. 开启限流关机功能          2. 停用限流关机功能"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				echo "0. 返回上一级选单"
-				echo -e "${rw_cheng}------------------------${rw_lv}"
-				read -e -p "请输入你的选择: " Limiting
-
-				case "$Limiting" in
-				  1)
-					# 输入新的虚拟内存大小
-					echo "如果实际服务器就100G流量，可设置阈值为95G，提前关机，以免出现流量误差或溢出。"
-					read -e -p "请输入进站流量阈值（单位为G，默认100G）: " rx_threshold_gb
-					rx_threshold_gb=${rx_threshold_gb:-100}
-					read -e -p "请输入出站流量阈值（单位为G，默认100G）: " tx_threshold_gb
-					tx_threshold_gb=${tx_threshold_gb:-100}
-					read -e -p "请输入流量重置日期（默认每月1日重置）: " cz_day
-					cz_day=${cz_day:-1}
-
-					cd ~
-					curl -Ss -o ~/Limiting_Shut_down.sh ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/Limiting_Shut_down1.sh
-					chmod +x ~/Limiting_Shut_down.sh
-					sed -i "s/110/$rx_threshold_gb/g" ~/Limiting_Shut_down.sh
-					sed -i "s/120/$tx_threshold_gb/g" ~/Limiting_Shut_down.sh
-					check_crontab_installed
-					crontab -l | grep -v '~/Limiting_Shut_down.sh' | crontab -
-					(crontab -l ; echo "* * * * * ~/Limiting_Shut_down.sh") | crontab - > /dev/null 2>&1
-					crontab -l | grep -v 'reboot' | crontab -
-					(crontab -l ; echo "0 1 $cz_day * * reboot") | crontab - > /dev/null 2>&1
-					echo "限流关机已设置"
-					send_stats "限流关机已设置"
-					;;
-				  2)
-					check_crontab_installed
-					crontab -l | grep -v '~/Limiting_Shut_down.sh' | crontab -
-					crontab -l | grep -v 'reboot' | crontab -
-					rm ~/Limiting_Shut_down.sh
-					echo "已关闭限流关机功能"
-					;;
-				  *)
-					break
-					;;
-				esac
-			done
-			  ;;
-
-
-		  13)
-			  root_use
-			  send_stats "修复SSH高危漏洞"
-			  cd ~
-			  curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/upgrade_openssh9.8p1.sh
-			  chmod +x ~/upgrade_openssh9.8p1.sh
-			  ~/upgrade_openssh9.8p1.sh
-			  rm -f ~/upgrade_openssh9.8p1.sh
-			  ;;
-
-		  14)
-			  elrepo
-			  ;;
-
-		  15)
-			  clamav
-			  ;;
-
-		  16)
-			  linux_language
-			  ;;
-
-		  17)
-			  shell_bianse
-			  ;;
-		  18)
-			  linux_trash
-			  ;;
-		  19)
-			  ssh_manager
-			  ;;
-		  20)
-			  clear
-			  send_stats "命令行历史记录"
-			  get_history_file() {
-				  for file in "$HOME"/.bash_history "$HOME"/.ash_history "$HOME"/.zsh_history "$HOME"/.local/share/fish/fish_history; do
-					  [ -f "$file" ] && { echo "$file"; return; }
-				  done
-				  return 1
-			  }
-
-			  history_file=$(get_history_file) && cat -n "$history_file"
-			  ;;
-
-		  21)
-			  clear
-			  linux_fav
-			  ;;
-
-		  22)
-			  clear
-			  env_menu
-			  ;;
-
-
-		  61)
-			clear
-			send_stats "留言板"
-			echo "访问Riou官方留言板，您对脚本有任何想法欢迎留言交流！"
-			echo "https://board.riwi.pro"
-			echo "公共密码: riwi.sh"
-			  ;;
-
-		  66)
-
-			  root_use
-			  send_stats "一条龙调优"
-			  echo "一条龙系统调优"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-			  echo "将对以下内容进行操作与优化"
-			  echo "1. 优化系统更新源，更新系统到最新"
-			  echo "2. 清理系统垃圾文件"
-			  echo -e "3. 设置虚拟内存${rw_huang}1G${rw_lv}"
-			  echo -e "4. 设置SSH端口号为${rw_huang}5522${rw_lv}"
-			  echo -e "5. 启动fail2ban防御SSH暴力破解"
-			  echo -e "6. 开放所有端口"
-			  echo -e "7. 开启${rw_huang}BBR${rw_lv}加速"
-			  echo -e "8. 设置时区到${rw_huang}上海${rw_lv}"
-			  echo -e "9. 自动优化DNS地址${rw_huang}海外: 1.1.1.1 8.8.8.8  国内: 223.5.5.5 ${rw_lv}"
-		  	  echo -e "10. 设置网络为${rw_huang}ipv4优先${rw_lv}"
-			  echo -e "11. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
-			  echo -e "12. Linux系统内核参数优化${rw_huang}自动根据网络环境调优${rw_lv}"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-			  read -e -p "确定一键保养吗？(Y/N): " choice
-
-			  case "$choice" in
-				[Yy])
-				  clear
-				  send_stats "一条龙调优启动"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  switch_mirror false false
-				  linux_update
-				  echo -e "[${rw_lv}OK${rw_lv}] 1/12. 更新系统到最新"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  linux_clean
-				  echo -e "[${rw_lv}OK${rw_lv}] 2/12. 清理系统垃圾文件"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  add_swap 1024
-				  echo -e "[${rw_lv}OK${rw_lv}] 3/12. 设置虚拟内存${rw_huang}1G${rw_lv}"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  new_ssh_port 5522
-				  echo -e "[${rw_lv}OK${rw_lv}] 4/12. 设置SSH端口号为${rw_huang}5522${rw_lv}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  f2b_install_sshd
-				  cd ~
-				  f2b_status
-				  echo -e "[${rw_lv}OK${rw_lv}] 5/12. 启动fail2ban防御SSH暴力破解"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  echo -e "[${rw_lv}OK${rw_lv}] 6/12. 开放所有端口"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  bbr_on
-				  echo -e "[${rw_lv}OK${rw_lv}] 7/12. 开启${rw_huang}BBR${rw_lv}加速"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  set_timedate Asia/Shanghai
-				  echo -e "[${rw_lv}OK${rw_lv}] 8/12. 设置时区到${rw_huang}上海${rw_lv}"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  auto_optimize_dns
-				  echo -e "[${rw_lv}OK${rw_lv}] 9/12. 自动优化DNS地址${rw_huang}${rw_lv}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  prefer_ipv4
-				  echo -e "[${rw_lv}OK${rw_lv}] 10/12. 设置网络为${rw_huang}ipv4优先${rw_lv}}"
-
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-				  install_docker
-				  install wget sudo tar unzip socat btop nano vim
-				  echo -e "[${rw_lv}OK${rw_lv}] 11/12. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
-				  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-
-				  curl -sS ${gh_proxy}raw.githubusercontent.com/riwi/sh/refs/heads/main/network-optimize.sh | bash
-				  echo -e "[${rw_lv}OK${rw_lv}] 12/12. Linux系统内核参数优化"
-				  echo -e "${rw_lv}一条龙系统调优已完成${rw_lv}"
-
-				  ;;
-				[Nn])
-				  echo "已取消"
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-
-			  ;;
-
-		  99)
-			  clear
-			  send_stats "重启系统"
-			  server_reboot
-			  ;;
-		  100)
-
-			root_use
-			while true; do
-			  clear
-			  if grep -q '^ENABLE_STATS="true"' /usr/local/bin/r > /dev/null 2>&1; then
-			  	local status_message="${rw_lv}正在采集数据${rw_lv}"
-			  elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/r > /dev/null 2>&1; then
-			  	local status_message="${rw_lv}采集已关闭${rw_lv}"
-			  else
-			  	local status_message="无法确定的状态"
-			  fi
-
-			  echo "隐私与安全"
-			  echo "脚本将收集用户使用功能的数据，优化脚本体验，制作更多好玩好用的功能"
-			  echo "将收集脚本版本号，使用的时间，系统版本，CPU架构，机器所属国家和使用的功能的名称，"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-			  echo -e "当前状态: $status_message"
-			  echo -e "${rw_cheng}--------------------${rw_lv}"
-			  echo "1. 开启采集"
-			  echo "2. 关闭采集"
-			  echo -e "${rw_cheng}--------------------${rw_lv}"
-			  echo "0. 返回上一级选单"
-			  echo -e "${rw_cheng}--------------------${rw_lv}"
-			  read -e -p "请输入你的选择: " sub_choice
-			  case $sub_choice in
-				  1)
-					  cd ~
-					  sed -i 's/^ENABLE_STATS="false"/ENABLE_STATS="true"/' /usr/local/bin/r
-					  sed -i 's/^ENABLE_STATS="false"/ENABLE_STATS="true"/' ~/riwi.sh
-					  echo "已开启采集"
-					  send_stats "隐私与安全已开启采集"
-					  ;;
-				  2)
-					  cd ~
-					  sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' /usr/local/bin/r
-					  sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' ~/riwi.sh
-					  echo "已关闭采集"
-					  send_stats "隐私与安全已关闭采集"
-					  ;;
-				  *)
-					  break
-					  ;;
-			  esac
-			done
-			  ;;
-
-		  101)
-			  clear
-			  k_info
-			  ;;
-
-		  102)
-			  clear
-			  send_stats "卸载Riou脚本"
-			  echo "卸载Riou脚本"
-			  echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
-			  echo "将彻底卸载riwi脚本，不影响你其他功能"
-			  read -e -p "确定继续吗？(Y/N): " choice
-
-			  case "$choice" in
-				[Yy])
-				  clear
-				  (crontab -l | grep -v "riwi.sh") | crontab -
-				  rm -f /usr/local/bin/r
-				  rm ~/riwi.sh
-				  echo "脚本已卸载，再见！"
-				  break_end
-				  clear
-				  exit
-				  ;;
-				[Nn])
-				  echo "已取消"
-				  ;;
-				*)
-				  echo "无效的选择，请输入 Y 或 N。"
-				  ;;
-			  esac
-			  ;;
-
-		  0)
-			  riwi
-
-			  ;;
-		  *)
-			  echo "无效的输入!"
-			  ;;
-	  esac
-	  break_end
-
-	done
-
-
-
-}
 
 
 
@@ -21492,396 +20705,6 @@ EOF
         ;;
     esac
   done
-}
-
-# ================================================================
-# 安全优化函数
-# ================================================================
-linux_security() {
-  while true; do
-    clear
-    send_stats "安全优化"
-
-    # ── 使用缓存的状态探测 ──
-    if _should_refresh_cache; then
-        refresh_status_cache
-    fi
-
-    local _ssh_stat="${rw_hong}未运行${rw_lv}"
-    local _fw_stat="${rw_hong}未运行${rw_lv}"
-    local _user_cnt=0
-
-    # 使用缓存值
-    $_CACHE_SSHD_ACTIVE && _ssh_stat="${rw_lv}运行中${rw_lv}"
-    ( $_CACHE_FIREWALLD_ACTIVE || $_CACHE_UFW_ACTIVE ) && _fw_stat="${rw_lv}运行中${rw_lv}"
-    _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  安全优化  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " SSH ${_ssh_stat}  防火墙 ${_fw_stat}  普通用户 ${rw_lv}${_user_cnt}${rw_lv} 个"
-    echo ""
-    echo -e " ${rw_cheng}──── 用户权限${rw_lv}"
-    echo -e " ${rw_huang}1${rw_lv}  用户权限管理"
-    echo ""
-    echo -e " ${rw_cheng}──── 系统安全${rw_lv}"
-    echo -e " ${rw_huang}2${rw_lv}  SSH安全配置        ${rw_huang}3${rw_lv}  防火墙管理"
-    echo -e " ${rw_huang}4${rw_lv}  失败锁定           ${rw_huang}5${rw_lv}  安全审计"
-    echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " sub_choice
-
-    case $sub_choice in
-      1)
-        user_permissions_menu
-        ;;
-      2)
-        echo -e "${rw_huang}SSH安全配置${rw_lv}"
-        echo "  1. 修改默认端口"
-        echo "  2. 禁用密码登录，仅密钥"
-        echo "  3. 禁用root远程登录"
-        read -e -p "请输入你的选择: " ssh_choice
-        case $ssh_choice in
-          1)
-            read -e -p "请输入新的SSH端口 (默认22): " ssh_port
-            ssh_port=${ssh_port:-22}
-            sed -i "s/^#Port 22/Port $ssh_port/" /etc/ssh/sshd_config
-            sed -i "s/^Port 22/Port $ssh_port/" /etc/ssh/sshd_config
-            systemctl restart sshd
-            echo -e "${rw_lv}SSH端口已修改为 $ssh_port${rw_lv}"
-            break_end
-            ;;
-          2)
-            echo -e "${rw_huang}请先确保已配置SSH密钥登录${rw_lv}"
-            read -e -p "确认禁用密码登录? (y/N): " confirm
-            if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-              sed -i 's/^[[:space:]]*#\?[[:space:]]*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
-              systemctl restart sshd
-              echo -e "${rw_lv}已禁用密码登录${rw_lv}"
-            fi
-            break_end
-            ;;
-          3)
-            sed -i 's/^[[:space:]]*#\?[[:space:]]*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-            systemctl restart sshd
-            echo -e "${rw_lv}已禁用root远程登录${rw_lv}"
-            break_end
-            ;;
-          *)
-            echo -e "${rw_hong}无效选项${rw_lv}"
-            sleep 1
-            ;;
-        esac
-        ;;
-      3)
-        echo -e "${rw_huang}防火墙管理${rw_lv}"
-        echo "  1. 查看防火墙状态"
-        echo "  2. 开放端口"
-        echo "  3. 关闭端口"
-        echo "  4. 开放IP"
-        echo "  5. 阻止IP"
-        read -e -p "请输入你的选择: " fw_choice
-        case $fw_choice in
-          1)
-            firewall-cmd --state 2>/dev/null || ufw status 2>/dev/null || iptables -L -n
-            break_end
-            ;;
-          2)
-            read -e -p "请输入要开放的端口: " port
-            firewall-cmd --add-port=$port/tcp --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
-            ufw allow $port/tcp 2>/dev/null
-            echo -e "${rw_lv}端口 $port 已开放${rw_lv}"
-            break_end
-            ;;
-          3)
-            read -e -p "请输入要关闭的端口: " port
-            firewall-cmd --remove-port=$port/tcp --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
-            ufw deny $port/tcp 2>/dev/null
-            echo -e "${rw_lv}端口 $port 已关闭${rw_lv}"
-            break_end
-            ;;
-          4)
-            read -e -p "请输入要放行的IP: " ip
-            firewall-cmd --add-source=$ip --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
-            iptables -A INPUT -s $ip -j ACCEPT 2>/dev/null
-            echo -e "${rw_lv}IP $ip 已放行${rw_lv}"
-            break_end
-            ;;
-          5)
-            read -e -p "请输入要阻止的IP: " ip
-            firewall-cmd --add-rich-rule="rule source ipset='$ip' drop" --permanent 2>/dev/null && firewall-cmd --reload 2>/dev/null
-            iptables -A INPUT -s $ip -j DROP 2>/dev/null
-            echo -e "${rw_lv}IP $ip 已阻止${rw_lv}"
-            break_end
-            ;;
-          *)
-            echo -e "${rw_hong}无效选项${rw_lv}"
-            sleep 1
-            ;;
-        esac
-        ;;
-      4)
-        echo -e "${rw_huang}失败锁定 (fail2ban)${rw_lv}"
-        install fail2ban
-        systemctl enable --now fail2ban 2>/dev/null
-        echo -e "${rw_lv}fail2ban 已安装并启动${rw_lv}"
-        break_end
-        ;;
-      5)
-        echo -e "${rw_huang}安全审计${rw_lv}"
-        echo "  最近登录记录:"
-        last -n 20 2>/dev/null || echo "  无法获取登录记录"
-        echo ""
-        echo "  当前登录用户:"
-        w 2>/dev/null || who
-        break_end
-        ;;
-      0)
-        riwi
-        ;;
-      *)
-        echo -e "${rw_hong}无效的输入!${rw_lv}"
-        sleep 1
-        ;;
-    esac
-  done
-}
-user_permissions_menu() {
-  while true; do
-    clear
-    send_stats "用户权限"
-
-    # ── 状态探测 ──
-    local _user_cnt=0 _sudo_cnt=0
-    _user_cnt=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd 2>/dev/null | wc -l | tr -d ' ')
-    _sudo_cnt=$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | wc -l | tr -d ' ')
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  用户权限  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " 普通用户 ${rw_lv}${_user_cnt}${rw_lv} 个  sudo权限 ${rw_lv}${_sudo_cnt}${rw_lv} 个"
-    echo ""
-    echo -e " ${rw_cheng}──── 密码管理${rw_lv}"
-    echo -e " ${rw_huang}1${rw_lv}  设置用户密码"
-    echo ""
-    echo -e " ${rw_cheng}──── 权限管理${rw_lv}"
-    echo -e " ${rw_huang}2${rw_lv}  添加sudo权限       ${rw_huang}3${rw_lv}  查看所有用户"
-    echo ""
-    echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
-    echo -e " ${rw_huang}4${rw_lv}  创建新用户         ${rw_huang}5${rw_lv}  删除用户"
-    echo ""
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e " ${rw_huang}0${rw_lv}  返回安全优化"
-    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " sub_choice
-
-    case $sub_choice in
-      1)
-        clear
-        send_stats "设置普通用户密码"
-        echo -e "${rw_huang}设置普通用户密码${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
-        echo -e "${rw_huang}  为服务器上的普通用户设置或修改密码${rw_lv}"
-        echo -e "${rw_huang}  注意: 无法修改root用户密码${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}  当前系统用户列表:${rw_lv}"
-        awk -F: '$3 >= 1000 && $3 < 65534 {print "  用户名: "$1"  |  UID: "$3"   | 主目录: "$6}' /etc/passwd
-        echo ""
-        read -e -p "请输入要设置密码的用户名 [示例:owen]: " username
-        if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_lv}"
-          break_end
-          continue
-        fi
-        if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
-          break_end
-          continue
-        fi
-        if [ "$username" = "root" ]; then
-          echo -e "${rw_hong}无法修改root用户密码，请使用passwd命令${rw_lv}"
-          break_end
-          continue
-        fi
-        echo -e "${rw_huang}请为用户 $username 设置密码:${rw_lv}"
-        while true; do
-          read -s -p "请输入新密码: " password1
-          echo ""
-          if [ -z "$password1" ]; then
-            echo -e "${rw_hong}密码不能为空${rw_lv}"
-            continue
-          fi
-          read -s -p "请确认新密码: " password2
-          echo ""
-          if [ "$password1" != "$password2" ]; then
-            echo -e "${rw_hong}两次输入的密码不一致，请重新输入${rw_lv}"
-            continue
-          fi
-          break
-        done
-        echo "$username:$password1" | chpasswd
-        echo -e "${rw_lv}✓ 用户 $username 的密码已设置成功${rw_lv}"
-        break_end
-        ;;
-
-      2)
-        clear
-        send_stats "添加sudo权限"
-        echo -e "${rw_huang}添加sudo权限${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
-        echo -e "${rw_huang}  为普通用户添加sudo权限，允许其执行需要root权限的命令${rw_lv}"
-        echo -e "${rw_huang}  添加后用户可以使用sudo命令执行系统管理操作${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
-        echo -e "${rw_huang}  输入用户名: owen${rw_lv}"
-        echo -e "${rw_huang}  确认后用户将可以使用sudo命令${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}当前具有sudo权限的用户:${rw_lv}"
-        getent group sudo | cut -d: -f4 | tr ',' '\n' | awk '{print "  ✓ "$1}'
-        getent group wheel | cut -d: -f4 | tr ',' '\n' | awk '{print "  ✓ "$1}'
-        echo ""
-        read -e -p "请输入要添加sudo权限的用户名 [示例:owen]: " username
-        if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_lv}"
-          break_end
-          continue
-        fi
-        if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
-          break_end
-          continue
-        fi
-        echo -e "${rw_huang}正在为用户 $username 添加sudo权限...${rw_lv}"
-        usermod -aG sudo "$username"
-        echo -e "${rw_lv}✓ 用户 $username 已成功添加sudo权限${rw_lv}"
-        echo -e "${rw_huang}  现在用户 $username 可以使用 sudo 命令执行系统管理操作${rw_lv}"
-        break_end
-        ;;
-
-      3)
-        clear
-        send_stats "查看所有用户"
-        echo -e "${rw_huang}查看所有用户${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
-        echo -e "${rw_huang}  显示系统中所有用户的信息，包括用户名、UID、用户类型等${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}用户类型说明:${rw_lv}"
-        echo -e "${rw_huang}  • UID 0: root用户（系统管理员）${rw_lv}"
-        echo -e "${rw_huang}  • UID 1-999: 系统用户（服务账户）${rw_lv}"
-        echo -e "${rw_huang}  • UID 1000+: 普通用户${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}系统用户列表 (UID 0-999):${rw_lv}"
-        awk -F: 'NR==1 {print "  用户名          UID    主目录"} {print "  "$1"          "$3"    "$6}' /etc/passwd | head -20
-        echo ""
-        echo -e "${rw_huang}普通用户列表 (UID 1000+):${rw_lv}"
-        awk -F: '$3 >= 1000 {print "  用户名: "$1"  |  UID: "$3"  |  主目录: "$6"  |  Shell: "$7}' /etc/passwd
-        echo ""
-        echo -e "${rw_lv}✓ 共发现 $(awk -F: '$3 >= 1000' /etc/passwd | wc -l) 个普通用户${rw_lv}"
-        break_end
-        ;;
-
-      4)
-        clear
-        send_stats "创建新用户"
-        echo -e "${rw_huang}创建新用户${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
-        echo -e "${rw_huang}  在服务器上创建一个新的普通用户${rw_lv}"
-        echo -e "${rw_huang}  新用户创建后可设置密码和添加权限${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
-        echo -e "${rw_huang}  输入新用户名: newuser${rw_lv}"
-        echo -e "${rw_huang}  设置密码后即可登录使用${rw_lv}"
-        echo ""
-        read -e -p "请输入新用户名 [示例:newuser]: " username
-        if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_lv}"
-          break_end
-          continue
-        fi
-        if id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 已存在${rw_lv}"
-          break_end
-          continue
-        fi
-        echo -e "${rw_huang}正在创建用户 $username ...${rw_lv}"
-        useradd -m -s /bin/bash "$username"
-        echo -e "${rw_lv}✓ 用户 $username 创建成功${rw_lv}"
-        echo -e "${rw_huang}  现在可以为该用户设置密码和添加权限${rw_lv}"
-        break_end
-        ;;
-
-      5)
-        clear
-        send_stats "删除用户"
-        echo -e "${rw_huang}删除用户${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📌 功能说明:${rw_lv}"
-        echo -e "${rw_huang}  从服务器上删除一个普通用户${rw_lv}"
-        echo -e "${rw_huang}  注意: 删除后用户数据将无法恢复${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}📝 使用示例:${rw_lv}"
-        echo -e "${rw_huang}  输入用户名: olduser${rw_lv}"
-        echo -e "${rw_huang}  确认后用户将被删除${rw_lv}"
-        echo ""
-        echo -e "${rw_huang}当前普通用户列表:${rw_lv}"
-        awk -F: '$3 >= 1000 && $3 < 65534 {print "  • "$1}' /etc/passwd
-        echo ""
-        read -e -p "请输入要删除的用户名 [示例:olduser]: " username
-        if [ -z "$username" ]; then
-          echo -e "${rw_hong}用户名不能为空${rw_lv}"
-          break_end
-          continue
-        fi
-        if ! id "$username" &>/dev/null; then
-          echo -e "${rw_hong}用户 $username 不存在${rw_lv}"
-          break_end
-          continue
-        fi
-        if [ "$username" = "root" ]; then
-          echo -e "${rw_hong}无法删除root用户${rw_lv}"
-          break_end
-          continue
-        fi
-        read -e -p "确认删除用户 $username ? (y/N): " confirm
-        if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-          userdel -r "$username" 2>/dev/null && echo -e "${rw_lv}✓ 用户 $username 已删除${rw_lv}" || echo -e "${rw_hong}删除失败${rw_lv}"
-        else
-          echo -e "${rw_huang}已取消操作${rw_lv}"
-        fi
-        break_end
-        ;;
-
-      0)
-        return
-        ;;
-
-      *)
-        echo -e "${rw_hong}无效的输入!${rw_lv}"
-        sleep 1
-        ;;
-    esac
-  done
-}
-riwi_Affiliates() {
-
-clear
-send_stats "热门专栏"
-echo -e "${rw_huang}热门专栏${rw_lv}"
-echo -e "${rw_cheng}------------------------${rw_lv}"
-echo ""
-echo -e "${rw_huang}欢迎访问我的仓库!${rw_lv}"
-echo -e "${rw_huang}  • 网站地址: https://github.com/riwi002/mybox${rw_lv}"
-echo ""
-echo -e "${rw_huang}提示: 按任意键返回主菜单${rw_lv}"
-echo ""
-read -n 1
 }
 
 # ================================================================
@@ -22341,7 +21164,7 @@ done
 update_clean_menu() {
 while true; do
   clear
-  send_stats "日常维护"
+  send_stats "日常管理"
 
     # ── 使用缓存的状态探测 ──
     if _should_refresh_cache; then
@@ -22354,6 +21177,7 @@ while true; do
     local _swap_size="0"
     local _f2b_stat="${rw_hong}未安装${rw_lv}"
     local _root_login="${rw_lv}允许${rw_lv}"
+    local _fw_stat="${rw_hong}未运行${rw_lv}"
 
     # SSH 端口
     _ssh_port=$(grep -E '^ *Port [0-9]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
@@ -22381,32 +21205,61 @@ while true; do
 
     # Root 登录状态
     if grep -q "^PermitRootLogin no" /etc/ssh/sshd_config 2>/dev/null; then
-      _root_login="${rw_huang}已禁用${rw_lv}"
+      _root_login="${rw_hong}已禁用${rw_lv}"
     fi
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  日常维护  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " SSH端口 ${rw_lv}${_ssh_port}${rw_lv}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}  fail2ban ${_f2b_stat}"
-    echo -e " Root登录 ${_root_login}"
+    # 防火墙状态（使用缓存）
+    if $_CACHE_FIREWALLD_ACTIVE; then
+      _fw_stat="${rw_lv}firewalld运行中${rw_lv}"
+    elif $_CACHE_UFW_ACTIVE; then
+      _fw_stat="${rw_lv}ufw运行中${rw_lv}"
+    fi
+
+    echo -e "${rw_cheng}━━━━━━━━━━━━  日常管理  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 防火墙 ${_fw_stat}  SSH端口 ${rw_lv}${_ssh_port}${rw_lv}  BBR ${_bbr_stat}  虚拟内存 ${_swap_size}"
+    echo -e " fail2ban ${_f2b_stat}  Root登录 ${_root_login}"
     echo ""
     echo -e " ${rw_cheng}──── 安全加固${rw_lv}"
     echo -e "  ${rw_lv}1${rw_lv} 修改SSH端口           ${rw_lv}2${rw_lv} 禁用ROOT创建"
     echo -e "  ${rw_lv}3${rw_lv} 用户密钥登录          ${rw_lv}4${rw_lv} SSH防御程序"
+    echo -e "  ${rw_lv}5${rw_lv} 病毒扫描工具          ${rw_lv}6${rw_lv} 修复OpenSSH高危漏洞"
+    echo -e "  ${rw_lv}7${rw_lv} 隐私与安全"
     echo ""
     echo -e " ${rw_cheng}──── 性能优化${rw_lv}"
-    echo -e "  ${rw_lv}5${rw_lv} 设置BBR3加速          ${rw_lv}6${rw_lv} 内核参数优化"
-    echo -e "  ${rw_lv}7${rw_lv} 修改虚拟内存大小"
+    echo -e "  ${rw_lv}8${rw_lv} 设置BBR3加速          ${rw_lv}9${rw_lv} 内核参数优化"
+    echo -e " ${rw_lv}10${rw_lv} 修改虚拟内存大小     ${rw_lv}11${rw_lv} 一条龙系统调优"
+    echo -e " ${rw_lv}12${rw_lv} 限流自动关机         ${rw_lv}13${rw_lv} 红帽系Linux内核升级"
     echo ""
     echo -e " ${rw_cheng}──── 监控排查${rw_lv}"
-    echo -e "  ${rw_lv}8${rw_lv} 查看端口              ${rw_lv}9${rw_lv} 网卡管理"
-    echo -e " ${rw_lv}10${rw_lv} 系统日志             ${rw_lv}11${rw_lv} TG-bot预警"
+    echo -e " ${rw_lv}14${rw_lv} 查看端口             ${rw_lv}15${rw_lv} 网卡管理"
+    echo -e " ${rw_lv}16${rw_lv} 系统日志             ${rw_lv}17${rw_lv} TG-bot预警"
     echo ""
     echo -e " ${rw_cheng}──── 数据管理${rw_lv}"
-    echo -e " ${rw_lv}12${rw_lv} 文件管理器           ${rw_lv}13${rw_lv} rsync同步"
-    echo -e " ${rw_lv}14${rw_lv} 备份与恢复           ${rw_lv}15${rw_lv} 定时任务管理"
+    echo -e " ${rw_lv}18${rw_lv} 文件管理器           ${rw_lv}19${rw_lv} rsync同步"
+    echo -e " ${rw_lv}20${rw_lv} 备份与恢复           ${rw_lv}21${rw_lv} 定时任务管理"
+    echo ""
+    echo -e " ${rw_cheng}──── 网络管理${rw_lv}"
+    echo -e " ${rw_lv}22${rw_lv} 优化DNS地址          ${rw_lv}23${rw_lv} 切换优先ipv4/ipv6"
+    echo -e " ${rw_lv}24${rw_lv} 本机host解析         ${rw_lv}25${rw_lv} 防火墙高级管理器"
+    echo ""
+    echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
+    echo -e " ${rw_lv}26${rw_lv} 用户管理             ${rw_lv}27${rw_lv} 用户/密码生成器"
+    echo -e " ${rw_lv}28${rw_lv} ssh远程连接工具"
+    echo ""
+    echo -e " ${rw_cheng}──── 系统配置${rw_lv}"
+    echo -e " ${rw_lv}29${rw_lv} 基础设置             ${rw_lv}30${rw_lv} 系统时区调整"
+    echo -e " ${rw_lv}31${rw_lv} 修改主机名           ${rw_lv}32${rw_lv} 切换系统语言"
+    echo -e " ${rw_lv}33${rw_lv} 切换系统更新源"
+    echo ""
+    echo -e " ${rw_cheng}──── 高级工具${rw_lv}"
+    echo -e " ${rw_lv}34${rw_lv} 命令行美化工具       ${rw_lv}35${rw_lv} 命令行历史记录"
+    echo -e " ${rw_lv}36${rw_lv} 命令收藏夹           ${rw_lv}37${rw_lv} 系统变量管理工具"
+    echo -e " ${rw_lv}38${rw_lv} r命令高级用法        ${rw_lv}39${rw_lv} 设置系统回收站"
     echo ""
     echo -e " ${rw_cheng}──── 系统维护${rw_lv}"
-    echo -e " ${rw_lv}16${rw_lv} 硬盘分区             ${rw_lv}17${rw_lv} 系统更新"
-    echo -e " ${rw_lv}18${rw_lv} 系统清理"
+    echo -e " ${rw_lv}40${rw_lv} 硬盘分区             ${rw_lv}41${rw_lv} 系统更新"
+    echo -e " ${rw_lv}42${rw_lv} 系统清理             ${rw_lv}43${rw_lv} 一键重装系统"
+    echo -e " ${rw_lv}44${rw_lv} 重启服务器           ${rw_lv}45${rw_lv} 卸载Riou脚本"
     echo ""
     echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     echo -e " ${rw_lv}0${rw_lv}  返回主菜单"
@@ -22465,12 +21318,69 @@ while true; do
       fail2ban_panel
       ;;
     5)
-      bbrv3
+      clamav
       ;;
     6)
-      Kernel_optimize
+      root_use
+      send_stats "修复SSH高危漏洞"
+      cd ~
+      curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/upgrade_openssh9.8p1.sh
+      chmod +x ~/upgrade_openssh9.8p1.sh
+      ~/upgrade_openssh9.8p1.sh
+      rm -f ~/upgrade_openssh9.8p1.sh
       ;;
     7)
+      root_use
+      while true; do
+        clear
+        if grep -q '^ENABLE_STATS="true"' /usr/local/bin/r > /dev/null 2>&1; then
+          local status_message="${rw_lv}正在采集数据${rw_lv}"
+        elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/r > /dev/null 2>&1; then
+          local status_message="${rw_lv}采集已关闭${rw_lv}"
+        else
+          local status_message="无法确定的状态"
+        fi
+
+        echo "隐私与安全"
+        echo "脚本将收集用户使用功能的数据，优化脚本体验，制作更多好玩好用的功能"
+        echo "将收集脚本版本号，使用的时间，系统版本，CPU架构，机器所属国家和使用的功能的名称，"
+        echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+        echo -e "当前状态: $status_message"
+        echo -e "${rw_cheng}--------------------${rw_lv}"
+        echo "1. 开启采集"
+        echo "2. 关闭采集"
+        echo -e "${rw_cheng}--------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}--------------------${rw_lv}"
+        read -e -p "请输入你的选择: " sub_choice
+        case $sub_choice in
+          1)
+            cd ~
+            sed -i 's/^ENABLE_STATS="false"/ENABLE_STATS="true"/' /usr/local/bin/r
+            sed -i 's/^ENABLE_STATS="false"/ENABLE_STATS="true"/' ~/riwi.sh
+            echo "已开启采集"
+            send_stats "隐私与安全已开启采集"
+            ;;
+          2)
+            cd ~
+            sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' /usr/local/bin/r
+            sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' ~/riwi.sh
+            echo "已关闭采集"
+            send_stats "隐私与安全已关闭采集"
+            ;;
+          *)
+            break
+            ;;
+        esac
+      done
+      ;;
+    8)
+      bbrv3
+      ;;
+    9)
+      Kernel_optimize
+      ;;
+    10)
       root_use
       send_stats "设置虚拟内存"
       while true; do
@@ -22495,19 +21405,173 @@ while true; do
         esac
       done
       ;;
-    8)
+    11)
+      root_use
+      send_stats "一条龙调优"
+      echo "一条龙系统调优"
+      echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+      echo "将对以下内容进行操作与优化"
+      echo "1. 优化系统更新源，更新系统到最新"
+      echo "2. 清理系统垃圾文件"
+      echo -e "3. 设置虚拟内存${rw_huang}1G${rw_lv}"
+      echo -e "4. 设置SSH端口号为${rw_huang}5522${rw_lv}"
+      echo -e "5. 启动fail2ban防御SSH暴力破解"
+      echo -e "6. 开放所有端口"
+      echo -e "7. 开启${rw_huang}BBR${rw_lv}加速"
+      echo -e "8. 设置时区到${rw_huang}上海${rw_lv}"
+      echo -e "9. 自动优化DNS地址${rw_huang}海外: 1.1.1.1 8.8.8.8  国内: 223.5.5.5 ${rw_lv}"
+      echo -e "10. 设置网络为${rw_huang}ipv4优先${rw_lv}"
+      echo -e "11. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
+      echo -e "12. Linux系统内核参数优化${rw_huang}自动根据网络环境调优${rw_lv}"
+      echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+      read -e -p "确定一键保养吗？(Y/N): " choice
+
+      case "$choice" in
+        [Yy])
+          clear
+          send_stats "一条龙调优启动"
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          switch_mirror false false
+          linux_update
+          echo -e "[${rw_lv}OK${rw_lv}] 1/12. 更新系统到最新"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          linux_clean
+          echo -e "[${rw_lv}OK${rw_lv}] 2/12. 清理系统垃圾文件"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          add_swap 1024
+          echo -e "[${rw_lv}OK${rw_lv}] 3/12. 设置虚拟内存${rw_huang}1G${rw_lv}"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          new_ssh_port 5522
+          echo -e "[${rw_lv}OK${rw_lv}] 4/12. 设置SSH端口号为${rw_huang}5522${rw_lv}"
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          f2b_install_sshd
+          cd ~
+          f2b_status
+          echo -e "[${rw_lv}OK${rw_lv}] 5/12. 启动fail2ban防御SSH暴力破解"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          echo -e "[${rw_lv}OK${rw_lv}] 6/12. 开放所有端口"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          bbr_on
+          echo -e "[${rw_lv}OK${rw_lv}] 7/12. 开启${rw_huang}BBR${rw_lv}加速"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          set_timedate Asia/Shanghai
+          echo -e "[${rw_lv}OK${rw_lv}] 8/12. 设置时区到${rw_huang}上海${rw_lv}"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          auto_optimize_dns
+          echo -e "[${rw_lv}OK${rw_lv}] 9/12. 自动优化DNS地址${rw_huang}${rw_lv}"
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          prefer_ipv4
+          echo -e "[${rw_lv}OK${rw_lv}] 10/12. 设置网络为${rw_huang}ipv4优先${rw_lv}}"
+
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+          install_docker
+          install wget sudo tar unzip socat btop nano vim
+          echo -e "[${rw_lv}OK${rw_lv}] 11/12. 安装基础工具${rw_huang}docker wget sudo tar unzip socat btop nano vim${rw_lv}"
+          echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+
+          curl -sS ${gh_proxy}raw.githubusercontent.com/riwi/sh/refs/heads/main/network-optimize.sh | bash
+          echo -e "[${rw_lv}OK${rw_lv}] 12/12. Linux系统内核参数优化"
+          echo -e "${rw_lv}一条龙系统调优已完成${rw_lv}"
+          ;;
+        [Nn])
+          echo "已取消"
+          ;;
+        *)
+          echo "无效的选择，请输入 Y 或 N。"
+          ;;
+      esac
+      ;;
+    12)
+      root_use
+      send_stats "限流关机功能"
+      while true; do
+        clear
+        echo "限流关机功能"
+        echo "视频介绍: https://www.bilibili.com/video/BV1mC411j7Qd?t=0.1"
+        echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+        echo "当前流量使用情况，重启服务器流量计算会清零！"
+        output_status
+        echo -e "${rw_huang}${rw_huang}总接收${rw_huang}: ${rw_lv}$rx"
+        echo -e "${rw_huang}${rw_huang}总发送${rw_huang}: ${rw_lv}$tx"
+
+        if [ -f ~/Limiting_Shut_down.sh ]; then
+          local rx_threshold_gb=$(sed -n 's/.*rx_threshold_gb=\\([0-9]\\+\\).*/\\1/p' ~/Limiting_Shut_down.sh)
+          local tx_threshold_gb=$(sed -n 's/.*tx_threshold_gb=\\([0-9]\\+\\).*/\\1/p' ~/Limiting_Shut_down.sh)
+          echo -e "${rw_lv}当前设置的进站限流阈值为: ${rw_huang}${rx_threshold_gb}${rw_lv}G${rw_lv}"
+          echo -e "${rw_lv}当前设置的出站限流阈值为: ${rw_huang}${tx_threshold_gb}${rw_lv}GB${rw_lv}"
+        else
+          echo -e "${rw_lv}当前未启用限流关机功能${rw_lv}"
+        fi
+
+        echo
+        echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+        echo "系统每分钟会检测实际流量是否到达阈值，到达后会自动关闭服务器！"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "1. 开启限流关机功能          2. 停用限流关机功能"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "请输入你的选择: " Limiting
+
+        case "$Limiting" in
+          1)
+            echo "如果实际服务器就100G流量，可设置阈值为95G，提前关机，以免出现流量误差或溢出。"
+            read -e -p "请输入进站流量阈值（单位为G，默认100G）: " rx_threshold_gb
+            rx_threshold_gb=${rx_threshold_gb:-100}
+            read -e -p "请输入出站流量阈值（单位为G，默认100G）: " tx_threshold_gb
+            tx_threshold_gb=${tx_threshold_gb:-100}
+            read -e -p "请输入流量重置日期（默认每月1日重置）: " cz_day
+            cz_day=${cz_day:-1}
+
+            cd ~
+            curl -Ss -o ~/Limiting_Shut_down.sh ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/Limiting_Shut_down1.sh
+            chmod +x ~/Limiting_Shut_down.sh
+            sed -i "s/110/$rx_threshold_gb/g" ~/Limiting_Shut_down.sh
+            sed -i "s/120/$tx_threshold_gb/g" ~/Limiting_Shut_down.sh
+            check_crontab_installed
+            crontab -l | grep -v '~/Limiting_Shut_down.sh' | crontab -
+            (crontab -l ; echo "* * * * * ~/Limiting_Shut_down.sh") | crontab - > /dev/null 2>&1
+            crontab -l | grep -v 'reboot' | crontab -
+            (crontab -l ; echo "0 1 $cz_day * * reboot") | crontab - > /dev/null 2>&1
+            echo "限流关机已设置"
+            send_stats "限流关机已设置"
+            ;;
+          2)
+            check_crontab_installed
+            crontab -l | grep -v '~/Limiting_Shut_down.sh' | crontab -
+            crontab -l | grep -v 'reboot' | crontab -
+            rm ~/Limiting_Shut_down.sh
+            echo "已关闭限流关机功能"
+            ;;
+          *)
+            break
+            ;;
+        esac
+      done
+      ;;
+    13)
+      elrepo
+      ;;
+    14)
       clear
       ss -tulnape
       ;;
-    9)
+    15)
       clear
       net_menu
       ;;
-    10)
+    16)
       clear
       log_menu
       ;;
-    11)
+    17)
       root_use
       send_stats "电报预警"
       echo "TG-bot监控预警功能"
@@ -22554,16 +21618,16 @@ while true; do
         *) echo "无效的选择，请输入 Y 或 N。" ;;
       esac
       ;;
-    12)
+    18)
       linux_file
       ;;
-    13)
+    19)
       rsync_manager
       ;;
-    14)
+    20)
       linux_backup
       ;;
-    15)
+    21)
       send_stats "定时任务管理"
       while true; do
         clear
@@ -22602,17 +21666,426 @@ while true; do
         esac
       done
       ;;
-    16)
+    22)
+      set_dns_ui
+      ;;
+    23)
+      root_use
+      send_stats "设置v4/v6优先级"
+      while true; do
+        clear
+        echo "设置v4/v6优先级"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+
+        if grep -Eq '^[[:space:]]*precedence[[:space:]]+::ffff:0:0/96[[:space:]]+100[[:space:]]*$' /etc/gai.conf 2>/dev/null; then
+          echo -e "当前网络优先级设置: ${rw_huang}IPv4${rw_lv} 优先"
+        else
+          echo -e "当前网络优先级设置: ${rw_huang}IPv6${rw_lv} 优先"
+        fi
+
+        echo ""
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "1. IPv4 优先          2. IPv6 优先          3. IPv6 修复工具"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "选择优先的网络: " choice
+
+        case $choice in
+          1)
+            prefer_ipv4
+            ;;
+          2)
+            rm -f /etc/gai.conf
+            echo "已切换为 IPv6 优先"
+            send_stats "已切换为 IPv6 优先"
+            ;;
+          3)
+            clear
+            bash <(curl -L -s jhb.ovh/jb/v6.sh)
+            echo "该功能由jhb大神提供，感谢他！"
+            send_stats "ipv6修复"
+            ;;
+          *)
+            break
+            ;;
+        esac
+      done
+      ;;
+    24)
+      root_use
+      send_stats "本地host解析"
+      while true; do
+        clear
+        echo "本机host解析列表"
+        echo "如果你在这里添加解析匹配，将不再使用动态解析了"
+        cat /etc/hosts
+        echo ""
+        echo "操作"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "1. 添加新的解析              2. 删除解析地址"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "请输入你的选择: " host_dns
+
+        case $host_dns in
+          1)
+            read -e -p "请输入新的解析记录 格式: 110.25.5.33 riwi.pro : " addhost
+            echo "$addhost" >> /etc/hosts
+            send_stats "本地host解析新增"
+            ;;
+          2)
+            read -e -p "请输入需要删除的解析内容关键字: " delhost
+            sed -i "/$delhost/d" /etc/hosts
+            send_stats "本地host解析删除"
+            ;;
+          *)
+            break
+            ;;
+        esac
+      done
+      ;;
+    25)
+      iptables_panel
+      ;;
+    26)
+      while true; do
+        root_use
+        send_stats "用户管理"
+        echo "用户列表"
+        echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_lv}"
+        printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
+        while IFS=: read -r username _ userid groupid _ _ homedir shell; do
+          local groups=$(groups "$username" | cut -d : -f 2)
+          local sudo_status
+          if sudo -n -lU "$username" 2>/dev/null | grep -q "(ALL) \\(NOPASSWD: \\)?ALL"; then
+            sudo_status="Yes"
+          else
+            sudo_status="No"
+          fi
+          printf "%-20s %-30s %-20s %-10s\n" "$username" "$homedir" "$groups" "$sudo_status"
+        done < /etc/passwd
+
+        echo ""
+        echo "账户操作"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "1. 创建普通用户             2. 创建高级用户"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "3. 赋予最高权限             4. 取消最高权限"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "5. 删除账号"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "请输入你的选择: " sub_choice
+
+        case $sub_choice in
+          1)
+            read -e -p "请输入新用户名: " new_username
+            create_user_with_sshkey $new_username false
+            ;;
+          2)
+            read -e -p "请输入新用户名: " new_username
+            create_user_with_sshkey $new_username true
+            ;;
+          3)
+            read -e -p "请输入用户名: " username
+            install sudo
+            cat >"/etc/sudoers.d/$username" <<EOF
+$username ALL=(ALL) NOPASSWD:ALL
+EOF
+            chmod 440 "/etc/sudoers.d/$username"
+            ;;
+          4)
+            read -e -p "请输入用户名: " username
+            if [[ -f "/etc/sudoers.d/$username" ]]; then
+              grep -lR "^$username" /etc/sudoers.d/ 2>/dev/null | xargs rm -f
+            fi
+            sed -i "/^$username\\s*ALL=(ALL)/d" /etc/sudoers
+            ;;
+          5)
+            read -e -p "请输入要删除的用户名: " username
+            userdel -r "$username"
+            ;;
+          *)
+            break
+            ;;
+        esac
+      done
+      ;;
+    27)
+      clear
+      send_stats "用户信息生成器"
+      echo "随机用户名"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      for i in {1..5}; do
+        username="user$(< /dev/urandom tr -dc _a-z0-9 | head -c6)"
+        echo "随机用户名 $i: $username"
+      done
+
+      echo ""
+      echo "随机姓名"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      local first_names=("John" "Jane" "Michael" "Emily" "David" "Sophia" "William" "Olivia" "James" "Emma" "Ava" "Liam" "Mia" "Noah" "Isabella")
+      local last_names=("Smith" "Johnson" "Brown" "Davis" "Wilson" "Miller" "Jones" "Garcia" "Martinez" "Williams" "Lee" "Gonzalez" "Rodriguez" "Hernandez")
+
+      for i in {1..5}; do
+        local first_name_index=$((RANDOM % ${#first_names[@]}))
+        local last_name_index=$((RANDOM % ${#last_names[@]}))
+        local user_name="${first_names[$first_name_index]} ${last_names[$last_name_index]}"
+        echo "随机用户姓名 $i: $user_name"
+      done
+
+      echo ""
+      echo "随机UUID"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      for i in {1..5}; do
+        uuid=$(cat /proc/sys/kernel/random/uuid)
+        echo "随机UUID $i: $uuid"
+      done
+
+      echo ""
+      echo "16位随机密码"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      for i in {1..5}; do
+        local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
+        echo "随机密码 $i: $password"
+      done
+
+      echo ""
+      echo "32位随机密码"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      for i in {1..5}; do
+        local password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32)
+        echo "随机密码 $i: $password"
+      done
+      echo ""
+      ;;
+    28)
+      ssh_manager
+      ;;
+    29)
+      basic_settings_menu
+      ;;
+    30)
+      root_use
+      send_stats "换时区"
+      while true; do
+        clear
+        echo "系统时间信息"
+        local timezone=$(current_timezone)
+        local current_time=$(date +"%Y-%m-%d %H:%M:%S")
+        echo "当前系统时区：$timezone"
+        echo "当前系统时间：$current_time"
+        echo ""
+        echo "时区切换"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "亚洲"
+        echo "1.  中国上海时间             2.  中国香港时间"
+        echo "3.  日本东京时间             4.  韩国首尔时间"
+        echo "5.  新加坡时间               6.  印度加尔各答时间"
+        echo "7.  阿联酋迪拜时间           8.  澳大利亚悉尼时间"
+        echo "9.  泰国曼谷时间"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "欧洲"
+        echo "11. 英国伦敦时间             12. 法国巴黎时间"
+        echo "13. 德国柏林时间             14. 俄罗斯莫斯科时间"
+        echo "15. 荷兰尤特赖赫特时间       16. 西班牙马德里时间"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "美洲"
+        echo "21. 美国西部时间             22. 美国东部时间"
+        echo "23. 加拿大时间               24. 墨西哥时间"
+        echo "25. 巴西时间                 26. 阿根廷时间"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "31. UTC全球标准时间"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo "0. 返回上一级选单"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "请输入你的选择: " sub_choice
+
+        case $sub_choice in
+          1) set_timedate Asia/Shanghai ;;
+          2) set_timedate Asia/Hong_Kong ;;
+          3) set_timedate Asia/Tokyo ;;
+          4) set_timedate Asia/Seoul ;;
+          5) set_timedate Asia/Singapore ;;
+          6) set_timedate Asia/Kolkata ;;
+          7) set_timedate Asia/Dubai ;;
+          8) set_timedate Australia/Sydney ;;
+          9) set_timedate Asia/Bangkok ;;
+          11) set_timedate Europe/London ;;
+          12) set_timedate Europe/Paris ;;
+          13) set_timedate Europe/Berlin ;;
+          14) set_timedate Europe/Moscow ;;
+          15) set_timedate Europe/Amsterdam ;;
+          16) set_timedate Europe/Madrid ;;
+          21) set_timedate America/Los_Angeles ;;
+          22) set_timedate America/New_York ;;
+          23) set_timedate America/Vancouver ;;
+          24) set_timedate America/Mexico_City ;;
+          25) set_timedate America/Sao_Paulo ;;
+          26) set_timedate America/Argentina/Buenos_Aires ;;
+          31) set_timedate UTC ;;
+          *) break ;;
+        esac
+      done
+      ;;
+    31)
+      root_use
+      send_stats "修改主机名"
+      while true; do
+        clear
+        local current_hostname=$(uname -n)
+        echo -e "当前主机名: ${rw_huang}$current_hostname${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        read -e -p "请输入新的主机名（输入0退出）: " new_hostname
+        if [ -n "$new_hostname" ] && [ "$new_hostname" != "0" ]; then
+          if [ -f /etc/alpine-release ]; then
+            echo "$new_hostname" > /etc/hostname
+            hostname "$new_hostname"
+          else
+            hostnamectl set-hostname "$new_hostname"
+            sed -i "s/$current_hostname/$new_hostname/g" /etc/hostname
+            systemctl restart systemd-hostnamed
+          fi
+
+          if grep -q "127.0.0.1" /etc/hosts; then
+            sed -i "s/127.0.0.1 .*/127.0.0.1       $new_hostname localhost localhost.localdomain/g" /etc/hosts
+          else
+            echo "127.0.0.1       $new_hostname localhost localhost.localdomain" >> /etc/hosts
+          fi
+
+          if grep -q "^::1" /etc/hosts; then
+            sed -i "s/^::1 .*/::1             $new_hostname localhost localhost.localdomain ipv6-localhost ipv6-loopback/g" /etc/hosts
+          else
+            echo "::1             $new_hostname localhost localhost.localdomain ipv6-localhost ipv6-loopback" >> /etc/hosts
+          fi
+
+          echo "主机名已更改为: $new_hostname"
+          send_stats "主机名已更改"
+          sleep 1
+        else
+          echo "已退出，未更改主机名。"
+          break
+        fi
+      done
+      ;;
+    32)
+      linux_language
+      ;;
+    33)
+      root_use
+      send_stats "换系统更新源"
+      clear
+      echo "选择更新源区域"
+      echo "接入LinuxMirrors切换系统更新源"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      echo "1. 中国大陆【默认】          2. 中国大陆【教育网】          3. 海外地区          4. 智能切换更新源"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      echo "0. 返回上一级选单"
+      echo -e "${rw_cheng}------------------------${rw_lv}"
+      read -e -p "输入你的选择: " choice
+
+      case $choice in
+        1)
+          send_stats "中国大陆默认源"
+          bash <(curl -sSL https://linuxmirrors.cn/main.sh)
+          ;;
+        2)
+          send_stats "中国大陆教育源"
+          bash <(curl -sSL https://linuxmirrors.cn/main.sh) --edu
+          ;;
+        3)
+          send_stats "海外源"
+          bash <(curl -sSL https://linuxmirrors.cn/main.sh) --abroad
+          ;;
+        4)
+          send_stats "智能切换更新源"
+          switch_mirror false false
+          ;;
+        *)
+          echo "已取消"
+          ;;
+      esac
+      ;;
+    34)
+      shell_bianse
+      ;;
+    35)
+      clear
+      send_stats "命令行历史记录"
+      get_history_file() {
+        for file in "$HOME"/.bash_history "$HOME"/.ash_history "$HOME"/.zsh_history "$HOME"/.local/share/fish/fish_history; do
+          [ -f "$file" ] && { echo "$file"; return; }
+        done
+        return 1
+      }
+
+      history_file=$(get_history_file) && cat -n "$history_file"
+      ;;
+    36)
+      clear
+      linux_fav
+      ;;
+    37)
+      clear
+      env_menu
+      ;;
+    38)
+      clear
+      k_info
+      ;;
+    39)
+      linux_trash
+      ;;
+    40)
       disk_manager
       ;;
-    17) clear ; send_stats "系统更新" ; linux_update ;;
-    18) clear ; send_stats "系统清理" ; linux_clean ;;
+    41) clear ; send_stats "系统更新" ; linux_update ;;
+    42) clear ; send_stats "系统清理" ; linux_clean ;;
+    43)
+      dd_xitong
+      ;;
+    44)
+      clear
+      send_stats "重启系统"
+      server_reboot
+      ;;
+    45)
+      clear
+      send_stats "卸载Riou脚本"
+      echo "卸载Riou脚本"
+      echo -e "${rw_cheng}------------------------------------------------${rw_lv}"
+      echo "将彻底卸载riwi脚本，不影响你其他功能"
+      read -e -p "确定继续吗？(Y/N): " choice
+
+      case "$choice" in
+        [Yy])
+          clear
+          (crontab -l | grep -v "riwi.sh") | crontab -
+          rm -f /usr/local/bin/r
+          rm ~/riwi.sh
+          echo "脚本已卸载，再见！"
+          break_end
+          clear
+          exit
+          ;;
+        [Nn])
+          echo "已取消"
+          ;;
+        *)
+          echo "无效的选择，请输入 Y 或 N。"
+          ;;
+      esac
+      ;;
     0) break ;;
     *) echo "无效的输入!" ;;
   esac
   break_end
 done
 }
+
 
 
 riwi_sh() {
@@ -22646,18 +22119,16 @@ echo -e "$(orange "Riou脚本工具箱 v$sh_v")"
 echo -e "命令行输入$(orange "r")可快速启动脚本${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}系统查询${rw_lv}"
-echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}日常维护${rw_lv}"
+echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}日常管理${rw_lv}"
 echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}安装环境${rw_lv}"
-echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}GitHub管理器${rw_lv}"
-echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}Docker全管理${rw_lv}"
-echo -e "${rw_huang}6.   ${rw_lv}${rw_lv}LDNMP建站${rw_lv}"
-echo -e "${rw_huang}7.   ${rw_lv}${rw_lv}应用市场${rw_lv}"
+echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}Git管理${rw_lv}"
+echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}应用市场${rw_lv}"
+echo -e "${rw_huang}6.   ${rw_lv}${rw_lv}热门专栏${rw_lv}"
+echo -e "${rw_huang}7.   ${rw_lv}${rw_lv}其他管理${rw_lv}"
 echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}后台工作区${rw_lv}"
-echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}系统工具${rw_lv}"
-echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}服务器集群控制${rw_lv}"
-echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}安全优化${rw_lv}"
-echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}热门专栏${rw_lv}"
-echo -e "${rw_huang}13.  ${rw_lv}${rw_lv}其他管理${rw_lv}"
+echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}Docker${rw_lv}"
+echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}LDNMP建站${rw_lv}"
+echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}服务器集群控制${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}退出脚本${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -22668,15 +22139,13 @@ case $choice in
   2) update_clean_menu ;;
   3) linux_tools ;;
   4) github_manager ;;
-  5) docker_manager_menu ;;
-  6) ldnmp_builder_menu ;;
-  7) linux_panel ;;
+  5) linux_panel ;;
+  6) riwi_Affiliates ;;
+  7) other_panel_manager ;;
   8) linux_work ;;
-  9) linux_Settings ;;
-  10) linux_cluster ;;
-  11) linux_security ;;
-  12) riwi_Affiliates ;;
-  13) other_panel_manager ;;
+  9) docker_manager_menu ;;
+  10) ldnmp_builder_menu ;;
+  11) linux_cluster ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
@@ -22890,7 +22359,7 @@ done
 
 
 # ================================================================
-# GitHub管理器函数
+# Git管理函数
 # ================================================================
 # 功能: 提供GitHub仓库管理功能
 # 包含: 克隆仓库、查看分支、暂存文件、提交推送等
@@ -23813,7 +23282,7 @@ HOOK_EOF
 github_manager() {
   while true; do
     clear
-    send_stats "GitHub管理器"
+    send_stats "Git管理"
 
     # ── 状态探测 ──
     local _git_repo="${rw_hong}未初始化${rw_lv}"
@@ -23857,7 +23326,7 @@ github_manager() {
     echo -e " ${rw_huang}17${rw_lv} 移除远程仓库         ${rw_huang}18${rw_lv} 移除远程分支"
     echo ""
     echo -e " ${rw_cheng}──── 其他${rw_lv}"
-    echo -e " ${rw_huang}19${rw_lv} 切换Git源"
+    echo -e " ${rw_huang}19${rw_lv} 切换Git源          ${rw_huang}20${rw_lv} GitHooks 部署"
     echo ""
     echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
     echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
@@ -24494,6 +23963,9 @@ GITIGNORE_EOF
       19)
         switch_git_mirror
         ;;
+      20)
+        git_hooks_deploy
+        ;;
       0)
         clear
         return
@@ -24508,7 +23980,7 @@ GITIGNORE_EOF
 docker_manager_menu() {
   while true; do
     clear
-    send_stats "Docker全管理"
+    send_stats "Docker"
 
     # ── 状态探测（容器/镜像数量每次刷新，状态使用缓存）──
     if _should_refresh_cache; then
@@ -26512,7 +25984,7 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _1p_stat="${rw_hong}未安装${rw_lv}" _ngx_stat="${rw_hong}未安装${rw_lv}" _gh_stat="${rw_hong}未安装${rw_lv}" _py_stat="${rw_hong}未安装${rw_lv}"
+	local _1p_stat="${rw_hong}未安装${rw_lv}" _ngx_stat="${rw_hong}未安装${rw_lv}" _py_stat="${rw_hong}未安装${rw_lv}"
 
 	# 1Panel 状态
 	if command -v 1pctl &>/dev/null; then
@@ -26536,19 +26008,12 @@ while true; do
 		_py_stat="${rw_lv}$(python3 --version 2>/dev/null | sed 's/Python //')${rw_lv}"
 	fi
 
-	# GitHooks 状态（检查是否已配置）
-	if [ -d /home/githooks ] || command -v git &>/dev/null; then
-		_gh_stat="${rw_lv}可用${rw_lv}"
-	fi
-
 	echo -e "${rw_cheng}━━━━━━━━━━━━  其他管理面板  ━━━━━━━━━━━━${rw_lv}"
 	echo -e " 1Panel ${_1p_stat}    Nginx ${_ngx_stat}    Python ${_py_stat}"
-	echo -e " GitHooks ${_gh_stat}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e "${rw_huang}1.  ${rw_lv}${rw_lv}1Panel 面板管理${rw_lv}"
 	echo -e "${rw_huang}2.  ${rw_lv}${rw_lv}Nginx 管理器${rw_lv}"
 	echo -e "${rw_huang}3.  ${rw_lv}${rw_lv}Python 管理${rw_lv}"
-	echo -e "${rw_huang}4.  ${rw_lv}${rw_lv}GitHooks 部署${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e "${rw_huang}0.  ${rw_lv}${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -26558,7 +26023,6 @@ while true; do
 	  1) one_panel_manager ;;
 	  2) ngxing_manager ;;
 	  3) python_manager ;;
-	  4) git_hooks_deploy ;;
 	  0) return ;;
 	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
 	esac
@@ -26764,7 +26228,7 @@ else
 					docker_image
 					;;
 				manager|管理|"")
-					send_stats "Docker全管理"
+					send_stats "Docker"
 					docker_manager_menu
 					;;
 				*)
