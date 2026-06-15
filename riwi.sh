@@ -20212,7 +20212,6 @@ env_menu() {
 
 create_user_with_sshkey() {
 	local new_username="$1"
-	local is_sudo="${2:-false}"
 	local sshkey_vl
 
 	if [[ -z "$new_username" ]]; then
@@ -20220,13 +20219,27 @@ create_user_with_sshkey() {
 		return 1
 	fi
 
-	# 创建用户
-	useradd -m -s /bin/bash "$new_username" || return 1
+	# 检查用户是否已存在
+	if id "$new_username" &>/dev/null; then
+		echo -e "${rw_hong}错误：用户 $new_username 已存在！${rw_lv}"
+		return 1
+	fi
 
+	# ====== 第1步：创建用户 ======
+	echo -e "${rw_huang}[1/5] 创建用户 $new_username ...${rw_lv}"
+	useradd -m -s /bin/bash "$new_username" || return 1
+	echo -e "${rw_lv}  ✓ 用户 $new_username 创建成功${rw_lv}"
+
+	# ====== 第2步：设置密码 ======
+	echo -e "${rw_huang}[2/5] 设置用户密码 ...${rw_lv}"
+	passwd "$new_username"
+
+	# ====== 第3步：导入 SSH 公钥 ======
+	echo -e "${rw_huang}[3/5] 导入 SSH 公钥 ...${rw_lv}"
 	echo "导入公钥范例："
 	echo "  - URL：      ${gh_https_url}github.com/torvalds.keys"
 	echo "  - 直接粘贴： ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI..."
-	read -e -p "请导入 ${new_username} 的公钥: " sshkey_vl
+	read -e -p "请导入 ${new_username} 的公钥（留空跳过）: " sshkey_vl
 
 	case "$sshkey_vl" in
 		http://*|https://*)
@@ -20237,32 +20250,67 @@ create_user_with_sshkey() {
 			send_stats "公钥直接导入"
 			import_sshkey "$sshkey_vl" "/home/$new_username"
 			;;
+		"")
+			echo -e "${rw_huang}  - 跳过 SSH 公钥导入${rw_lv}"
+			;;
 		*)
-			echo "错误：未知参数 '$sshkey_vl'"
-			return 1
+			echo -e "${rw_hong}错误：未知公钥格式，跳过导入${rw_lv}"
 			;;
 	esac
 
+	# 修正 .ssh 权限
+	chown -R "$new_username:$new_username" "/home/$new_username/.ssh" 2>/dev/null
 
-	# 修正权限
-	chown -R "$new_username:$new_username" "/home/$new_username/.ssh"
-
+	# ====== 第4步：赋予 sudo 最高权限 ======
+	echo -e "${rw_huang}[4/5] 赋予 sudo 最高权限 ...${rw_lv}"
 	install sudo
-
-	# sudo 免密
-	if [[ "$is_sudo" == "true" ]]; then
-		cat >"/etc/sudoers.d/$new_username" <<EOF
+	cat >"/etc/sudoers.d/$new_username" <<EOF
 $new_username ALL=(ALL) NOPASSWD:ALL
 EOF
-		chmod 440 "/etc/sudoers.d/$new_username"
-	fi
+	chmod 440 "/etc/sudoers.d/$new_username"
+	echo -e "${rw_lv}  ✓ 已写入 /etc/sudoers.d/$new_username → NOPASSWD:ALL${rw_lv}"
 
+	# ====== 第5步：配置 SSH + 锁定密码登录 ======
+	echo -e "${rw_huang}[5/5] 配置 SSH 并锁定密码登录 ...${rw_lv}"
 	sed -i '/^\s*#\?\s*UsePAM\s\+/d' /etc/ssh/sshd_config
 	echo 'UsePAM yes' >> /etc/ssh/sshd_config
 	passwd -l "$new_username" &>/dev/null
 	restart_ssh
+	echo -e "${rw_lv}  ✓ SSH 配置完成，密码登录已锁定（仅密钥登录）${rw_lv}"
 
-	echo "用户 $new_username 创建完成"
+	echo ""
+	echo -e "${rw_cheng}============================================${rw_lv}"
+	echo -e "${rw_cheng}  用户 $new_username 创建完成！${rw_lv}"
+	echo -e "${rw_cheng}============================================${rw_lv}"
+
+	# ====== 自动探测：用户组 & sudo 权限 ======
+	echo ""
+	echo -e "${rw_huang}>>> 自动探测验证 <<<${rw_lv}"
+
+	# 用户组探测
+	local user_groups=$(groups "$new_username" 2>/dev/null | cut -d : -f 2 | xargs)
+	echo -e "  用户组: ${rw_lv}${user_groups}${rw_lv}"
+
+	# sudo 权限探测（文件级 + 组级）
+	local sudo_ok="否"
+	if [[ -f "/etc/sudoers.d/$new_username" ]] && grep -qE "^\s*${new_username}\s+ALL=\(ALL\)" "/etc/sudoers.d/$new_username" 2>/dev/null; then
+		sudo_ok="是"
+	elif grep -qE "^\s*${new_username}\s+ALL=\(ALL\)" /etc/sudoers 2>/dev/null; then
+		sudo_ok="是"
+	elif echo "$user_groups" | grep -qE '(^|[[:space:]])(sudo|wheel)($|[[:space:]])'; then
+		sudo_ok="是"
+	fi
+
+	if [[ "$sudo_ok" == "是" ]]; then
+		echo -e "  sudo权限: ${rw_lv}✓ 已配置 NOPASSWD:ALL${rw_lv}"
+	else
+		echo -e "  sudo权限: ${rw_hong}✗ 未探测到，请手动检查${rw_lv}"
+	fi
+
+	# 密码状态探测
+	local passwd_status=$(passwd -S "$new_username" 2>/dev/null | awk '{print $2}')
+	echo -e "  密码状态: ${rw_huang}${passwd_status}${rw_lv} (L=锁定, P=可用)"
+	echo ""
 }
 
 
@@ -21753,29 +21801,65 @@ while true; do
       while true; do
         root_use
         send_stats "用户管理"
-        echo "用户列表（自动探测 sudo 高级用户状态）"
-        echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_lv}"
-        printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
+
+        # ====== 顶部自动探测面板 ======
+        echo -e "${rw_cheng}╔══════════════════════════════════════════════════════════════╗${rw_lv}"
+        echo -e "${rw_cheng}║              自动探测：系统用户权限概览                      ║${rw_lv}"
+        echo -e "${rw_cheng}╚══════════════════════════════════════════════════════════════╝${rw_lv}"
+
+        # 统计总数
+        local total_users=0 sudo_users=0 normal_users=0
         while IFS=: read -r username _ userid groupid _ _ homedir shell; do
-          local groups=$(groups "$username" | cut -d : -f 2)
-          local sudo_status
-          if sudo -n -lU "$username" 2>/dev/null | grep -q "(ALL) \\(NOPASSWD: \\)?ALL"; then
-            sudo_status="Yes"
+          ((total_users++))
+          local g=$(groups "$username" 2>/dev/null | cut -d : -f 2)
+          local has_sudo=0
+          [[ -f "/etc/sudoers.d/$username" ]] && grep -qE "^\s*${username}\s+ALL=\(ALL\)" "/etc/sudoers.d/$username" 2>/dev/null && has_sudo=1
+          grep -qE "^\s*${username}\s+ALL=\(ALL\)" /etc/sudoers 2>/dev/null && has_sudo=1
+          [[ "$g" =~ (^|[[:space:]])sudo($|[[:space:]]) ]] && has_sudo=1
+          [[ "$g" =~ (^|[[:space:]])wheel($|[[:space:]]) ]] && has_sudo=1
+          if [[ "$has_sudo" -eq 1 ]]; then
+            ((sudo_users++))
           else
-            sudo_status="No"
+            ((normal_users++))
           fi
-          printf "%-20s %-30s %-20s %-10s\n" "$username" "$homedir" "$groups" "$sudo_status"
         done < /etc/passwd
 
+        echo -e "  系统总用户数: ${rw_huang}${total_users}${rw_lv}    |    sudo 高级用户: ${rw_lv}${sudo_users}${rw_lv}    |    普通用户: ${rw_huang}${normal_users}${rw_lv}"
         echo ""
+
+        # 列表表头
+        echo "  用户详细列表"
+        echo -e "${rw_cheng}  ----------------------------------------------------------------${rw_lv}"
+        printf "  %-16s %-28s %-18s %-6s %-12s\n" "用户名" "用户主目录" "用户组" "UID" "sudo权限"
+        echo -e "${rw_cheng}  ----------------------------------------------------------------${rw_lv}"
+
+        while IFS=: read -r username _ userid groupid _ _ homedir shell; do
+          local groups=$(groups "$username" 2>/dev/null | cut -d : -f 2)
+          local sudo_status="No"
+          [[ -f "/etc/sudoers.d/$username" ]] && grep -qE "^\s*${username}\s+ALL=\(ALL\)" "/etc/sudoers.d/$username" 2>/dev/null && sudo_status="${rw_lv}Yes${rw_lv}"
+          [[ "$sudo_status" == "No" ]] && grep -qE "^\s*${username}\s+ALL=\(ALL\)" /etc/sudoers 2>/dev/null && sudo_status="${rw_lv}Yes${rw_lv}"
+          [[ "$sudo_status" == "No" ]] && ([[ "$groups" =~ (^|[[:space:]])sudo($|[[:space:]]) ]] || [[ "$groups" =~ (^|[[:space:]])wheel($|[[:space:]]) ]]) && sudo_status="${rw_lv}Yes${rw_lv}"
+
+          local display_home="$homedir"
+          [[ ${#display_home} -gt 28 ]] && display_home="...${display_home: -25}"
+
+          if [[ "$sudo_status" == "No" ]]; then
+            printf "  %-16s %-28s %-18s %-6s %s\n" "$username" "$display_home" "$groups" "$userid" "No"
+          else
+            printf "  %-16s %-28s %-18s %-6s %b\n" "$username" "$display_home" "$groups" "$userid" "$sudo_status"
+          fi
+        done < /etc/passwd
+
+        echo -e "${rw_cheng}  ----------------------------------------------------------------${rw_lv}"
+        echo ""
+
         echo "账户操作"
         echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo "1. 创建普通用户             2. 创建高级用户"
-        echo -e "${rw_cheng}  (两者均自动赋予 sudo 最高权限)  ${rw_lv}"
+        echo "1. 创建用户（含密码+密钥+sudo最高权限）"
         echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo "3. 取消最高权限"
+        echo "2. 取消最高权限"
         echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo "4. 删除账号"
+        echo "3. 删除账号"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "0. 返回上一级选单"
         echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -21784,26 +21868,23 @@ while true; do
         case $sub_choice in
           1)
             read -e -p "请输入新用户名: " new_username
-            create_user_with_sshkey $new_username true
+            create_user_with_sshkey "$new_username"
             ;;
           2)
-            read -e -p "请输入新用户名: " new_username
-            create_user_with_sshkey $new_username true
-            ;;
-          3)
             read -e -p "请输入用户名: " username
             if [[ -f "/etc/sudoers.d/$username" ]]; then
               grep -lR "^$username" /etc/sudoers.d/ 2>/dev/null | xargs rm -f
             fi
             sed -i "/^$username\\s*ALL=(ALL)/d" /etc/sudoers
-            # 探测并提示当前 sudo 状态
-            if sudo -n -lU "$username" 2>/dev/null | grep -q "(ALL)"; then
-              echo -e "${rw_cheng}[提示] 用户 $username 仍有其他来源的 sudo 权限，请手动检查 /etc/sudoers${rw_lv}"
+            if [[ -f "/etc/sudoers.d/$username" ]] && grep -qE "^\s*${username}\s+ALL=\(ALL\)" "/etc/sudoers.d/$username" 2>/dev/null; then
+              echo -e "${rw_cheng}[提示] 用户 $username 仍有 sudoers.d 权限残留${rw_lv}"
+            elif grep -qE "^\s*${username}\s+ALL=\(ALL\)" /etc/sudoers 2>/dev/null; then
+              echo -e "${rw_cheng}[提示] 用户 $username 在 /etc/sudoers 中仍有权限残留${rw_lv}"
             else
-              echo -e "[OK] 用户 $username 的 sudo 权限已取消"
+              echo -e "${rw_lv}[OK] 用户 $username 的 sudo 权限已取消${rw_lv}"
             fi
             ;;
-          4)
+          3)
             read -e -p "请输入要删除的用户名: " username
             userdel -r "$username"
             ;;
