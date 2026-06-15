@@ -21753,7 +21753,7 @@ while true; do
       while true; do
         root_use
         send_stats "用户管理"
-        echo "用户列表"
+        echo "用户列表（自动探测 sudo 高级用户状态）"
         echo -e "${rw_cheng}----------------------------------------------------------------------------${rw_lv}"
         printf "%-24s %-34s %-20s %-10s\n" "用户名" "用户权限" "用户组" "sudo权限"
         while IFS=: read -r username _ userid groupid _ _ homedir shell; do
@@ -21771,10 +21771,11 @@ while true; do
         echo "账户操作"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "1. 创建普通用户             2. 创建高级用户"
+        echo -e "${rw_cheng}  (两者均自动赋予 sudo 最高权限)  ${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo "3. 赋予最高权限             4. 取消最高权限"
+        echo "3. 取消最高权限"
         echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo "5. 删除账号"
+        echo "4. 删除账号"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo "0. 返回上一级选单"
         echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -21783,7 +21784,7 @@ while true; do
         case $sub_choice in
           1)
             read -e -p "请输入新用户名: " new_username
-            create_user_with_sshkey $new_username false
+            create_user_with_sshkey $new_username true
             ;;
           2)
             read -e -p "请输入新用户名: " new_username
@@ -21791,20 +21792,18 @@ while true; do
             ;;
           3)
             read -e -p "请输入用户名: " username
-            install sudo
-            cat >"/etc/sudoers.d/$username" <<EOF
-$username ALL=(ALL) NOPASSWD:ALL
-EOF
-            chmod 440 "/etc/sudoers.d/$username"
-            ;;
-          4)
-            read -e -p "请输入用户名: " username
             if [[ -f "/etc/sudoers.d/$username" ]]; then
               grep -lR "^$username" /etc/sudoers.d/ 2>/dev/null | xargs rm -f
             fi
             sed -i "/^$username\\s*ALL=(ALL)/d" /etc/sudoers
+            # 探测并提示当前 sudo 状态
+            if sudo -n -lU "$username" 2>/dev/null | grep -q "(ALL)"; then
+              echo -e "${rw_cheng}[提示] 用户 $username 仍有其他来源的 sudo 权限，请手动检查 /etc/sudoers${rw_lv}"
+            else
+              echo -e "[OK] 用户 $username 的 sudo 权限已取消"
+            fi
             ;;
-          5)
+          4)
             read -e -p "请输入要删除的用户名: " username
             userdel -r "$username"
             ;;
