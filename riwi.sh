@@ -21292,7 +21292,7 @@ while true; do
     echo ""
     echo -e " ${rw_cheng}──── 用户管理${rw_lv}"
     echo -e " ${rw_lv}26${rw_lv} 用户管理             ${rw_lv}27${rw_lv} 用户/密码生成器"
-    echo -e " ${rw_lv}28${rw_lv} ssh远程连接工具"
+    echo -e " ${rw_lv}28${rw_lv} ssh远程连接工具       ${rw_lv}46${rw_lv} SSH免密登录权限检查"
     echo ""
     echo -e " ${rw_cheng}──── 系统配置${rw_lv}"
     echo -e " ${rw_lv}29${rw_lv} 基础设置             ${rw_lv}30${rw_lv} 系统时区调整"
@@ -22159,11 +22159,162 @@ while true; do
           ;;
       esac
       ;;
+    46)
+      ssh_key_permission_check
+      ;;
     0) break ;;
     *) echo "无效的输入!" ;;
   esac
   break_end
 done
+}
+
+
+# SSH 免密登录权限检查与修复
+ssh_key_permission_check() {
+  root_use
+  send_stats "SSH免密登录权限检查"
+
+  clear
+  echo -e "${rw_cheng}╔══════════════════════════════════════════════════════════════╗${rw_lv}"
+  echo -e "${rw_cheng}║           SSH 免密登录权限检查与修复工具                     ║${rw_lv}"
+  echo -e "${rw_cheng}╚══════════════════════════════════════════════════════════════╝${rw_lv}"
+  echo ""
+
+  # 列出系统中所有有 .ssh 目录的用户
+  echo -e "${rw_huang}正在扫描系统中存在 SSH 配置的用户...${rw_lv}"
+  echo ""
+
+  local found_any=0
+  while IFS=: read -r username _ uid _ _ _ homedir shell; do
+    # 跳过系统用户（UID < 1000 且不是 root）
+    [[ "$uid" -lt 1000 && "$username" != "root" ]] && continue
+    # 跳过无家目录或家目录不存在的用户
+    [[ -z "$homedir" || ! -d "$homedir" ]] && continue
+
+    local ssh_dir="${homedir}/.ssh"
+    local auth_keys="${ssh_dir}/authorized_keys"
+
+    if [[ -d "$ssh_dir" ]]; then
+      found_any=1
+      echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+      echo -e "  用户: ${rw_huang}${username}${rw_lv}  (UID: ${uid})"
+      echo -e "  家目录: ${homedir}"
+      echo ""
+
+      # 1. 检查 .ssh 目录权限 (应为 700 / drwx------)
+      local ssh_perm=$(stat -c "%a" "$ssh_dir" 2>/dev/null)
+      local ssh_perm_display=$(stat -c "%A" "$ssh_dir" 2>/dev/null)
+      echo -ne "  .ssh 目录权限: ${ssh_perm_display} (${ssh_perm})  →  "
+      if [[ "$ssh_perm" == "700" ]]; then
+        echo -e "${rw_lv}✓ 正确${rw_lv}"
+      else
+        echo -e "${rw_hong}✗ 应修复为 700 (drwx------)${rw_lv}"
+      fi
+
+      # 2. 检查 .ssh 目录所有者
+      local ssh_owner=$(stat -c "%U:%G" "$ssh_dir" 2>/dev/null)
+      echo -ne "  .ssh 目录所有者: ${ssh_owner}  →  "
+      if [[ "$ssh_owner" == "${username}:"* ]]; then
+        echo -e "${rw_lv}✓ 正确${rw_lv}"
+      else
+        echo -e "${rw_hong}✗ 应修复为 ${username}:${username}${rw_lv}"
+      fi
+
+      # 3. 检查 authorized_keys 文件
+      if [[ -f "$auth_keys" ]]; then
+        local ak_perm=$(stat -c "%a" "$auth_keys" 2>/dev/null)
+        local ak_perm_display=$(stat -c "%A" "$auth_keys" 2>/dev/null)
+        local ak_owner=$(stat -c "%U:%G" "$auth_keys" 2>/dev/null)
+        local key_count=$(grep -cE '^(ssh-rsa|ssh-ed25519|ssh-ecdsa|ecdsa-sha2)' "$auth_keys" 2>/dev/null)
+
+        echo ""
+        echo -e "  ${rw_huang}authorized_keys 文件:${rw_lv}"
+        echo -ne "    权限: ${ak_perm_display} (${ak_perm})  →  "
+        if [[ "$ak_perm" == "600" ]]; then
+          echo -e "${rw_lv}✓ 正确${rw_lv}"
+        else
+          echo -e "${rw_hong}✗ 应修复为 600 (-rw-------)${rw_lv}"
+        fi
+
+        echo -ne "    所有者: ${ak_owner}  →  "
+        if [[ "$ak_owner" == "${username}:"* ]]; then
+          echo -e "${rw_lv}✓ 正确${rw_lv}"
+        else
+          echo -e "${rw_hong}✗ 应修复为 ${username}:${username}${rw_lv}"
+        fi
+
+        echo -e "    公钥数量: ${rw_lv}${key_count}${rw_lv} 个"
+      else
+        echo ""
+        echo -e "  ${rw_huang}authorized_keys: ${rw_hong}文件不存在${rw_lv}"
+      fi
+    fi
+  done < /etc/passwd
+
+  if [[ "$found_any" -eq 0 ]]; then
+    echo -e "${rw_huang}系统中未发现任何用户的 .ssh 配置目录。${rw_lv}"
+  fi
+
+  echo ""
+  echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+  echo ""
+  echo -e "${rw_cheng}------------------------${rw_lv}"
+  echo "1. 一键修复所有权限问题"
+  echo "2. 修复指定用户"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
+  echo "0. 返回上一级选单"
+  echo -e "${rw_cheng}------------------------${rw_lv}"
+  read -e -p "请输入你的选择: " fix_choice
+
+  case $fix_choice in
+    1)
+      echo ""
+      echo -e "${rw_huang}正在一键修复所有用户的 SSH 权限...${rw_lv}"
+      while IFS=: read -r username _ uid _ _ _ homedir shell; do
+        [[ "$uid" -lt 1000 && "$username" != "root" ]] && continue
+        [[ -z "$homedir" || ! -d "$homedir" ]] && continue
+        local ssh_dir="${homedir}/.ssh"
+
+        if [[ -d "$ssh_dir" ]]; then
+          chmod 700 "$ssh_dir"
+          chown -R "${username}:${username}" "$ssh_dir"
+          [[ -f "${ssh_dir}/authorized_keys" ]] && chmod 600 "${ssh_dir}/authorized_keys"
+          echo -e "  ${rw_lv}✓ 已修复用户 ${username}${rw_lv}"
+        fi
+      done < /etc/passwd
+      echo ""
+      echo -e "${rw_lv}全部修复完成！${rw_lv}"
+      ;;
+    2)
+      echo ""
+      read -e -p "请输入要修复的用户名: " target_user
+      if ! id "$target_user" &>/dev/null; then
+        echo -e "${rw_hong}错误：用户 $target_user 不存在！${rw_lv}"
+      else
+        local target_home=$(eval echo "~$target_user")
+        local target_ssh="${target_home}/.ssh"
+        if [[ -d "$target_ssh" ]]; then
+          chmod 700 "$target_ssh"
+          chown -R "${target_user}:${target_user}" "$target_ssh"
+          [[ -f "${target_ssh}/authorized_keys" ]] && chmod 600 "${target_ssh}/authorized_keys"
+          echo -e "${rw_lv}✓ 已修复用户 ${target_user} 的 SSH 权限${rw_lv}"
+        else
+          echo -e "${rw_huang}用户 ${target_user} 没有 .ssh 目录，无需修复${rw_lv}"
+        fi
+      fi
+      ;;
+    *)
+      ;;
+  esac
+
+  echo ""
+  echo -e "${rw_huang}💡 安全说明：${rw_lv}"
+  echo -e "  • .ssh 目录权限必须为 ${rw_lv}700 (drwx------)${rw_lv}，否则 SSH 拒绝使用密钥"
+  echo -e "  • authorized_keys 权限必须为 ${rw_lv}600 (-rw-------)${rw_lv}，否则 SSH 拒绝免密登录"
+  echo -e "  • .ssh 目录及 authorized_keys 的所有者必须为用户本人"
+  echo -e "  • 以上三项全部正确，才能正常使用 SSH 密钥免密登录"
+  break_end
 }
 
 
