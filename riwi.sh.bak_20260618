@@ -22538,9 +22538,9 @@ while true; do
 	echo ""
 	echo -e " ${rw_cheng}──── 密钥管理${rw_lv}"
 	echo -e " ${rw_huang}8.   ${rw_lv}添加 SSH 公钥${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请输入你的选择: " ssh_choice
 
 	case $ssh_choice in
@@ -22773,25 +22773,17 @@ while true; do
 			# 全局模式：PasswordAuthentication no + PubkeyAuthentication yes + PermitRootLogin no
 			sed -i -E 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 			sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-			# 询问是否禁止 root（附加选项）
-			echo ""
-			echo -e " ${rw_cheng}── 附加选项 ──${rw_lv}"
-			echo -e " 是否同时禁止 root SSH 登录？(PermitRootLogin no)"
-			read -e -p " 确认？(y/N): " _root_confirm < /dev/tty
-			if [[ "$_root_confirm" =~ ^[Yy]$ ]]; then
-				sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-				green "已同时禁止 root SSH 登录"
-			else
-				yellow "保留 root SSH 登录设置（未修改 PermitRootLogin）"
-			fi
+			sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
 			# 如果参数不存在则追加
 			grep -qE '^PasswordAuthentication' /etc/ssh/sshd_config || echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
 			grep -qE '^PubkeyAuthentication' /etc/ssh/sshd_config || echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+			grep -qE '^PermitRootLogin' /etc/ssh/sshd_config || echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 
 			green "全局配置已更新："
 			green "  - 密码登录已禁止"
 			green "  - 密钥登录已允许"
+			green "  - root SSH 登录已禁止"
 		else
 			# 单用户模式：用 Match User 块，不影响全局
 			# 安全删除已存在的该用户 Match 块（用行号精确删除，避免 sed 正则 bug）
@@ -22974,8 +22966,7 @@ EOF
 		else
 			yellow "已取消"
 		fi
-		;;
-	  8)
+		;;	  8)
 		root_use
 		clear
 		echo ""
@@ -23122,13 +23113,13 @@ EOF
 			fi
 			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
 			;;
-		  0)
-			;;
 		  *)
-			[[ "$_key_choice" != "0" ]] && red "无效的输入!"
-			;;
-		esac
+			[[ "$_key_choic		;;
+		  *)
+		[[ "$_key_choice" != "0" ]] && red "无效的输入!"
 		;;
+	esac
+	;;
 
 	  0)
 		break
