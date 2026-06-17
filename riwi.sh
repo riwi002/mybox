@@ -20272,8 +20272,16 @@ EOF
 
 	# ====== 第5步：配置 SSH + 锁定密码登录 ======
 	echo -e "${rw_huang}[5/5] 配置 SSH 并锁定密码登录 ...${rw_lv}"
-	sed -i '/^\s*#\?\s*UsePAM\s\+/d' /etc/ssh/sshd_config
-	echo 'UsePAM yes' >> /etc/ssh/sshd_config
+	# 安全设置 UsePAM：修改已有行（取消注释），而不是追加到文件末尾
+	# 原因：>> 追加会把 UsePAM 写到 Match 块后面，导致语法错误/认证失败
+	if grep -qE '^#?[[:space:]]*UsePAM' /etc/ssh/sshd_config 2>/dev/null; then
+		sed -i -E 's/^#?[[:space:]]*UsePAM[[:space:]]+.*/UsePAM yes/' /etc/ssh/sshd_config
+	else
+		# 不存在：追加到文件末尾（确保不在 Match 块内）
+		echo '' >> /etc/ssh/sshd_config
+		echo '# PAM 认证（由创建用户脚本添加）' >> /etc/ssh/sshd_config
+		echo 'UsePAM yes' >> /etc/ssh/sshd_config
+	fi
 	passwd -l "$new_username" &>/dev/null
 	restart_ssh
 	echo -e "${rw_lv}  ✓ SSH 配置完成，密码登录已锁定（仅密钥登录）${rw_lv}"
@@ -22958,9 +22966,75 @@ EOF
 		else
 			yellow "已取消"
 		fi
-		;;
-	  8)
+		;;	  8)
+		root_use
+		clear
 		echo ""
+		echo -e "${rw_cheng}━━━━━━ 添加 SSH 公钥 ━━━━━━${rw_lv}"
+		echo ""
+
+		# ── 选择目标用户 ──
+		echo -e " ${rw_cheng}── 请选择目标用户 ──${rw_lv}"
+		local _cur_usr=$(whoami)
+		echo -e " ${rw_huang}0.   ${rw_lv}${_cur_usr}（当前用户，uid=$(id -u)）→ 自动检测 home 目录${rw_lv}"
+		# 列出所有 uid >= 1000 的普通用户
+		local _users_list=()
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[[ "$_uid" -ge 1000 ]] && [[ -d "$_home" ]] && _users_list+=("$_u")
+		done </etc/passwd
+
+		local _ui=1
+		for _u in "${_users_list[@]}"; do
+			local _h=$(getent passwd "$_u" | cut -d: -f6)
+			echo -e " ${rw_huang}${_ui}.   ${rw_lv}${_u} → ${_h}/.ssh${rw_lv}"
+			((_ui++))
+		done
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		echo -e "${rw_hong}⚠ 提示: 用 sudo 运行脚本时，请选择实际要配置的用户，不要选 root${rw_lv}"
+		echo ""
+		read -e -p " 请选择（默认0=当前用户）: " _usr_choice < /dev/tty
+		_usr_choice="${_usr_choice:-0}"
+
+		local _target_user _target_home
+		if [[ "$_usr_choice" == "0" ]]; then
+			_target_user="$_cur_usr"
+			# 用 getent 获取真实 home 目录（sudo 下 $HOME 可能不对）
+			_target_home=$(getent passwd "$_target_user" | cut -d: -f6)
+			# 如果获取失败，才用 $HOME
+			if [[ -z "$_target_home" ]] || [[ ! -d "$_target_home" ]]; then
+				_target_home="$HOME"
+			fi
+		else
+			_ui=1
+			_target_user=""
+			for _u in "${_users_list[@]}"; do
+				if [[ "$_ui" == "$_usr_choice" ]]; then
+					_target_user="$_u"
+					break
+				fi
+				((_ui++))
+			done
+			if [[ -z "$_target_user" ]]; then
+				red "无效选择"
+				break_end
+				continue
+			fi
+			_target_home=$(getent passwd "$_target_user" | cut -d: -f6)
+			if [[ -z "$_target_home" ]] || [[ ! -d "$_target_home" ]]; then
+				red "无法获取用户 ${_target_user} 的 home 目录"
+				break_end
+				continue
+			fi
+		fi
+
+		_ssh_dir="${_target_home}/.ssh"
+		_auth_file="${_ssh_dir}/authorized_keys"
+
+		echo ""
+		echo -e " ${rw_lv}目标用户: ${rw_huang}${_target_user}${rw_lv}  →  ${_ssh_dir}${rw_lv}"
+		echo -e " ${rw_hong}⚠ 注意: .ssh 目录会被创建到上述路径，请确保这是你要配置的用户！${rw_lv}"
+		echo ""
+
 		echo -e " 请选择操作:"
 		echo -e " ${rw_huang}1.   ${rw_lv}粘贴已有公钥${rw_lv}"
 		echo -e " ${rw_huang}2.   ${rw_lv}自动生成新密钥对${rw_lv}"
@@ -22974,69 +23048,57 @@ EOF
 		  1)
 			echo ""
 			read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
-			if [ -n "$_pubkey" ]; then
+			if [[ -n "$_pubkey" ]]; then
 				mkdir -p "$_ssh_dir"
 				echo "$_pubkey" >> "$_auth_file"
 				chmod 700 "$_ssh_dir"
 				chmod 600 "$_auth_file"
-				green "公钥已添加到 authorized_keys"
+				chown -R "$_target_user":"$(id -gn "$_target_user" 2>/dev/null || echo "$_target_user")" "$_ssh_dir" 2>/dev/null
+				green "公钥已添加到 ${_auth_file}"
 			else
 				red "公钥不能为空"
 			fi
 			;;
 		  2)
 			echo ""
-			echo -e "${rw_cheng}━━━━━━ 生成新密钥对 ━━━━━━${rw_lv}"
-			echo ""
-			read -e -p " 请输入密钥名称（默认: id_rsa）: " _key_name < /dev/tty
-			_key_name="${_key_name:-id_rsa}"
+			read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
+			_key_name="${_key_name:-id_ed25519}"
 			_key_path="${_ssh_dir}/${_key_name}"
 
-			if [ -f "$_key_path" ]; then
+			if [[ -f "$_key_path" ]]; then
 				yellow "密钥文件 ${_key_name} 已存在"
 				read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
 				[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 			fi
 
-			echo ""
-			echo -e " 请选择密钥加密强度:"
-			echo -e " ${rw_huang}1.   ${rw_lv}2048 位（快速）${rw_lv}"
-			echo -e " ${rw_huang}2.   ${rw_lv}3072 位（推荐）${rw_lv}"
-			echo -e " ${rw_huang}3.   ${rw_lv}4096 位（高安全）${rw_lv}"
-			echo -e " ${rw_huang}4.   ${rw_lv}8192 位（最高安全）${rw_lv}"
-			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
-			read -e -p " 请选择: " _bits_choice
+			echo -e " 密钥类型:"
+			echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐，更安全更快）${rw_lv}"
+			echo -e " ${rw_huang}2.   ${rw_lv}RSA 3072 位（兼容性更好）${rw_lv}"
+			read -e -p " 请选择（默认1）: " _key_type_choice
+			_key_type_choice="${_key_type_choice:-1}"
 
-			local _bits=3072
-			case $_bits_choice in
-			  1) _bits=2048 ;;
-			  2) _bits=3072 ;;
-			  3) _bits=4096 ;;
-			  4) _bits=8192 ;;
-			  *) yellow "无效选择，使用默认 3072 位" ;;
-			esac
+			local _key_type="ed25519"
+			[[ "$_key_type_choice" == "2" ]] && _key_type="rsa"
 
-			echo ""
-			echo -e " ${rw_huang}正在生成 ${_bits} 位 RSA 密钥对...${rw_lv}"
+			echo -e " ${rw_huang}正在生成 ${_key_type} 密钥对...${rw_lv}"
+			mkdir -p "$_ssh_dir" && chmod 700 "$_ssh_dir"
 
-			mkdir -p "$_ssh_dir"
-			chmod 700 "$_ssh_dir"
+			local _gen_ok=false
+			if [[ "$_key_type" == "ed25519" ]]; then
+				ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+			else
+				ssh-keygen -t rsa -b 3072 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+			fi
 
-			# 生成密钥对
-			ssh-keygen -t rsa -b "$_bits" -f "$_key_path" -N "" -q
-			if [ $? -eq 0 ]; then
-				# 自动将公钥添加到 authorized_keys
+			if $_gen_ok; then
 				cat "${_key_path}.pub" >> "$_auth_file"
 				chmod 600 "$_auth_file"
-
+				chown -R "$_target_user":"$(id -gn "$_target_user" 2>/dev/null || echo "$_target_user")" "$_ssh_dir" 2>/dev/null
 				green "密钥对生成成功！"
-				echo ""
-				echo -e " 私钥位置: ${rw_huang}${_key_path}${rw_lv}"
-				echo -e " 公钥位置: ${rw_huang}${_key_path}.pub${rw_lv}"
-				echo -e " 加密强度: ${rw_huang}${_bits} 位 RSA${rw_lv}"
-				echo -e " 公钥已自动添加到 authorized_keys"
-				echo ""
-				yellow "请妥善保管私钥，不要泄露给他人！"
+				echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
+				echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
+				echo -e " ${rw_hong}⚠ 请立即下载私钥保存到本地，否则无法 SSH 登录！${rw_lv}"
+				echo -e "   ${rw_lv}下载方式: scp 或 SFTP 下载 ${_key_path}${rw_lv}"
 			else
 				red "密钥生成失败"
 			fi
@@ -23044,18 +23106,19 @@ EOF
 		  3)
 			echo ""
 			echo -e "${rw_cheng}━━━━━━ 已授权密钥 ━━━━━━${rw_lv}"
-			if [ -f "$_auth_file" ] && [ -s "$_auth_file" ]; then
+			if [[ -f "$_auth_file" ]] && [[ -s "$_auth_file" ]]; then
 				cat "$_auth_file"
 			else
 				echo -e "暂无已授权的密钥"
 			fi
 			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
 			;;
-		  0) ;;
-		  *) red "无效的输入!" ;;
+		  *)
+			[[ "$_key_choice" != "0" ]] && red "无效的输入!"
+			;;
 		esac
 		;;
-	  0) break ;;
+
 	  *) red "无效的输入!" ;;
 	esac
 	break_end
@@ -24429,8 +24492,20 @@ github_manager() {
         if [ -d ".git" ]; then
           read -e -p "请输入要暂存的文件名（多个用空格分隔）: " files
           if [ "$files" = "0" ]; then continue; fi
-          git add $files
-          echo -e "${rw_lv}文件已暂存${rw_lv}"
+          git add $files 2>&1
+          _git_add_ret=$?
+          if [ $_git_add_ret -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！${rw_lv}"
+            echo -e "${rw_huang}详细错误:${rw_lv}"
+            git add $files 2>&1 | head -5
+            echo ""
+            echo -e "${rw_huang}常见原因: .git 目录权限不足（所有者不是当前用户）${rw_lv}"
+            echo -e "${rw_lv}修复命令: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            echo ""
+            read -e -p "按回车继续..."
+            continue
+          fi
+          echo -e "${rw_lv}文件已暂存: ${rw_lv}$files"
         else
           echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
@@ -24583,14 +24658,21 @@ GITIGNORE_EOF
           fi
           
           # ── git add ──
-          git add .
-          if [ $? -ne 0 ]; then
-            echo -e "${rw_hong}git add 失败！常见原因：.git 目录权限不足${rw_lv}"
-            echo -e "${rw_huang}尝试修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+          echo -e "${rw_huang}正在执行: git add .${rw_lv}"
+          git add . 2>&1
+          _git_add_ret=$?
+          if [ $_git_add_ret -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！${rw_lv}"
+            echo -e "${rw_huang}详细错误:${rw_lv}"
+            git add . 2>&1 | head -5
+            echo ""
+            echo -e "${rw_huang}常见原因: .git 目录权限不足（所有者不是当前用户）${rw_lv}"
+            echo -e "${rw_lv}修复命令: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
             echo ""
             read -e -p "按回车继续..."
             continue
           fi
+          echo -e "${rw_lv}git add 成功${rw_lv}"
           
           has_head=0
           git rev-parse --verify HEAD >/dev/null 2>&1 && has_head=1
