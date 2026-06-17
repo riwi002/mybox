@@ -22394,8 +22394,91 @@ done
 root_manager() {
 while true; do
 	clear
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	echo -e "                  root 管理"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_huang}1.   ${rw_lv}创建普通用户${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}为已有用户设置密码${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}为已有用户设置 sudo 权限${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}查看当前 sudo 权限用户${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " _rm_choice
 
-	# ── 当前状态探测 ──
+	case $_rm_choice in
+	  1)
+		echo ""
+		read -e -p " 请输入要创建的普通用户名: " _newuser < /dev/tty
+		if [ -z "$_newuser" ]; then
+			red "用户名不能为空"
+		elif id "$_newuser" &>/dev/null; then
+			yellow "用户 $_newuser 已存在，跳过创建"
+		else
+			useradd -m -s /bin/bash "$_newuser" && green "用户 $_newuser 创建成功" || red "创建失败"
+		fi
+		break_end
+		;;
+	  2)
+		echo ""
+		read -e -p " 请输入要设置密码的用户名: " _pwuser < /dev/tty
+		if [ -n "$_pwuser" ]; then
+			passwd "$_pwuser"
+		else
+			red "用户名不能为空"
+		fi
+		break_end
+		;;
+	  3)
+		echo ""
+		read -e -p " 请输入要赋予 sudo 权限的用户名: " _sudouser < /dev/tty
+		if [ -n "$_sudouser" ]; then
+			usermod -aG sudo "$_sudouser" 2>/dev/null || usermod -aG wheel "$_sudouser" 2>/dev/null
+			green "已为 $_sudouser 添加 sudo 权限"
+		else
+			red "用户名不能为空"
+		fi
+		break_end
+		;;
+	  4)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		echo -e "           当前拥有 sudo 权限的用户"
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		local _sudo_users=""
+		_sudo_users=$(getent group sudo 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
+		[ -z "$_sudo_users" ] && _sudo_users=$(getent group wheel 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
+		if [ -n "$_sudo_users" ]; then
+			while IFS= read -r _u; do
+				[ -n "$_u" ] && echo -e "   ${rw_lv}✓${rw_lv}  ${_u}"
+			done <<< "$_sudo_users"
+		else
+			echo -e "   ${rw_huang}暂无 sudo 权限用户${rw_lv}"
+		fi
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		break_end
+		;;
+	  0) break ;;
+	  *) red "无效的输入!" ; break_end ;;
+	esac
+done
+}
+
+# ── 新用户管理（直接复用 root 管理一样的逻辑）──
+new_user_manager() {
+	root_manager
+}
+
+# ── SSH 配置 ──
+ssh_config_manager() {
+while true; do
+	clear
+
+	# ── 读取当前状态 ──
+	local _ssh_port=$(grep -E '^#?Port[[:space:]]+' /etc/ssh/sshd_config | awk '{print $2}' | head -1)
+	_ssh_port="${_ssh_port:-22}"
+
 	local _root_login="未知"
 	if grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
 		_root_login="${rw_lv}允许${rw_lv}"
@@ -22405,199 +22488,124 @@ while true; do
 		_root_login="${rw_huang}仅密钥${rw_lv}"
 	fi
 
-	local _root_locked=""
-	passwd -S root 2>/dev/null | grep -q 'L' && _root_locked="${rw_hong} [已锁定]${rw_lv}" || true
+	local _pass_auth="未知"
+	if grep -qE '^PasswordAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+		_pass_auth="${rw_lv}允许${rw_lv}"
+	elif grep -qE '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+		_pass_auth="${rw_hong}禁止${rw_lv}"
+	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  root 管理  ━━━━━━━━━━━━${rw_lv}"
-	echo -e " SSH 登录状态: ${_root_login}${_root_locked}"
+	local _ssh_status="未知"
+	systemctl is-active --quiet sshd 2>/dev/null && _ssh_status="${rw_lv}运行中${rw_lv}" || _ssh_status="${rw_hong}未运行${rw_lv}"
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 配置  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 端口: ${rw_huang}${_ssh_port}${rw_lv}  Root登录: ${_root_login}  密码登录: ${_pass_auth}  服务: ${_ssh_status}"
 	echo ""
-	echo -e " ${rw_huang}1.   ${rw_lv}修改 root 密码${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}启用 root SSH 登录${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}禁用 root SSH 登录${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}锁定 root 账户${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}解锁 root 账户${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}配置 root 密钥登录${rw_lv}"
-	echo -e " ${rw_huang}7.   ${rw_lv}禁用 root 密码登录（仅密钥）${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}修改 SSH 端口号${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}禁止 root 直接 SSH 登录${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}禁止密码登录（仅密钥）${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}重启 SSH 服务${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请输入你的选择: " root_choice
+	read -e -p " 请输入你的选择: " ssh_choice
 
-	case $root_choice in
+	case $ssh_choice in
 	  1)
-		echo -e "${rw_huang}正在修改 root 密码...${rw_lv}"
-		passwd root
-		;;
-	  2)
-		echo -e "${rw_huang}启用 root SSH 登录...${rw_lv}"
-		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
-		green "root SSH 登录已启用"
-		;;
-	  3)
-		echo -e "${rw_huang}禁用 root SSH 登录...${rw_lv}"
-		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
-		green "root SSH 登录已禁用"
-		;;
-	  4)
-		passwd -l root
-		green "root 账户已锁定"
-		;;
-	  5)
-		passwd -u root
-		green "root 账户已解锁"
-		;;
-	  6)
 		echo ""
-		echo -e "${rw_cheng}━━━━ 配置 root 密钥登录 ━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 修改 SSH 端口号 ━━━━━━${rw_lv}"
+		echo -e " 当前端口: ${rw_huang}${_ssh_port}${rw_lv}"
 		echo ""
-		echo -e " 请选择密钥来源:"
-		echo -e " ${rw_huang}1.   ${rw_lv}粘贴公钥（手动输入）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}从 GitHub 拉取公钥${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}从本地文件导入公钥${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}查看当前已授权的密钥${rw_lv}"
-		echo -e " ${rw_cheng}────────────────────────────────${rw_lv}"
-		read -e -p " 请选择: " _key_choice
-
-		case $_key_choice in
-		  1)
-			read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
-			if [ -n "$_pubkey" ]; then
-				mkdir -p /root/.ssh
-				chmod 700 /root/.ssh
-				echo "$_pubkey" >> /root/.ssh/authorized_keys
-				chmod 600 /root/.ssh/authorized_keys
-				green "公钥已添加"
-			else
-				red "公钥不能为空"
-			fi
-			;;
-		  2)
-			read -e -p " 请输入 GitHub 用户名: " _gh_user < /dev/tty
-			if [ -n "$_gh_user" ]; then
-				mkdir -p /root/.ssh
-				chmod 700 /root/.ssh
-				curl -fsSL "https://github.com/${_gh_user}.keys" >> /root/.ssh/authorized_keys 2>/dev/null
-				chmod 600 /root/.ssh/authorized_keys
-				green "已从 GitHub 拉取 $_gh_user 的公钥"
-			else
-				red "用户名不能为空"
-			fi
-			;;
-		  3)
-			read -e -p " 请输入本地公钥文件路径（如 /path/to/id_rsa.pub）: " _keyfile < /dev/tty
-			if [ -f "$_keyfile" ]; then
-				mkdir -p /root/.ssh
-				chmod 700 /root/.ssh
-				cat "$_keyfile" >> /root/.ssh/authorized_keys
-				chmod 600 /root/.ssh/authorized_keys
-				green "公钥已从 $_keyfile 导入"
-			else
-				red "文件不存在: $_keyfile"
-			fi
-			;;
-		  4)
-			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
-			if [ -f /root/.ssh/authorized_keys ]; then
-				cat /root/.ssh/authorized_keys
-			else
-				echo -e "暂无已授权的密钥"
-			fi
-			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
-			;;
-		  *) red "无效的输入!" ;;
-		esac
-		;;
-	  7)
-		echo ""
-		echo -e "${rw_huang}正在配置 root 仅密钥登录（禁用密码）...${rw_lv}"
-		if [ ! -f /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ]; then
-			red "⚠ 警告: /root/.ssh/authorized_keys 为空或不存在！"
-			red "   禁用密码后你将无法通过 SSH 登录！"
-			read -e -p " 是否仍然继续？(y/N): " _force < /dev/tty
-			[[ ! "$_force" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		read -e -p " 请输入新端口号（1-65535）: " _new_port < /dev/tty
+		if [ -z "$_new_port" ]; then
+			red "端口号不能为空，已取消"
+			break_end
+			continue
 		fi
-		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
-		# 确保公钥认证已开启
-		sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-		sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
-		green "已配置为仅密钥登录，密码登录已禁用"
-		;;
-	  0) break ;;
-	  *) red "无效的输入!" ;;
-	esac
-	break_end
-done
-}
+		if ! [[ "$_new_port" =~ ^[0-9]+$ ]] || [ "$_new_port" -lt 1 ] || [ "$_new_port" -gt 65535 ]; then
+			red "无效端口号，请输入 1-65535 之间的数字"
+			break_end
+			continue
+		fi
 
-# ── 新用户管理 ──
-new_user_manager() {
-while true; do
-	clear
-	echo -e "${rw_cheng}━━━━━━━━━━━━  新用户管理  ━━━━━━━━━━━━${rw_lv}"
-	echo ""
-	echo -e " ${rw_huang}1.   ${rw_lv}创建新用户${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}删除用户${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}修改用户密码${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}查看所有用户列表${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}赋予用户 sudo 权限${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}撤销用户 sudo 权限${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请输入你的选择: " nu_choice
-
-	case $nu_choice in
-	  1)
-		read -e -p " 请输入新用户名: " _newuser < /dev/tty
-		if [ -z "$_newuser" ]; then
-			red "用户名不能为空"
+		# 修改端口
+		if grep -qE '^#?Port[[:space:]]+' /etc/ssh/sshd_config; then
+			sed -i -E "s/^#?Port[[:space:]]+.*/Port ${_new_port}/" /etc/ssh/sshd_config
 		else
-			useradd -m -s /bin/bash "$_newuser"
-			passwd "$_newuser"
-			green "用户 $_newuser 创建成功"
+			echo "Port ${_new_port}" >> /etc/ssh/sshd_config
+		fi
+
+		green "SSH 端口已修改为: ${_new_port}"
+		echo -e " ${rw_huang}提示: 新端口将在重启 SSH 服务后生效${rw_lv}"
+
+		# 询问是否重启
+		read -e -p " 是否立即重启 SSH 服务使新端口生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+			green "SSH 服务已重启，新端口 ${_new_port} 已生效"
+		else
+			yellow "请稍后手动重启 SSH 服务使端口生效"
 		fi
 		;;
 	  2)
-		read -e -p " 请输入要删除的用户名: " _deluser < /dev/tty
-		if [ -z "$_deluser" ]; then
-			red "用户名不能为空"
-		else
-			read -e -p " 是否同时删除用户主目录？(y/N): " _delhome < /dev/tty
-			if [[ "$_delhome" =~ ^[Yy]$ ]]; then
-				userdel -r "$_deluser" && green "用户 $_deluser 及其主目录已删除" || red "删除失败"
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁止 root 直接 SSH 登录 ━━━━━━${rw_lv}"
+		echo -e " ${rw_hong}⚠ 此操作将禁止 root 账户通过 SSH 直接登录${rw_lv}"
+		echo ""
+		read -e -p " 确认禁止 root SSH 登录？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+			green "root SSH 登录已禁止"
+
+			read -e -p " 是否立即重启 SSH 服务？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				green "SSH 服务已重启，配置已生效"
 			else
-				userdel "$_deluser" && green "用户 $_deluser 已删除" || red "删除失败"
+				yellow "请稍后手动重启 SSH 服务使配置生效"
 			fi
+		else
+			yellow "已取消"
 		fi
 		;;
 	  3)
-		read -e -p " 请输入要修改密码的用户名: " _chpwuser < /dev/tty
-		[ -n "$_chpwuser" ] && passwd "$_chpwuser" || red "用户名不能为空"
-		;;
-	  4)
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		awk -F: '$3 >= 1000 || $1 == "root" { printf " %-20s UID:%-6s Shell:%s\n", $1, $3, $7 }' /etc/passwd
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		;;
-	  5)
-		read -e -p " 请输入要授权 sudo 的用户名: " _sudouser < /dev/tty
-		if [ -n "$_sudouser" ]; then
-			usermod -aG sudo "$_sudouser" 2>/dev/null || usermod -aG wheel "$_sudouser" 2>/dev/null
-			green "已为 $_sudouser 添加 sudo 权限"
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁止密码登录（仅密钥）━━━━━━${rw_lv}"
+		echo -e " ${rw_hong}⚠ 禁用密码后只能通过 SSH 密钥登录！${rw_lv}"
+		echo -e " ${rw_huang}请确保你已配置好 SSH 密钥，否则将无法登录！${rw_lv}"
+		echo ""
+		read -e -p " 确认禁止密码登录？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			sed -i -E 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+			sed -i -E 's/^#?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+			sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+			green "密码登录已禁止，仅允许密钥登录"
+
+			read -e -p " 是否立即重启 SSH 服务保存配置？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				green "SSH 服务已重启，配置已生效"
+			else
+				yellow "配置已保存，请稍后手动重启 SSH 服务"
+			fi
 		else
-			red "用户名不能为空"
+			yellow "已取消"
 		fi
 		;;
-	  6)
-		read -e -p " 请输入要撤销 sudo 的用户名: " _rmsudouser < /dev/tty
-		if [ -n "$_rmsudouser" ]; then
-			gpasswd -d "$_rmsudouser" sudo 2>/dev/null || gpasswd -d "$_rmsudouser" wheel 2>/dev/null
-			green "已撤销 $_rmsudouser 的 sudo 权限"
+	  4)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 重启 SSH 服务 ━━━━━━${rw_lv}"
+		read -e -p " 确认重启 SSH 服务？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			echo -e " ${rw_huang}正在重启 SSH 服务...${rw_lv}"
+			systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+			if systemctl is-active --quiet sshd 2>/dev/null; then
+				green "SSH 服务重启成功！当前端口: $(grep -E '^Port[[:space:]]+' /etc/ssh/sshd_config | awk '{print $2}' | head -1)"
+			else
+				red "SSH 服务重启可能失败，请检查配置"
+			fi
 		else
-			red "用户名不能为空"
+			yellow "已取消"
 		fi
 		;;
 	  0) break ;;
@@ -22615,6 +22623,7 @@ while true; do
 	echo ""
 	echo -e " ${rw_huang}1.   ${rw_lv}root 管理${rw_lv}"
 	echo -e " ${rw_huang}2.   ${rw_lv}新用户管理${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}SSH 配置${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -22623,6 +22632,7 @@ while true; do
 	case $um_choice in
 	  1) root_manager ;;
 	  2) new_user_manager ;;
+	  3) ssh_config_manager ;;
 	  0) break ;;
 	  *) red "无效的输入!" ;;
 	esac
@@ -24034,7 +24044,8 @@ github_manager() {
           if [ -z "$commit_msg" ]; then
             commit_msg=$(date "+%Y年%m月%d日%H:%M")
           fi
-          git commit -m "$commit_msg"
+          rm -f .git/COMMIT_EDITMSG 2>/dev/null
+          GIT_EDITOR=true git commit -m "$commit_msg"
           if [ $? -ne 0 ]; then
             echo -e "${rw_hong}提交失败${rw_lv}"
           else
@@ -24114,7 +24125,8 @@ GITIGNORE_EOF
           if [ -z "$commit_msg" ]; then
             commit_msg=$(date "+%Y年%m月%d日%H:%M")
           fi
-          git commit -m "$commit_msg"
+          rm -f .git/COMMIT_EDITMSG 2>/dev/null
+          GIT_EDITOR=true git commit -m "$commit_msg"
           if [ $? -ne 0 ]; then
             echo -e "${rw_hong}提交失败${rw_lv}"
             echo -e "${rw_huang}提示: 没有可提交的更改${rw_lv}"
