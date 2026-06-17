@@ -22594,50 +22594,234 @@ while true; do
 		fi
 		;;
 	  3)
+		root_use
+		clear
+		echo -e "${rw_cheng}━━━━━━━━━━━━  当前账户仅密钥登录  ━━━━━━━━━━━━${rw_lv}"
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 当前账户仅密钥登录 ━━━━━━${rw_lv}"
-		echo -e " ${rw_huang}此操作将配置 SSH 服务全局仅允许密钥登录${rw_lv}"
-		echo -e " ${rw_hong}⚠ 请确保当前账户已配置好 SSH 密钥，否则将无法登录！${rw_lv}"
+		echo -e " ${rw_huang}此操作将禁止 SSH 密码登录，仅允许密钥登录${rw_lv}"
+		echo -e " ${rw_hong}⚠ 操作前请确保：1) 当前账户已配置 SSH 密钥  2) 已保存好私钥${rw_lv}"
+		echo -e " ${rw_lv}   如配置失误导致无法登录，可通过腾讯云 VNC 控制台救援${rw_lv}"
 		echo ""
 
-		# 先修复当前账户密钥权限
+		# 获取当前用户名（用于 Match 块，需转义特殊字符）
+		local _cur_user
+		_cur_user=$(whoami)
+		local _cur_user_esc
+		_cur_user_esc=$(printf '%s\n' "$_cur_user" | sed 's/[.[\*^$(){}?+|/]/\\&/g')
+
+		# ── 1. 确保 .ssh 目录和密钥权限正确 ──
 		mkdir -p "$_ssh_dir"
 		chmod 700 "$_ssh_dir"
 		[ -f "$_auth_file" ] && chmod 600 "$_auth_file"
 
-		# 检查密钥是否存在
+		# ── 2. 密钥为空 → 交互式引导配置 ──
 		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
-			red "⚠ 警告: 当前账户的 authorized_keys 为空或不存在！"
-			red "   禁用密码后你将无法通过 SSH 登录！"
-			read -e -p " 是否仍然继续？(y/N): " _force < /dev/tty
-			[[ ! "$_force" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+			red "⚠ 当前账户（${_cur_user}）的 authorized_keys 为空或不存在！"
+			red "   禁用密码登录后你将无法通过 SSH 登录！"
+			echo ""
+			echo -e " ${rw_cheng}── 请先配置 SSH 密钥 ──${rw_lv}"
+			echo -e " ${rw_huang}1.   ${rw_lv}粘贴已有公钥${rw_lv}"
+			echo -e " ${rw_huang}2.   ${rw_lv}自动生成新密钥对（ed25519 / RSA）${rw_lv}"
+			echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+			read -e -p " 请选择: " _key_guide < /dev/tty
+
+			case $_key_guide in
+			  1)
+				echo ""
+				read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
+				if [ -n "$_pubkey" ]; then
+					mkdir -p "$_ssh_dir"
+					echo "$_pubkey" >> "$_auth_file"
+					chmod 700 "$_ssh_dir"
+					chmod 600 "$_auth_file"
+					green "公钥已添加"
+				else
+					red "公钥不能为空，已取消"
+					break_end
+					continue
+				fi
+				;;
+			  2)
+				echo ""
+				read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
+				_key_name="${_key_name:-id_ed25519}"
+				_key_path="${_ssh_dir}/${_key_name}"
+
+				if [ -f "$_key_path" ]; then
+					yellow "密钥文件 ${_key_name} 已存在"
+					read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+					[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+				fi
+
+				echo -e " 密钥类型:"
+				echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐，更安全更快）${rw_lv}"
+				echo -e " ${rw_huang}2.   ${rw_lv}RSA 3072 位（兼容性更好）${rw_lv}"
+				read -e -p " 请选择（默认1）: " _key_type_choice
+				_key_type_choice="${_key_type_choice:-1}"
+
+				local _key_type="ed25519"
+				[[ "$_key_type_choice" == "2" ]] && _key_type="rsa"
+
+				echo -e " ${rw_huang}正在生成 ${_key_type} 密钥对...${rw_lv}"
+				mkdir -p "$_ssh_dir" && chmod 700 "$_ssh_dir"
+
+				local _gen_ok=false
+				if [ "$_key_type" = "ed25519" ]; then
+					ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+				else
+					ssh-keygen -t rsa -b 3072 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+				fi
+
+				if $_gen_ok; then
+					cat "${_key_path}.pub" >> "$_auth_file"
+					chmod 600 "$_auth_file"
+					green "密钥对生成成功！"
+					echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
+					echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
+					echo -e " ${rw_hong}⚠ 请立即下载私钥保存到本地，否则无法 SSH 登录！${rw_lv}"
+					echo -e "   ${rw_lv}下载方式: scp 或 SFTP 下载 ${_key_path}${rw_lv}"
+				else
+					red "密钥生成失败，已取消"
+					break_end
+					continue
+				fi
+				;;
+			  *)
+				yellow "已取消"
+				break_end
+				continue
+				;;
+			esac
 		fi
 
-		read -e -p " 确认配置仅密钥登录？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+		# ── 3. 选择生效范围：全局 / 仅当前用户 ──
+		echo ""
+		echo -e " ${rw_cheng}── 生效范围 ──${rw_lv}"
+		echo -e " ${rw_huang}1.   ${rw_lv}全局生效 — 所有用户都只能密钥登录，同时禁止 root SSH 登录${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}仅当前用户 — 只对 ${_cur_user} 生效，其他用户不受影响${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		read -e -p " 请选择（默认2）: " _scope < /dev/tty
+		_scope="${_scope:-2}"
+
+		local _scope_global=false
+		[[ "$_scope" == "1" ]] && _scope_global=true
+
+		# ── 4. 变更预览 ──
+		echo ""
+		echo -e " ${rw_cheng}━━━━━━━━━━━━  变更预览  ━━━━━━━━━━━━${rw_lv}"
+
+		# 读取当前值
+		local _cur_passauth="未设置"
+		if grep -qE '^PasswordAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_passauth="${rw_lv}允许${rw_lv}"
+		elif grep -qE '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_passauth="${rw_hong}禁止${rw_lv}"
+		fi
+
+		local _cur_pubkey="未设置"
+		if grep -qE '^PubkeyAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_pubkey="${rw_lv}允许${rw_lv}"
+		elif grep -qE '^PubkeyAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_pubkey="${rw_hong}禁止${rw_lv}"
+		fi
+
+		local _cur_root="未设置"
+		local _root_warn=""
+		if grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_lv}允许${rw_lv}"
+			_root_warn="${rw_hong}⚠ 当前 root 允许密码登录，建议禁止！${rw_lv}"
+		elif grep -qE '^PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_hong}禁止${rw_lv}"
+		elif grep -qE '^PermitRootLogin[[:space:]]+prohibit-password' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_huang}仅密钥${rw_lv}"
+		fi
+
+		if $_scope_global; then
+			echo -e " 生效范围: ${rw_huang}全局（所有用户）${rw_lv}"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "密码登录:" "$_cur_passauth"
+			printf " %-16s %s → ${rw_lv}允许${rw_lv}\n" "密钥登录:" "$_cur_pubkey"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "Root SSH:" "$_cur_root"
+		else
+			echo -e " 生效用户: ${rw_huang}${_cur_user}${rw_lv}（通过 Match User 块，不影响其他用户）"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "密码登录:" "$_cur_passauth"
+			printf " %-16s %s → ${rw_lv}允许${rw_lv}\n" "密钥登录:" "$_cur_pubkey"
+			echo -e " Root SSH:   ${_cur_root}（不修改）"
+		fi
+
+		echo -e " 当前账户密钥: ${rw_lv}$(grep -c '^ssh-' "$_auth_file" 2>/dev/null || echo 0)${rw_lv} 个"
+		[ -n "$_root_warn" ] && echo -e " $_root_warn"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+
+		read -e -p " 确认应用以上配置？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# ── 5. 写入配置 ──
+		if $_scope_global; then
+			# 全局模式：PasswordAuthentication no + PubkeyAuthentication yes + PermitRootLogin no
 			sed -i -E 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-			sed -i -E 's/^#?PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
-			sed -i -E 's/^#?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 			sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 			sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
-			# 如果 PermitEmptyPasswords 不存在则追加
-			if ! grep -qE '^PermitEmptyPasswords' /etc/ssh/sshd_config; then
-				echo "PermitEmptyPasswords no" >> /etc/ssh/sshd_config
-			fi
+			# 如果参数不存在则追加
+			grep -qE '^PasswordAuthentication' /etc/ssh/sshd_config || echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+			grep -qE '^PubkeyAuthentication' /etc/ssh/sshd_config || echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+			grep -qE '^PermitRootLogin' /etc/ssh/sshd_config || echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 
-			green "已配置为仅密钥登录，密码登录已禁止"
-			green "空密码登录已禁止"
-
-			read -e -p " 是否立即重启 SSH 服务？(y/N): " _restart < /dev/tty
-			if [[ "$_restart" =~ ^[Yy]$ ]]; then
-				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
-				green "SSH 服务已重启，配置已生效"
-			else
-				yellow "配置已保存，请稍后手动重启 SSH 服务"
-			fi
+			green "全局配置已更新："
+			green "  - 密码登录已禁止"
+			green "  - 密钥登录已允许"
+			green "  - root SSH 登录已禁止"
 		else
-			yellow "已取消"
+			# 单用户模式：用 Match User 块，不影响全局
+			# 安全删除已存在的该用户 Match 块（用行号精确删除，避免 sed 正则 bug）
+			local _match_start
+			_match_start=$(grep -n -E "^[[:space:]]*Match[[:space:]]+User[[:space:]]+${_cur_user_esc}([[:space:]]|$)" /etc/ssh/sshd_config 2>/dev/null | head -1 | cut -d: -f1)
+			if [ -n "$_match_start" ]; then
+				# 找到 Match 块结束行（下一个 Match 或文件结束）
+				local _match_end
+				_match_end=$(tail -n +"$_match_start" /etc/ssh/sshd_config | grep -n -E '^[[:space:]]*Match[[:space:]]' | head -2 | tail -1 | cut -d: -f1)
+				if [ -n "$_match_end" ]; then
+					_match_end=$((_match_start + _match_end - 1))
+					sed -i "${_match_start},${_match_end}d" /etc/ssh/sshd_config
+				else
+					sed -i "${_match_start},\$d" /etc/ssh/sshd_config
+				fi
+			fi
+
+			# 追加新的 Match 块（缩进 4 空格）
+			cat >> /etc/ssh/sshd_config <<EOF
+
+# 仅密钥登录 — ${_cur_user}
+Match User ${_cur_user}
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+EOF
+			green "Match User 块已添加：仅 ${_cur_user} 必须使用密钥登录"
+		fi
+
+		# ── 6. 语法检查 ──
+		echo ""
+		echo -e " ${rw_huang}正在测试 SSH 配置语法...${rw_lv}"
+		if sshd -t 2>&1; then
+			green "SSH 配置语法检查通过"
+		else
+			red "SSH 配置存在错误，请检查后重试"
+			break_end
+			continue
+		fi
+
+		# ── 7. 重启确认 ──
+		read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+			green "SSH 服务已重启，配置已生效"
+		else
+			yellow "配置已保存，请稍后手动重启 SSH 服务使配置生效"
 		fi
 		;;
 	  4)
@@ -24289,7 +24473,31 @@ github_manager() {
             continue
           fi
 
+          # ── 检查 .git 目录权限 ──
+          local _git_owner12
+          _git_owner12=$(stat -c '%U' .git 2>/dev/null || stat -f '%Su' .git 2>/dev/null || echo "")
+          local _cur_user12
+          _cur_user12=$(whoami)
+          if [ -n "$_git_owner12" ] && [ "$_git_owner12" != "$_cur_user12" ]; then
+            echo -e "${rw_hong}⚠ .git 目录所有者是 ${_git_owner12}，当前用户是 ${_cur_user12}${rw_lv}"
+            echo -e "${rw_huang}   这会导致 git add/commit 因权限不足而失败${rw_lv}"
+            read -e -p " 是否尝试修复 .git 目录权限（chown -R）？(y/N): " _fix_perm12 < /dev/tty
+            if [[ "$_fix_perm12" =~ ^[Yy]$ ]]; then
+              chown -R "$_cur_user12":"$(id -gn)" .git 2>/dev/null && \
+                green "已修复 .git 目录权限" || \
+                red "修复失败，可能需要 sudo 权限"
+            else
+              yellow "未修复权限，git 操作可能失败"
+            fi
+          fi
+
           git add $files
+          if [ $? -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！常见原因：.git 目录权限不足${rw_lv}"
+            echo -e "${rw_huang}尝试修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            read -e -p "按回车继续..."
+            continue
+          fi
           echo -e "${rw_lv}指定文件已暂存: ${rw_lv}$files"
           echo ""
 
@@ -24304,11 +24512,20 @@ github_manager() {
             commit_msg=$(date "+%Y年%m月%d日%H:%M")
           fi
           rm -f .git/COMMIT_EDITMSG 2>/dev/null
-          GIT_EDITOR=true git commit -m "$commit_msg"
-          if [ $? -ne 0 ]; then
+          local _commit_output12
+          _commit_output12=$(GIT_EDITOR=true git commit -m "$commit_msg" 2>&1)
+          local _commit_ret12=$?
+          if [ $_commit_ret12 -ne 0 ]; then
             echo -e "${rw_hong}提交失败${rw_lv}"
+            echo -e "${rw_huang}错误详情:${rw_lv}"
+            echo "$_commit_output12"
+            if echo "$_commit_output12" | grep -q "insufficient permission"; then
+              echo -e "${rw_huang}原因: .git 目录权限不足${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            fi
           else
             echo -e "${rw_lv}提交成功${rw_lv}"
+            echo "$_commit_output12" | head -5
           fi
         else
           echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
@@ -24345,7 +24562,35 @@ GITIGNORE_EOF
             echo ""
           fi
           
+          # ── 检查 .git 目录权限 ──
+          local _git_owner
+          _git_owner=$(stat -c '%U' .git 2>/dev/null || stat -f '%Su' .git 2>/dev/null || echo "")
+          local _cur_user
+          _cur_user=$(whoami)
+          if [ -n "$_git_owner" ] && [ "$_git_owner" != "$_cur_user" ]; then
+            echo -e "${rw_hong}⚠ .git 目录所有者是 ${_git_owner}，当前用户是 ${_cur_user}${rw_lv}"
+            echo -e "${rw_huang}   这会导致 git add/commit 因权限不足而失败${rw_lv}"
+            echo ""
+            read -e -p " 是否尝试修复 .git 目录权限（chown -R）？(y/N): " _fix_perm < /dev/tty
+            if [[ "$_fix_perm" =~ ^[Yy]$ ]]; then
+              chown -R "$_cur_user":"$(id -gn)" .git 2>/dev/null && \
+                green "已修复 .git 目录权限" || \
+                red "修复失败，可能需要 sudo 权限"
+            else
+              yellow "未修复权限，git 操作可能失败"
+            fi
+            echo ""
+          fi
+          
+          # ── git add ──
           git add .
+          if [ $? -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！常见原因：.git 目录权限不足${rw_lv}"
+            echo -e "${rw_huang}尝试修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            echo ""
+            read -e -p "按回车继续..."
+            continue
+          fi
           
           has_head=0
           git rev-parse --verify HEAD >/dev/null 2>&1 && has_head=1
@@ -24385,12 +24630,27 @@ GITIGNORE_EOF
             commit_msg=$(date "+%Y年%m月%d日%H:%M")
           fi
           rm -f .git/COMMIT_EDITMSG 2>/dev/null
-          GIT_EDITOR=true git commit -m "$commit_msg"
-          if [ $? -ne 0 ]; then
+          local _commit_output
+          _commit_output=$(GIT_EDITOR=true git commit -m "$commit_msg" 2>&1)
+          local _commit_ret=$?
+          if [ $_commit_ret -ne 0 ]; then
             echo -e "${rw_hong}提交失败${rw_lv}"
-            echo -e "${rw_huang}提示: 没有可提交的更改${rw_lv}"
+            echo -e "${rw_huang}错误详情:${rw_lv}"
+            echo "$_commit_output"
+            echo ""
+            # 根据错误类型给出针对性提示
+            if echo "$_commit_output" | grep -q "insufficient permission"; then
+              echo -e "${rw_huang}原因: .git 目录权限不足${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            elif echo "$_commit_output" | grep -q "nothing to commit\|no changes"; then
+              echo -e "${rw_huang}原因: 没有可提交的更改${rw_lv}"
+            elif echo "$_commit_output" | grep -q "Error building trees"; then
+              echo -e "${rw_huang}原因: git add 可能因权限失败，暂存区为空${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            fi
           else
             echo -e "${rw_lv}提交成功${rw_lv}"
+            echo "$_commit_output" | head -5
           fi
         else
           echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
