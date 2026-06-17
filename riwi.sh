@@ -22360,6 +22360,7 @@ echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}后台工作区${rw_lv}"
 echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}Docker${rw_lv}"
 echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}LDNMP建站${rw_lv}"
 echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}服务器集群控制${rw_lv}"
+echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}用户管理器${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}退出脚本${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -22377,10 +22378,254 @@ case $choice in
   9) docker_manager_menu ;;
   10) ldnmp_builder_menu ;;
   11) linux_cluster ;;
+  12) user_manager ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
 	break_end
+done
+}
+
+# ================================================================
+# 用户管理器
+# ================================================================
+
+# ── root 管理 ──
+root_manager() {
+while true; do
+	clear
+
+	# ── 当前状态探测 ──
+	local _root_login="未知"
+	if grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_lv}允许${rw_lv}"
+	elif grep -qE '^PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_hong}禁止${rw_lv}"
+	elif grep -qE '^PermitRootLogin[[:space:]]+prohibit-password' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_huang}仅密钥${rw_lv}"
+	fi
+
+	local _root_locked=""
+	passwd -S root 2>/dev/null | grep -q 'L' && _root_locked="${rw_hong} [已锁定]${rw_lv}" || true
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  root 管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " SSH 登录状态: ${_root_login}${_root_locked}"
+	echo ""
+	echo -e " ${rw_huang}1.   ${rw_lv}修改 root 密码${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}启用 root SSH 登录${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}禁用 root SSH 登录${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}锁定 root 账户${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}解锁 root 账户${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}配置 root 密钥登录${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}禁用 root 密码登录（仅密钥）${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " root_choice
+
+	case $root_choice in
+	  1)
+		echo -e "${rw_huang}正在修改 root 密码...${rw_lv}"
+		passwd root
+		;;
+	  2)
+		echo -e "${rw_huang}启用 root SSH 登录...${rw_lv}"
+		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+		green "root SSH 登录已启用"
+		;;
+	  3)
+		echo -e "${rw_huang}禁用 root SSH 登录...${rw_lv}"
+		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+		green "root SSH 登录已禁用"
+		;;
+	  4)
+		passwd -l root
+		green "root 账户已锁定"
+		;;
+	  5)
+		passwd -u root
+		green "root 账户已解锁"
+		;;
+	  6)
+		echo ""
+		echo -e "${rw_cheng}━━━━ 配置 root 密钥登录 ━━━━${rw_lv}"
+		echo ""
+		echo -e " 请选择密钥来源:"
+		echo -e " ${rw_huang}1.   ${rw_lv}粘贴公钥（手动输入）${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}从 GitHub 拉取公钥${rw_lv}"
+		echo -e " ${rw_huang}3.   ${rw_lv}从本地文件导入公钥${rw_lv}"
+		echo -e " ${rw_huang}4.   ${rw_lv}查看当前已授权的密钥${rw_lv}"
+		echo -e " ${rw_cheng}────────────────────────────────${rw_lv}"
+		read -e -p " 请选择: " _key_choice
+
+		case $_key_choice in
+		  1)
+			read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
+			if [ -n "$_pubkey" ]; then
+				mkdir -p /root/.ssh
+				chmod 700 /root/.ssh
+				echo "$_pubkey" >> /root/.ssh/authorized_keys
+				chmod 600 /root/.ssh/authorized_keys
+				green "公钥已添加"
+			else
+				red "公钥不能为空"
+			fi
+			;;
+		  2)
+			read -e -p " 请输入 GitHub 用户名: " _gh_user < /dev/tty
+			if [ -n "$_gh_user" ]; then
+				mkdir -p /root/.ssh
+				chmod 700 /root/.ssh
+				curl -fsSL "https://github.com/${_gh_user}.keys" >> /root/.ssh/authorized_keys 2>/dev/null
+				chmod 600 /root/.ssh/authorized_keys
+				green "已从 GitHub 拉取 $_gh_user 的公钥"
+			else
+				red "用户名不能为空"
+			fi
+			;;
+		  3)
+			read -e -p " 请输入本地公钥文件路径（如 /path/to/id_rsa.pub）: " _keyfile < /dev/tty
+			if [ -f "$_keyfile" ]; then
+				mkdir -p /root/.ssh
+				chmod 700 /root/.ssh
+				cat "$_keyfile" >> /root/.ssh/authorized_keys
+				chmod 600 /root/.ssh/authorized_keys
+				green "公钥已从 $_keyfile 导入"
+			else
+				red "文件不存在: $_keyfile"
+			fi
+			;;
+		  4)
+			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+			if [ -f /root/.ssh/authorized_keys ]; then
+				cat /root/.ssh/authorized_keys
+			else
+				echo -e "暂无已授权的密钥"
+			fi
+			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+			;;
+		  *) red "无效的输入!" ;;
+		esac
+		;;
+	  7)
+		echo ""
+		echo -e "${rw_huang}正在配置 root 仅密钥登录（禁用密码）...${rw_lv}"
+		if [ ! -f /root/.ssh/authorized_keys ] || [ ! -s /root/.ssh/authorized_keys ]; then
+			red "⚠ 警告: /root/.ssh/authorized_keys 为空或不存在！"
+			red "   禁用密码后你将无法通过 SSH 登录！"
+			read -e -p " 是否仍然继续？(y/N): " _force < /dev/tty
+			[[ ! "$_force" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+		sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+		# 确保公钥认证已开启
+		sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+		sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+		systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+		green "已配置为仅密钥登录，密码登录已禁用"
+		;;
+	  0) break ;;
+	  *) red "无效的输入!" ;;
+	esac
+	break_end
+done
+}
+
+# ── 新用户管理 ──
+new_user_manager() {
+while true; do
+	clear
+	echo -e "${rw_cheng}━━━━━━━━━━━━  新用户管理  ━━━━━━━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_huang}1.   ${rw_lv}创建新用户${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}删除用户${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}修改用户密码${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}查看所有用户列表${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}赋予用户 sudo 权限${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}撤销用户 sudo 权限${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " nu_choice
+
+	case $nu_choice in
+	  1)
+		read -e -p " 请输入新用户名: " _newuser < /dev/tty
+		if [ -z "$_newuser" ]; then
+			red "用户名不能为空"
+		else
+			useradd -m -s /bin/bash "$_newuser"
+			passwd "$_newuser"
+			green "用户 $_newuser 创建成功"
+		fi
+		;;
+	  2)
+		read -e -p " 请输入要删除的用户名: " _deluser < /dev/tty
+		if [ -z "$_deluser" ]; then
+			red "用户名不能为空"
+		else
+			read -e -p " 是否同时删除用户主目录？(y/N): " _delhome < /dev/tty
+			if [[ "$_delhome" =~ ^[Yy]$ ]]; then
+				userdel -r "$_deluser" && green "用户 $_deluser 及其主目录已删除" || red "删除失败"
+			else
+				userdel "$_deluser" && green "用户 $_deluser 已删除" || red "删除失败"
+			fi
+		fi
+		;;
+	  3)
+		read -e -p " 请输入要修改密码的用户名: " _chpwuser < /dev/tty
+		[ -n "$_chpwuser" ] && passwd "$_chpwuser" || red "用户名不能为空"
+		;;
+	  4)
+		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+		awk -F: '$3 >= 1000 || $1 == "root" { printf " %-20s UID:%-6s Shell:%s\n", $1, $3, $7 }' /etc/passwd
+		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+		;;
+	  5)
+		read -e -p " 请输入要授权 sudo 的用户名: " _sudouser < /dev/tty
+		if [ -n "$_sudouser" ]; then
+			usermod -aG sudo "$_sudouser" 2>/dev/null || usermod -aG wheel "$_sudouser" 2>/dev/null
+			green "已为 $_sudouser 添加 sudo 权限"
+		else
+			red "用户名不能为空"
+		fi
+		;;
+	  6)
+		read -e -p " 请输入要撤销 sudo 的用户名: " _rmsudouser < /dev/tty
+		if [ -n "$_rmsudouser" ]; then
+			gpasswd -d "$_rmsudouser" sudo 2>/dev/null || gpasswd -d "$_rmsudouser" wheel 2>/dev/null
+			green "已撤销 $_rmsudouser 的 sudo 权限"
+		else
+			red "用户名不能为空"
+		fi
+		;;
+	  0) break ;;
+	  *) red "无效的输入!" ;;
+	esac
+	break_end
+done
+}
+
+# ── 用户管理器 主菜单 ──
+user_manager() {
+while true; do
+	clear
+	echo -e "${rw_cheng}━━━━━━━━━━━━  用户管理器  ━━━━━━━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_huang}1.   ${rw_lv}root 管理${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}新用户管理${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " um_choice
+
+	case $um_choice in
+	  1) root_manager ;;
+	  2) new_user_manager ;;
+	  0) break ;;
+	  *) red "无效的输入!" ;;
+	esac
 done
 }
 
