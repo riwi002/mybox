@@ -22368,7 +22368,7 @@ echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}后台工作区${rw_lv}"
 echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}Docker${rw_lv}"
 echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}LDNMP建站${rw_lv}"
 echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}服务器集群控制${rw_lv}"
-echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}用户管理器${rw_lv}"
+echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}密钥管理${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}退出脚本${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -23145,10 +23145,10 @@ while true; do
 	clear
 	echo -e "${rw_cheng}━━━━━━━━━━━━  用户管理器  ━━━━━━━━━━━━${rw_lv}"
 	echo ""
-	echo -e " ${rw_huang}1.   ${rw_lv}root 管理${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}SSH 配置${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}SSH 多因素认证 (MFA/OTP)${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}SSH FIDO2 硬件密钥认证${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}创建用户${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}双证登录（需要两样凭证）${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}三证登录（需要三样凭证）${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}硬证登录（需要硬件凭证）${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -23483,6 +23483,15 @@ while true; do
 		else
 			echo "KbdInteractiveAuthentication yes" >> /etc/ssh/sshd_config
 			green "已追加 KbdInteractiveAuthentication yes"
+		fi
+
+		# 设置 AuthenticationMethods: 强制公钥 + 键盘交互(OTP) 双因素认证
+		if grep -qE "^#?AuthenticationMethods" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's|^#?AuthenticationMethods.*|AuthenticationMethods publickey,keyboard-interactive|' /etc/ssh/sshd_config
+			green "已更新 AuthenticationMethods (强制: 公钥+OTP 双因素)"
+		else
+			echo "AuthenticationMethods publickey,keyboard-interactive" >> /etc/ssh/sshd_config
+			green "已追加 AuthenticationMethods (强制: 公钥+OTP 双因素)"
 		fi
 
 		# 语法检查
