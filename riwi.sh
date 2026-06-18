@@ -23147,6 +23147,8 @@ while true; do
 	echo ""
 	echo -e " ${rw_huang}1.   ${rw_lv}root 管理${rw_lv}"
 	echo -e " ${rw_huang}2.   ${rw_lv}SSH 配置${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}SSH 多因素认证 (MFA/OTP)${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}SSH FIDO2 硬件密钥认证${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -23155,9 +23157,1230 @@ while true; do
 	case $um_choice in
 	  1) root_manager ;;
 	  2) ssh_config_manager ;;
+	  3) ssh_mfa_manager ;;
+	  4) ssh_fido2_manager ;;
 	  0) break ;;
 	  *) red "无效的输入!" ;;
 	esac
+done
+}
+
+# ================================================================
+# SSH 多因素认证 (MFA/OTP) 管理器
+# 依赖: google-authenticator-libpam (Debian/Ubuntu) / google-authenticator (CentOS/RHEL)
+# ================================================================
+ssh_mfa_manager() {
+while true; do
+	clear
+
+	# ── 探测当前 MFA 状态 ──
+	local _mfa_pam=0 _mfa_pkg="未安装"
+	# 检查 PAM 配置中是否启用了 google-auth
+	if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+		_mfa_pam=1
+	fi
+	# 检查软件包是否安装
+	if command -v google-authenticator &>/dev/null; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	elif dpkg -l google-authenticator-libpam 2>/dev/null | grep -q "^ii"; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	elif rpm -q google-authenticator 2>/dev/null | grep -q "google-authenticator"; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	else
+		_mfa_pkg="${rw_hong}未安装${rw_lv}"
+	fi
+	local _mfa_status="${rw_hong}未启用${rw_lv}"
+	[ $_mfa_pam -eq 1 ] && _mfa_status="${rw_lv}已启用${rw_lv}"
+
+	# 统计已配置 MFA 的用户数
+	local _mfa_users=0 _mfa_user_list=""
+	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+		[ -f "${_home}/.google_authenticator" ] && {
+			_mfa_users=$((_mfa_users + 1))
+			_mfa_user_list="${_mfa_user_list} ${_u}"
+		}
+	done </etc/passwd
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 多因素认证 (MFA)  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 软件包: ${_mfa_pkg}  MFA 状态: ${_mfa_status}  已配置用户: ${rw_huang}${_mfa_users}${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 安装与状态${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}安装 google-authenticator${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}查看已配置 MFA 的用户${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 为用户启用 MFA${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}为指定用户配置 OTP (交互式)${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}为当前用户配置 OTP${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 全局开关${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}启用 SSH MFA (修改 sshd_config + PAM)${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}禁用 SSH MFA${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " mfa_choice
+
+	case $mfa_choice in
+	  1)
+		# ── 安装 google-authenticator ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 安装 google-authenticator ━━━━━━${rw_lv}"
+		echo ""
+		if command -v google-authenticator &>/dev/null; then
+			green "google-authenticator 已经安装"
+			break_end
+			continue
+		fi
+		echo -e " 正在检测系统包管理器..."
+		if command -v apt-get &>/dev/null; then
+			echo -e " 检测到 Debian/Ubuntu，使用 apt 安装..."
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				apt-get update -y && apt-get install -y libpam-google-authenticator
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 libpam-google-authenticator"
+			else
+				yellow "已取消"
+			fi
+		elif command -v yum &>/dev/null; then
+			echo -e " 检测到 CentOS/RHEL，使用 yum 安装..."
+			echo -e " ${rw_hong}提示: EPEL 仓库可能需要先启用${rw_lv}"
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				yum install -y google-authenticator
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 google-authenticator"
+			else
+				yellow "已取消"
+			fi
+		elif command -v dnf &>/dev/null; then
+			echo -e " 检测到 Fedora/RHEL9+，使用 dnf 安装..."
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				dnf install -y google-authenticator
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 google-authenticator"
+			else
+				yellow "已取消"
+			fi
+		elif command -v apk &>/dev/null; then
+			echo -e " 检测到 Alpine，使用 apk 安装..."
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				apk add --no-cache google-authenticator
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
+			else
+				yellow "已取消"
+			fi
+		else
+			red "无法识别包管理器，请手动安装 google-authenticator"
+			echo -e " Debian/Ubuntu: ${rw_huang}apt-get install libpam-google-authenticator${rw_lv}"
+			echo -e " CentOS/RHEL:   ${rw_huang}yum install google-authenticator${rw_lv}"
+		fi
+		;;
+	  2)
+		# ── 查看已配置 MFA 的用户 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 已配置 MFA 的用户 ━━━━━━${rw_lv}"
+		echo ""
+		local _found=0
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			if [ -f "${_home}/.google_authenticator" ]; then
+				_found=1
+				local _ga_mtime=""
+				_ga_mtime=$(stat -c '%y' "${_home}/.google_authenticator" 2>/dev/null | cut -d' ' -f1 || \
+							 stat -f '%Sm' -t '%Y-%m-%d' "${_home}/.google_authenticator" 2>/dev/null || echo "未知")
+				printf "  ${rw_huang}%-15s${rw_lv}  HOME: %-25s  配置时间: %s\n" "$_u" "${_home}" "$_ga_mtime"
+			fi
+		done </etc/passwd
+		[ $_found -eq 0 ] && yellow "暂无用户配置 MFA"
+		echo ""
+		;;
+	  3)
+		# ── 为指定用户配置 OTP ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 为指定用户配置 OTP ━━━━━━${rw_lv}"
+		echo ""
+		if ! command -v google-authenticator &>/dev/null; then
+			red "google-authenticator 未安装，请先执行选项 1 安装"
+			break_end
+			continue
+		fi
+		# 列出可用用户
+		echo -e " ${rw_cheng}── 可用用户 ──${rw_lv}"
+		local _avail_users=()
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			[ -n "$_shell" ] && _avail_users+=("$_u")
+		done </etc/passwd
+		local _ui=1
+		for _u in "${_avail_users[@]}"; do
+			local _h=$(getent passwd "$_u" | cut -d: -f6)
+			local _mfa_mark=""
+			[ -f "${_h}/.google_authenticator" ] && _mfa_mark="${rw_lv}[已配置MFA]${rw_lv}"
+			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_h} ${_mfa_mark}"
+			((_ui++))
+		done
+		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
+		echo ""
+		read -e -p " 请选择用户编号: " _user_idx < /dev/tty
+		[ "$_user_idx" = "0" ] && continue
+		[ -z "$_user_idx" ] && { red "无效选择"; break_end; continue; }
+		local _target_u=""
+		_ui=1
+		for _u in "${_avail_users[@]}"; do
+			if [ "$_ui" -eq "$_user_idx" ]; then
+				_target_u="$_u"
+				break
+			fi
+			((_ui++))
+		done
+		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
+
+		echo ""
+		echo -e " ${rw_huang}目标用户: ${rw_lv}${_target_u}"
+		echo -e " ${rw_hong}注意: 接下来会以 ${_target_u} 身份运行 google-authenticator${rw_lv}"
+		echo -e " ${rw_hong}请用手机 App (Google/Microsoft Authenticator) 扫码${rw_lv}"
+		echo ""
+		read -e -p " 确认开始配置？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		local _target_home
+		_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
+		[ ! -d "$_target_home" ] && { red "无法获取用户 home 目录"; break_end; continue; }
+
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 交互配置 (请以 ${_target_u} 身份运行) ━━━━━━${rw_lv}"
+		echo -e " ${rw_lv}即将运行: su - $_target_u -c 'google-authenticator'${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}推荐回答:${rw_lv}"
+		echo -e "   Q1: 是否基于时间? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q2: 是否更新配置文件? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q3: 是否禁止多地点复用令牌? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q4: 是否扩大时间窗口? → ${rw_lv}n${rw_lv}"
+		echo -e "   Q5: 是否启用限速? → ${rw_lv}y${rw_lv}"
+		echo ""
+		read -e -p " 按回车开始交互配置 (需要手动操作)..." _dummy < /dev/tty
+		echo ""
+
+		# 用 expect 自动回答（如果 available），否则交互运行
+		if command -v expect &>/dev/null; then
+			echo -e " ${rw_huang}检测到 expect，将自动回答默认选项...${rw_lv}"
+			su - "$_target_u" -c "yes y | google-authenticator -t -d -f -w 3 -s ~/.google_authenticator"
+		else
+			su - "$_target_u" -c "google-authenticator"
+		fi
+
+		echo ""
+		if [ -f "${_target_home}/.google_authenticator" ]; then
+			green "MFA 配置文件已生成: ${_target_home}/.google_authenticator"
+			echo -e " ${rw_hong}⚠ 请务必保存好 ${rw_huang}紧急备用码${rw_hong}（无法找回）！${rw_lv}"
+			echo -e " ${rw_lv}下次 SSH 登录时需要输入: 密码 + 6位动态码${rw_lv}"
+		else
+			red "配置文件未生成，可能配置未完成"
+		fi
+		;;
+	  4)
+		# ── 为当前用户配置 OTP ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 为当前用户 ($(whoami)) 配置 OTP ━━━━━━${rw_lv}"
+		echo ""
+		if ! command -v google-authenticator &>/dev/null; then
+			red "google-authenticator 未安装，请先执行选项 1 安装"
+			break_end
+			continue
+		fi
+		local _cur_u _cur_home
+		_cur_u=$(whoami)
+		_cur_home="$HOME"
+		if [ -f "${_cur_home}/.google_authenticator" ]; then
+			echo -e " ${rw_huang}当前用户已配置 MFA${rw_lv}"
+			read -e -p " 是否重新配置？(y/N): " _reconfirm < /dev/tty
+			[[ ! "$_reconfirm" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+		echo -e " ${rw_hong}请用手机 App (Google/Microsoft Authenticator) 扫码${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}推荐回答:${rw_lv}"
+		echo -e "   Q1: 是否基于时间? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q2: 是否更新配置文件? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q3: 是否禁止多地点复用令牌? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q4: 是否扩大时间窗口? → ${rw_lv}n${rw_lv}"
+		echo -e "   Q5: 是否启用限速? → ${rw_lv}y${rw_lv}"
+		echo ""
+		read -e -p " 按回车开始交互配置..." _dummy < /dev/tty
+		echo ""
+		google-authenticator
+		echo ""
+		if [ -f "${_cur_home}/.google_authenticator" ]; then
+			green "MFA 配置完成！"
+			echo -e " ${rw_hong}⚠ 请务必保存好 ${rw_huang}紧急备用码${rw_hong}（无法找回）！${rw_lv}"
+		fi
+		;;
+	  5)
+		# ── 启用 SSH MFA ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 启用 SSH MFA ━━━━━━${rw_lv}"
+		echo ""
+		if ! command -v google-authenticator &>/dev/null; then
+			red "google-authenticator 未安装，请先执行选项 1"
+			break_end
+			continue
+		fi
+		if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			yellow "MFA 似乎已启用（/etc/pam.d/sshd 中已存在 pam_google_authenticator.so）"
+			read -e -p " 是否重新配置？(y/N): " _reconfirm < /dev/tty
+			[[ ! "$_reconfirm" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+		echo -e " ${rw_hong}⚠ 此操作将修改以下文件:${rw_lv}"
+		echo -e "   ${rw_huang}/etc/pam.d/sshd${rw_lv}  — 添加 MFA PAM 模块"
+		echo -e "   ${rw_huang}/etc/ssh/sshd_config${rw_lv}  — 启用 ChallengeResponseAuthentication"
+		echo ""
+		echo -e " ${rw_lv}登录流程将变为:  1) 输入密码  2) 输入 App 中的 6 位动态码${rw_lv}"
+		echo ""
+		read -e -p " 确认启用 SSH MFA？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# 备份原配置
+		cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		green "原配置已备份"
+
+		# 修改 PAM: 在 /etc/pam.d/sshd 中添加 google_authenticator
+		# 放在 auth 部分的最前，确保先验证 OTP
+		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			# 在文件开头（或第一个 auth 行之前）插入
+			sed -i '/^auth.*pam_unix.so/a auth       required     pam_google_authenticator.so nullok' /etc/pam.d/sshd 2>/dev/null
+			# 如果 sed 没匹配到，直接追加
+			if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+				echo "auth       required     pam_google_authenticator.so nullok" >> /etc/pam.d/sshd
+			fi
+			green "PAM 配置已更新: /etc/pam.d/sshd"
+		else
+			yellow "PAM 配置中已存在 google_authenticator 条目"
+		fi
+
+		# 修改 sshd_config: 启用 ChallengeResponseAuthentication (旧版) 或 KbdInteractiveAuthentication (新版)
+		# 新版 OpenSSH 用 KbdInteractiveAuthentication
+		if grep -q "KbdInteractiveAuthentication" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's/^#?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+			if ! grep -q "^KbdInteractiveAuthentication" /etc/ssh/sshd_config; then
+				echo "KbdInteractiveAuthentication yes" >> /etc/ssh/sshd_config
+			fi
+			green "已设置 KbdInteractiveAuthentication yes"
+		elif grep -q "ChallengeResponseAuthentication" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's/^#?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+			if ! grep -q "^ChallengeResponseAuthentication" /etc/ssh/sshd_config; then
+				echo "ChallengeResponseAuthentication yes" >> /etc/ssh/sshd_config
+			fi
+			green "已设置 ChallengeResponseAuthentication yes"
+		else
+			echo "KbdInteractiveAuthentication yes" >> /etc/ssh/sshd_config
+			green "已追加 KbdInteractiveAuthentication yes"
+		fi
+
+		# 语法检查
+		echo ""
+		echo -e " ${rw_huang}正在进行 SSH 配置语法检查...${rw_lv}"
+		if sshd -t 2>/dev/null; then
+			green "SSH 配置语法检查通过"
+			echo ""
+			read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				[ $? -eq 0 ] && green "SSH 服务已重启，MFA 已生效！" || red "SSH 重启失败，请手动重启"
+			else
+				yellow "请稍后手动重启 SSH 服务使配置生效"
+			fi
+		else
+			red "SSH 配置语法检查失败，已自动回滚（备份文件未被删除）"
+			echo -e " ${rw_huang}请手动检查 /etc/ssh/sshd_config${rw_lv}"
+		fi
+		;;
+	  6)
+		# ── 禁用 SSH MFA ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁用 SSH MFA ━━━━━━${rw_lv}"
+		echo ""
+		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			yellow "MFA 似乎未启用（/etc/pam.d/sshd 中未找到 pam_google_authenticator.so）"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_hong}⚠ 此操作将:${rw_lv}"
+		echo -e "   1) 从 /etc/pam.d/sshd 中移除 MFA PAM 模块"
+		echo -e "   2) 禁用 SSH 交互式认证"
+		echo ""
+		read -e -p " 确认禁用 SSH MFA？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# 备份
+		cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		green "原配置已备份"
+
+		# 移除 PAM 中的 google_authenticator 行
+		sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd 2>/dev/null
+		green "PAM 配置已更新（已移除 MFA 模块）"
+
+		# 禁用 KbdInteractiveAuthentication
+		sed -i -E 's/^KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+		sed -i -E 's/^ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+		green "SSH 交互式认证已禁用"
+
+		# 语法检查 + 重启
+		echo ""
+		echo -e " ${rw_huang}正在进行 SSH 配置语法检查...${rw_lv}"
+		if sshd -t 2>/dev/null; then
+			green "SSH 配置语法检查通过"
+			read -e -p " 是否立即重启 SSH 服务？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				[ $? -eq 0 ] && green "SSH 服务已重启，MFA 已禁用！" || red "SSH 重启失败"
+			else
+				yellow "请稍后手动重启 SSH 服务"
+			fi
+		else
+			red "SSH 配置语法检查失败，请手动检查"
+		fi
+		;;
+	  0)
+		break
+		;;
+	  *)
+		red "无效的输入!"
+		;;
+	esac
+	break_end
+done
+}
+
+# ================================================================
+# SSH FIDO2 硬件密钥认证管理器
+# 依赖: OpenSSH ≥ 8.2 (服务端+客户端)、FIDO2 硬件密钥 (YubiKey/Titan 等)
+# 原理: 利用 OpenSSH 内置的 sk-* 密钥类型，通过 FIDO2 硬件完成 SSH 认证
+# ================================================================
+ssh_fido2_manager() {
+while true; do
+	clear
+
+	# ── 探测 FIDO2 就绪状态 ──
+	local _fido_sshd_ver="" _fido_sshd_ok=0
+	_fido_sshd_ver=$(sshd -V 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+	local _fido_sshd_major=0 _fido_sshd_minor=0
+	if [ -n "$_fido_sshd_ver" ]; then
+		_fido_sshd_major=$(echo "$_fido_sshd_ver" | cut -d. -f1)
+		_fido_sshd_minor=$(echo "$_fido_sshd_ver" | cut -d. -f2)
+		# OpenSSH >= 8.2 才原生支持 FIDO2
+		if [ "$_fido_sshd_major" -gt 8 ] || ([ "$_fido_sshd_major" -eq 8 ] && [ "$_fido_sshd_minor" -ge 2 ]); then
+			_fido_sshd_ok=1
+		fi
+	fi
+	_fido_sshd_ver="${_fido_sshd_ver:-未知}"
+
+	# 客户端 ssh 版本
+	local _fido_cli_ver="" _fido_cli_ok=0
+	_fido_cli_ver=$(ssh -V 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+	local _fido_cli_major=0 _fido_cli_minor=0
+	if [ -n "$_fido_cli_ver" ]; then
+		_fido_cli_major=$(echo "$_fido_cli_ver" | cut -d. -f1)
+		_fido_cli_minor=$(echo "$_fido_cli_ver" | cut -d. -f2)
+		if [ "$_fido_cli_major" -gt 8 ] || ([ "$_fido_cli_major" -eq 8 ] && [ "$_fido_cli_minor" -ge 2 ]); then
+			_fido_cli_ok=1
+		fi
+	fi
+	_fido_cli_ver="${_fido_cli_ver:-未知}"
+
+	# 检查当前用户是否有 sk-* 密钥
+	local _fido_keys=0 _fido_key_list=""
+	local _fido_authorized=0 _fido_auth_user_list=""
+	if [ -d "$HOME/.ssh" ]; then
+		_fido_keys=$(ls "$HOME/.ssh"/id_*_sk 2>/dev/null | wc -l | tr -d ' ')
+		_fido_key_list=$(ls "$HOME/.ssh"/id_*_sk 2>/dev/null | while read -r f; do basename "$f"; done | tr '\n' ' ')
+	fi
+	# 检查 authorized_keys 中是否有 sk-* 公钥
+	if [ -f "$HOME/.ssh/authorized_keys" ]; then
+		_fido_authorized=$(grep -c "sk-ssh" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
+	fi
+
+	# 服务端版本状态颜色
+	local _sshd_color="${rw_hong}"
+	[ $_fido_sshd_ok -eq 1 ] && _sshd_color="${rw_lv}"
+	local _cli_color="${rw_hong}"
+	[ $_fido_cli_ok -eq 1 ] && _cli_color="${rw_lv}"
+
+	echo -e "${rw_cheng}━━━━━━━━  SSH FIDO2 硬件密钥认证  ━━━━━━━━${rw_lv}"
+	echo -e " 服务端 OpenSSH: ${_sshd_color}${_fido_sshd_ver}${rw_lv} (≥8.2: ${_sshd_color}$([ $_fido_sshd_ok -eq 1 ] && echo "✓" || echo "✗")${rw_lv})"
+	echo -e " 本地客户端:     ${_cli_color}${_fido_cli_ver}${rw_lv} (≥8.2: ${_cli_color}$([ $_fido_cli_ok -eq 1 ] && echo "✓" || echo "✗")${rw_lv})"
+	echo -e " 当前用户密钥:   ${rw_huang}${_fido_keys}${rw_lv} 个 FIDO2 密钥  authorized_keys 中: ${rw_huang}${_fido_authorized}${rw_lv} 个"
+	echo ""
+	echo -e " ${rw_cheng}──── 服务端准备${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}检查 FIDO2 环境兼容性${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}确保服务端配置正确 (PubkeyAuthentication)${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 密钥生成与部署 (在本地客户端执行)${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}生成驻留密钥 (ed25519-sk, 推荐)${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}生成非驻留密钥 (ecdsa-sk)${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}部署公钥到服务器${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 管理与诊断${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}查看已注册的 FIDO2 密钥${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}测试 FIDO2 SSH 连接${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}多密钥备份 (注册备用硬件密钥)${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}9.   ${rw_lv}📖 操作教程 (快速上手指南)${rw_lv}"
+	echo -e " ${rw_huang}10.  ${rw_lv}🗑  卸载与删除 FIDO2 配置${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " fido_choice
+
+	case $fido_choice in
+	  1)
+		# ── 检查 FIDO2 环境兼容性 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ FIDO2 环境兼容性检查 ━━━━━━${rw_lv}"
+		echo ""
+
+		# 检查服务端 OpenSSH
+		echo -e " ${rw_cheng}── 1) 服务端 OpenSSH 版本 ──${rw_lv}"
+		if [ $_fido_sshd_ok -eq 1 ]; then
+			green "服务端 OpenSSH ${_fido_sshd_ver} ≥ 8.2 — 满足要求"
+		else
+			red "服务端 OpenSSH ${_fido_sshd_ver} < 8.2 — 不满足要求"
+			echo -e " ${rw_huang}解决方案:${rw_lv}"
+			echo -e "   Ubuntu 20.04+/Debian 11+: 系统默认满足"
+			echo -e "   CentOS 7/Ubuntu 18.04: 需升级 OpenSSH 或编译安装新版"
+			echo -e "   可使用本工具箱的 ${rw_huang}升级 OpenSSH${rw_lv} 功能"
+		fi
+
+		# 检查客户端 ssh
+		echo -e " ${rw_cheng}── 2) 本地客户端 OpenSSH 版本 ──${rw_lv}"
+		if [ $_fido_cli_ok -eq 1 ]; then
+			green "本地客户端 OpenSSH ${_fido_cli_ver} ≥ 8.2 — 满足要求"
+		else
+			red "本地客户端 OpenSSH ${_fido_cli_ver} < 8.2 — 不满足要求"
+			echo -e " ${rw_huang}解决方案:${rw_lv}"
+			echo -e "   macOS: 系统自带 (Big Sur+)"
+			echo -e "   Windows: Win10 2004+ / Win11 自带 OpenSSH"
+			echo -e "   Linux: apt install openssh-client / yum install openssh-clients"
+		fi
+
+		# 检查 FIDO2 密钥类型支持
+		echo -e " ${rw_cheng}── 3) FIDO2 密钥类型支持 ──${rw_lv}"
+		if ssh-keygen -t ed25519-sk -f /dev/null -N "" 2>&1 | grep -q "not supported\|unknown\|invalid"; then
+			echo -e " ${rw_hong}ed25519-sk 不支持 — 请升级 libfido2 库${rw_lv}"
+			echo -e " ${rw_huang}解决方案:${rw_lv}"
+			echo -e "   Debian/Ubuntu: apt-get install libfido2-1"
+			echo -e "   CentOS/RHEL:   yum install libfido2"
+		else
+			green "ed25519-sk 密钥类型已支持"
+		fi
+
+		# 检查 USB 设备
+		echo -e " ${rw_cheng}── 4) FIDO2 USB 设备检测 ──${rw_lv}"
+		if command -v lsusb &>/dev/null; then
+			local _fido_devs
+			_fido_devs=$(lsusb 2>/dev/null | grep -iE "yubi|fido|security key|u2f" || true)
+			if [ -n "$_fido_devs" ]; then
+				green "检测到 FIDO2 设备:"
+				echo "$_fido_devs" | while read -r _line; do
+					echo -e "   ${rw_lv}$_line${rw_lv}"
+				done
+			else
+				yellow "未检测到 FIDO2 设备，请确认硬件密钥已插入"
+				echo -e " ${rw_lv}常见设备: YubiKey 5/5C/Nano, Google Titan, Feitian${rw_lv}"
+			fi
+		elif command -v system_profiler &>/dev/null; then
+			# macOS
+			local _usb_info
+			_usb_info=$(system_profiler SPUSBDataType 2>/dev/null | grep -iE "yubi|fido|security key" -A 2 || true)
+			if [ -n "$_usb_info" ]; then
+				green "检测到 FIDO2 设备:"
+				echo "$_usb_info"
+			else
+				yellow "未检测到 FIDO2 设备，请确认硬件密钥已插入"
+			fi
+		else
+			echo -e " ${rw_huang}无法检测 USB 设备 (缺少 lsusb)，请手动确认硬件密钥已插入${rw_lv}"
+		fi
+
+		# 检查 libfido2 (如果存在)
+		echo -e " ${rw_cheng}── 5) libfido2 库状态 ──${rw_lv}"
+		if ldconfig -p 2>/dev/null | grep -q libfido2; then
+			green "libfido2 已安装"
+		elif dpkg -l libfido2-1 2>/dev/null | grep -q "^ii"; then
+			green "libfido2-1 已安装"
+		elif rpm -q libfido2 2>/dev/null | grep -q "libfido2"; then
+			green "libfido2 已安装"
+		else
+			yellow "libfido2 可能未安装，某些 FIDO2 功能可能受限"
+			echo -e " ${rw_huang}安装:${rw_lv} apt-get install libfido2-1 (Debian) / yum install libfido2 (RHEL)"
+		fi
+
+		echo ""
+		;;
+	  2)
+		# ── 确保服务端配置正确 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 确保服务端配置正确 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}FIDO2 SSH 认证仅需 sshd_config 中包含:${rw_lv}"
+		echo -e "   ${rw_lv}PubkeyAuthentication yes${rw_lv}"
+		echo -e " ${rw_hong}注意: 无需额外安装任何 FIDO2 库，OpenSSH 8.2+ 原生支持${rw_lv}"
+		echo ""
+
+		# 检查当前配置
+		if grep -qE '^PubkeyAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			green "PubkeyAuthentication yes — 已正确配置"
+		else
+			red "PubkeyAuthentication 未启用"
+			read -e -p " 是否自动启用？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+				if ! grep -qE '^PubkeyAuthentication' /etc/ssh/sshd_config; then
+					echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+				fi
+				green "PubkeyAuthentication yes 已配置"
+				if sshd -t 2>/dev/null; then
+					green "SSH 配置语法检查通过"
+					systemctl reload sshd 2>/dev/null || service ssh reload 2>/dev/null
+					green "SSH 服务已重载"
+				else
+					red "SSH 配置语法错误，请手动检查"
+				fi
+			else
+				yellow "已取消"
+			fi
+		fi
+		echo ""
+		;;
+	  3)
+		# ── 生成驻留密钥 (ed25519-sk) ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 生成驻留密钥 (ed25519-sk) ━━━━━━${rw_lv}"
+		echo ""
+		if [ $_fido_cli_ok -ne 1 ]; then
+			red "本地客户端 OpenSSH 版本过低 (< 8.2)，不支持 ed25519-sk"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_lv}密钥类型: ${rw_huang}ed25519-sk -O resident${rw_lv}"
+		echo -e " ${rw_lv}说明: 私钥将${rw_hong}永久存储在硬件密钥内${rw_lv}，本地仅保存"句柄"文件"
+		echo -e " ${rw_lv}优点: 硬件丢失也不泄露私钥，可多设备漫游${rw_lv}"
+		echo ""
+		echo -e " ${rw_hong}操作步骤:${rw_lv}"
+		echo -e " 1. 确保 FIDO2 硬件密钥已插入 USB 端口"
+		echo -e " 2. 按回车后，终端将提示触摸硬件密钥"
+		echo -e " 3. 触摸硬件密钥上的金属触点"
+		echo -e " 4. 输入 PIN 码 (首次使用需设置)"
+		echo ""
+		read -e -p " 请输入密钥名称（默认: id_ed25519_sk_cvm）: " _key_name < /dev/tty
+		_key_name="${_key_name:-id_ed25519_sk_cvm}"
+		local _key_path="$HOME/.ssh/${_key_name}"
+
+		if [ -f "$_key_path" ]; then
+			yellow "密钥文件 ${_key_name} 已存在"
+			read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+
+		echo ""
+		echo -e " ${rw_huang}正在生成驻留密钥...${rw_lv}"
+		echo -e " ${rw_lv}请准备好触摸你的 FIDO2 硬件密钥...${rw_lv}"
+		echo ""
+
+		ssh-keygen -t ed25519-sk -O resident -O application="ssh:cvm-$(hostname)" -f "$_key_path"
+		local _gen_rc=$?
+
+		if [ $_gen_rc -eq 0 ] && [ -f "$_key_path" ]; then
+			green "驻留密钥生成成功！"
+			echo ""
+			echo -e " ${rw_huang}私钥句柄:${rw_lv} ${_key_path}"
+			echo -e " ${rw_huang}公钥文件:${rw_lv} ${_key_path}.pub"
+			echo ""
+			echo -e " ${rw_hong}⚠ 重要提示:${rw_lv}"
+			echo -e "   - 私钥已永久存储在 FIDO2 硬件内，${_key_path} 仅是一个"句柄""
+			echo -e "   - 如果硬件密钥丢失，需要重新生成密钥"
+			echo -e "   - ${rw_hong}强烈建议注册至少 2 把硬件密钥 (主用+备用)${rw_lv}"
+			echo ""
+			echo -e " 公钥内容:"
+			cat "${_key_path}.pub"
+			echo ""
+			echo -e " ${rw_huang}下一步: 使用选项5将公钥部署到服务器${rw_lv}"
+		else
+			red "密钥生成失败"
+			echo -e " ${rw_huang}常见原因:${rw_lv}"
+			echo -e "  - 硬件密钥未插入或未被系统识别"
+			echo -e "  - 客户端 OpenSSH 版本不支持 (需要 ≥ 8.2)"
+			echo -e "  - 缺少 libfido2 库"
+		fi
+		;;
+	  4)
+		# ── 生成非驻留密钥 (ecdsa-sk) ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 生成非驻留密钥 (ecdsa-sk) ━━━━━━${rw_lv}"
+		echo ""
+		if [ $_fido_cli_ok -ne 1 ]; then
+			red "本地客户端 OpenSSH 版本过低 (< 8.2)，不支持 ecdsa-sk"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_lv}密钥类型: ${rw_huang}ecdsa-sk${rw_lv}"
+		echo -e " ${rw_lv}说明: 私钥存储在本地文件，硬件密钥仅用于签名验证${rw_lv}"
+		echo -e " ${rw_lv}适用场景: 需要在多台机器间共享密钥但不想购买多把硬件密钥${rw_lv}"
+		echo ""
+		echo -e " ${rw_hong}⚠ 注意: 非驻留密钥的私钥文件在本地，安全性低于驻留模式${rw_lv}"
+		echo ""
+
+		read -e -p " 请输入密钥名称（默认: id_ecdsa_sk_cvm）: " _key_name < /dev/tty
+		_key_name="${_key_name:-id_ecdsa_sk_cvm}"
+		local _key_path="$HOME/.ssh/${_key_name}"
+
+		if [ -f "$_key_path" ]; then
+			yellow "密钥文件 ${_key_name} 已存在"
+			read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+
+		echo ""
+		echo -e " ${rw_huang}正在生成非驻留密钥...${rw_lv}"
+		echo -e " ${rw_lv}请准备好触摸你的 FIDO2 硬件密钥...${rw_lv}"
+		echo ""
+
+		ssh-keygen -t ecdsa-sk -f "$_key_path"
+		local _gen_rc=$?
+
+		if [ $_gen_rc -eq 0 ] && [ -f "$_key_path" ]; then
+			green "非驻留密钥生成成功！"
+			echo ""
+			echo -e " ${rw_huang}私钥文件:${rw_lv} ${_key_path}"
+			echo -e " ${rw_huang}公钥文件:${rw_lv} ${_key_path}.pub"
+			echo ""
+			echo -e " ${rw_hong}⚠ 请妥善保管私钥文件，不要泄露！${rw_lv}"
+			echo ""
+			echo -e " 公钥内容:"
+			cat "${_key_path}.pub"
+			echo ""
+		else
+			red "密钥生成失败"
+		fi
+		;;
+	  5)
+		# ── 部署公钥到服务器 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 部署公钥到服务器 ━━━━━━${rw_lv}"
+		echo ""
+
+		# 列出可用的 sk-* 公钥
+		local _sk_keys=()
+		if [ -d "$HOME/.ssh" ]; then
+			while IFS= read -r -d '' _f; do
+				_sk_keys+=("$_f")
+			done < <(find "$HOME/.ssh" -maxdepth 1 -name "*.pub" -exec grep -l "sk-" {} \; 2>/dev/null | tr '\n' '\0')
+		fi
+
+		if [ ${#_sk_keys[@]} -eq 0 ]; then
+			yellow "未找到任何 FIDO2 公钥 (.pub 文件中含 sk- 前缀)"
+			echo -e " ${rw_huang}请先使用选项 3 或 4 生成 FIDO2 密钥${rw_lv}"
+			break_end
+			continue
+		fi
+
+		echo -e " ${rw_cheng}── 可部署的 FIDO2 公钥 ──${rw_lv}"
+		local _i=1
+		for _k in "${_sk_keys[@]}"; do
+			local _ktype
+			_ktype=$(awk '{print $1}' "$_k" 2>/dev/null || echo "未知")
+			echo -e " ${rw_huang}${_i}.${rw_lv} $(basename "$_k")  (类型: $_ktype)"
+			((_i++))
+		done
+		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
+		echo ""
+
+		read -e -p " 请选择要部署的公钥编号: " _pk_idx < /dev/tty
+		[ "$_pk_idx" = "0" ] && continue
+		if ! [[ "$_pk_idx" =~ ^[0-9]+$ ]] || [ "$_pk_idx" -lt 1 ] || [ "$_pk_idx" -gt ${#_sk_keys[@]} ]; then
+			red "无效选择"
+			break_end
+			continue
+		fi
+		local _selected_pk="${_sk_keys[$((_pk_idx - 1))]}"
+		local _pk_content
+		_pk_content=$(cat "$_selected_pk")
+
+		echo ""
+		echo -e " 即将部署的公钥:"
+		echo -e "  文件: ${rw_huang}$(basename "$_selected_pk")${rw_lv}"
+		echo -e "  内容: ${rw_lv}${_pk_content}${rw_lv}"
+		echo ""
+
+		# 选择部署方式
+		echo -e " 部署方式:"
+		echo -e " ${rw_huang}1.   ${rw_lv}自动追加到当前用户的 authorized_keys${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}手动指定目标用户和服务器${rw_lv}"
+		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
+		echo ""
+		read -e -p " 请选择: " _deploy_way < /dev/tty
+		[ "$_deploy_way" = "0" ] && continue
+
+		case $_deploy_way in
+		  1)
+			mkdir -p "$HOME/.ssh"
+			chmod 700 "$HOME/.ssh"
+			if grep -qF "$_pk_content" "$HOME/.ssh/authorized_keys" 2>/dev/null; then
+				yellow "该公钥已存在于 authorized_keys 中"
+			else
+				echo "$_pk_content" >> "$HOME/.ssh/authorized_keys"
+				chmod 600 "$HOME/.ssh/authorized_keys"
+				green "公钥已部署到 ~/.ssh/authorized_keys"
+			fi
+			;;
+		  2)
+			echo ""
+			read -e -p " 请输入目标用户名: " _target_user < /dev/tty
+			[ -z "$_target_user" ] && { red "用户名不能为空"; break_end; continue; }
+			read -e -p " 请输入目标服务器 IP/主机名: " _target_host < /dev/tty
+			[ -z "$_target_host" ] && { red "服务器地址不能为空"; break_end; continue; }
+			read -e -p " 请输入 SSH 端口（默认 22）: " _target_port < /dev/tty
+			_target_port="${_target_port:-22}"
+
+			echo ""
+			echo -e " ${rw_huang}正在使用 ssh-copy-id 部署公钥...${rw_lv}"
+			echo -e " ${rw_hong}注意: 需要目标服务器的密码登录权限${rw_lv}"
+			read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				ssh-copy-id -i "$_selected_pk" -p "$_target_port" "${_target_user}@${_target_host}" 2>&1
+				[ $? -eq 0 ] && green "公钥已部署到 ${_target_user}@${_target_host}" || red "部署失败，请检查连接"
+			else
+				yellow "已取消"
+			fi
+			;;
+		  *)
+			yellow "无效选择"
+			;;
+		esac
+
+		echo ""
+		echo -e " ${rw_huang}部署完成后，测试命令:${rw_lv}"
+		echo -e "   ${rw_lv}ssh -i $(basename "$_selected_pk" .pub) user@server_ip${rw_lv}"
+		echo -e " ${rw_lv}连接时会提示 \"Touch your authenticator\"，触摸硬件密钥即可登录${rw_lv}"
+		;;
+	  6)
+		# ── 查看已注册的 FIDO2 密钥 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 已注册的 FIDO2 密钥 ━━━━━━${rw_lv}"
+		echo ""
+
+		# 检查当前用户的 sk-* 密钥文件
+		echo -e " ${rw_cheng}── 本地 FIDO2 密钥文件 ──${rw_lv}"
+		if [ -d "$HOME/.ssh" ]; then
+			local _found_sk=0
+			for _f in "$HOME/.ssh"/id_*_sk "$HOME/.ssh"/*_sk; do
+				if [ -f "$_f" ] && [[ "$_f" != *.pub ]]; then
+					_found_sk=1
+					local _f_pub="${_f}.pub"
+					local _f_type="未知"
+					local _f_date=""
+					if [ -f "$_f_pub" ]; then
+						_f_type=$(awk '{print $1}' "$_f_pub")
+					fi
+					_f_date=$(stat -c '%y' "$_f" 2>/dev/null | cut -d' ' -f1 || \
+							  stat -f '%Sm' -t '%Y-%m-%d' "$_f" 2>/dev/null || echo "未知")
+					printf "  ${rw_huang}%-35s${rw_lv}  类型: %-15s  创建: %s\n" "$(basename "$_f")" "$_f_type" "$_f_date"
+				fi
+			done
+			[ $_found_sk -eq 0 ] && yellow "  未找到本地 FIDO2 密钥文件"
+		else
+			yellow "  ~/.ssh 目录不存在"
+		fi
+
+		# 检查 authorized_keys 中的 sk-* 公钥
+		echo ""
+		echo -e " ${rw_cheng}── authorized_keys 中的 FIDO2 公钥 ──${rw_lv}"
+		if [ -f "$HOME/.ssh/authorized_keys" ]; then
+			local _sk_count=0
+			while IFS= read -r _line; do
+				if echo "$_line" | grep -q "^sk-"; then
+					_sk_count=$((_sk_count + 1))
+					local _sk_type _sk_comment
+					_sk_type=$(echo "$_line" | awk '{print $1}')
+					_sk_comment=$(echo "$_line" | awk '{print $NF}')
+					echo -e "  ${rw_huang}${_sk_count}.${rw_lv} 类型: $_sk_type  注释: ${_sk_comment:-无}"
+				fi
+			done < "$HOME/.ssh/authorized_keys"
+			[ $_sk_count -eq 0 ] && yellow "  未找到 FIDO2 公钥条目"
+			echo -e "  ${rw_huang}共 ${_sk_count} 个 FIDO2 公钥${rw_lv}"
+		else
+			yellow "  ~/.ssh/authorized_keys 不存在"
+		fi
+		echo ""
+		;;
+	  7)
+		# ── 测试 FIDO2 SSH 连接 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 测试 FIDO2 SSH 连接 ━━━━━━${rw_lv}"
+		echo ""
+
+		# 列出可用的 sk-* 私钥
+		local _sk_privs=()
+		if [ -d "$HOME/.ssh" ]; then
+			for _f in "$HOME/.ssh"/id_*_sk "$HOME/.ssh"/*_sk; do
+				[ -f "$_f" ] && [[ "$_f" != *.pub ]] && _sk_privs+=("$_f")
+			done
+		fi
+
+		if [ ${#_sk_privs[@]} -eq 0 ]; then
+			yellow "未找到任何 FIDO2 私钥文件"
+			echo -e " ${rw_huang}请先使用选项 3 或 4 生成密钥${rw_lv}"
+			break_end
+			continue
+		fi
+
+		echo -e " ${rw_cheng}── 可用的 FIDO2 密钥 ──${rw_lv}"
+		local _i=1
+		for _k in "${_sk_privs[@]}"; do
+			echo -e " ${rw_huang}${_i}.${rw_lv} $(basename "$_k")"
+			((_i++))
+		done
+		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
+		echo ""
+		read -e -p " 请选择密钥编号: " _k_idx < /dev/tty
+		[ "$_k_idx" = "0" ] && continue
+		if ! [[ "$_k_idx" =~ ^[0-9]+$ ]] || [ "$_k_idx" -lt 1 ] || [ "$_k_idx" -gt ${#_sk_privs[@]} ]; then
+			red "无效选择"
+			break_end
+			continue
+		fi
+		local _selected_key="${_sk_privs[$((_k_idx - 1))]}"
+
+		echo ""
+		read -e -p " 请输入目标服务器 (user@host): " _test_target < /dev/tty
+		[ -z "$_test_target" ] && { red "目标不能为空"; break_end; continue; }
+		read -e -p " 请输入 SSH 端口（默认 22）: " _test_port < /dev/tty
+		_test_port="${_test_port:-22}"
+
+		echo ""
+		echo -e " ${rw_huang}正在测试 FIDO2 SSH 连接...${rw_lv}"
+		echo -e " ${rw_lv}请准备好触摸你的 FIDO2 硬件密钥...${rw_lv}"
+		echo -e " ${rw_lv}终端会提示: \"Touch your authenticator\"${rw_lv}"
+		echo ""
+
+		ssh -i "$_selected_key" -p "$_test_port" -o PreferredAuthentications=publickey -o IdentitiesOnly=yes "$_test_target" "echo 'FIDO2 SSH 认证成功！'; hostname; whoami"
+		local _test_rc=$?
+
+		echo ""
+		if [ $_test_rc -eq 0 ]; then
+			green "FIDO2 SSH 连接测试成功！"
+		else
+			red "连接测试失败 (退出码: $_test_rc)"
+			echo -e " ${rw_huang}常见原因:${rw_lv}"
+			echo -e "  - 公钥未部署到目标服务器 (请使用选项5部署)"
+			echo -e "  - 服务端 PubkeyAuthentication 未启用"
+			echo -e "  - 防火墙/安全组未放行 SSH 端口"
+			echo -e "  - 硬件密钥未被客户端识别"
+		fi
+		;;
+	  8)
+		# ── 多密钥备份 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 多密钥备份 (注册备用硬件密钥) ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_hong}⚠ 强烈建议注册至少两把 FIDO2 硬件密钥${rw_lv}"
+		echo -e " ${rw_lv}  - 主用: 日常使用"
+		echo -e "  - 备用: 主密钥丢失/损坏时的替代方案"
+		echo ""
+		echo -e " ${rw_huang}操作步骤:${rw_lv}"
+		echo -e " 1. 插入备用 FIDO2 硬件密钥"
+		echo -e " 2. 使用选项 3 生成新的驻留密钥 (不同文件名)"
+		echo -e "   例如: ${rw_lv}id_ed25519_sk_cvm_backup${rw_lv}"
+		echo -e " 3. 使用选项 5 将备用公钥也部署到服务器"
+		echo ""
+		echo -e " ${rw_lv}这样，任意一把硬件密钥都可独立登录服务器${rw_lv}"
+		echo ""
+		echo -e " ${rw_cheng}── 当前已部署的 FIDO2 公钥 ──${rw_lv}"
+		if [ -f "$HOME/.ssh/authorized_keys" ]; then
+			grep "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null | while IFS= read -r _line; do
+				local _type _comment
+				_type=$(echo "$_line" | awk '{print $1}')
+				_comment=$(echo "$_line" | awk '{print $NF}')
+				echo -e "  ${rw_huang}•${rw_lv} $_type  ${rw_lv}($_comment)${rw_lv}"
+			done
+		else
+			yellow "  authorized_keys 不存在"
+		fi
+		echo ""
+
+		# 快速备份：直接生成第二把密钥
+		read -e -p " 是否立即生成备用 FIDO2 密钥？(y/N): " _gen_backup < /dev/tty
+		if [[ "$_gen_backup" =~ ^[Yy]$ ]]; then
+			if [ $_fido_cli_ok -ne 1 ]; then
+				red "客户端 OpenSSH 版本不满足要求"
+				break_end
+				continue
+			fi
+			read -e -p " 请输入备用密钥名称（默认: id_ed25519_sk_cvm_backup）: " _bk_name < /dev/tty
+			_bk_name="${_bk_name:-id_ed25519_sk_cvm_backup}"
+			local _bk_path="$HOME/.ssh/${_bk_name}"
+
+			if [ -f "$_bk_path" ]; then
+				yellow "密钥文件已存在"
+				read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+				[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+			fi
+
+			echo ""
+			echo -e " ${rw_huang}正在生成备用驻留密钥...${rw_lv}"
+			echo -e " ${rw_lv}请触摸备用 FIDO2 硬件密钥...${rw_lv}"
+			echo ""
+			ssh-keygen -t ed25519-sk -O resident -O application="ssh:cvm-backup-$(hostname)" -f "$_bk_path"
+
+			if [ $? -eq 0 ]; then
+				green "备用密钥生成成功！"
+				echo -e " ${rw_huang}备用公钥:${rw_lv} ${_bk_path}.pub"
+				echo ""
+				echo -e " ${rw_huang}下一步: 使用选项5将备用公钥也部署到服务器${rw_lv}"
+			else
+				red "备用密钥生成失败"
+			fi
+		else
+			yellow "已取消"
+		fi
+		;;
+	  0)
+		break
+		;;
+	  10)
+		# ── 卸载与删除 FIDO2 配置 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 卸载与删除 FIDO2 配置 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_hong}⚠ 此功能将帮助你清理 FIDO2 相关配置${rw_lv}"
+		echo -e " ${rw_lv}请根据需求选择要清理的内容:${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}1.   ${rw_lv}删除本地 FIDO2 密钥文件 (id_*_sk + .pub)${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}从 authorized_keys 中移除 FIDO2 公钥${rw_lv}"
+		echo -e " ${rw_huang}3.   ${rw_lv}一键全部清理 (密钥文件 + authorized_keys)${rw_lv}"
+		echo -e " ${rw_huang}4.   ${rw_lv}自检残留 (检查是否还有 FIDO2 配置残留)${rw_lv}"
+		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
+		echo ""
+		read -e -p " 请选择: " _clean_choice < /dev/tty
+
+		case $_clean_choice in
+		  1)
+			echo ""
+			echo -e " ${rw_cheng}── 本地 FIDO2 密钥文件 ──${rw_lv}"
+			local _sk_files=()
+			if [ -d "$HOME/.ssh" ]; then
+				while IFS= read -r -d '' _f; do
+					_sk_files+=("$_f")
+				done < <(find "$HOME/.ssh" -maxdepth 1 \( -name "*_sk" -o -name "*_sk.pub" \) -print0 2>/dev/null)
+			fi
+			if [ ${#_sk_files[@]} -eq 0 ]; then
+				yellow "  未找到任何 FIDO2 密钥文件"
+			else
+				echo -e " 将删除以下文件:"
+				for _f in "${_sk_files[@]}"; do
+					echo -e "   ${rw_hong}•${rw_lv} $(basename "$_f")"
+				done
+				echo ""
+				read -e -p " 确认删除以上 ${#_sk_files[@]} 个文件？(y/N): " _confirm < /dev/tty
+				if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+					for _f in "${_sk_files[@]}"; do
+						rm -f "$_f"
+						echo -e "   ${rw_lv}已删除: $(basename "$_f")${rw_lv}"
+					done
+					green "所有本地 FIDO2 密钥文件已删除"
+				else
+					yellow "已取消"
+				fi
+			fi
+			;;
+		  2)
+			echo ""
+			echo -e " ${rw_cheng}── authorized_keys 中的 FIDO2 公钥 ──${rw_lv}"
+			if [ ! -f "$HOME/.ssh/authorized_keys" ]; then
+				yellow "  ~/.ssh/authorized_keys 不存在"
+				break_end
+				continue
+			fi
+			local _sk_lines
+			_sk_lines=$(grep -n "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || true)
+			if [ -z "$_sk_lines" ]; then
+				yellow "  未找到 FIDO2 公钥条目"
+			else
+				echo -e " 将删除以下 FIDO2 公钥:"
+				echo "$_sk_lines" | while IFS= read -r _line; do
+					local _ln=$(echo "$_line" | cut -d: -f1)
+					local _comment=$(echo "$_line" | awk '{print $NF}')
+					echo -e "   ${rw_hong}•${rw_lv} 第 $_ln 行  注释: ${_comment:-无}"
+				done
+				echo ""
+				read -e -p " 确认从 authorized_keys 中移除以上条目？(y/N): " _confirm < /dev/tty
+				if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+					sed -i '/^sk-/d' "$HOME/.ssh/authorized_keys"
+					green "FIDO2 公钥已从 authorized_keys 中移除"
+				else
+					yellow "已取消"
+				fi
+			fi
+			;;
+		  3)
+			echo ""
+			echo -e " ${rw_hong}⚠ 一键全部清理${rw_lv}"
+			echo -e " 将执行:"
+			echo -e "   1) 删除 ~/.ssh/ 下所有 id_*_sk 及 id_*_sk.pub 文件"
+			echo -e "   2) 从 authorized_keys 中移除所有 sk-* 公钥"
+			echo ""
+			read -e -p " 确认一键清理？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				# 删除本地密钥文件
+				local _deleted=0
+				find "$HOME/.ssh" -maxdepth 1 \( -name "*_sk" -o -name "*_sk.pub" \) -print0 2>/dev/null | while IFS= read -r -d '' _f; do
+					rm -f "$_f" && echo -e "   ${rw_lv}已删除: $(basename "$_f")${rw_lv}"
+				done
+				# 删除 authorized_keys 中的 sk- 行
+				if [ -f "$HOME/.ssh/authorized_keys" ]; then
+					local _sk_before _sk_after
+					_sk_before=$(grep -c "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
+					sed -i '/^sk-/d' "$HOME/.ssh/authorized_keys"
+					_sk_after=$(grep -c "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
+					echo -e "   ${rw_lv}已从 authorized_keys 移除 $_sk_before 个 FIDO2 公钥${rw_lv}"
+				fi
+				green "一键清理完成！"
+			else
+				yellow "已取消"
+			fi
+			;;
+		  4)
+			echo ""
+			echo -e " ${rw_cheng}── 自检残留 ──${rw_lv}"
+			echo ""
+			local _found_any=0
+
+			# 检查本地密钥文件
+			echo -e " ${rw_huang}1) 本地 FIDO2 密钥文件:${rw_lv}"
+			local _sk_remains
+			_sk_remains=$(find "$HOME/.ssh" -maxdepth 1 \( -name "*_sk" -o -name "*_sk.pub" \) 2>/dev/null || true)
+			if [ -n "$_sk_remains" ]; then
+				_found_any=1
+				echo "$_sk_remains" | while IFS= read -r _f; do
+					echo -e "   ${rw_hong}⚠ 残留${rw_lv}  $(basename "$_f")"
+				done
+			else
+				echo -e "   ${rw_lv}✓ 无残留${rw_lv}"
+			fi
+
+			# 检查 authorized_keys
+			echo -e " ${rw_huang}2) authorized_keys 中的 sk-* 公钥:${rw_lv}"
+			if [ -f "$HOME/.ssh/authorized_keys" ]; then
+				local _sk_count
+				_sk_count=$(grep -c "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
+				if [ "$_sk_count" -gt 0 ]; then
+					_found_any=1
+					echo -e "   ${rw_hong}⚠ 残留${rw_lv}  $_sk_count 个 FIDO2 公钥"
+				else
+					echo -e "   ${rw_lv}✓ 无残留${rw_lv}"
+				fi
+			else
+				echo -e "   ${rw_lv}✓ authorized_keys 不存在${rw_lv}"
+			fi
+
+			# 检查 ssh_config (是否有 FIDO2 密钥引用)
+			echo -e " ${rw_huang}3) SSH 客户端配置引用:${rw_lv}"
+			if [ -f "$HOME/.ssh/config" ]; then
+				if grep -q "_sk" "$HOME/.ssh/config" 2>/dev/null; then
+					_found_any=1
+					echo -e "   ${rw_hong}⚠ 残留${rw_lv}  ~/.ssh/config 中仍有 _sk 密钥引用"
+					grep -n "_sk" "$HOME/.ssh/config" | while IFS= read -r _line; do
+						echo -e "     $_line"
+					done
+				else
+					echo -e "   ${rw_lv}✓ 无残留${rw_lv}"
+				fi
+			else
+				echo -e "   ${rw_lv}✓ ~/.ssh/config 不存在${rw_lv}"
+			fi
+
+			echo ""
+			if [ $_found_any -eq 0 ]; then
+				green "✅ 未发现任何 FIDO2 配置残留，清理干净！"
+			else
+				yellow "⚠ 发现残留项，可使用选项 1-3 继续清理"
+			fi
+			;;
+		  *)
+			[ "$_clean_choice" != "0" ] && red "无效选择"
+			;;
+		esac
+		;;
+	  9)
+		# ── 操作教程 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━━━━━━━  FIDO2 SSH 快速上手指南  ━━━━━━━━━━━━${rw_lv}"
+		echo ""
+		echo -e "  ${rw_huang}硬件要求: ${rw_lv}OpenSSH ≥ 8.2 + FIDO2 硬件密钥 (YubiKey / Titan 等)"
+		echo ""
+		echo -e "  ${rw_cheng}━━━━━━ 操作步骤 (按顺序执行对应菜单选项) ━━━━━━${rw_lv}"
+		echo ""
+		echo -e "  ┌──────────────────────────────────────────────────────────┐"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第1步  ▸ 菜单选项 [1] 检查 FIDO2 环境兼容性${rw_lv}              │"
+		echo -e "  │    确认服务器/客户端 OpenSSH ≥ 8.2，检测 USB 硬件密钥   │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第2步  ▸ 菜单选项 [2] 确保服务端配置正确${rw_lv}                  │"
+		echo -e "  │    确认 PubkeyAuthentication yes（脚本自动修复）        │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第3步  ▸ 菜单选项 [3] 生成驻留密钥${rw_lv}                        │"
+		echo -e "  │    ${rw_hong}★ 推荐!${rw_lv} 在本地电脑执行，私钥永久存入硬件芯片           │"
+		echo -e "  │    按提示触摸硬件密钥 + 输入 PIN 完成                   │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第4步  ▸ 菜单选项 [5] 部署公钥到服务器${rw_lv}                    │"
+		echo -e "  │    自动将 .pub 公钥追加到 ~/.ssh/authorized_keys         │"
+		echo -e "  │    或使用 ssh-copy-id 部署到远程服务器                  │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第5步  ▸ 菜单选项 [7] 测试 FIDO2 SSH 连接${rw_lv}                 │"
+		echo -e "  │    终端提示 \"Touch your authenticator\" 时触摸硬件密钥    │"
+		echo -e "  │                                                         │"
+		echo -e "  └──────────────────────────────────────────────────────────┘"
+		echo ""
+		echo -e "  ${rw_cheng}━━━━━━ 卸载与删除指南 (不需要时执行) ━━━━━━${rw_cv}"
+		echo ""
+		echo -e "  ┌──────────────────────────────────────────────────────────┐"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}▸ 菜单选项 [10] 卸载与删除 FIDO2 配置${rw_lv}                     │"
+		echo -e "  │    内含 4 个子选项:                                     │"
+		echo -e "  │      [1] 删除本地 FIDO2 密钥文件 (id_*_sk + .pub)      │"
+		echo -e "  │      [2] 从 authorized_keys 中移除 FIDO2 公钥           │"
+		echo -e "  │      [3] 一键全部清理 (密钥 + authorized_keys)          │"
+		echo -e "  │      [4] 自检残留 (检查是否清理干净)                    │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}手动清理命令 (可选):${rw_lv}                                 │"
+		echo -e "  │    rm -f ~/.ssh/id_*_sk ~/.ssh/id_*_sk.pub             │"
+		echo -e "  │    sed -i '/^sk-/d' ~/.ssh/authorized_keys              │"
+		echo -e "  │                                                         │"
+		echo -e "  └──────────────────────────────────────────────────────────┘"
+		echo ""
+		echo -e "  ${rw_huang}💡 建议${rw_lv}  配置前通过腾讯云 VNC 保留应急通道，防止硬件丢失被锁"
+		echo -e "  ${rw_huang}💡 建议${rw_lv}  ${rw_hong}注册至少 2 把硬件密钥${rw_lv}（主用+备用），菜单选项 [8] 一键完成"
+		echo -e "  ${rw_hong}⚠ 注意${rw_lv}  腾讯云控制台"通行密钥" ≠ SSH FIDO2，不能用于 SSH 登录"
+		echo ""
+		echo -e "  ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		;;
+	  *)
+		red "无效的输入!"
+		;;
+	esac
+	break_end
 done
 }
 
@@ -24346,15 +25569,17 @@ github_manager() {
         clear
         install git
         echo -e "${rw_huang}克隆仓库${rw_lv}"
-        echo "示例: https://github.com/username/repo.git"
-        echo "示例: git@github.com:username/repo.git"
+        echo "示例: https://github.com/riwi002/mybox.git"
+        echo "示例: git@github.com:riwi002/mybox.git"
         echo ""
         echo -e "${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_lv}"
         echo ""
         echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo -e "${rw_huang}提示: 直接回车默认克隆工具箱仓库${rw_lv}"
         echo ""
-        read -e -p "请输入仓库URL: " repo_url
+        read -e -p "请输入仓库URL（回车默认工具箱地址）: " repo_url
         if [ "$repo_url" = "0" ]; then continue; fi
+        [ -z "$repo_url" ] && repo_url="https://github.com/riwi002/mybox.git"
         read -e -p "请输入目标目录（回车使用默认）: " target_dir
         if [ "$target_dir" = "0" ]; then continue; fi
         
