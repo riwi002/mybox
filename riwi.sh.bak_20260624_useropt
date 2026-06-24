@@ -18692,298 +18692,58 @@ done
 root_manager() {
 while true; do
 	clear
-
-	# ── 状态面板: 列出当前普通用户 ──
-	echo -e "${rw_cheng}━━━━━━━━━━━━  创建用户  ━━━━━━━━━━━━${rw_lv}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	echo -e "                  root 管理"
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}── 当前普通用户（uid≥1000）──${rw_lv}"
-	local _has_user=0
-	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-		[ -n "$_shell" ] || continue
-		local _sudo_mark=""
-		if getent group sudo 2>/dev/null | grep -q "$_u" || \
-		   getent group wheel 2>/dev/null | grep -q "$_u"; then
-			_sudo_mark="${rw_lv}[sudo]${rw_lv}"
-		fi
-		local _pw_mark=""
-		[ -n "$_p" ] && [ "$_p" != "x" ] && [ "$_p" != "*" ] && [ "$_p" != "!" ] && _pw_mark="${rw_lv}[有密码]${rw_lv}"
-		printf "  ${rw_huang}%-12s${rw_lv}  uid=%-6s  shell=%-12s %s %s\n" "$_u" "$_uid" "$(basename "$_shell")" "$_sudo_mark" "$_pw_mark"
-		_has_user=1
-	done </etc/passwd 2>/dev/null
-	[ $_has_user -eq 0 ] && echo -e "  ${rw_huang}暂无普通用户${rw_lv}"
-	echo ""
-
-	echo -e " ${rw_cheng}──── 用户管理 ────${rw_lv}"
 	echo -e " ${rw_huang}1.   ${rw_lv}创建普通用户${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}为用户设置密码${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}为用户设置 sudo 权限${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}撤销用户 sudo 权限${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}删除用户${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}修改用户 Shell${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 查看 ────${rw_lv}"
-	echo -e " ${rw_huang}7.   ${rw_lv}查看 sudo 权限用户${rw_lv}"
-	echo -e " ${rw_huang}8.   ${rw_lv}查看所有用户详情${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── SSH 设置 ────${rw_lv}"
-	echo -e " ${rw_huang}9.   ${rw_lv}SSH 设置（端口/root登录/密码认证/安全项）${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}为已有用户设置密码${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}为已有用户设置 sudo 权限${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}查看当前 sudo 权限用户${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────────────────${rw_lv}"
 	read -e -p " 请输入你的选择: " _rm_choice
 
 	case $_rm_choice in
 	  1)
-		# ── 创建普通用户 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 创建普通用户 ━━━━━━${rw_lv}"
-		echo ""
-		read -e -p " 请输入用户名: " _newuser < /dev/tty
+		read -e -p " 请输入要创建的普通用户名: " _newuser < /dev/tty
 		if [ -z "$_newuser" ]; then
 			red "用户名不能为空"
-			break_end
-			continue
+		elif id "$_newuser" &>/dev/null; then
+			yellow "用户 $_newuser 已存在，跳过创建"
+		else
+			useradd -m -s /bin/bash "$_newuser" && green "用户 $_newuser 创建成功" || red "创建失败"
 		fi
-		if id "$_newuser" &>/dev/null; then
-			yellow "用户 $_newuser 已存在"
-			break_end
-			continue
-		fi
-		# 选 shell
-		echo ""
-		echo -e " Shell 选择:"
-		echo -e " ${rw_huang}1.${rw_lv} /bin/bash（默认，推荐）"
-		echo -e " ${rw_huang}2.${rw_lv} /bin/sh"
-		echo -e " ${rw_huang}3.${rw_lv} /usr/sbin/nologin（不允许登录）"
-		read -e -p " 请选择（默认1）: " _shell_choice < /dev/tty
-		_shell_choice="${_shell_choice:-1}"
-		local _user_shell="/bin/bash"
-		case $_shell_choice in
-			2) _user_shell="/bin/sh" ;;
-			3) _user_shell="/usr/sbin/nologin" ;;
-		esac
-		# 创建
-		useradd -m -s "$_user_shell" "$_newuser"
-		if [ $? -ne 0 ]; then
-			red "创建失败"
-			break_end
-			continue
-		fi
-		green "✓ 用户 $_newuser 创建成功 (shell: $_user_shell)"
-		# 询问是否设密码
-		echo ""
-		read -e -p " 是否立即设置密码？(y/N): " _setpw < /dev/tty
-		if [[ "$_setpw" =~ ^[Yy]$ ]]; then
-			passwd "$_newuser"
-		fi
-		# 询问是否加 sudo
-		echo ""
-		read -e -p " 是否赋予 sudo 权限？(y/N): " _setsudo < /dev/tty
-		if [[ "$_setsudo" =~ ^[Yy]$ ]]; then
-			usermod -aG sudo "$_newuser" 2>/dev/null || usermod -aG wheel "$_newuser" 2>/dev/null
-			green "✓ 已为 $_newuser 添加 sudo 权限"
-		fi
+		break_end
 		;;
 	  2)
-		# ── 设置密码 ──
 		echo ""
-		# 列出用户供选择
-		echo -e " ${rw_cheng}── 可选用户 ──${rw_lv}"
-		local _users=()
-		local _ui=1
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] || continue
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u"
-			_users+=("$_u")
-			((_ui++))
-		done </etc/passwd
-		echo -e " ${rw_huang}${_ui}.${rw_lv} root"
-		_users+=("root")
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 请选择: " _idx < /dev/tty
-		[ "$_idx" = "0" ] && continue
-		[ -z "$_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target=""
-		_ui=1
-		for _u in "${_users[@]}"; do
-			[ "$_ui" -eq "$_idx" ] && { _target="$_u"; break; }
-			((_ui++))
-		done
-		[ -z "$_target" ] && { red "无效选择"; break_end; continue; }
-		echo ""
-		passwd "$_target"
+		read -e -p " 请输入要设置密码的用户名: " _pwuser < /dev/tty
+		if [ -n "$_pwuser" ]; then
+			passwd "$_pwuser"
+		else
+			red "用户名不能为空"
+		fi
+		break_end
 		;;
 	  3)
-		# ── 设置 sudo 权限 ──
 		echo ""
-		echo -e " ${rw_cheng}── 选择用户 ──${rw_lv}"
-		local _users=()
-		local _ui=1
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] || continue
-			local _m=""
-			if getent group sudo 2>/dev/null | grep -q "$_u" || \
-			   getent group wheel 2>/dev/null | grep -q "$_u"; then
-				_m="${rw_lv}[已有sudo]${rw_lv}"
-			fi
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u $_m"
-			_users+=("$_u")
-			((_ui++))
-		done </etc/passwd
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 请选择: " _idx < /dev/tty
-		[ "$_idx" = "0" ] && continue
-		[ -z "$_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target=""
-		_ui=1
-		for _u in "${_users[@]}"; do
-			[ "$_ui" -eq "$_idx" ] && { _target="$_u"; break; }
-			((_ui++))
-		done
-		[ -z "$_target" ] && { red "无效选择"; break_end; continue; }
-		usermod -aG sudo "$_target" 2>/dev/null || usermod -aG wheel "$_target" 2>/dev/null
-		green "✓ 已为 $_target 添加 sudo 权限"
+		read -e -p " 请输入要赋予 sudo 权限的用户名: " _sudouser < /dev/tty
+		if [ -n "$_sudouser" ]; then
+			usermod -aG sudo "$_sudouser" 2>/dev/null || usermod -aG wheel "$_sudouser" 2>/dev/null
+			green "已为 $_sudouser 添加 sudo 权限"
+		else
+			red "用户名不能为空"
+		fi
+		break_end
 		;;
 	  4)
-		# ── 撤销 sudo 权限 ──
 		echo ""
-		echo -e " ${rw_cheng}── 当前 sudo 用户 ──${rw_lv}"
-		local _sudo_users=""
-		_sudo_users=$(getent group sudo 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
-		[ -z "$_sudo_users" ] && _sudo_users=$(getent group wheel 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
-		if [ -z "$_sudo_users" ]; then
-			yellow "  暂无 sudo 用户"
-			break_end
-			continue
-		fi
-		local _users=()
-		local _ui=1
-		while IFS= read -r _u; do
-			[ -n "$_u" ] && {
-				echo -e " ${rw_huang}${_ui}.${rw_lv} $_u"
-				_users+=("$_u")
-				((_ui++))
-			}
-		done <<< "$_sudo_users"
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 请选择要撤销的用户: " _idx < /dev/tty
-		[ "$_idx" = "0" ] && continue
-		[ -z "$_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target=""
-		_ui=1
-		for _u in "${_users[@]}"; do
-			[ "$_ui" -eq "$_idx" ] && { _target="$_u"; break; }
-			((_ui++))
-		done
-		[ -z "$_target" ] && { red "无效选择"; break_end; continue; }
-		read -e -p " 确认撤销 $_target 的 sudo 权限？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			gpasswd -d "$_target" sudo 2>/dev/null
-			gpasswd -d "$_target" wheel 2>/dev/null
-			green "✓ 已撤销 $_target 的 sudo 权限"
-		else
-			yellow "已取消"
-		fi
-		;;
-	  5)
-		# ── 删除用户 ──
-		echo ""
-		echo -e " ${rw_cheng}── 选择要删除的用户 ──${rw_lv}"
-		local _users=()
-		local _ui=1
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] || continue
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_home}"
-			_users+=("$_u")
-			((_ui++))
-		done </etc/passwd
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 请选择: " _idx < /dev/tty
-		[ "$_idx" = "0" ] && continue
-		[ -z "$_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target=""
-		_ui=1
-		for _u in "${_users[@]}"; do
-			[ "$_ui" -eq "$_idx" ] && { _target="$_u"; break; }
-			((_ui++))
-		done
-		[ -z "$_target" ] && { red "无效选择"; break_end; continue; }
-		echo ""
-		echo -e " ${rw_hong}⚠ 将删除用户 $_target${rw_lv}"
-		echo -e " ${rw_huang}1.${rw_lv} 仅删除用户（保留 home 目录）"
-		echo -e " ${rw_huang}2.${rw_lv} 删除用户 + home 目录"
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		read -e -p " 请选择: " _del_mode < /dev/tty
-		case $_del_mode in
-			1)
-				userdel "$_target" && green "✓ 已删除用户 $_target（home 保留）" || red "删除失败"
-				;;
-			2)
-				read -e -p " 确认删除 $_target 及其 home 目录？(yes确认): " _confirm < /dev/tty
-				if [ "$_confirm" = "yes" ]; then
-					userdel -r "$_target" && green "✓ 已删除用户 $_target 及 home 目录" || red "删除失败"
-				else
-					yellow "已取消"
-				fi
-				;;
-			*) yellow "已取消" ;;
-		esac
-		;;
-	  6)
-		# ── 修改用户 Shell ──
-		echo ""
-		echo -e " ${rw_cheng}── 选择用户 ──${rw_lv}"
-		local _users=()
-		local _ui=1
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] || continue
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u  (当前: $_shell)"
-			_users+=("$_u")
-			((_ui++))
-		done </etc/passwd
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 请选择: " _idx < /dev/tty
-		[ "$_idx" = "0" ] && continue
-		[ -z "$_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target=""
-		_ui=1
-		for _u in "${_users[@]}"; do
-			[ "$_ui" -eq "$_idx" ] && { _target="$_u"; break; }
-			((_ui++))
-		done
-		[ -z "$_target" ] && { red "无效选择"; break_end; continue; }
-		echo ""
-		echo -e " Shell 选择:"
-		echo -e " ${rw_huang}1.${rw_lv} /bin/bash"
-		echo -e " ${rw_huang}2.${rw_lv} /bin/sh"
-		echo -e " ${rw_huang}3.${rw_lv} /usr/sbin/nologin（不允许登录）"
-		echo -e " ${rw_huang}4.${rw_lv} /bin/zsh"
-		read -e -p " 请选择: " _sc < /dev/tty
-		local _new_shell=""
-		case $_sc in
-			1) _new_shell="/bin/bash" ;;
-			2) _new_shell="/bin/sh" ;;
-			3) _new_shell="/usr/sbin/nologin" ;;
-			4) _new_shell="/bin/zsh" ;;
-			*) yellow "已取消"; break_end; continue ;;
-		esac
-		usermod -s "$_new_shell" "$_target" && green "✓ $_target 的 shell 已改为 $_new_shell" || red "修改失败"
-		;;
-	  7)
-		# ── 查看 sudo 用户 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 当前 sudo 权限用户 ━━━━━━${rw_lv}"
-		echo ""
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		echo -e "           当前拥有 sudo 权限的用户"
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 		local _sudo_users=""
 		_sudo_users=$(getent group sudo 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
 		[ -z "$_sudo_users" ] && _sudo_users=$(getent group wheel 2>/dev/null | awk -F: '{print $4}' | tr ',' '\n')
@@ -18994,360 +18754,672 @@ while true; do
 		else
 			echo -e "   ${rw_huang}暂无 sudo 权限用户${rw_lv}"
 		fi
+		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+		break_end
 		;;
-	  8)
-		# ── 查看所有用户详情 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 所有用户详情 ━━━━━━${rw_lv}"
-		echo ""
-		printf "  ${rw_huang}%-12s %-6s %-10s %-20s %s${rw_lv}\n" "用户名" "UID" "Shell" "HOME" "备注"
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] || continue
-			local _note=""
-			if getent group sudo 2>/dev/null | grep -q "$_u" || \
-			   getent group wheel 2>/dev/null | grep -q "$_u"; then
-				_note="sudo"
-			fi
-			[ -n "$_p" ] && [ "$_p" != "x" ] && [ "$_p" != "*" ] && [ "$_p" != "!" ] && _note="${_note} 有密码"
-			printf "  %-12s %-6s %-10s %-20s %s\n" "$_u" "$_uid" "$(basename "$_shell")" "$_home" "$_note"
-		done </etc/passwd
-		;;
-	  9)
-		# ── SSH 设置 ──
-		ssh_config_manager
-		;;
-	  0)
-		break
-		;;
-	  *)
-		red "无效的输入!"
-		;;
+	  0) break ;;
+	  *) red "无效的输入!" ; break_end ;;
 	esac
-	break_end
 done
 }
 
-# ================================================================
-# SSH 设置管理器
-# 功能: 端口 / root 登录 / 密码认证 / 公钥认证 / 安全加固 / 重启
-# ================================================================
+# ── 新用户管理（直接复用 root 管理一样的逻辑）──
+
+# ── SSH 配置 ──
 ssh_config_manager() {
 while true; do
 	clear
 
 	# ── 读取当前状态 ──
-	local _ssh_port _root_login _pass_auth _pubkey_auth _maxauth _ssh_status
-	_ssh_port=$(grep -E '^#?Port[[:space:]]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
+	local _ssh_port=$(grep -E '^#?Port[[:space:]]+' /etc/ssh/sshd_config | awk '{print $2}' | head -1)
 	_ssh_port="${_ssh_port:-22}"
 
-	_root_login="未设置"
-	grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null && _root_login="${rw_hong}允许${rw_lv}"
-	grep -qE '^PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null && _root_login="${rw_lv}禁止${rw_lv}"
-	grep -qE '^PermitRootLogin[[:space:]]+prohibit-password' /etc/ssh/sshd_config 2>/dev/null && _root_login="${rw_huang}仅密钥${rw_lv}"
-
-	_pass_auth="未设置"
-	grep -qE '^PasswordAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null && _pass_auth="${rw_hong}允许${rw_lv}"
-	grep -qE '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null && _pass_auth="${rw_lv}禁止${rw_lv}"
-
-	_pubkey_auth="未设置"
-	grep -qE '^PubkeyAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null && _pubkey_auth="${rw_lv}允许${rw_lv}"
-	grep -qE '^PubkeyAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null && _pubkey_auth="${rw_hong}禁止${rw_lv}"
-
-	_maxauth=$(grep -E '^#?MaxAuthTries[[:space:]]+' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}' | head -1)
-	_maxauth="${_maxauth:-6}"
-
-	if systemctl is-active --quiet sshd 2>/dev/null || systemctl is-active --quiet ssh 2>/dev/null; then
-		_ssh_status="${rw_lv}运行中${rw_lv}"
-	else
-		_ssh_status="${rw_hong}未运行${rw_lv}"
+	local _root_login="未知"
+	if grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_lv}允许${rw_lv}"
+	elif grep -qE '^PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_hong}禁止${rw_lv}"
+	elif grep -qE '^PermitRootLogin[[:space:]]+prohibit-password' /etc/ssh/sshd_config 2>/dev/null; then
+		_root_login="${rw_huang}仅密钥${rw_lv}"
 	fi
 
-	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 设置  ━━━━━━━━━━━━${rw_lv}"
-	echo -e " 端口: ${rw_huang}${_ssh_port}${rw_lv}   服务: ${_ssh_status}"
-	echo -e " Root登录: ${_root_login}   密码: ${_pass_auth}   公钥: ${_pubkey_auth}"
-	echo -e " 最大尝试: ${rw_huang}${_maxauth}${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 基本设置 ────${rw_lv}"
-	echo -e " ${rw_huang}1.   ${rw_lv}修改 SSH 端口${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}Root 登录设置${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}密码认证设置${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}公钥认证设置${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}限制认证尝试次数${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 安全加固 ────${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}禁止 root SSH 登录${rw_lv}"
-	echo -e " ${rw_huang}7.   ${rw_lv}禁止密码登录（仅密钥）${rw_lv}"
-	echo -e " ${rw_huang}8.   ${rw_lv}禁用端口转发/X11${rw_lv}"
-	echo -e " ${rw_huang}9.   ${rw_lv}限制登录用户/组（AllowUsers/AllowGroups）${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 服务管理 ────${rw_lv}"
-	echo -e " ${rw_huang}10.  ${rw_lv}查看当前 SSH 配置${rw_lv}"
-	echo -e " ${rw_huang}11.  ${rw_lv}测试配置语法 (sshd -t)${rw_lv}"
-	echo -e " ${rw_huang}12.  ${rw_lv}重启 SSH 服务${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请输入你的选择: " _sc_choice
+	local _pass_auth="未知"
+	if grep -qE '^PasswordAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+		_pass_auth="${rw_lv}允许${rw_lv}"
+	elif grep -qE '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+		_pass_auth="${rw_hong}禁止${rw_lv}"
+	fi
 
-	case $_sc_choice in
+	local _ssh_status="未知"
+	systemctl is-active --quiet sshd 2>/dev/null && _ssh_status="${rw_lv}运行中${rw_lv}" || _ssh_status="${rw_hong}未运行${rw_lv}"
+
+	# ── 当前用户 SSH 密钥状态 ──
+	local _ssh_dir="$HOME/.ssh"
+	local _auth_file="${_ssh_dir}/authorized_keys"
+	local _dir_perm="-" _dir_perm_color="${rw_hong}" _key_perm="-" _key_perm_color="${rw_hong}" _key_count=0
+
+	if [ -d "$_ssh_dir" ]; then
+		_dir_perm=$(stat -c '%a' "$_ssh_dir" 2>/dev/null || stat -f '%Lp' "$_ssh_dir" 2>/dev/null)
+		[ "$_dir_perm" = "700" ] && _dir_perm_color="${rw_lv}" || _dir_perm_color="${rw_huang}"
+	else
+		_dir_perm="不存在"
+	fi
+
+	if [ -f "$_auth_file" ]; then
+		_key_perm=$(stat -c '%a' "$_auth_file" 2>/dev/null || stat -f '%Lp' "$_auth_file" 2>/dev/null)
+		[ "$_key_perm" = "600" ] && _key_perm_color="${rw_lv}" || _key_perm_color="${rw_huang}"
+		_key_count=$(grep -c '^ssh-' "$_auth_file" 2>/dev/null || echo 0)
+	else
+		_key_perm="不存在"
+	fi
+
+	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 配置  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 端口: ${rw_huang}${_ssh_port}${rw_lv}  Root登录: ${_root_login}  密码登录: ${_pass_auth}  服务: ${_ssh_status}"
+	echo -e " .ssh 目录: ${_dir_perm_color}${_dir_perm}${rw_lv}  authorized_keys: ${_key_perm_color}${_key_perm}${rw_lv}  密钥数: ${_key_count}"
+	echo ""
+	echo -e " ${rw_cheng}──── 服务配置${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}修改 SSH 端口号${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}禁止 root 直接 SSH 登录${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}配置当前账户仅密钥登录${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}限制登录用户/组${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}限制认证尝试次数${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}禁用端口转发/X11${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}保存 SSH 配置并重启${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 密钥管理${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}添加 SSH 公钥${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+	read -e -p " 请输入你的选择: " ssh_choice
+
+	case $ssh_choice in
 	  1)
-		# ── 修改端口 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 修改 SSH 端口 ━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 修改 SSH 端口号 ━━━━━━${rw_lv}"
 		echo -e " 当前端口: ${rw_huang}${_ssh_port}${rw_lv}"
 		echo ""
-		read -e -p " 新端口号（1-65535）: " _new_port < /dev/tty
+		read -e -p " 请输入新端口号（1-65535）: " _new_port < /dev/tty
 		if [ -z "$_new_port" ]; then
-			red "不能为空"
+			red "端口号不能为空，已取消"
 			break_end
 			continue
 		fi
 		if ! [[ "$_new_port" =~ ^[0-9]+$ ]] || [ "$_new_port" -lt 1 ] || [ "$_new_port" -gt 65535 ]; then
-			red "无效端口号"
+			red "无效端口号，请输入 1-65535 之间的数字"
 			break_end
 			continue
 		fi
-		_ssh_backup_configs
+
+		# 修改端口
 		if grep -qE '^#?Port[[:space:]]+' /etc/ssh/sshd_config; then
 			sed -i -E "s/^#?Port[[:space:]]+.*/Port ${_new_port}/" /etc/ssh/sshd_config
 		else
 			echo "Port ${_new_port}" >> /etc/ssh/sshd_config
 		fi
-		green "✓ 端口已改为 ${_new_port}"
-		echo -e " ${rw_hong}⚠ 记得放行防火墙/安全组的 ${_new_port} 端口！${rw_lv}"
-		_ssh_apply_and_restart
+
+		green "SSH 端口已修改为: ${_new_port}"
+		echo -e " ${rw_huang}提示: 新端口将在重启 SSH 服务后生效${rw_lv}"
+
+		# 询问是否重启
+		read -e -p " 是否立即重启 SSH 服务使新端口生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+			green "SSH 服务已重启，新端口 ${_new_port} 已生效"
+		else
+			yellow "请稍后手动重启 SSH 服务使端口生效"
+		fi
 		;;
 	  2)
-		# ── Root 登录设置 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ Root 登录设置 ━━━━━━${rw_lv}"
-		echo -e " 当前: ${_root_login}"
+		echo -e "${rw_cheng}━━━━━━ 禁止 root 直接 SSH 登录 ━━━━━━${rw_lv}"
+		echo -e " ${rw_hong}⚠ 此操作将禁止 root 账户通过 SSH 直接登录${rw_lv}"
 		echo ""
-		echo -e " ${rw_huang}1.${rw_lv} 允许 root 登录（含密码）"
-		echo -e " ${rw_huang}2.${rw_lv} 仅允许 root 密钥登录（prohibit-password）"
-		echo -e " ${rw_huang}3.${rw_lv} 禁止 root SSH 登录"
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		read -e -p " 请选择: " _rl < /dev/tty
-		local _rl_val=""
-		case $_rl in
-			1) _rl_val="yes" ;;
-			2) _rl_val="prohibit-password" ;;
-			3) _rl_val="no" ;;
-			*) continue ;;
-		esac
-		_ssh_backup_configs
-		_ssh_cfg_set PermitRootLogin "$_rl_val"
-		green "✓ PermitRootLogin 已设为 $_rl_val"
-		_ssh_apply_and_restart
-		;;
-	  3)
-		# ── 密码认证设置 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 密码认证设置 ━━━━━━${rw_lv}"
-		echo -e " 当前: ${_pass_auth}"
-		echo ""
-		echo -e " ${rw_huang}1.${rw_lv} 允许密码登录"
-		echo -e " ${rw_huang}2.${rw_lv} 禁止密码登录（仅密钥）"
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		read -e -p " 请选择: " _pa < /dev/tty
-		local _pa_val=""
-		case $_pa in
-			1) _pa_val="yes" ;;
-			2)
-				_pa_val="no"
-				# 检查当前用户是否有公钥
-				local _cur_home
-				_cur_home=$(getent passwd "$(whoami)" | cut -d: -f6)
-				if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
-					red "⚠ 当前用户未配置公钥，禁用密码后将无法登录！"
-					echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」部署公钥${rw_lv}"
-					read -e -p " 仍要禁用？(yes确认): " _confirm < /dev/tty
-					[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
-				fi
-				;;
-			*) continue ;;
-		esac
-		_ssh_backup_configs
-		_ssh_cfg_set PasswordAuthentication "$_pa_val"
-		green "✓ PasswordAuthentication 已设为 $_pa_val"
-		_ssh_apply_and_restart
-		;;
-	  4)
-		# ── 公钥认证设置 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 公钥认证设置 ━━━━━━${rw_lv}"
-		echo -e " 当前: ${_pubkey_auth}"
-		echo ""
-		echo -e " ${rw_huang}1.${rw_lv} 允许公钥登录"
-		echo -e " ${rw_huang}2.${rw_lv} 禁止公钥登录"
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		read -e -p " 请选择: " _pk < /dev/tty
-		local _pk_val=""
-		case $_pk in
-			1) _pk_val="yes" ;;
-			2) _pk_val="no" ;;
-			*) continue ;;
-		esac
-		_ssh_backup_configs
-		_ssh_cfg_set PubkeyAuthentication "$_pk_val"
-		green "✓ PubkeyAuthentication 已设为 $_pk_val"
-		_ssh_apply_and_restart
-		;;
-	  5)
-		# ── 限制认证尝试次数 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 限制认证尝试次数 ━━━━━━${rw_lv}"
-		echo -e " 当前: ${rw_huang}${_maxauth}${rw_lv} 次"
-		echo -e " ${rw_lv}连续 N 次失败后断开连接，建议 3-6${rw_lv}"
-		echo ""
-		read -e -p " 新次数（1-10，默认3）: " _new_max < /dev/tty
-		_new_max="${_new_max:-3}"
-		if ! [[ "$_new_max" =~ ^[0-9]+$ ]] || [ "$_new_max" -lt 1 ] || [ "$_new_max" -gt 10 ]; then
-			red "无效次数"
-			break_end
-			continue
-		fi
-		_ssh_backup_configs
-		_ssh_cfg_set MaxAuthTries "$_new_max"
-		green "✓ MaxAuthTries 已设为 $_new_max"
-		_ssh_apply_and_restart
-		;;
-	  6)
-		# ── 禁止 root SSH 登录（快捷）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁止 root SSH 登录 ━━━━━━${rw_lv}"
-		echo -e " ${rw_hong}⚠ 将禁止 root 通过 SSH 登录${rw_lv}"
-		echo -e " ${rw_huang}确保有其他 sudo 用户可登录，否则将锁死！${rw_lv}"
-		echo ""
-		read -e -p " 确认？(y/N): " _confirm < /dev/tty
+		read -e -p " 确认禁止 root SSH 登录？(y/N): " _confirm < /dev/tty
 		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			_ssh_backup_configs
-			_ssh_cfg_set PermitRootLogin no
-			green "✓ 已禁止 root SSH 登录"
-			_ssh_apply_and_restart
-		else
-			yellow "已取消"
-		fi
-		;;
-	  7)
-		# ── 禁止密码登录（快捷）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁止密码登录（仅密钥）━━━━━━${rw_lv}"
-		echo -e " ${rw_hong}⚠ 将禁止密码登录，仅允许密钥登录${rw_lv}"
-		# 检查公钥
-		local _cur_home
-		_cur_home=$(getent passwd "$(whoami)" | cut -d: -f6)
-		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
-			red "⚠ 当前用户未配置公钥，禁用密码后将无法登录！"
-			echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」部署公钥${rw_lv}"
-			break_end
-			continue
-		fi
-		echo -e " ${rw_lv}当前用户公钥数: $(grep -cE '^(ssh-|ecdsa-|sk-)' "${_cur_home}/.ssh/authorized_keys" 2>/dev/null || echo 0)${rw_lv}"
-		echo ""
-		read -e -p " 确认禁止密码登录？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			_ssh_backup_configs
-			_ssh_cfg_set PasswordAuthentication no
-			_ssh_cfg_set PubkeyAuthentication yes
-			green "✓ 已禁止密码登录，仅允许密钥"
-			_ssh_apply_and_restart
-		else
-			yellow "已取消"
-		fi
-		;;
-	  8)
-		# ── 禁用端口转发/X11 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁用端口转发/X11 ━━━━━━${rw_lv}"
-		echo -e " 将设置: AllowTcpForwarding no / X11Forwarding no / AllowAgentForwarding no"
-		echo ""
-		read -e -p " 确认？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			_ssh_backup_configs
-			_ssh_cfg_set AllowTcpForwarding no
-			_ssh_cfg_set X11Forwarding no
-			_ssh_cfg_set AllowAgentForwarding no
-			green "✓ 已禁用端口转发/X11/Agent 转发"
-			_ssh_apply_and_restart
-		else
-			yellow "已取消"
-		fi
-		;;
-	  9)
-		# ── 限制登录用户/组 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 限制登录用户/组 ━━━━━━${rw_lv}"
-		echo -e " ${rw_lv}使用 AllowUsers/AllowGroups 明确指定允许登录的用户${rw_lv}"
-		echo -e " ${rw_hong}⚠ 配置后只有列表中的用户能登录，其他用户被拒绝！${rw_lv}"
-		echo ""
-		# 显示当前设置
-		local _cur_allow_u _cur_allow_g
-		_cur_allow_u=$(grep -E '^AllowUsers' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}')
-		_cur_allow_g=$(grep -E '^AllowGroups' /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}')
-		[ -n "$_cur_allow_u" ] && echo -e " 当前 AllowUsers: ${rw_huang}${_cur_allow_u}${rw_lv}"
-		[ -n "$_cur_allow_g" ] && echo -e " 当前 AllowGroups: ${rw_huang}${_cur_allow_g}${rw_lv}"
-		echo ""
-		read -e -p " 允许登录的用户（空格分隔，留空跳过）: " _au < /dev/tty
-		read -e -p " 允许登录的用户组（空格分隔，留空跳过）: " _ag < /dev/tty
-		_ssh_backup_configs
-		if [ -n "$_au" ]; then
-			sed -i -E '/^AllowUsers/d' /etc/ssh/sshd_config
-			echo "AllowUsers $_au" >> /etc/ssh/sshd_config
-			green "✓ AllowUsers 已设置: $_au"
-		fi
-		if [ -n "$_ag" ]; then
-			sed -i -E '/^AllowGroups/d' /etc/ssh/sshd_config
-			echo "AllowGroups $_ag" >> /etc/ssh/sshd_config
-			green "✓ AllowGroups 已设置: $_ag"
-		fi
-		[ -z "$_au" ] && [ -z "$_ag" ] && yellow "未输入任何内容，跳过"
-		_ssh_apply_and_restart
-		;;
-	  10)
-		# ── 查看当前 SSH 配置 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 当前 SSH 关键配置 ━━━━━━${rw_lv}"
-		echo ""
-		local _keys="Port PermitRootLogin PasswordAuthentication PubkeyAuthentication MaxAuthTries KbdInteractiveAuthentication ChallengeResponseAuthentication UsePAM AllowUsers AllowGroups AllowTcpForwarding X11Forwarding"
-		for _k in $_keys; do
-			local _v
-			_v=$(grep -E "^${_k}[[:space:]]+" /etc/ssh/sshd_config 2>/dev/null | head -1 | awk '{print $2}')
-			[ -n "$_v" ] && printf "  ${rw_huang}%-30s${rw_lv} %s\n" "$_k" "$_v"
-		done
-		;;
-	  11)
-		# ── 测试配置语法 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 测试 SSH 配置语法 ━━━━━━${rw_lv}"
-		echo ""
-		if sshd -t 2>&1; then
-			green "✓ 语法检查通过"
-		else
-			red "✗ 语法检查失败，请检查配置"
-		fi
-		;;
-	  12)
-		# ── 重启 SSH 服务 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 重启 SSH 服务 ━━━━━━${rw_lv}"
-		echo ""
-		read -e -p " 确认重启 SSH 服务？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			if sshd -t 2>/dev/null; then
-				if systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null || systemctl restart ssh 2>/dev/null; then
-					green "✓ SSH 服务已重启"
-				else
-					red "重启失败"
-				fi
+			sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+			green "root SSH 登录已禁止"
+
+			read -e -p " 是否立即重启 SSH 服务？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				green "SSH 服务已重启，配置已生效"
 			else
-				red "配置语法错误，已取消重启"
+				yellow "请稍后手动重启 SSH 服务使配置生效"
 			fi
 		else
 			yellow "已取消"
 		fi
 		;;
+	  3)
+		root_use
+		clear
+		echo -e "${rw_cheng}━━━━━━━━━━━━  当前账户仅密钥登录  ━━━━━━━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}此操作将禁止 SSH 密码登录，仅允许密钥登录${rw_lv}"
+		echo -e " ${rw_hong}⚠ 操作前请确保：1) 当前账户已配置 SSH 密钥  2) 已保存好私钥${rw_lv}"
+		echo -e " ${rw_lv}   如配置失误导致无法登录，可通过腾讯云 VNC 控制台救援${rw_lv}"
+		echo ""
+
+		# 获取当前用户名（用于 Match 块，需转义特殊字符）
+		local _cur_user
+		_cur_user=$(whoami)
+		local _cur_user_esc
+		_cur_user_esc=$(printf '%s\n' "$_cur_user" | sed 's/[.[\*^$(){}?+|/]/\\&/g')
+
+		# ── 1. 确保 .ssh 目录和密钥权限正确 ──
+		mkdir -p "$_ssh_dir"
+		chmod 700 "$_ssh_dir"
+		[ -f "$_auth_file" ] && chmod 600 "$_auth_file"
+
+		# ── 2. 密钥为空 → 交互式引导配置 ──
+		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
+			red "⚠ 当前账户（${_cur_user}）的 authorized_keys 为空或不存在！"
+			red "   禁用密码登录后你将无法通过 SSH 登录！"
+			echo ""
+			echo -e " ${rw_cheng}── 请先配置 SSH 密钥 ──${rw_lv}"
+			echo -e " ${rw_huang}1.   ${rw_lv}粘贴已有公钥${rw_lv}"
+			echo -e " ${rw_huang}2.   ${rw_lv}自动生成新密钥对（ed25519 / RSA）${rw_lv}"
+			echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+			read -e -p " 请选择: " _key_guide < /dev/tty
+
+			case $_key_guide in
+			  1)
+				echo ""
+				read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
+				if [ -n "$_pubkey" ]; then
+					mkdir -p "$_ssh_dir"
+					echo "$_pubkey" >> "$_auth_file"
+					chmod 700 "$_ssh_dir"
+					chmod 600 "$_auth_file"
+					green "公钥已添加"
+				else
+					red "公钥不能为空，已取消"
+					break_end
+					continue
+				fi
+				;;
+			  2)
+				echo ""
+				read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
+				_key_name="${_key_name:-id_ed25519}"
+				_key_path="${_ssh_dir}/${_key_name}"
+
+				if [ -f "$_key_path" ]; then
+					yellow "密钥文件 ${_key_name} 已存在"
+					read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+					[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+				fi
+
+				echo -e " 密钥类型:"
+				echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐，更安全更快）${rw_lv}"
+				echo -e " ${rw_huang}2.   ${rw_lv}RSA 3072 位（兼容性更好）${rw_lv}"
+				read -e -p " 请选择（默认1）: " _key_type_choice
+				_key_type_choice="${_key_type_choice:-1}"
+
+				local _key_type="ed25519"
+				[[ "$_key_type_choice" == "2" ]] && _key_type="rsa"
+
+				echo -e " ${rw_huang}正在生成 ${_key_type} 密钥对...${rw_lv}"
+				mkdir -p "$_ssh_dir" && chmod 700 "$_ssh_dir"
+
+				local _gen_ok=false
+				if [ "$_key_type" = "ed25519" ]; then
+					ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+				else
+					ssh-keygen -t rsa -b 3072 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+				fi
+
+				if $_gen_ok; then
+					cat "${_key_path}.pub" >> "$_auth_file"
+					chmod 600 "$_auth_file"
+					green "密钥对生成成功！"
+					echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
+					echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
+					echo -e " ${rw_hong}⚠ 请立即下载私钥保存到本地，否则无法 SSH 登录！${rw_lv}"
+					echo -e "   ${rw_lv}下载方式: scp 或 SFTP 下载 ${_key_path}${rw_lv}"
+				else
+					red "密钥生成失败，已取消"
+					break_end
+					continue
+				fi
+				;;
+			  *)
+				yellow "已取消"
+				break_end
+				continue
+				;;
+			esac
+		fi
+
+		# ── 3. 选择生效范围：全局 / 仅当前用户 ──
+		echo ""
+		echo -e " ${rw_cheng}── 生效范围 ──${rw_lv}"
+		echo -e " ${rw_huang}1.   ${rw_lv}全局生效 — 所有用户都只能密钥登录，同时禁止 root SSH 登录${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}仅当前用户 — 只对 ${_cur_user} 生效，其他用户不受影响${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		read -e -p " 请选择（默认2）: " _scope < /dev/tty
+		_scope="${_scope:-2}"
+
+		local _scope_global=false
+		[[ "$_scope" == "1" ]] && _scope_global=true
+
+		# ── 4. 变更预览 ──
+		echo ""
+		echo -e " ${rw_cheng}━━━━━━━━━━━━  变更预览  ━━━━━━━━━━━━${rw_lv}"
+
+		# 读取当前值
+		local _cur_passauth="未设置"
+		if grep -qE '^PasswordAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_passauth="${rw_lv}允许${rw_lv}"
+		elif grep -qE '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_passauth="${rw_hong}禁止${rw_lv}"
+		fi
+
+		local _cur_pubkey="未设置"
+		if grep -qE '^PubkeyAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_pubkey="${rw_lv}允许${rw_lv}"
+		elif grep -qE '^PubkeyAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_pubkey="${rw_hong}禁止${rw_lv}"
+		fi
+
+		local _cur_root="未设置"
+		local _root_warn=""
+		if grep -qE '^PermitRootLogin[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_lv}允许${rw_lv}"
+			_root_warn="${rw_hong}⚠ 当前 root 允许密码登录，建议禁止！${rw_lv}"
+		elif grep -qE '^PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_hong}禁止${rw_lv}"
+		elif grep -qE '^PermitRootLogin[[:space:]]+prohibit-password' /etc/ssh/sshd_config 2>/dev/null; then
+			_cur_root="${rw_huang}仅密钥${rw_lv}"
+		fi
+
+		if $_scope_global; then
+			echo -e " 生效范围: ${rw_huang}全局（所有用户）${rw_lv}"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "密码登录:" "$_cur_passauth"
+			printf " %-16s %s → ${rw_lv}允许${rw_lv}\n" "密钥登录:" "$_cur_pubkey"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "Root SSH:" "$_cur_root"
+		else
+			echo -e " 生效用户: ${rw_huang}${_cur_user}${rw_lv}（通过 Match User 块，不影响其他用户）"
+			printf " %-16s %s → ${rw_hong}禁止${rw_lv}\n" "密码登录:" "$_cur_passauth"
+			printf " %-16s %s → ${rw_lv}允许${rw_lv}\n" "密钥登录:" "$_cur_pubkey"
+			echo -e " Root SSH:   ${_cur_root}（不修改）"
+		fi
+
+		echo -e " 当前账户密钥: ${rw_lv}$(grep -c '^ssh-' "$_auth_file" 2>/dev/null || echo 0)${rw_lv} 个"
+		[ -n "$_root_warn" ] && echo -e " $_root_warn"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+
+		read -e -p " 确认应用以上配置？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# ── 5. 写入配置 ──
+		if $_scope_global; then
+			# 全局模式：PasswordAuthentication no + PubkeyAuthentication yes + PermitRootLogin no
+			sed -i -E 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+			sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+			# 询问是否禁止 root（附加选项）
+			echo ""
+			echo -e " ${rw_cheng}── 附加选项 ──${rw_lv}"
+			echo -e " 是否同时禁止 root SSH 登录？(PermitRootLogin no)"
+			read -e -p " 确认？(y/N): " _root_confirm < /dev/tty
+			if [[ "$_root_confirm" =~ ^[Yy]$ ]]; then
+				sed -i -E 's/^#?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+				green "已同时禁止 root SSH 登录"
+			else
+				yellow "保留 root SSH 登录设置（未修改 PermitRootLogin）"
+			fi
+
+			# 如果参数不存在则追加
+			grep -qE '^PasswordAuthentication' /etc/ssh/sshd_config || echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+			grep -qE '^PubkeyAuthentication' /etc/ssh/sshd_config || echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+
+			green "全局配置已更新："
+			green "  - 密码登录已禁止"
+			green "  - 密钥登录已允许"
+		else
+			# 单用户模式：用 Match User 块，不影响全局
+			# 安全删除已存在的该用户 Match 块（用行号精确删除，避免 sed 正则 bug）
+			local _match_start
+			_match_start=$(grep -n -E "^[[:space:]]*Match[[:space:]]+User[[:space:]]+${_cur_user_esc}([[:space:]]|$)" /etc/ssh/sshd_config 2>/dev/null | head -1 | cut -d: -f1)
+			if [ -n "$_match_start" ]; then
+				# 找到 Match 块结束行（下一个 Match 或文件结束）
+				local _match_end
+				_match_end=$(tail -n +"$_match_start" /etc/ssh/sshd_config | grep -n -E '^[[:space:]]*Match[[:space:]]' | head -2 | tail -1 | cut -d: -f1)
+				if [ -n "$_match_end" ]; then
+					_match_end=$((_match_start + _match_end - 1))
+					sed -i "${_match_start},${_match_end}d" /etc/ssh/sshd_config
+				else
+					sed -i "${_match_start},\$d" /etc/ssh/sshd_config
+				fi
+			fi
+
+			# 追加新的 Match 块（缩进 4 空格）
+			cat >> /etc/ssh/sshd_config <<EOF
+
+# 仅密钥登录 — ${_cur_user}
+Match User ${_cur_user}
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+EOF
+			green "Match User 块已添加：仅 ${_cur_user} 必须使用密钥登录"
+		fi
+
+		# ── 6. 语法检查 ──
+		echo ""
+		echo -e " ${rw_huang}正在测试 SSH 配置语法...${rw_lv}"
+		if sshd -t 2>&1; then
+			green "SSH 配置语法检查通过"
+		else
+			red "SSH 配置存在错误，请检查后重试"
+			break_end
+			continue
+		fi
+
+		# ── 7. 重启确认 ──
+		read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+			green "SSH 服务已重启，配置已生效"
+		else
+			yellow "配置已保存，请稍后手动重启 SSH 服务使配置生效"
+		fi
+		;;
+	  4)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 限制登录用户/组 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " 说明：使用 AllowUsers 或 AllowGroups 参数，明确指定允许通过 SSH 登录的用户或用户组。"
+		echo -e " 注意：配置后只有列表中的用户/组才能登录，其他用户将被拒绝！"
+		echo ""
+		read -e -p " 请输入允许登录的用户名（空格分隔多个）: " _allow_users < /dev/tty
+		if [ -n "$_allow_users" ]; then
+			sed -i -E '/^AllowUsers/d' /etc/ssh/sshd_config
+			echo "AllowUsers $_allow_users" >> /etc/ssh/sshd_config
+			green "已设置允许登录用户: $_allow_users"
+		else
+			yellow "用户名为空，跳过 AllowUsers 设置"
+		fi
+		echo ""
+		read -e -p " 请输入允许登录的用户组（空格分隔多个，留空跳过）: " _allow_groups < /dev/tty
+		if [ -n "$_allow_groups" ]; then
+			sed -i -E '/^AllowGroups/d' /etc/ssh/sshd_config
+			echo "AllowGroups $_allow_groups" >> /etc/ssh/sshd_config
+			green "已设置允许登录用户组: $_allow_groups"
+		else
+			yellow "用户组为空，跳过 AllowGroups 设置"
+		fi
+		echo ""
+		read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			if sshd -t 2>/dev/null; then
+				green "SSH 配置语法检查通过"
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				green "SSH 服务已重启，配置已生效"
+			else
+				red "SSH 配置存在错误，请检查后重试"
+			fi
+		else
+			yellow "配置已保存，请稍后手动重启 SSH 服务"
+		fi
+		;;
+	  5)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 限制认证尝试次数 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " 说明：设置 MaxAuthTries，在连续 N 次认证失败后直接断开连接，减缓暴力破解速度。"
+		echo -e " 建议值：3-6 次"
+		echo ""
+		read -e -p " 请输入最大认证尝试次数（默认 3）: " _max_tries < /dev/tty
+		_max_tries="${_max_tries:-3}"
+		if ! [[ "$_max_tries" =~ ^[0-9]+$ ]] || [ "$_max_tries" -lt 1 ] || [ "$_max_tries" -gt 10 ]; then
+			red "无效次数，请输入 1-10 之间的数字"
+			break_end
+			continue
+		fi
+		sed -i -E 's/^#?MaxAuthTries.*/MaxAuthTries '"$_max_tries"'/' /etc/ssh/sshd_config
+		if ! grep -qE '^MaxAuthTries' /etc/ssh/sshd_config; then
+			echo "MaxAuthTries $_max_tries" >> /etc/ssh/sshd_config
+		fi
+		green "已设置最大认证尝试次数: $_max_tries"
+		echo ""
+		read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+		if [[ "$_restart" =~ ^[Yy]$ ]]; then
+			if sshd -t 2>/dev/null; then
+				green "SSH 配置语法检查通过"
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				green "SSH 服务已重启，配置已生效"
+			else
+				red "SSH 配置存在错误，请检查后重试"
+			fi
+		else
+			yellow "配置已保存，请稍后手动重启 SSH 服务"
+		fi
+		;;
+	  6)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁用端口转发/X11 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " 说明：如果不需要端口转发或图形界面转发，可以禁用以减少潜在的攻击面。"
+		echo -e " 将设置：AllowTcpForwarding no 和 X11Forwarding no"
+		echo ""
+		read -e -p " 确认禁用端口转发和 X11 转发？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			sed -i -E 's/^#?AllowTcpForwarding.*/AllowTcpForwarding no/' /etc/ssh/sshd_config
+			sed -i -E 's/^#?X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
+			if ! grep -qE '^AllowTcpForwarding' /etc/ssh/sshd_config; then
+				echo "AllowTcpForwarding no" >> /etc/ssh/sshd_config
+			fi
+			if ! grep -qE '^X11Forwarding' /etc/ssh/sshd_config; then
+				echo "X11Forwarding no" >> /etc/ssh/sshd_config
+			fi
+			green "已禁用端口转发（AllowTcpForwarding no）"
+			green "已禁用 X11 转发（X11Forwarding no）"
+			echo ""
+			read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				if sshd -t 2>/dev/null; then
+					green "SSH 配置语法检查通过"
+					systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+					green "SSH 服务已重启，配置已生效"
+				else
+					red "SSH 配置存在错误，请检查后重试"
+				fi
+			else
+				yellow "配置已保存，请稍后手动重启 SSH 服务"
+			fi
+		else
+			yellow "已取消"
+		fi
+		;;
+	  7)
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 保存 SSH 配置并重启 ━━━━━━${rw_lv}"
+		echo -e " ${rw_huang}此操作将使用管理员权限重启 SSH 服务${rw_lv}"
+		echo ""
+		read -e -p " 确认保存当前配置并重启 SSH 服务？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			echo -e " ${rw_huang}正在测试 SSH 配置...${rw_lv}"
+			if sshd -t 2>/dev/null; then
+				green "SSH 配置语法检查通过"
+			else
+				red "SSH 配置存在错误，请检查后重试"
+				break_end
+				continue
+			fi
+
+			echo -e " ${rw_huang}正在以管理员权限重启 SSH 服务...${rw_lv}"
+			if systemctl restart sshd 2>/dev/null; then
+				green "SSH 服务重启成功！当前端口: $(grep -E '^Port[[:space:]]+' /etc/ssh/sshd_config | awk '{print $2}' | head -1)"
+			elif service ssh restart 2>/dev/null; then
+				green "SSH 服务重启成功！"
+			else
+				red "SSH 服务重启失败，请检查配置"
+			fi
+		else
+			yellow "已取消"
+		fi
+		;;
+	  8)
+		root_use
+		clear
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 添加 SSH 公钥 ━━━━━━${rw_lv}"
+		echo ""
+
+		# ── 选择目标用户 ──
+		echo -e " ${rw_cheng}── 请选择目标用户 ──${rw_lv}"
+		local _cur_usr=$(whoami)
+		echo -e " ${rw_huang}0.   ${rw_lv}${_cur_usr}（当前用户，uid=$(id -u)）→ 自动检测 home 目录${rw_lv}"
+		# 列出所有 uid >= 1000 的普通用户
+		local _users_list=()
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[[ "$_uid" -ge 1000 ]] && [[ -d "$_home" ]] && _users_list+=("$_u")
+		done </etc/passwd
+
+		local _ui=1
+		for _u in "${_users_list[@]}"; do
+			local _h=$(getent passwd "$_u" | cut -d: -f6)
+			echo -e " ${rw_huang}${_ui}.   ${rw_lv}${_u} → ${_h}/.ssh${rw_lv}"
+			((_ui++))
+		done
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		echo -e "${rw_hong}⚠ 提示: 用 sudo 运行脚本时，请选择实际要配置的用户，不要选 root${rw_lv}"
+		echo ""
+		read -e -p " 请选择（默认0=当前用户）: " _usr_choice < /dev/tty
+		_usr_choice="${_usr_choice:-0}"
+
+		local _target_user _target_home
+		if [[ "$_usr_choice" == "0" ]]; then
+			_target_user="$_cur_usr"
+			# 用 getent 获取真实 home 目录（sudo 下 $HOME 可能不对）
+			_target_home=$(getent passwd "$_target_user" | cut -d: -f6)
+			# 如果获取失败，才用 $HOME
+			if [[ -z "$_target_home" ]] || [[ ! -d "$_target_home" ]]; then
+				_target_home="$HOME"
+			fi
+		else
+			_ui=1
+			_target_user=""
+			for _u in "${_users_list[@]}"; do
+				if [[ "$_ui" == "$_usr_choice" ]]; then
+					_target_user="$_u"
+					break
+				fi
+				((_ui++))
+			done
+			if [[ -z "$_target_user" ]]; then
+				red "无效选择"
+				break_end
+				continue
+			fi
+			_target_home=$(getent passwd "$_target_user" | cut -d: -f6)
+			if [[ -z "$_target_home" ]] || [[ ! -d "$_target_home" ]]; then
+				red "无法获取用户 ${_target_user} 的 home 目录"
+				break_end
+				continue
+			fi
+		fi
+
+		_ssh_dir="${_target_home}/.ssh"
+		_auth_file="${_ssh_dir}/authorized_keys"
+
+		echo ""
+		echo -e " ${rw_lv}目标用户: ${rw_huang}${_target_user}${rw_lv}  →  ${_ssh_dir}${rw_lv}"
+		echo -e " ${rw_hong}⚠ 注意: .ssh 目录会被创建到上述路径，请确保这是你要配置的用户！${rw_lv}"
+		echo ""
+
+		echo -e " 请选择操作:"
+		echo -e " ${rw_huang}1.   ${rw_lv}粘贴已有公钥${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}自动生成新密钥对${rw_lv}"
+		echo -e " ${rw_huang}3.   ${rw_lv}查看已授权密钥${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+		read -e -p " 请选择: " _key_choice
+
+		case $_key_choice in
+		  1)
+			echo ""
+			read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa 开头）: " _pubkey < /dev/tty
+			if [[ -n "$_pubkey" ]]; then
+				mkdir -p "$_ssh_dir"
+				echo "$_pubkey" >> "$_auth_file"
+				chmod 700 "$_ssh_dir"
+				chmod 600 "$_auth_file"
+				chown -R "$_target_user":"$(id -gn "$_target_user" 2>/dev/null || echo "$_target_user")" "$_ssh_dir" 2>/dev/null
+				green "公钥已添加到 ${_auth_file}"
+			else
+				red "公钥不能为空"
+			fi
+			;;
+		  2)
+			echo ""
+			read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
+			_key_name="${_key_name:-id_ed25519}"
+			_key_path="${_ssh_dir}/${_key_name}"
+
+			if [[ -f "$_key_path" ]]; then
+				yellow "密钥文件 ${_key_name} 已存在"
+				read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
+				[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+			fi
+
+			echo -e " 密钥类型:"
+			echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐，更安全更快）${rw_lv}"
+			echo -e " ${rw_huang}2.   ${rw_lv}RSA 3072 位（兼容性更好）${rw_lv}"
+			read -e -p " 请选择（默认1）: " _key_type_choice
+			_key_type_choice="${_key_type_choice:-1}"
+
+			local _key_type="ed25519"
+			[[ "$_key_type_choice" == "2" ]] && _key_type="rsa"
+
+			echo -e " ${rw_huang}正在生成 ${_key_type} 密钥对...${rw_lv}"
+			mkdir -p "$_ssh_dir" && chmod 700 "$_ssh_dir"
+
+			local _gen_ok=false
+			if [[ "$_key_type" == "ed25519" ]]; then
+				ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+			else
+				ssh-keygen -t rsa -b 3072 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+			fi
+
+			if $_gen_ok; then
+				cat "${_key_path}.pub" >> "$_auth_file"
+				chmod 600 "$_auth_file"
+				chown -R "$_target_user":"$(id -gn "$_target_user" 2>/dev/null || echo "$_target_user")" "$_ssh_dir" 2>/dev/null
+				green "密钥对生成成功！"
+				echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
+				echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
+				echo -e " ${rw_hong}⚠ 请立即下载私钥保存到本地，否则无法 SSH 登录！${rw_lv}"
+				echo -e "   ${rw_lv}下载方式: scp 或 SFTP 下载 ${_key_path}${rw_lv}"
+			else
+				red "密钥生成失败"
+			fi
+			;;
+		  3)
+			echo ""
+			echo -e "${rw_cheng}━━━━━━ 已授权密钥 ━━━━━━${rw_lv}"
+			if [[ -f "$_auth_file" ]] && [[ -s "$_auth_file" ]]; then
+				cat "$_auth_file"
+			else
+				echo -e "暂无已授权的密钥"
+			fi
+			echo -e "${rw_cheng}────────────────────────────────${rw_lv}"
+			;;
+		  0)
+			;;
+		  *)
+			[[ "$_key_choice" != "0" ]] && red "无效的输入!"
+			;;
+		esac
+		;;
+
 	  0)
 		break
 		;;
