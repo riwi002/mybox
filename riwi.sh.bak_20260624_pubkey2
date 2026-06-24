@@ -19436,10 +19436,10 @@ while true; do
 	echo -e "${rw_cheng}━━━━━━━━━━━━  用户管理器  ━━━━━━━━━━━━${rw_lv}"
 	echo ""
 	echo -e " ${rw_huang}1.   ${rw_lv}创建用户${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}公钥配置（一键部署 / 生成 / 管理）${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}双证登录（公钥 + OTP 动态码）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}三证登录（公钥 + 密码 + OTP 动态码）${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}硬证登录（FIDO2 硬件密钥）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}双证登录（公钥 + OTP 动态码）${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}三证登录（公钥 + 密码 + OTP 动态码）${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}硬证登录（FIDO2 硬件密钥）${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}公钥配置（一键部署 / 生成 / 管理）${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -19447,10 +19447,10 @@ while true; do
 
 	case $um_choice in
 	  1) root_manager ;;
-	  2) ssh_pubkey_manager ;;
-	  3) ssh_two_factor_manager ;;
-	  4) ssh_three_factor_manager ;;
-	  5) ssh_fido2_manager ;;
+	  2) ssh_two_factor_manager ;;
+	  3) ssh_three_factor_manager ;;
+	  4) ssh_fido2_manager ;;
+	  5) ssh_pubkey_manager ;;
 	  0) break ;;
 	  *) red "无效的输入!" ;;
 	esac
@@ -19462,141 +19462,44 @@ done
 # 功能: 粘贴公钥 / 生成密钥对 / 查看已授权 / 删除公钥 / 权限修复
 # 支持为任意普通用户（含 root）配置，自动修正 .ssh 与 authorized_keys 权限
 # ================================================================
-# ================================================================
-# 公钥配置管理器（一键部署 / 生成 / 管理 SSH 公钥）
-# 设计原则: 逻辑分层清晰 — 状态面板 → 子菜单 → 执行
-# 支持任意普通用户（含 root），自动修正权限，sudo 场景安全
-# ================================================================
-
-# ── 辅助: 列出可选用户（uid≥1000 + root），返回数组 _PK_USERS ──
-_pk_list_users() {
-	_PK_USERS=()
-	local _u _p _uid _gid _gcos _home _shell
-	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-		[ -d "$_home" ] && _PK_USERS+=("$_u")
-	done </etc/passwd 2>/dev/null
-	# root 始终加入
-	_PK_USERS+=("root")
-}
-
-# ── 辅助: 交互选择用户，结果写入 _PK_TARGET_U / _PK_TARGET_HOME ──
-_pk_pick_user() {
-	_pk_list_users
-	echo -e " ${rw_cheng}── 选择目标用户 ──${rw_lv}"
-	local _i=1
-	for _u in "${_PK_USERS[@]}"; do
-		local _h
-		_h=$(getent passwd "$_u" | cut -d: -f6)
-		local _mark=""
-		[ -f "${_h}/.ssh/authorized_keys" ] && [ -s "${_h}/.ssh/authorized_keys" ] && \
-			_mark="${rw_lv}[已配公钥]${rw_lv}"
-		echo -e " ${rw_huang}${_i}.${rw_lv} $_u → ${_h} ${_mark}"
-		((_i++))
-	done
-	echo -e " ${rw_huang}0.${rw_lv} 取消"
-	echo ""
-	read -e -p " 请选择用户编号: " _idx < /dev/tty
-	[ "$_idx" = "0" ] && return 1
-	[ -z "$_idx" ] && return 1
-	if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_PK_USERS[@]} ]; then
-		return 1
-	fi
-	_PK_TARGET_U="${_PK_USERS[$((_idx - 1))]}"
-	_PK_TARGET_HOME=$(getent passwd "$_PK_TARGET_U" | cut -d: -f6)
-	[ -z "$_PK_TARGET_HOME" ] || [ ! -d "$_PK_TARGET_HOME" ] && return 1
-	return 0
-}
-
-# ── 辅助: 为指定用户追加公钥（去重 + 权限 + chown）──
-# 用法: _pk_add_pubkey <user> <home> <pubkey>
-_pk_add_pubkey() {
-	local _user="$1" _home="$2" _pubkey="$3"
-	local _ssh_dir="${_home}/.ssh"
-	local _auth_file="${_ssh_dir}/authorized_keys"
-
-	mkdir -p "$_ssh_dir"
-	chmod 700 "$_ssh_dir"
-	if [ ! -f "$_auth_file" ]; then
-		touch "$_auth_file"
-	fi
-	if grep -qF "$_pubkey" "$_auth_file" 2>/dev/null; then
-		yellow "  该公钥已存在，跳过添加"
-		return 0
-	fi
-	echo "$_pubkey" >> "$_auth_file"
-	chmod 600 "$_auth_file"
-	chown -R "$_user":"$(id -gn "$_user" 2>/dev/null || echo "$_user")" "$_ssh_dir" 2>/dev/null
-	green "  公钥已添加到 ${_auth_file}"
-	return 0
-}
-
-# ── 辅助: 显示某用户的 authorized_keys（带行号）──
-# 用法: _pk_show_authkeys <home>
-_pk_show_authkeys() {
-	local _home="$1"
-	local _auth_file="${_home}/.ssh/authorized_keys"
-	if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
-		yellow "  文件为空或不存在: ${_auth_file}"
-		return 1
-	fi
-	local _ln=0
-	while IFS= read -r _line; do
-		_ln=$((_ln + 1))
-		if echo "$_line" | grep -qE '^(ssh-|ecdsa-|sk-)'; then
-			local _kt _kc
-			_kt=$(echo "$_line" | awk '{print $1}')
-			_kc=$(echo "$_line" | awk '{print $NF}')
-			printf "  ${rw_huang}%-3s${rw_lv} %-20s %s\n" "$_ln" "$_kt" "${_kc:-无注释}"
-		elif [ -n "$_line" ]; then
-			printf "  ${rw_huang}%-3s${rw_lv} %s\n" "$_ln" "(非公钥行) ${_line}"
-		fi
-	done < "$_auth_file"
-	echo ""
-	echo -e "  共 ${rw_huang}${_ln}${rw_lv} 行"
-}
-
 ssh_pubkey_manager() {
 while true; do
 	clear
 	echo -e "${rw_cheng}━━━━━━━━━━━━  公钥配置  ━━━━━━━━━━━━${rw_lv}"
 	echo ""
 
-	# ── 状态面板: 扫描所有用户的公钥配置情况 ──
+	# ── 状态: 列出有 authorized_keys 的用户 ──
 	echo -e " ${rw_cheng}── 已配置公钥的用户 ──${rw_lv}"
-	local _has_any=0 _total_keys=0
+	local _has_any=0
 	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
 		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
 		if [ -f "${_home}/.ssh/authorized_keys" ] && [ -s "${_home}/.ssh/authorized_keys" ]; then
 			local _cnt
 			_cnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "${_home}/.ssh/authorized_keys" 2>/dev/null || echo 0)
-			if [ "$_cnt" -gt 0 ]; then
+			[ "$_cnt" -gt 0 ] && {
 				printf "  ${rw_huang}%-12s${rw_lv}  %s 个公钥  %s\n" "$_u" "$_cnt" "${_home}/.ssh/authorized_keys"
 				_has_any=1
-				_total_keys=$((_total_keys + _cnt))
-			fi
+			}
 		fi
 	done </etc/passwd 2>/dev/null
-	[ $_has_any -eq 0 ] && echo -e "  ${rw_huang}暂无用户配置公钥${rw_lv}" || \
-		echo -e "  ${rw_lv}合计 ${rw_huang}${_total_keys}${rw_lv} 个公钥${rw_lv}"
+	# 单独检查 root
+	if [ -f "/root/.ssh/authorized_keys" ] && [ -s "/root/.ssh/authorized_keys" ]; then
+		local _rcnt
+		_rcnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "/root/.ssh/authorized_keys" 2>/dev/null || echo 0)
+		[ "$_rcnt" -gt 0 ] && {
+			printf "  ${rw_huang}%-12s${rw_lv}  %s 个公钥  /root/.ssh/authorized_keys\n" "root" "$_rcnt"
+			_has_any=1
+		}
+	fi
+	[ $_has_any -eq 0 ] && echo -e "  ${rw_huang}暂无用户配置公钥${rw_lv}"
 	echo ""
 
-	echo -e " ${rw_cheng}──── 添加公钥 ────${rw_lv}"
-	echo -e " ${rw_huang}1.   ${rw_lv}粘贴公钥 → 当前用户${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}粘贴公钥 → 指定用户${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}生成新密钥对 → 当前用户（自动部署）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}生成新密钥对 → 指定用户（自动部署）${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}从其他服务器拉取公钥（ssh-copy-id 反向）${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 查看与管理 ────${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}查看指定用户的已授权公钥${rw_lv}"
-	echo -e " ${rw_huang}7.   ${rw_lv}删除指定公钥（按行号）${rw_lv}"
-	echo -e " ${rw_huang}8.   ${rw_lv}清空指定用户的全部公钥${rw_lv}"
-	echo -e " ${rw_huang}9.   ${rw_lv}修复 .ssh 与 authorized_keys 权限${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 批量与导入 ────${rw_lv}"
-	echo -e " ${rw_huang}10.  ${rw_lv}批量导入公钥（从文件，每行一个）${rw_lv}"
-	echo -e " ${rw_huang}11.  ${rw_lv}导出指定用户的公钥到文件${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}为当前用户配置公钥（粘贴已有公钥）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}为当前用户生成新密钥对并自动部署${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}为指定用户配置公钥${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}查看已授权公钥${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}删除指定公钥${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}修复 .ssh 与 authorized_keys 权限${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -19604,9 +19507,9 @@ while true; do
 
 	case $pk_choice in
 	  1)
-		# ── 粘贴公钥 → 当前用户 ──
+		# ── 为当前用户粘贴公钥 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 粘贴公钥 → 当前用户 ━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 为当前用户配置公钥 ━━━━━━${rw_lv}"
 		echo ""
 		local _cur_u _cur_home
 		_cur_u=$(whoami)
@@ -19614,50 +19517,39 @@ while true; do
 		[ -z "$_cur_home" ] && _cur_home="$HOME"
 		echo -e " 目标用户: ${rw_huang}${_cur_u}${rw_lv}  →  ${_cur_home}/.ssh/authorized_keys"
 		echo ""
-		read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa/sk- 开头）: " _pubkey < /dev/tty
+		read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa/sk- 开头，可多行）: " _pubkey < /dev/tty
 		if [ -z "$_pubkey" ]; then
 			red "公钥不能为空"
 			break_end
 			continue
 		fi
-		_pk_add_pubkey "$_cur_u" "$_cur_home" "$_pubkey"
+		mkdir -p "${_cur_home}/.ssh"
+		chmod 700 "${_cur_home}/.ssh"
+		local _auth_file="${_cur_home}/.ssh/authorized_keys"
+		# 去重检查
+		if grep -qF "$_pubkey" "$_auth_file" 2>/dev/null; then
+			yellow "该公钥已存在，跳过添加"
+		else
+			echo "$_pubkey" >> "$_auth_file"
+			chmod 600 "$_auth_file"
+			chown -R "$_cur_u":"$(id -gn "$_cur_u" 2>/dev/null || echo "$_cur_u")" "${_cur_home}/.ssh" 2>/dev/null
+			green "公钥已添加到 ${_auth_file}"
+		fi
 		;;
 	  2)
-		# ── 粘贴公钥 → 指定用户 ──
+		# ── 生成新密钥对并自动部署 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 粘贴公钥 → 指定用户 ━━━━━━${rw_lv}"
-		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		echo ""
-		echo -e " 目标用户: ${rw_huang}${_PK_TARGET_U}${rw_lv}  →  ${_PK_TARGET_HOME}/.ssh/authorized_keys"
-		echo ""
-		read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa/sk- 开头）: " _pubkey < /dev/tty
-		if [ -z "$_pubkey" ]; then
-			red "公钥不能为空"
-			break_end
-			continue
-		fi
-		_pk_add_pubkey "$_PK_TARGET_U" "$_PK_TARGET_HOME" "$_pubkey"
-		;;
-	  3)
-		# ── 生成新密钥对 → 当前用户 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 生成新密钥对 → 当前用户 ━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 生成新密钥对并自动部署 ━━━━━━${rw_lv}"
 		echo ""
 		local _cur_u _cur_home
 		_cur_u=$(whoami)
 		_cur_home=$(getent passwd "$_cur_u" | cut -d: -f6)
 		[ -z "$_cur_home" ] && _cur_home="$HOME"
-		echo -e " 目标用户: ${rw_huang}${_cur_u}${rw_lv}  →  ${_cur_home}/.ssh"
-		echo ""
 
 		read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
 		_key_name="${_key_name:-id_ed25519}"
 		local _key_path="${_cur_home}/.ssh/${_key_name}"
+
 		if [ -f "$_key_path" ]; then
 			yellow "密钥文件 ${_key_name} 已存在"
 			read -e -p " 是否覆盖？(y/N): " _ow < /dev/tty
@@ -19666,8 +19558,7 @@ while true; do
 
 		echo -e " 密钥类型:"
 		echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐，更安全更快）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}RSA 4096 位（兼容性更好）${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}ECDSA 521 位${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}RSA 3072 位（兼容性更好）${rw_lv}"
 		read -e -p " 请选择（默认1）: " _kt < /dev/tty
 		_kt="${_kt:-1}"
 
@@ -19675,235 +19566,233 @@ while true; do
 		echo -e " ${rw_huang}正在生成密钥对...${rw_lv}"
 		mkdir -p "${_cur_home}/.ssh" && chmod 700 "${_cur_home}/.ssh"
 		local _gen_ok=false
-		case "$_kt" in
-			2) ssh-keygen -t rsa -b 4096 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true ;;
-			3) ssh-keygen -t ecdsa -b 521 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true ;;
-			*) ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true ;;
-		esac
+		if [ "$_kt" = "2" ]; then
+			ssh-keygen -t rsa -b 3072 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+		else
+			ssh-keygen -t ed25519 -f "$_key_path" -N "" -q 2>/dev/null && _gen_ok=true
+		fi
 
 		if $_gen_ok && [ -f "$_key_path" ]; then
-			_pk_add_pubkey "$_cur_u" "$_cur_home" "$(cat ${_key_path}.pub)"
+			local _auth_file="${_cur_home}/.ssh/authorized_keys"
+			cat "${_key_path}.pub" >> "$_auth_file"
+			chmod 600 "$_auth_file"
+			chown -R "$_cur_u":"$(id -gn "$_cur_u" 2>/dev/null || echo "$_cur_u")" "${_cur_home}/.ssh" 2>/dev/null
+			green "密钥对生成成功并已自动部署！"
 			echo ""
 			echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
 			echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
+			echo -e " ${rw_huang}已自动追加到:${rw_lv} ${_auth_file}"
 			echo ""
 			echo -e " ${rw_hong}⚠ 请立即下载私钥保存到本地，否则无法 SSH 登录！${rw_lv}"
 			echo -e "   ${rw_lv}下载方式: scp 或 SFTP 下载 ${_key_path}${rw_lv}"
 			echo ""
-			echo -e " 公钥内容:"
+			echo -e " 公钥内容（可手动复制部署到其他服务器）:"
 			cat "${_key_path}.pub"
 		else
 			red "密钥生成失败"
+		fi
+		;;
+	  3)
+		# ── 为指定用户配置公钥 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 为指定用户配置公钥 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_cheng}── 可选用户 ──${rw_lv}"
+		local _users_list=()
+		local _ui=1
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			[ -d "$_home" ] && {
+				echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_home}"
+				_users_list+=("$_u")
+				((_ui++))
+			}
+		done </etc/passwd
+		echo -e " ${rw_huang}${_ui}.${rw_lv} root → /root"
+		_users_list+=("root")
+		echo -e " ${rw_huang}0.${rw_lv} 取消"
+		echo ""
+		read -e -p " 请选择用户编号: " _user_idx < /dev/tty
+		[ "$_user_idx" = "0" ] && continue
+		[ -z "$_user_idx" ] && { red "无效选择"; break_end; continue; }
+		local _target_u=""
+		_ui=1
+		for _u in "${_users_list[@]}"; do
+			[ "$_ui" -eq "$_user_idx" ] && { _target_u="$_u"; break; }
+			((_ui++))
+		done
+		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
+
+		local _target_home
+		_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
+		[ -z "$_target_home" ] || [ ! -d "$_target_home" ] && { red "无法获取 ${_target_u} 的 home 目录"; break_end; continue; }
+
+		echo ""
+		echo -e " 目标用户: ${rw_huang}${_target_u}${rw_lv}  →  ${_target_home}/.ssh/authorized_keys"
+		echo ""
+		read -e -p " 请粘贴 SSH 公钥（以 ssh-rsa/ssh-ed25519/ecdsa/sk- 开头）: " _pubkey < /dev/tty
+		if [ -z "$_pubkey" ]; then
+			red "公钥不能为空"
+			break_end
+			continue
+		fi
+		mkdir -p "${_target_home}/.ssh"
+		chmod 700 "${_target_home}/.ssh"
+		local _auth_file="${_target_home}/.ssh/authorized_keys"
+		if grep -qF "$_pubkey" "$_auth_file" 2>/dev/null; then
+			yellow "该公钥已存在，跳过添加"
+		else
+			echo "$_pubkey" >> "$_auth_file"
+			chmod 600 "$_auth_file"
+			chown -R "$_target_u":"$(id -gn "$_target_u" 2>/dev/null || echo "$_target_u")" "${_target_home}/.ssh" 2>/dev/null
+			green "公钥已添加到 ${_auth_file}"
 		fi
 		;;
 	  4)
-		# ── 生成新密钥对 → 指定用户 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 生成新密钥对 → 指定用户 ━━━━━━${rw_lv}"
-		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		local _tu _th
-		_tu="$_PK_TARGET_U"
-		_th="$_PK_TARGET_HOME"
-		echo ""
-		echo -e " 目标用户: ${rw_huang}${_tu}${rw_lv}  →  ${_th}/.ssh"
-		echo ""
-
-		read -e -p " 请输入密钥名称（默认: id_ed25519）: " _key_name < /dev/tty
-		_key_name="${_key_name:-id_ed25519}"
-		local _key_path="${_th}/.ssh/${_key_name}"
-		if [ -f "$_key_path" ]; then
-			yellow "密钥文件 ${_key_name} 已存在"
-			read -e -p " 是否覆盖？(y/N): " _ow < /dev/tty
-			[[ ! "$_ow" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
-		fi
-
-		echo -e " 密钥类型:"
-		echo -e " ${rw_huang}1.   ${rw_lv}ed25519（推荐）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}RSA 4096 位${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}ECDSA 521 位${rw_lv}"
-		read -e -p " 请选择（默认1）: " _kt < /dev/tty
-		_kt="${_kt:-1}"
-
-		echo ""
-		echo -e " ${rw_huang}正在为 ${_tu} 生成密钥对...${rw_lv}"
-		mkdir -p "${_th}/.ssh" && chmod 700 "${_th}/.ssh"
-
-		# 用目标用户身份生成（确保私钥属主正确）
-		local _gen_ok=false
-		case "$_kt" in
-			2) su - "$_tu" -c "ssh-keygen -t rsa -b 4096 -f '${_key_path}' -N '' -q" 2>/dev/null && _gen_ok=true ;;
-			3) su - "$_tu" -c "ssh-keygen -t ecdsa -b 521 -f '${_key_path}' -N '' -q" 2>/dev/null && _gen_ok=true ;;
-			*) su - "$_tu" -c "ssh-keygen -t ed25519 -f '${_key_path}' -N '' -q" 2>/dev/null && _gen_ok=true ;;
-		esac
-
-		if $_gen_ok && [ -f "$_key_path" ]; then
-			_pk_add_pubkey "$_tu" "$_th" "$(cat ${_key_path}.pub)"
-			echo ""
-			echo -e " ${rw_huang}私钥位置:${rw_lv} ${_key_path}"
-			echo -e " ${rw_huang}公钥位置:${rw_lv} ${_key_path}.pub"
-			echo -e " ${rw_hong}⚠ 私钥属主为 ${_tu}，请用对应账号下载${rw_lv}"
-			echo ""
-			echo -e " 公钥内容:"
-			cat "${_key_path}.pub"
-		else
-			red "密钥生成失败"
-		fi
-		;;
-	  5)
-		# ── 从其他服务器拉取公钥 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 从其他服务器拉取公钥 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}从远程服务器抓取指定用户的 authorized_keys 内容，追加到本地${rw_lv}"
-		echo ""
-		read -e -p " 远程服务器 (user@host): " _remote < /dev/tty
-		[ -z "$_remote" ] && { red "不能为空"; break_end; continue; }
-		read -e -p " SSH 端口（默认 22）: " _rport < /dev/tty
-		_rport="${_rport:-22}"
-		read -e -p " 远程用户名（抓取谁的公钥，默认 root）: " _ruser < /dev/tty
-		_ruser="${_ruser:-root}"
-
-		echo ""
-		echo -e " ${rw_huang}正在从 ${_remote} 抓取 ${_ruser} 的公钥...${rw_lv}"
-		local _remote_keys
-		_remote_keys=$(ssh -p "$_rport" "$_remote" "cat ~${_ruser}/.ssh/authorized_keys 2>/dev/null" 2>/dev/null)
-		if [ -z "$_remote_keys" ]; then
-			red "抓取失败或远程无公钥"
-			break_end
-			continue
-		fi
-		local _remote_cnt
-		_remote_cnt=$(echo "$_remote_keys" | grep -cE '^(ssh-|ecdsa-|sk-)' 2>/dev/null || echo 0)
-		green "抓取到 ${_remote_cnt} 个公钥"
-		echo ""
-
-		# 选择本地目标用户
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		echo ""
-		echo -e " ${rw_huang}正在追加到 ${_PK_TARGET_U} ...${rw_lv}"
-		local _added=0
-		while IFS= read -r _line; do
-			echo "$_line" | grep -qE '^(ssh-|ecdsa-|sk-)' || continue
-			_pk_add_pubkey "$_PK_TARGET_U" "$_PK_TARGET_HOME" "$_line"
-			_added=$((_added + 1))
-		done <<< "$_remote_keys"
-		green "完成，共处理 ${_added} 个公钥"
-		;;
-	  6)
-		# ── 查看指定用户的已授权公钥 ──
+		# ── 查看已授权公钥 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 查看已授权公钥 ━━━━━━${rw_lv}"
 		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
+		echo -e " ${rw_cheng}── 选择用户 ──${rw_lv}"
+		local _users_list=()
+		local _ui=1
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			[ -f "${_home}/.ssh/authorized_keys" ] && {
+				echo -e " ${rw_huang}${_ui}.${rw_lv} $_u"
+				_users_list+=("$_u")
+				((_ui++))
+			}
+		done </etc/passwd
+		[ -f "/root/.ssh/authorized_keys" ] && {
+			echo -e " ${rw_huang}${_ui}.${rw_lv} root"
+			_users_list+=("root")
+			((_ui++))
+		}
+		echo -e " ${rw_huang}0.${rw_lv} 取消"
 		echo ""
-		echo -e " ${rw_cheng}── ${_PK_TARGET_U} 的 authorized_keys ──${rw_lv}"
-		_pk_show_authkeys "$_PK_TARGET_HOME"
+		read -e -p " 请选择: " _user_idx < /dev/tty
+		[ "$_user_idx" = "0" ] && continue
+		local _target_u=""
+		_ui=1
+		for _u in "${_users_list[@]}"; do
+			[ "$_ui" -eq "$_user_idx" ] && { _target_u="$_u"; break; }
+			((_ui++))
+		done
+		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
+
+		local _target_home _auth_file
+		_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
+		_auth_file="${_target_home}/.ssh/authorized_keys"
+		echo ""
+		echo -e " ${rw_cheng}── ${_target_u} 的 authorized_keys ──${rw_lv}"
+		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
+			yellow "  文件为空或不存在"
+		else
+			local _ln=0
+			while IFS= read -r _line; do
+				_ln=$((_ln + 1))
+				if echo "$_line" | grep -qE '^(ssh-|ecdsa-|sk-)'; then
+					local _kt _kc
+					_kt=$(echo "$_line" | awk '{print $1}')
+					_kc=$(echo "$_line" | awk '{print $NF}')
+					printf "  ${rw_huang}%-3s${rw_lv} %-18s %s\n" "$_ln" "$_kt" "${_kc:-无注释}"
+				elif [ -n "$_line" ]; then
+					printf "  ${rw_huang}%-3s${rw_lv} %s\n" "$_ln" "(非公钥行) $_line"
+				fi
+			done < "$_auth_file"
+			echo ""
+			echo -e "  共 ${rw_huang}$_ln${rw_lv} 行"
+		fi
 		;;
-	  7)
-		# ── 删除指定公钥（按行号）──
+	  5)
+		# ── 删除指定公钥 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 删除指定公钥 ━━━━━━${rw_lv}"
 		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		local _auth_file="${_PK_TARGET_HOME}/.ssh/authorized_keys"
+		echo -e " ${rw_cheng}── 选择用户 ──${rw_lv}"
+		local _users_list=()
+		local _ui=1
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			[ -f "${_home}/.ssh/authorized_keys" ] && {
+				echo -e " ${rw_huang}${_ui}.${rw_lv} $_u"
+				_users_list+=("$_u")
+				((_ui++))
+			}
+		done </etc/passwd
+		[ -f "/root/.ssh/authorized_keys" ] && {
+			echo -e " ${rw_huang}${_ui}.${rw_lv} root"
+			_users_list+=("root")
+			((_ui++))
+		}
+		echo -e " ${rw_huang}0.${rw_lv} 取消"
 		echo ""
-		echo -e " ${rw_cheng}── ${_PK_TARGET_U} 的 authorized_keys ──${rw_lv}"
+		read -e -p " 请选择: " _user_idx < /dev/tty
+		[ "$_user_idx" = "0" ] && continue
+		local _target_u=""
+		_ui=1
+		for _u in "${_users_list[@]}"; do
+			[ "$_ui" -eq "$_user_idx" ] && { _target_u="$_u"; break; }
+			((_ui++))
+		done
+		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
+
+		local _target_home _auth_file
+		_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
+		_auth_file="${_target_home}/.ssh/authorized_keys"
+		echo ""
+		echo -e " ${rw_cheng}── ${_target_u} 的 authorized_keys ──${rw_lv}"
 		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
 			yellow "  文件为空或不存在"
 			break_end
 			continue
 		fi
-		_pk_show_authkeys "$_PK_TARGET_HOME"
+		# 列出公钥行（带编号）
+		local _pk_lines=()
+		local _ln=0
+		while IFS= read -r _line; do
+			_ln=$((_ln + 1))
+			if echo "$_line" | grep -qE '^(ssh-|ecdsa-|sk-)'; then
+				local _kt _kc
+				_kt=$(echo "$_line" | awk '{print $1}')
+				_kc=$(echo "$_line" | awk '{print $NF}')
+				echo -e " ${rw_huang}${_ln}.${rw_lv} $_kt  ${_kc:-无注释}"
+				_pk_lines+=("$_ln")
+			fi
+		done < "$_auth_file"
+		if [ ${#_pk_lines[@]} -eq 0 ]; then
+			yellow "  无公钥可删除"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_huang}0.${rw_lv} 取消"
 		echo ""
-		read -e -p " 请输入要删除的公钥行号: " _del_idx < /dev/tty
-		[ -z "$_del_idx" ] && { red "无效行号"; break_end; continue; }
-		if ! [[ "$_del_idx" =~ ^[0-9]+$ ]] || [ "$_del_idx" -lt 1 ]; then
-			red "无效行号"
-			break_end
-			continue
-		fi
-		# 检查行号是否存在
-		local _total_lines
-		_total_lines=$(wc -l < "$_auth_file" 2>/dev/null || echo 0)
-		if [ "$_del_idx" -gt "$_total_lines" ]; then
-			red "行号超出范围（文件共 ${_total_lines} 行）"
-			break_end
-			continue
-		fi
-		read -e -p " 确认删除第 ${_del_idx} 行？(y/N): " _confirm < /dev/tty
+		read -e -p " 请选择要删除的公钥行号: " _del_idx < /dev/tty
+		[ "$_del_idx" = "0" ] && continue
+		local _valid=0
+		for _n in "${_pk_lines[@]}"; do
+			[ "$_n" = "$_del_idx" ] && { _valid=1; break; }
+		done
+		[ $_valid -eq 0 ] && { red "无效行号"; break_end; continue; }
+
+		read -e -p " 确认删除第 ${_del_idx} 行公钥？(y/N): " _confirm < /dev/tty
 		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			local _del_line
-			_del_line=$(sed -n "${_del_idx}p" "$_auth_file")
 			sed -i "${_del_idx}d" "$_auth_file"
-			green "已删除第 ${_del_idx} 行:"
-			echo -e "   ${rw_lv}$(echo "$_del_line" | head -c 80)...${rw_lv}"
+			green "已删除第 ${_del_idx} 行公钥"
 		else
 			yellow "已取消"
 		fi
 		;;
-	  8)
-		# ── 清空指定用户的全部公钥 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 清空指定用户的全部公钥 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_hong}⚠ 此操作将清空 authorized_keys 中的所有公钥！${rw_lv}"
-		echo -e " ${rw_hong}⚠ 清空后该用户将无法通过公钥登录，请确保有其他登录方式！${rw_lv}"
-		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		local _auth_file="${_PK_TARGET_HOME}/.ssh/authorized_keys"
-		echo ""
-		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
-			yellow "  文件已为空或不存在"
-			break_end
-			continue
-		fi
-		local _cnt
-		_cnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "$_auth_file" 2>/dev/null || echo 0)
-		echo -e " ${rw_huang}${_PK_TARGET_U}${rw_lv} 当前有 ${rw_huang}${_cnt}${rw_lv} 个公钥"
-		echo ""
-		read -e -p " 确认清空全部公钥？输入 yes 确认: " _confirm < /dev/tty
-		if [ "$_confirm" = "yes" ]; then
-			# 备份后清空
-			cp -a "$_auth_file" "${_auth_file}.bak.$(date +%Y%m%d%H%M%S)" 2>/dev/null
-			> "$_auth_file"
-			green "已清空 ${_auth_file}"
-			echo -e " ${rw_huang}备份已保存为 ${_auth_file}.bak.*${rw_lv}"
-		else
-			yellow "已取消（需输入 yes 才会执行）"
-		fi
-		;;
-	  9)
+	  6)
 		# ── 修复权限 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 修复 .ssh 与 authorized_keys 权限 ━━━━━━${rw_lv}"
 		echo ""
-		echo -e " ${rw_huang}即将修复所有用户的 SSH 相关权限:${rw_lv}"
+		echo -e " ${rw_huang}即将修复所有用户的 .ssh 目录和 authorized_keys 权限:${rw_lv}"
 		echo -e "   .ssh/              → 700"
 		echo -e "   authorized_keys    → 600"
 		echo -e "   私钥文件 (id_*)    → 600"
-		echo -e "   .ssh/config        → 600"
-		echo -e "   known_hosts        → 644"
 		echo ""
 		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
@@ -19918,82 +19807,13 @@ while true; do
 			chmod 700 "${_home}/.ssh" 2>/dev/null
 			chown -R "$_u":"$(id -gn "$_u" 2>/dev/null || echo "$_u")" "${_home}/.ssh" 2>/dev/null
 			[ -f "${_home}/.ssh/authorized_keys" ] && chmod 600 "${_home}/.ssh/authorized_keys" 2>/dev/null
-			[ -f "${_home}/.ssh/config" ] && chmod 600 "${_home}/.ssh/config" 2>/dev/null
-			[ -f "${_home}/.ssh/known_hosts" ] && chmod 644 "${_home}/.ssh/known_hosts" 2>/dev/null
+			# 私钥文件
 			for _kf in "${_home}/.ssh"/id_*; do
 				[ -f "$_kf" ] && [[ "$_kf" != *.pub ]] && chmod 600 "$_kf" 2>/dev/null
 			done
 			_fixed=$((_fixed + 1))
 		done </etc/passwd
 		green "已修复 ${_fixed} 个用户的 SSH 相关权限"
-		;;
-	  10)
-		# ── 批量导入公钥（从文件）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 批量导入公钥（从文件）━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}从文本文件读取公钥（每行一个），批量追加到指定用户${rw_lv}"
-		echo ""
-		read -e -p " 请输入公钥文件路径: " _import_file < /dev/tty
-		if [ -z "$_import_file" ] || [ ! -f "$_import_file" ]; then
-			red "文件不存在: ${_import_file:-空}"
-			break_end
-			continue
-		fi
-		# 统计文件中的公钥数
-		local _file_cnt
-		_file_cnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "$_import_file" 2>/dev/null || echo 0)
-		if [ "$_file_cnt" -eq 0 ]; then
-			red "文件中未找到有效的公钥行（需以 ssh-/ecdsa-/sk- 开头）"
-			break_end
-			continue
-		fi
-		echo -e " 文件中检测到 ${rw_huang}${_file_cnt}${rw_lv} 个公钥"
-		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		echo ""
-		echo -e " ${rw_huang}正在导入到 ${_PK_TARGET_U} ...${rw_lv}"
-		local _imported=0 _skipped=0
-		while IFS= read -r _line; do
-			echo "$_line" | grep -qE '^(ssh-|ecdsa-|sk-)' || continue
-			if grep -qF "$_line" "${_PK_TARGET_HOME}/.ssh/authorized_keys" 2>/dev/null; then
-				_skipped=$((_skipped + 1))
-			else
-				_pk_add_pubkey "$_PK_TARGET_U" "$_PK_TARGET_HOME" "$_line" 2>/dev/null
-				_imported=$((_imported + 1))
-			fi
-		done < "$_import_file"
-		echo ""
-		green "导入完成: 新增 ${_imported} 个, 跳过已存在 ${_skipped} 个"
-		;;
-	  11)
-		# ── 导出指定用户的公钥到文件 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 导出指定用户的公钥到文件 ━━━━━━${rw_lv}"
-		echo ""
-		if ! _pk_pick_user; then
-			red "无效选择"
-			break_end
-			continue
-		fi
-		local _auth_file="${_PK_TARGET_HOME}/.ssh/authorized_keys"
-		if [ ! -f "$_auth_file" ] || [ ! -s "$_auth_file" ]; then
-			yellow "  ${_PK_TARGET_U} 无公钥可导出"
-			break_end
-			continue
-		fi
-		local _export_file
-		_export_file="${HOME}/${_PK_TARGET_U}_authorized_keys_$(date +%Y%m%d%H%M%S).txt"
-		cp -a "$_auth_file" "$_export_file"
-		chmod 644 "$_export_file"
-		local _cnt
-		_cnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "$_export_file" 2>/dev/null || echo 0)
-		green "已导出 ${_cnt} 个公钥到:"
-		echo -e "   ${rw_huang}${_export_file}${rw_lv}"
 		;;
 	  0)
 		break
