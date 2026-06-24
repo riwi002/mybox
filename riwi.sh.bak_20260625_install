@@ -671,48 +671,35 @@ install() {
 		return 1
 	fi
 
-	# ── 确定 sudo 前缀：非 root 且有 sudo 权限时自动加 sudo ──
-	local _sudo_pfx=""
-	if [ "$EUID" -ne 0 ]; then
-		if sudo -n true 2>/dev/null; then
-			# 免密 sudo
-			_sudo_pfx="sudo"
-		elif getent group sudo 2>/dev/null | grep -qw "$(whoami)" || \
-		     getent group wheel 2>/dev/null | grep -qw "$(whoami)"; then
-			# 在 sudo/wheel 组里（需要密码），首次用 sudo -v 缓存
-			sudo -v 2>/dev/null && _sudo_pfx="sudo"
-		fi
-	fi
-
 	for package in "$@"; do
 		if ! command -v "$package" &>/dev/null; then
 			echo -e "${rw_huang}正在安装 $package...${rw_lv}"
 			if command -v dnf &>/dev/null; then
-				$_sudo_pfx dnf -y update
-				$_sudo_pfx dnf install -y epel-release
-				$_sudo_pfx dnf install -y "$package"
+				dnf -y update
+				dnf install -y epel-release
+				dnf install -y "$package"
 			elif command -v yum &>/dev/null; then
-				$_sudo_pfx yum -y update
-				$_sudo_pfx yum install -y epel-release
-				$_sudo_pfx yum install -y "$package"
+				yum -y update
+				yum install -y epel-release
+				yum install -y "$package"
 			elif command -v apt &>/dev/null; then
-				$_sudo_pfx apt update -y
-				$_sudo_pfx apt install -y "$package"
+				apt update -y
+				apt install -y "$package"
 			elif command -v apk &>/dev/null; then
-				$_sudo_pfx apk update
-				$_sudo_pfx apk add "$package"
+				apk update
+				apk add "$package"
 			elif command -v pacman &>/dev/null; then
-				$_sudo_pfx pacman -Syu --noconfirm
-				$_sudo_pfx pacman -S --noconfirm "$package"
+				pacman -Syu --noconfirm
+				pacman -S --noconfirm "$package"
 			elif command -v zypper &>/dev/null; then
-				$_sudo_pfx zypper refresh
-				$_sudo_pfx zypper install -y "$package"
+				zypper refresh
+				zypper install -y "$package"
 			elif command -v opkg &>/dev/null; then
-				$_sudo_pfx opkg update
-				$_sudo_pfx opkg install "$package"
+				opkg update
+				opkg install "$package"
 			elif command -v pkg &>/dev/null; then
-				$_sudo_pfx pkg update
-				$_sudo_pfx pkg install -y "$package"
+				pkg update
+				pkg install -y "$package"
 			else
 				echo "未知的包管理器!"
 				return 1
@@ -19168,27 +19155,17 @@ while true; do
 		case $_pa in
 			1) _pa_val="yes" ;;
 			2)
-			_pa_val="no"
-			# 禁用密码全局生效，审计所有可登录用户是否都有公钥
-			_ssh_audit_auth_users
-			echo ""
-			echo -e " ${rw_cheng}── 公钥审计（禁用密码后将仅靠公钥登录）──${rw_lv}"
-			echo -e "   可登录用户: ${rw_huang}${_AUDIT_USERS}${rw_lv}    有公钥: ${rw_huang}${_AUDIT_HAS_PUBKEY}${rw_lv}"
-			if [ $_AUDIT_USERS -gt 0 ] && [ $_AUDIT_HAS_PUBKEY -lt $_AUDIT_USERS ]; then
-				echo -e " ${rw_hong}⚠ 以下用户没有公钥，禁用密码后将无法 SSH 登录：${rw_lv}"
-				echo "$_AUDIT_MISSING" | grep '无公钥' | sed 's/^/   /'
-				echo ""
-				echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」为这些用户部署公钥${rw_lv}"
-				read -e -p " 仍要禁用密码？(yes确认): " _confirm < /dev/tty
-				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
-			elif [ $_AUDIT_USERS -eq 0 ]; then
-				echo -e " ${rw_hong}⚠ 未发现可登录用户，禁用密码有锁死风险${rw_lv}"
-				read -e -p " 仍要禁用密码？(yes确认): " _confirm < /dev/tty
-				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
-			else
-				green "✓ 所有可登录用户均已配置公钥"
-			fi
-			;;
+				_pa_val="no"
+				# 检查当前用户是否有公钥
+				local _cur_home
+				_cur_home=$(getent passwd "$(whoami)" | cut -d: -f6)
+				if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
+					red "⚠ 当前用户未配置公钥，禁用密码后将无法登录！"
+					echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」部署公钥${rw_lv}"
+					read -e -p " 仍要禁用？(yes确认): " _confirm < /dev/tty
+					[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
+				fi
+				;;
 			*) continue ;;
 		esac
 		_ssh_backup_configs
@@ -19254,30 +19231,21 @@ while true; do
 		fi
 		;;
 	  7)
-	# ── 禁止密码登录（快捷）──
-	echo ""
-	echo -e "${rw_cheng}━━━━━━ 禁止密码登录（仅密钥）━━━━━━${rw_lv}"
-	echo -e " ${rw_hong}⚠ 将禁止密码登录，仅允许密钥登录${rw_lv}"
-	# 全局审计公钥
-	_ssh_audit_auth_users
-	echo ""
-	echo -e " ${rw_cheng}── 公钥审计 ──${rw_lv}"
-	echo -e "   可登录用户: ${rw_huang}${_AUDIT_USERS}${rw_lv}    有公钥: ${rw_huang}${_AUDIT_HAS_PUBKEY}${rw_lv}"
-	if [ $_AUDIT_USERS -eq 0 ]; then
-		red "⚠ 未发现可登录用户，禁用密码有锁死风险！"
-		break_end
-		continue
-	fi
-	if [ $_AUDIT_HAS_PUBKEY -lt $_AUDIT_USERS ]; then
-		echo -e " ${rw_hong}⚠ 以下用户没有公钥，禁用密码后将无法 SSH 登录：${rw_lv}"
-		echo "$_AUDIT_MISSING" | grep '无公钥' | sed 's/^/   /'
+		# ── 禁止密码登录（快捷）──
 		echo ""
-		echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」为这些用户部署公钥${rw_lv}"
-		break_end
-		continue
-	fi
-	green "✓ 所有可登录用户均已配置公钥"
-	echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁止密码登录（仅密钥）━━━━━━${rw_lv}"
+		echo -e " ${rw_hong}⚠ 将禁止密码登录，仅允许密钥登录${rw_lv}"
+		# 检查公钥
+		local _cur_home
+		_cur_home=$(getent passwd "$(whoami)" | cut -d: -f6)
+		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
+			red "⚠ 当前用户未配置公钥，禁用密码后将无法登录！"
+			echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」部署公钥${rw_lv}"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_lv}当前用户公钥数: $(grep -cE '^(ssh-|ecdsa-|sk-)' "${_cur_home}/.ssh/authorized_keys" 2>/dev/null || echo 0)${rw_lv}"
+		echo ""
 		read -e -p " 确认禁止密码登录？(y/N): " _confirm < /dev/tty
 		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 			_ssh_backup_configs
@@ -20722,64 +20690,6 @@ _ssh_otp_configure_user() {
 	fi
 }
 
-# ── 辅助: 审计所有可登录用户的公钥/OTP 配置状态 ──
-# 用途: 启用双证/三证/禁用密码登录前，全局检查哪些用户会受影响
-# 输出:
-#   $_AUDIT_USERS        — 可登录用户总数
-#   $_AUDIT_HAS_PUBKEY   — 有公钥的用户数
-#   $_AUDIT_HAS_OTP      — 有OTP的用户数
-#   $_AUDIT_MISSING      — 缺公钥或缺OTP的用户清单（换行分隔）
-#   $_AUDIT_OK           — 1=全部齐备, 0=有缺失
-_ssh_audit_auth_users() {
-	_AUDIT_USERS=0
-	_AUDIT_HAS_PUBKEY=0
-	_AUDIT_HAS_OTP=0
-	_AUDIT_MISSING=""
-	_AUDIT_OK=1
-
-	local _u _uid _home _shell _missing_pub _missing_otp _has_pub _has_otp
-	while IFS=: read -r _u _ _uid _ _ _home _shell; do
-		# 跳过无登录 shell 的系统用户（保留 root）
-		case "$_shell" in
-			""|/sbin/nologin|/usr/sbin/nologin|/bin/false|/usr/bin/false|/bin/sync|/sbin/halt|/sbin/shutdown)
-				[ "$_u" != "root" ] && continue
-				;;
-		esac
-		# 跳过 UID<1000 的非 root 系统用户
-		[ "$_uid" -lt 1000 ] 2>/dev/null && [ "$_u" != "root" ] && continue
-		[ -z "$_shell" ] && [ "$_u" != "root" ] && continue
-
-		_AUDIT_USERS=$((_AUDIT_USERS + 1))
-		# 解析 home（兜底用 $HOME 仅对当前用户）
-		[ -z "$_home" ] && [ "$_u" = "$(whoami)" ] && _home="$HOME"
-		[ -z "$_home" ] && continue
-
-		_has_pub=0
-		_has_otp=0
-		[ -f "${_home}/.ssh/authorized_keys" ] && [ -s "${_home}/.ssh/authorized_keys" ] && _has_pub=1
-		[ -f "${_home}/.google_authenticator" ] && _has_otp=1
-
-		[ $_has_pub -eq 1 ] && _AUDIT_HAS_PUBKEY=$((_AUDIT_HAS_PUBKEY + 1))
-		[ $_has_otp -eq 1 ]  && _AUDIT_HAS_OTP=$((_AUDIT_HAS_OTP + 1))
-
-		_missing_pub=""
-		_missing_otp=""
-		[ $_has_pub -eq 0 ] && _missing_pub="无公钥"
-		[ $_has_otp -eq 0 ]  && _missing_otp="无OTP"
-		if [ -n "$_missing_pub" ] || [ -n "$_missing_otp" ]; then
-			_AUDIT_OK=0
-			local _gap=""
-			[ -n "$_missing_pub" ] && _gap="$_missing_pub"
-			[ -n "$_missing_otp" ]  && _gap="${_gap:+$_gap, }$_missing_otp"
-			_AUDIT_MISSING="${_AUDIT_MISSING}${_u} (${_gap}) -> ${_home}
-"
-		fi
-	done </etc/passwd 2>/dev/null
-
-	# 去掉末尾换行
-	_AUDIT_MISSING="${_AUDIT_MISSING%$'\n'}"
-}
-
 # ================================================================
 # 双证登录管理器（公钥 + OTP 动态码，不需要密码）
 # 登录流程: 1) 客户端用私钥通过公钥认证  2) 输入手机 App 中的 6 位 OTP
@@ -20935,34 +20845,22 @@ while true; do
 			break_end
 			continue
 		fi
-
-		# 多用户审计：双证全局生效，必须确认所有可登录用户都齐备
-		_ssh_audit_auth_users
-		echo -e " ${rw_cheng}── 可登录用户审计 ──${rw_lv}"
-		echo -e "   可登录用户: ${rw_huang}${_AUDIT_USERS}${rw_lv}    有公钥: ${rw_huang}${_AUDIT_HAS_PUBKEY}${rw_lv}    有OTP: ${rw_huang}${_AUDIT_HAS_OTP}${rw_lv}"
-		echo ""
-		if [ $_AUDIT_USERS -eq 0 ]; then
-			red "未发现可登录用户，无法启用双证"
+		local _cur_u _cur_home
+		_cur_u=$(whoami)
+		_cur_home=$(getent passwd "$_cur_u" | cut -d: -f6)
+		[ -z "$_cur_home" ] && _cur_home="$HOME"
+		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
+			red "当前用户 (${_cur_u}) 的 authorized_keys 为空！"
+			echo -e " ${rw_huang}双证登录需要先部署公钥，否则启用后无法登录！${rw_lv}"
+			echo -e " ${rw_huang}请先到「主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥」部署公钥${rw_lv}"
 			break_end
 			continue
 		fi
-		# 双证 = 公钥 + OTP，所以两个都必须有
-		if [ $_AUDIT_OK -eq 0 ]; then
-			echo -e " ${rw_hong}⚠ 以下用户缺少公钥或 OTP，启用后这些用户将无法 SSH 登录：${rw_lv}"
-			echo "$_AUDIT_MISSING" | sed 's/^/   /'
-			echo ""
-			echo -e " ${rw_huang}双证全局生效，建议先为所有用户补齐公钥+OTP${rw_lv}"
-			echo -e " ${rw_huang}公钥: 主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥${rw_lv}"
-			echo -e " ${rw_huang}OTP : 本菜单选项 2「为用户配置 OTP 动态码」${rw_lv}"
-			echo ""
-			read -e -p " 仍要强制启用双证？(输入 yes 继续): " _force < /dev/tty
-			if [ "$_force" != "yes" ]; then
-				yellow "已取消"
-				break_end
-				continue
-			fi
-		else
-			green "✓ 所有可登录用户均已配置公钥 + OTP"
+		if [ ! -f "${_cur_home}/.google_authenticator" ]; then
+			red "当前用户 (${_cur_u}) 尚未配置 OTP！"
+			echo -e " ${rw_huang}请先执行选项 2 为当前用户配置 OTP${rw_lv}"
+			break_end
+			continue
 		fi
 
 		echo -e " ${rw_huang}即将执行的变更:${rw_lv}"
@@ -21231,35 +21129,22 @@ while true; do
 			break_end
 			continue
 		fi
-
-		# 多用户审计：三证全局生效，必须确认所有可登录用户都齐备公钥+OTP
-		_ssh_audit_auth_users
-		echo -e " ${rw_cheng}── 可登录用户审计 ──${rw_lv}"
-		echo -e "   可登录用户: ${rw_huang}${_AUDIT_USERS}${rw_lv}    有公钥: ${rw_huang}${_AUDIT_HAS_PUBKEY}${rw_lv}    有OTP: ${rw_huang}${_AUDIT_HAS_OTP}${rw_lv}"
-		echo ""
-		if [ $_AUDIT_USERS -eq 0 ]; then
-			red "未发现可登录用户，无法启用三证"
+		local _cur_u _cur_home
+		_cur_u=$(whoami)
+		_cur_home=$(getent passwd "$_cur_u" | cut -d: -f6)
+		[ -z "$_cur_home" ] && _cur_home="$HOME"
+		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
+			red "当前用户 (${_cur_u}) 的 authorized_keys 为空！"
+			echo -e " ${rw_huang}三证登录需要先部署公钥，否则启用后无法登录！${rw_lv}"
+			echo -e " ${rw_huang}请先到「主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥」部署公钥${rw_lv}"
 			break_end
 			continue
 		fi
-		# 三证 = 公钥 + 密码 + OTP，公钥和OTP必须先配齐（密码由用户自行保证非空）
-		if [ $_AUDIT_OK -eq 0 ]; then
-			echo -e " ${rw_hong}⚠ 以下用户缺少公钥或 OTP，启用后这些用户将无法 SSH 登录：${rw_lv}"
-			echo "$_AUDIT_MISSING" | sed 's/^/   /'
-			echo ""
-			echo -e " ${rw_huang}三证全局生效，建议先为所有用户补齐公钥+OTP${rw_lv}"
-			echo -e " ${rw_huang}公钥: 主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥${rw_lv}"
-			echo -e " ${rw_huang}OTP : 本菜单选项 2「为用户配置 OTP 动态码」${rw_lv}"
-			echo -e " ${rw_huang}密码: 确保各用户密码非空（passwd <用户>）${rw_lv}"
-			echo ""
-			read -e -p " 仍要强制启用三证？(输入 yes 继续): " _force < /dev/tty
-			if [ "$_force" != "yes" ]; then
-				yellow "已取消"
-				break_end
-				continue
-			fi
-		else
-			green "✓ 所有可登录用户均已配置公钥 + OTP（请自行确认密码非空）"
+		if [ ! -f "${_cur_home}/.google_authenticator" ]; then
+			red "当前用户 (${_cur_u}) 尚未配置 OTP！"
+			echo -e " ${rw_huang}请先执行选项 2 为当前用户配置 OTP${rw_lv}"
+			break_end
+			continue
 		fi
 
 		echo -e " ${rw_huang}即将执行的变更:${rw_lv}"
@@ -23409,31 +23294,38 @@ github_manager() {
     case $sub_choice in
       1)
         clear
+        install git
         echo -e "${rw_cheng}━━━━━━━━━━━━  克隆仓库  ━━━━━━━━━━━━${rw_lv}"
         echo ""
-
-        # ── 1. 确保 git 已安装（install 函数内部已自动 sudo）──
-        if ! command -v git &>/dev/null; then
-            echo -e " ${rw_huang}git 未安装，正在安装...${rw_lv}"
-            install git
-            # 再次检查
-            if ! command -v git &>/dev/null; then
-                red "✗ git 安装失败，请手动安装后重试"
-                echo -e " ${rw_huang}Debian/Ubuntu: ${rw_lv}sudo apt install git${rw_lv}"
-                echo -e " ${rw_huang}CentOS/RHEL:   ${rw_lv}sudo yum install git${rw_lv}"
-                break_end
-                continue
-            fi
-            green "✓ git 已安装"
-        fi
-        echo ""
-
         echo -e " ${rw_huang}URL 示例:${rw_lv}"
         echo -e "   ${rw_lv}https://github.com/riwi002/mybox.git${rw_lv}"
         echo -e "   ${rw_lv}git@github.com:riwi002/mybox.git${rw_lv}"
         echo ""
         echo -e " ${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_lv}"
         echo -e " ${rw_huang}当前用户: ${rw_lv}$(whoami)${rw_lv}  (uid=$(id -u))${rw_lv}"
+        echo ""
+
+        # ── 检测当前用户是否有 sudo 权限 ──
+        local _can_sudo=false
+        if [ "$EUID" -eq 0 ]; then
+            # 已经是 root，不需要 sudo
+            _can_sudo=true
+        elif sudo -n true 2>/dev/null; then
+            # 免密 sudo
+            _can_sudo=true
+        elif getent group sudo 2>/dev/null | grep -qw "$(whoami)" || \
+             getent group wheel 2>/dev/null | grep -qw "$(whoami)"; then
+            # 在 sudo/wheel 组里（需要密码）
+            _can_sudo=true
+        fi
+
+        if [ "$EUID" -ne 0 ] && $_can_sudo; then
+            echo -e " ${rw_lv}检测到当前用户有 sudo 权限${rw_lv}"
+        elif [ "$EUID" -eq 0 ]; then
+            echo -e " ${rw_lv}当前是 root 用户${rw_lv}"
+        else
+            echo -e " ${rw_huang}当前用户无 sudo 权限，将使用普通权限克隆${rw_lv}"
+        fi
         echo ""
         echo -e " ${rw_huang}提示: 直接回车默认克隆工具箱仓库${rw_lv}"
         echo ""
@@ -23445,65 +23337,50 @@ github_manager() {
         read -e -p " 请输入目标目录（回车使用仓库名，0返回）: " target_dir
         if [ "$target_dir" = "0" ]; then continue; fi
 
-        # ── 2. 清理旧的 git url 替换配置 ──
+        # ── 清理旧的 git url 替换配置 ──
         git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
           git config --global --unset "$key" 2>/dev/null
         done
 
-        # ── 3. 判断目标目录是否可写，决定是否需要 sudo ──
-        local _target_path
-        if [ -n "$target_dir" ]; then
-            _target_path="$target_dir"
-        else
-            _target_path="$(pwd)/$(basename "$repo_url" .git)"
-        fi
-        local _target_parent
-        _target_parent=$(dirname "$_target_path" 2>/dev/null)
-        [ -z "$_target_parent" ] && _target_parent="$(pwd)"
-
+        # ── 判断是否需要 sudo ──
+        # 如果目标目录的父目录不可写，或者当前不是 root 且用户选择了 sudo 模式，则用 sudo
         local _use_sudo=false
         local _sudo_prefix=""
 
-        # 如果当前不是 root 且目标父目录不可写，检查 sudo
-        if [ "$EUID" -ne 0 ] && [ ! -w "$_target_parent" ]; then
-            # 检查是否有 sudo 权限
-            local _can_sudo=false
-            if sudo -n true 2>/dev/null; then
-                _can_sudo=true
-            elif getent group sudo 2>/dev/null | grep -qw "$(whoami)" || \
-                 getent group wheel 2>/dev/null | grep -qw "$(whoami)"; then
-                _can_sudo=true
-            fi
+        if [ "$EUID" -ne 0 ] && $_can_sudo; then
+            echo ""
+            echo -e " ${rw_cheng}── 选择克隆方式 ──${rw_lv}"
+            echo -e " ${rw_huang}1.${rw_lv} 普通克隆（当前用户权限）"
+            echo -e " ${rw_huang}2.${rw_lv} sudo 克隆（需要输入密码，克隆到需要权限的目录时用）"
+            echo -e " ${rw_huang}0.${rw_lv} 取消"
+            read -e -p " 请选择（默认1）: " _clone_mode < /dev/tty
+            _clone_mode="${_clone_mode:-1}"
 
-            if $_can_sudo; then
-                echo ""
-                echo -e " ${rw_hong}目标目录 ${_target_parent} 不可写，需要使用 sudo 克隆${rw_lv}"
-                echo -e " ${rw_huang}需要验证 sudo 密码:${rw_lv}"
-                if sudo -v 2>/dev/null; then
-                    green "✓ sudo 密码验证成功"
+            case $_clone_mode in
+                2)
                     _use_sudo=true
-                    _sudo_prefix="sudo"
-                else
-                    red "sudo 密码验证失败"
-                    break_end
-                    continue
-                fi
-            else
-                red "目标目录 ${_target_parent} 不可写，且当前用户无 sudo 权限"
-                echo -e " ${rw_huang}请换到有权限的目录再试，或联系管理员${rw_lv}"
-                break_end
-                continue
-            fi
+                    # 测试 sudo 密码（交互式输入一次，后续缓存）
+                    echo ""
+                    echo -e " ${rw_huang}需要验证 sudo 密码:${rw_lv}"
+                    if sudo -v 2>/dev/null; then
+                        green "✓ sudo 密码验证成功"
+                        _sudo_prefix="sudo"
+                    else
+                        red "sudo 密码验证失败，将回退为普通克隆"
+                        _use_sudo=false
+                    fi
+                    ;;
+                0) continue ;;
+                *) ;;
+            esac
         fi
 
-        # ── 4. 执行克隆 ──
+        # ── 执行克隆 ──
         echo ""
         echo -e " ${rw_huang}正在克隆...${rw_lv}"
         echo -e " ${rw_lv}URL: ${repo_url}${rw_lv}"
         if [ -n "$target_dir" ]; then
             echo -e " ${rw_lv}目标: ${target_dir}${rw_lv}"
-        else
-            echo -e " ${rw_lv}目标: $(basename "$repo_url" .git)${rw_lv}"
         fi
         if $_use_sudo; then
             echo -e " ${rw_lv}模式: sudo 克隆${rw_lv}"
@@ -23514,12 +23391,13 @@ github_manager() {
 
         local _clone_rc=0
         if $_use_sudo; then
-            # sudo 克隆：sudo git clone，然后把属主改回当前用户
+            # sudo 克隆：先 sudo git clone，然后把属主改回当前用户
             local _cur_user
             _cur_user=$(whoami)
             if [ -z "$target_dir" ]; then
                 $_sudo_prefix git clone "$repo_url"
                 _clone_rc=$?
+                # 从 URL 推断目录名
                 local _repo_name
                 _repo_name=$(basename "$repo_url" .git)
                 if [ -d "$_repo_name" ]; then
