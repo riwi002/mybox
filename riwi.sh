@@ -20554,6 +20554,7 @@ _ssh_status_panel() {
 
 # ── 统一备份 sshd_config + pam.d/sshd ──
 # 备份路径写入全局 _SSH_BACKUP_TAG / _SSH_BACKUP_DIR
+# 同时备份所有有 authorized_keys 的可登录用户公钥文件
 _ssh_backup_configs() {
 	_SSH_BACKUP_TAG=$(date +%Y%m%d%H%M%S)
 	_SSH_BACKUP_DIR="/tmp/riwi_ssh_backup_${_SSH_BACKUP_TAG}"
@@ -20567,43 +20568,67 @@ _ssh_backup_configs() {
 		cp -a /etc/pam.d/sshd "$_SSH_BACKUP_DIR/pam_sshd"
 		_bk_count=$((_bk_count + 1))
 	fi
+	# 备份当前用户 authorized_keys（兼容旧逻辑）
 	if [ -f "$HOME/.ssh/authorized_keys" ]; then
 		cp -a "$HOME/.ssh/authorized_keys" "$_SSH_BACKUP_DIR/authorized_keys"
 		_bk_count=$((_bk_count + 1))
 	fi
+	# 额外备份所有有 authorized_keys 的普通用户+root，避免遗漏实际登录用户
+	local _u _uid _home
+	while IFS=: read -r _u _ _uid _ _ _home _; do
+		[ "$_uid" -lt 1000 ] 2>/dev/null && [ "$_u" != "root" ] && continue
+		[ -z "$_home" ] && continue
+		[ "$_home" = "$HOME" ] && continue  # 已备份过
+		if [ -f "${_home}/.ssh/authorized_keys" ]; then
+			# 文件名用用户名避免冲突
+			local _safe_u
+			_safe_u=$(printf '%s' "$_u" | tr -c 'A-Za-z0-9_-' '_')
+			cp -a "${_home}/.ssh/authorized_keys" "$_SSH_BACKUP_DIR/authorized_keys.${_safe_u}" 2>/dev/null
+			_bk_count=$((_bk_count + 1))
+		fi
+	done </etc/passwd 2>/dev/null
 	echo -e " ${rw_lv}已备份 ${_bk_count} 个文件到 ${rw_huang}${_SSH_BACKUP_DIR}${rw_lv}"
 }
 
 # ── 清理上一个认证模式留下的冲突项 ──
 # 清理目标: AuthenticationMethods / KbdInteractiveAuthentication /
 # ChallengeResponseAuthentication / PAM 中的 google_authenticator 行 /
-# 当前用户的 Match User 块（仅清理认证相关字段）
+# 所有 Match User 块中的认证相关字段（不再只清 whoami，避免误伤其他登录用户）
 _ssh_clear_conflicting_auth() {
-	local _cur_user _cur_user_esc
-	_cur_user=$(whoami)
-	_cur_user_esc=$(printf '%s\n' "$_cur_user" | sed 's/[.[\*^$(){}?+|/]/\\&/g')
-
-	# 1. 注释掉 AuthenticationMethods（用 #riwi-disabled 前缀，方便追溯）
+	# 1. 注释掉全局 AuthenticationMethods（用 #riwi-disabled 前缀，方便追溯）
 	if grep -qE '^[[:space:]]*AuthenticationMethods' /etc/ssh/sshd_config 2>/dev/null; then
 		sed -i -E 's/^([[:space:]]*)(AuthenticationMethods[[:space:]].*)/#riwi-disabled \1\2/' /etc/ssh/sshd_config
-		echo -e " ${rw_lv}已注释旧的 AuthenticationMethods${rw_lv}"
+		echo -e " ${rw_lv}已注释全局 AuthenticationMethods${rw_lv}"
 	fi
 
-	# 2. 清理当前用户的 Match User 块中认证相关字段（保留块本身，删 PasswordAuthentication/PubkeyAuthentication/AuthenticationMethods 行）
-	#    简单做法：直接删除匹配当前用户的整个 Match 块，后续模式会按需重建
-	local _match_start
-	_match_start=$(grep -n -E "^[[:space:]]*Match[[:space:]]+User[[:space:]]+${_cur_user_esc}([[:space:]]|$)" /etc/ssh/sshd_config 2>/dev/null | head -1 | cut -d: -f1)
-	if [ -n "$_match_start" ]; then
-		local _match_end
-		_match_end=$(tail -n +"$_match_start" /etc/ssh/sshd_config | grep -n -E '^[[:space:]]*Match[[:space:]]' | head -2 | tail -1 | cut -d: -f1)
-		if [ -n "$_match_end" ]; then
-			_match_end=$((_match_start + _match_end - 1))
-			sed -i "${_match_start},${_match_end}d" /etc/ssh/sshd_config
+	# 2. 清理【所有】Match User/Match Group 块中认证相关字段
+	#    不再只清 whoami，否则其他登录用户（如 root 跑脚本但实际用 xin 登录）的残留限制会被遗漏
+	#    sshd_config 的 Match 块边界: 从 Match 行开始，到下一个 Match 行或文件末尾
+	#    策略：在 Match 块范围内，注释掉认证字段行（保留块本身和无关字段如 AllowTcpForwarding）
+	local _match_cleaned=0
+	if grep -qE '^[[:space:]]*Match[[:space:]]' /etc/ssh/sshd_config 2>/dev/null; then
+		awk '
+			# 遇到新的 Match 行：进入 match 块
+			/^[[:space:]]*Match[[:space:]]/ { in_match=1 }
+			# 在 match 块内遇到认证字段：注释掉
+			{
+				if (in_match && /^[[:space:]]*(AuthenticationMethods|KbdInteractiveAuthentication|ChallengeResponseAuthentication|PasswordAuthentication|PubkeyAuthentication)[[:space:]]/) {
+					print "#riwi-disabled " $0
+					cleaned=1
+				} else {
+					print
+				}
+			}
+			END { if (cleaned) exit 0; else exit 1 }
+		' /etc/ssh/sshd_config > /tmp/riwi_sshd_clean.$$.tmp
+		if [ $? -eq 0 ]; then
+			mv /tmp/riwi_sshd_clean.$$.tmp /etc/ssh/sshd_config
+			_match_cleaned=1
 		else
-			sed -i "${_match_start},\$d" /etc/ssh/sshd_config
+			rm -f /tmp/riwi_sshd_clean.$$.tmp
 		fi
-		echo -e " ${rw_lv}已清理 ${_cur_user} 的旧 Match User 块${rw_lv}"
 	fi
+	[ $_match_cleaned -eq 1 ] && echo -e " ${rw_lv}已清理所有 Match 块中的旧认证字段${rw_lv}"
 
 	# 3. 移除 PAM 中的 google_authenticator 行（除非调用方明确要保留）
 	#    由调用方决定是否重新写入
@@ -20681,6 +20706,19 @@ _ssh_restore_backup() {
 		cp -a "$_SSH_BACKUP_DIR/authorized_keys" "$HOME/.ssh/authorized_keys"
 		echo -e " ${rw_lv}已回滚 ~/.ssh/authorized_keys${rw_lv}"
 	fi
+	# 回滚其它用户的 authorized_keys
+	local _bk_file _dest_home _bk_user
+	for _bk_file in "$_SSH_BACKUP_DIR"/authorized_keys.*; do
+		[ -f "$_bk_file" ] || continue
+		# 从文件名提取用户名（authorized_keys.<user>）
+		_bk_user="${_bk_file##*.}"
+		_dest_home=$(getent passwd "$_bk_user" | cut -d: -f6)
+		[ -z "$_dest_home" ] && continue
+		if [ -d "$_dest_home/.ssh" ]; then
+			cp -a "$_bk_file" "$_dest_home/.ssh/authorized_keys"
+			echo -e " ${rw_lv}已回滚 ${_bk_user} 的 authorized_keys${rw_lv}"
+		fi
+	done
 	green "回滚完成"
 }
 
