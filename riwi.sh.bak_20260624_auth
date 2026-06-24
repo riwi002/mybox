@@ -15782,159 +15782,3869 @@ send_stats "应用市场"
 echo -e "${rw_huang}应用市场${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo ""
+echo -e "${rw_huang}功能说明:${rw_lv}"
+echo -e "${rw_huang}  提供各种实用应用程序的一键安装，包括:${rw_lv}"
+echo -e "${rw_huang}  • 网站程序: WordPress, Discuz, 可道云等${rw_lv}"
+echo -e "${rw_huang}  • 开发工具: VS Code Server, Jupyter等${rw_lv}"
+echo -e "${rw_huang}  • 系统工具: 监控面板, 管理面板等${rw_lv}"
+echo -e "${rw_huang}  • 媒体工具: Jellyfin, 下载器等${rw_lv}"
+echo ""
+echo -e "${rw_huang}提示: 应用列表将自动更新，请稍等...${rw_lv}"
+echo ""
+install git
+echo -e "${rw_huang}正在更新应用列表请稍等……${rw_lv}"
+if [ ! -d apps/.git ]; then
+	timeout 10s git clone ${gh_proxy}github.com/riwi/apps.git
+else
+	cd apps
+	# git pull origin main > /dev/null 2>&1
+	timeout 10s git pull ${gh_proxy}github.com/riwi/apps.git main > /dev/null 2>&1
+fi
 
 while true; do
 
 	if [ -z "$sub_choice" ]; then
 	  clear
-	  echo -e "${rw_cheng}━━━━━━━━━━━━  应用市场  ━━━━━━━━━━━━${rw_lv}"
-	  echo ""
-	  echo -e " ${rw_huang}1.   ${rw_lv}1Panel 新一代管理面板${rw_lv}"
-	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	  echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
-	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	  read -e -p " 请输入你的选择: " sub_choice
+	  echo -e "应用市场"
+	  echo -e "${rw_lv}-------------------------"
+
+	  local app_numbers=$([ -f /home/docker/appno.txt ] && cat /home/docker/appno.txt || echo "")
+
+	  # 用循环设置颜色
+	  for i in {1..150}; do
+		  if echo "$app_numbers" | grep -q "^$i$"; then
+			  declare "color$i=${rw_lv}"
+		  else
+			  declare "color$i=${rw_lv}"
+		  fi
+	  done
+
+	  echo -e "${rw_huang}1.   ${color1}宝塔面板官方版                      ${rw_huang}2.   ${color2}aaPanel宝塔国际版"
+	  echo -e "${rw_huang}3.   ${color3}1Panel新一代管理面板                ${rw_huang}4.   ${color4}NginxProxyManager可视化面板"
+	  echo -e "${rw_huang}5.   ${color5}OpenList多存储文件列表程序          ${rw_huang}6.   ${color6}Ubuntu远程桌面网页版"
+	  echo -e "${rw_huang}7.   ${color7}哪吒探针VPS监控面板                 ${rw_huang}8.   ${color8}QB离线BT磁力下载面板"
+	  echo -e "${rw_huang}9.   ${color9}Poste.io邮件服务器程序              ${rw_huang}10.  ${color10}RocketChat多人在线聊天系统"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}11.  ${color11}禅道项目管理软件                    ${rw_huang}12.  ${color12}青龙面板定时任务管理平台"
+	  echo -e "${rw_huang}13.  ${color13}Cloudreve网盘 ${rw_huang}★${rw_lv}                     ${rw_huang}14.  ${color14}简单图床图片管理程序"
+	  echo -e "${rw_huang}15.  ${color15}emby多媒体管理系统                  ${rw_huang}16.  ${color16}Speedtest测速面板"
+	  echo -e "${rw_huang}17.  ${color17}AdGuardHome去广告软件               ${rw_huang}18.  ${color18}onlyoffice在线办公OFFICE"
+	  echo -e "${rw_huang}19.  ${color19}雷池WAF防火墙面板                   ${rw_huang}20.  ${color20}portainer容器管理面板"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}21.  ${color21}VScode网页版                        ${rw_huang}22.  ${color22}UptimeKuma监控工具"
+	  echo -e "${rw_huang}23.  ${color23}Memos网页备忘录                     ${rw_huang}24.  ${color24}Webtop远程桌面网页版 ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}25.  ${color25}Nextcloud网盘                       ${rw_huang}26.  ${color26}QD-Today定时任务管理框架"
+	  echo -e "${rw_huang}27.  ${color27}Dockge容器堆栈管理面板              ${rw_huang}28.  ${color28}LibreSpeed测速工具"
+	  echo -e "${rw_huang}29.  ${color29}searxng聚合搜索站 ${rw_huang}★${rw_lv}                 ${rw_huang}30.  ${color30}PhotoPrism私有相册系统"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}31.  ${color31}StirlingPDF工具大全                 ${rw_huang}32.  ${color32}drawio免费的在线图表软件 ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}33.  ${color33}Sun-Panel导航面板                   ${rw_huang}34.  ${color34}Pingvin-Share文件分享平台"
+	  echo -e "${rw_huang}35.  ${color35}极简朋友圈                          ${rw_huang}36.  ${color36}LobeChatAI聊天聚合网站"
+	  echo -e "${rw_huang}37.  ${color37}MyIP工具箱 ${rw_huang}★${rw_lv}                        ${rw_huang}38.  ${color38}小雅alist全家桶"
+	  echo -e "${rw_huang}39.  ${color39}Bililive直播录制工具                ${rw_huang}40.  ${color40}webssh网页版SSH连接工具"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}41.  ${color41}耗子管理面板                	 ${rw_huang}42.  ${color42}Nexterm远程连接工具"
+	  echo -e "${rw_huang}43.  ${color43}RustDesk远程桌面(服务端) ${rw_huang}★${rw_lv}          ${rw_huang}44.  ${color44}RustDesk远程桌面(中继端) ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}45.  ${color45}Docker加速站            		 ${rw_huang}46.  ${color46}GitHub加速站 ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}47.  ${color47}普罗米修斯监控			 ${rw_huang}48.  ${color48}普罗米修斯(主机监控)"
+	  echo -e "${rw_huang}49.  ${color49}普罗米修斯(容器监控)		 ${rw_huang}50.  ${color50}补货监控工具"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}51.  ${color51}PVE开小鸡面板			 ${rw_huang}52.  ${color52}DPanel容器管理面板"
+	  echo -e "${rw_huang}53.  ${color53}llama3聊天AI大模型                  ${rw_huang}54.  ${color54}AMH主机建站管理面板"
+	  echo -e "${rw_huang}55.  ${color55}FRP内网穿透(服务端) ${rw_huang}★${rw_lv}	         ${rw_huang}56.  ${color56}FRP内网穿透(客户端) ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}57.  ${color57}Deepseek聊天AI大模型                ${rw_huang}58.  ${color58}Dify大模型知识库 ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}59.  ${color59}NewAPI大模型资产管理                ${rw_huang}60.  ${color60}JumpServer开源堡垒机"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}61.  ${color61}在线翻译服务器			 ${rw_huang}62.  ${color62}RAGFlow大模型知识库"
+	  echo -e "${rw_huang}63.  ${color63}OpenWebUI自托管AI平台 ${rw_huang}★${rw_lv}             ${rw_huang}64.  ${color64}it-tools工具箱"
+	  echo -e "${rw_huang}65.  ${color65}n8n自动化工作流平台 ${rw_huang}★${rw_lv}               ${rw_huang}66.  ${color66}yt-dlp视频下载工具"
+	  echo -e "${rw_huang}67.  ${color67}ddns-go动态DNS管理工具 ${rw_huang}★${rw_lv}            ${rw_huang}68.  ${color68}AllinSSL证书管理平台"
+	  echo -e "${rw_huang}69.  ${color69}SFTPGo文件传输工具                  ${rw_huang}70.  ${color70}AstrBot聊天机器人框架"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}71.  ${color71}Navidrome私有音乐服务器             ${rw_huang}72.  ${color72}bitwarden密码管理器 ${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}73.  ${color73}LibreTV私有影视                     ${rw_huang}74.  ${color74}MoonTV私有影视"
+	  echo -e "${rw_huang}75.  ${color75}Melody音乐精灵                      ${rw_huang}76.  ${color76}在线DOS老游戏"
+	  echo -e "${rw_huang}77.  ${color77}迅雷离线下载工具                    ${rw_huang}78.  ${color78}PandaWiki智能文档管理系统"
+	  echo -e "${rw_huang}79.  ${color79}Beszel服务器监控                    ${rw_huang}80.  ${color80}linkwarden书签管理"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}81.  ${color81}JitsiMeet视频会议                   ${rw_huang}82.  ${color82}gpt-load高性能AI透明代理"
+	  echo -e "${rw_huang}83.  ${color83}komari服务器监控工具                ${rw_huang}84.  ${color84}Wallos个人财务管理工具"
+	  echo -e "${rw_huang}85.  ${color85}immich图片视频管理器                ${rw_huang}86.  ${color86}jellyfin媒体管理系统"
+	  echo -e "${rw_huang}87.  ${color87}SyncTV一起看片神器                  ${rw_huang}88.  ${color88}Owncast自托管直播平台"
+	  echo -e "${rw_huang}89.  ${color89}FileCodeBox文件快递                 ${rw_huang}90.  ${color90}matrix去中心化聊天协议"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}91.  ${color91}gitea私有代码仓库                   ${rw_huang}92.  ${color92}FileBrowser文件管理器"
+	  echo -e "${rw_huang}93.  ${color93}Dufs极简静态文件服务器              ${rw_huang}94.  ${color94}Gopeed高速下载工具"
+	  echo -e "${rw_huang}95.  ${color95}paperless文档管理平台               ${rw_huang}96.  ${color96}2FAuth自托管二步验证器"
+	  echo -e "${rw_huang}97.  ${color97}WireGuard组网(服务端)               ${rw_huang}98.  ${color98}WireGuard组网(客户端)"
+	  echo -e "${rw_huang}99.  ${color99}DSM群晖虚拟机                       ${rw_huang}100. ${color100}Syncthing点对点文件同步工具"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}101. ${color101}AI视频生成工具                      ${rw_huang}102. ${color102}VoceChat多人在线聊天系统"
+	  echo -e "${rw_huang}103. ${color103}Umami网站统计工具                   ${rw_huang}104. ${color104}Stream四层代理转发工具"
+	  echo -e "${rw_huang}105. ${color105}思源笔记                            ${rw_huang}106. ${color106}Drawnix开源白板工具"
+	  echo -e "${rw_huang}107. ${color107}PanSou网盘搜索                      ${rw_huang}108. ${color108}LangBot聊天机器人"
+	  echo -e "${rw_huang}109. ${color109}ZFile在线网盘                       ${rw_huang}110. ${color110}Karakeep书签管理"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}111. ${color111}多格式文件转换工具                  ${rw_huang}112. ${color112}Lucky大内网穿透工具"
+	  echo -e "${rw_huang}113. ${color113}Firefox浏览器                       ${rw_huang}114. ${color114}OpenClaw机器人管理工具${rw_huang}★${rw_lv}"
+	  echo -e "${rw_huang}115. ${color115}Hermes机器人管理工具${rw_huang}★${rw_lv}"
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}第三方应用列表"
+  	  echo -e "${rw_huang}想要让你的应用出现在这里？查看开发者指南: ${rw_huang}https://dev.riwi.sh/${rw_lv}"
+
+	  for f in "$HOME"/apps/*.conf; do
+		  [ -e "$f" ] || continue
+		  local base_name=$(basename "$f" .conf)
+		  # 获取应用描述
+		  local app_text=$(grep "app_text=" "$f" | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+
+		  # 检查安装状态 (匹配 appno.txt 中的 ID)
+		  # 这里假设 appno.txt 中记录的是 base_name (即文件名)
+		  if echo "$app_numbers" | grep -q "^$base_name$"; then
+			  # 如果已安装：显示 base_name - 描述 [已安装] (绿色)
+			  echo -e "${rw_huang}$base_name${rw_lv} - ${rw_lv}$app_text [已安装]${rw_lv}"
+		  else
+			  # 如果未安装：正常显示
+			  echo -e "${rw_huang}$base_name${rw_lv} - $app_text"
+		  fi
+	  done
+
+
+
+	  echo -e "${rw_lv}-------------------------"
+	  echo -e "${rw_huang}b.   ${rw_lv}备份全部应用数据                    ${rw_huang}r.   ${rw_lv}还原全部应用数据"
+	  echo -e "${rw_lv}------------------------"
+	  echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}返回主菜单${rw_lv}"
+	  echo -e "${rw_cheng}------------------------${rw_lv}"
+	  read -e -p "请输入你的选择: " sub_choice
 	fi
 
-	case "$sub_choice" in
-	  1)
-		# ── 1Panel 新一代管理面板 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 1Panel 新一代管理面板 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}1Panel 是飞致云开源的现代 Linux 服务器运维面板${rw_lv}"
-		echo -e " ${rw_lv}特性: 可视化界面 / 应用商店 / Docker 管理 / 网站管理 / 防火墙 / 计划任务${rw_lv}"
-		echo -e " ${rw_lv}依赖: Docker（安装脚本会自动检测并安装）${rw_lv}"
-		echo -e " ${rw_lv}官网: ${rw_huang}https://1panel.cn${rw_lv}"
-		echo -e " ${rw_lv}开源: ${rw_huang}https://github.com/1Panel-dev/1Panel${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}即将执行:${rw_lv}"
-		echo -e "   1) 检测系统环境（Linux x86_64 / arm64）"
-		echo -e "   2) 下载并运行 1Panel 官方 install.sh 在线脚本"
-		echo -e "   3) 脚本会自动安装 Docker（如未安装）并启动 1Panel 服务"
-		echo -e "   4) 安装完成后终端会显示访问地址 / 用户名 / 密码"
-		echo ""
-		echo -e " ${rw_hong}⚠ 注意:${rw_lv}"
-		echo -e "   - 官方脚本来自 ${rw_huang}https://resource.fit2cloud.com/1panel/package/install.sh${rw_lv}"
-		echo -e "   - 安装过程需要交互（设置端口/入口/用户名/密码），请按提示操作"
-		echo -e "   - 如网络较慢，可先用本工具箱的「换源」功能切换镜像源"
-		echo ""
-		read -e -p " 确认开始安装 1Panel？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
+	case $sub_choice in
+	  1|bt|baota)
+		local app_id="1"
+		local lujing="[ -d "/www/server/panel" ]"
+		local panelname="宝塔面板"
+		local panelurl="https://www.bt.cn/new/index.html"
+
+		panel_app_install() {
+			if [ -f /usr/bin/curl ];then curl -sSO https://download.bt.cn/install/install_panel.sh;else wget -O install_panel.sh https://download.bt.cn/install/install_panel.sh;fi;bash install_panel.sh ed8484bec
+		}
+
+		panel_app_manage() {
+			bt
+		}
+
+		panel_app_uninstall() {
+			curl -o bt-uninstall.sh http://download.bt.cn/install/bt-uninstall.sh > /dev/null 2>&1 && chmod +x bt-uninstall.sh && ./bt-uninstall.sh
+			chmod +x bt-uninstall.sh
+			./bt-uninstall.sh
+		}
+
+		install_panel
+
+
+
+		  ;;
+	  2|aapanel)
+
+
+		local app_id="2"
+		local lujing="[ -d "/www/server/panel" ]"
+		local panelname="aapanel"
+		local panelurl="https://www.aapanel.com/new/index.html"
+
+		panel_app_install() {
+			URL=https://www.aapanel.com/script/install_7.0_en.sh && if [ -f /usr/bin/curl ];then curl -ksSO "$URL" ;else wget --no-check-certificate -O install_7.0_en.sh "$URL";fi;bash install_7.0_en.sh aapanel
+		}
+
+		panel_app_manage() {
+			bt
+		}
+
+		panel_app_uninstall() {
+			curl -o bt-uninstall.sh http://download.bt.cn/install/bt-uninstall.sh > /dev/null 2>&1 && chmod +x bt-uninstall.sh && ./bt-uninstall.sh
+			chmod +x bt-uninstall.sh
+			./bt-uninstall.sh
+		}
+
+		install_panel
+
+		  ;;
+	  3|1p|1panel)
+
+		local app_id="3"
+		local lujing="command -v 1pctl"
+		local panelname="1Panel"
+		local panelurl="https://1panel.cn/"
+
+		panel_app_install() {
+			install bash
+			bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)"
+		}
+
+		panel_app_manage() {
+			1pctl user-info
+			1pctl update password
+		}
+
+		panel_app_uninstall() {
+			1pctl uninstall
+		}
+
+		install_panel
+
+		  ;;
+	  4|npm)
+
+		local app_id="4"
+		local docker_name="npm"
+		local docker_img="jc21/nginx-proxy-manager:latest"
+		local docker_port=81
+
+		docker_rum() {
+
+			docker run -d \
+			  --name=$docker_name \
+			  -p ${docker_port}:81 \
+			  -p 80:80 \
+			  -p 443:443 \
+			  -v /home/docker/npm/data:/data \
+			  -v /home/docker/npm/letsencrypt:/etc/letsencrypt \
+			  --restart=always \
+			  $docker_img
+
+
+		}
+
+		local docker_describe="一个Nginx反向代理工具面板，不支持添加域名访问。"
+		local docker_url="官网介绍: https://nginxproxymanager.com/"
+		local docker_use="echo \"初始用户名: admin@example.com\""
+		local docker_passwd="echo \"初始密码: changeme\""
+		local app_size="1"
+
+		docker_app
+
+		  ;;
+
+	  5|openlist)
+
+		local app_id="5"
+		local docker_name="openlist"
+		local docker_img="openlistteam/openlist:latest-aria2"
+		local docker_port=5244
+
+		docker_rum() {
+
+			mkdir -p /home/docker/openlist
+			chmod -R 777 /home/docker/openlist
+
+			docker run -d \
+				--restart=always \
+				-v /home/docker/openlist:/opt/openlist/data \
+				-p ${docker_port}:5244 \
+				-e PUID=0 \
+				-e PGID=0 \
+				-e UMASK=022 \
+				--name="openlist" \
+				openlistteam/openlist:latest-aria2
+
+		}
+
+
+		local docker_describe="一个支持多种存储，支持网页浏览和 WebDAV 的文件列表程序，由 gin 和 Solidjs 驱动"
+		local docker_url="官网介绍: ${gh_https_url}github.com/OpenListTeam/OpenList"
+		local docker_use="docker exec openlist ./openlist admin random"
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	  6|webtop-ubuntu)
+
+		local app_id="6"
+		local docker_name="webtop-ubuntu"
+		local docker_img="lscr.io/linuxserver/webtop:ubuntu-kde"
+		local docker_port=3006
+
+		docker_rum() {
+
+			read -e -p "设置登录用户名: " admin
+			read -e -p "设置登录用户密码: " admin_password
+			docker run -d \
+			  --name=webtop-ubuntu \
+			  --security-opt seccomp=unconfined \
+			  -e PUID=1000 \
+			  -e PGID=1000 \
+			  -e TZ=Etc/UTC \
+			  -e SUBFOLDER=/ \
+			  -e TITLE=Webtop \
+			  -e CUSTOM_USER=${admin} \
+			  -e PASSWORD=${admin_password} \
+			  -p ${docker_port}:3000 \
+			  -v /home/docker/webtop/data:/config \
+			  -v /var/run/docker.sock:/var/run/docker.sock \
+			  --shm-size="1gb" \
+			  --restart=always \
+			  lscr.io/linuxserver/webtop:ubuntu-kde
+
+
+		}
+
+
+		local docker_describe="webtop基于Ubuntu的容器。若IP无法访问，请添加域名访问。"
+		local docker_url="官网介绍: https://docs.linuxserver.io/images/docker-webtop/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+
+
+		  ;;
+	  7|nezha)
+		clear
+		send_stats "搭建哪吒"
+
+		local app_id="7"
+		local docker_name="nezha-dashboard"
+		local docker_port=8008
+		while true; do
+			check_docker_app
+			check_docker_image_update $docker_name
+			clear
+			echo -e "哪吒监控 $check_docker $update_status"
+			echo "开源、轻量、易用的服务器监控与运维工具"
+			echo "官网搭建文档: https://nezha.wiki/guide/dashboard.html"
+			if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "$docker_name"; then
+				local docker_port=$(docker port $docker_name | awk -F'[:]' '/->/ {print $NF}' | uniq)
+				check_docker_app_ip
+			fi
+			echo ""
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "1. 使用"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "0. 返回上一级选单"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			read -e -p "输入你的选择: " choice
+
+			case $choice in
+				1)
+					check_disk_space 1
+					install unzip jq
+					install_docker
+					curl -sL ${gh_proxy}raw.githubusercontent.com/nezhahq/scripts/refs/heads/main/install.sh -o nezha.sh && chmod +x nezha.sh && ./nezha.sh
+					local docker_port=$(docker port $docker_name | awk -F'[:]' '/->/ {print $NF}' | uniq)
+					check_docker_app_ip
+					;;
+
+				*)
+					break
+					;;
+
+			esac
 			break_end
-			sub_choice=""
-			continue
+		done
+		  ;;
+
+	  8|qb|QB)
+
+		local app_id="8"
+		local docker_name="qbittorrent"
+		local docker_img="lscr.io/linuxserver/qbittorrent:latest"
+		local docker_port=8081
+
+		docker_rum() {
+
+			docker run -d \
+			  --name=qbittorrent \
+			  -e PUID=1000 \
+			  -e PGID=1000 \
+			  -e TZ=Etc/UTC \
+			  -e WEBUI_PORT=${docker_port} \
+			  -e TORRENTING_PORT=56881 \
+			  -p ${docker_port}:${docker_port} \
+			  -p 56881:56881 \
+			  -p 56881:56881/udp \
+			  -v /home/docker/qbittorrent/config:/config \
+			  -v /home/docker/qbittorrent/downloads:/downloads \
+			  --restart=always \
+			  lscr.io/linuxserver/qbittorrent:latest
+
+		}
+
+		local docker_describe="qbittorrent离线BT磁力下载服务"
+		local docker_url="官网介绍: https://hub.docker.com/r/linuxserver/qbittorrent"
+		local docker_use="sleep 3"
+		local docker_passwd="docker logs qbittorrent"
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	  9|mail)
+		send_stats "搭建邮局"
+		clear
+		install telnet
+		local app_id="9"
+		local docker_name=“mailserver”
+		while true; do
+			check_docker_app
+			check_docker_image_update $docker_name
+
+			clear
+			echo -e "邮局服务 $check_docker $update_status"
+			echo "poste.io 是一个开源的邮件服务器解决方案，"
+			echo "视频介绍: https://www.bilibili.com/video/BV1wv421C71t?t=0.1"
+
+			echo ""
+			echo "端口检测"
+			port=25
+			timeout=3
+			if echo "quit" | timeout $timeout telnet smtp.qq.com $port | grep 'Connected'; then
+			  echo -e "${rw_lv}端口 $port 当前可用${rw_lv}"
+			else
+			  echo -e "${rw_hong}端口 $port 当前不可用${rw_lv}"
+			fi
+			echo ""
+
+			if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "$docker_name"; then
+				yuming=$(cat /home/docker/mail.txt)
+				echo "访问地址: "
+				echo "https://$yuming"
+			fi
+
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "1. 安装           2. 更新           3. 卸载"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "0. 返回上一级选单"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			read -e -p "输入你的选择: " choice
+
+			case $choice in
+				1)
+					setup_docker_dir
+					check_disk_space 2 /home/docker
+					read -e -p "请设置邮箱域名 例如 mail.yuming.com : " yuming
+					mkdir -p /home/docker
+					echo "$yuming" > /home/docker/mail.txt
+					echo -e "${rw_cheng}------------------------${rw_lv}"
+					ip_address
+					echo "先解析这些DNS记录"
+					echo "A           mail            $ipv4_address"
+					echo "CNAME       imap            $yuming"
+					echo "CNAME       pop             $yuming"
+					echo "CNAME       smtp            $yuming"
+					echo "MX          @               $yuming"
+					echo "TXT         @               v=spf1 mx ~all"
+					echo "TXT         ?               ?"
+					echo ""
+					echo -e "${rw_cheng}------------------------${rw_lv}"
+					echo "按任意键继续..."
+					read -n 1 -s -r -p ""
+
+					install jq
+					install_docker
+
+					docker run \
+						--net=host \
+						-e TZ=Europe/Prague \
+						-v /home/docker/mail:/data \
+						--name "mailserver" \
+						-h "$yuming" \
+						--restart=always \
+						-d analogic/poste.io
+
+
+					add_app_id
+
+					clear
+					echo "poste.io已经安装完成"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
+					echo "您可以使用以下地址访问poste.io:"
+					echo "https://$yuming"
+					echo ""
+
+					;;
+
+				2)
+					docker rm -f mailserver
+					docker rmi -f analogic/poste.i
+					yuming=$(cat /home/docker/mail.txt)
+					docker run \
+						--net=host \
+						-e TZ=Europe/Prague \
+						-v /home/docker/mail:/data \
+						--name "mailserver" \
+						-h "$yuming" \
+						--restart=always \
+						-d analogic/poste.i
+
+
+					add_app_id
+
+					clear
+					echo "poste.io已经安装完成"
+					echo -e "${rw_cheng}------------------------${rw_lv}"
+					echo "您可以使用以下地址访问poste.io:"
+					echo "https://$yuming"
+					echo ""
+					;;
+				3)
+					docker rm -f mailserver
+					docker rmi -f analogic/poste.io
+					rm /home/docker/mail.txt
+					rm -rf /home/docker/mail
+
+					sed -i "/\b${app_id}\b/d" /home/docker/appno.txt
+					echo "应用已卸载"
+					;;
+
+				*)
+					break
+					;;
+
+			esac
+			break_end
+		done
+
+		  ;;
+
+	  10|rocketchat)
+
+		local app_id="10"
+		local app_name="Rocket.Chat聊天系统"
+		local app_text="Rocket.Chat 是一个开源的团队通讯平台，支持实时聊天、音视频通话、文件共享等多种功能，"
+		local app_url="官方介绍: https://www.rocket.chat/"
+		local docker_name="rocketchat"
+		local docker_port="3897"
+		local app_size="2"
+
+		docker_app_install() {
+			docker run --name db -d --restart=always \
+				-v /home/docker/mongo/dump:/dump \
+				mongo:latest --replSet rs5 --oplogSize 256
+			sleep 1
+			docker exec db mongosh --eval "printjson(rs.initiate())"
+			sleep 5
+			docker run --name rocketchat --restart=always -p ${docker_port}:3000 --link db --env ROOT_URL=http://localhost --env MONGO_OPLOG_URL=mongodb://db:27017/rs5 -d rocket.chat
+
+			clear
+			ip_address
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			docker rm -f rocketchat
+			docker rmi -f rocket.chat:latest
+			docker run --name rocketchat --restart=always -p ${docker_port}:3000 --link db --env ROOT_URL=http://localhost --env MONGO_OPLOG_URL=mongodb://db:27017/rs5 -d rocket.chat
+			clear
+			ip_address
+			echo "rocket.chat已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_uninstall() {
+			docker rm -f rocketchat
+			docker rmi -f rocket.chat
+			docker rm -f db
+			docker rmi -f mongo:latest
+			rm -rf /home/docker/mongo
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+		  ;;
+
+
+
+	  11|zentao)
+		local app_id="11"
+		local docker_name="zentao-server"
+		local docker_img="idoop/zentao:latest"
+		local docker_port=82
+
+
+		docker_rum() {
+
+
+			docker run -d -p ${docker_port}:80 \
+			  -e ADMINER_USER="root" -e ADMINER_PASSWD="password" \
+			  -e BIND_ADDRESS="false" \
+			  -v /home/docker/zentao-server/:/opt/zbox/ \
+			  --add-host smtp.exmail.qq.com:163.177.90.125 \
+			  --name zentao-server \
+			  --restart=always \
+			  idoop/zentao:latest
+
+
+		}
+
+		local docker_describe="禅道是通用的项目管理软件"
+		local docker_url="官网介绍: https://www.zentao.net/"
+		local docker_use="echo \"初始用户名: admin\""
+		local docker_passwd="echo \"初始密码: 123456\""
+		local app_size="2"
+		docker_app
+
+		  ;;
+
+	  12|qinglong)
+		local app_id="12"
+		local docker_name="qinglong"
+		local docker_img="whyour/qinglong:latest"
+		local docker_port=5700
+
+		docker_rum() {
+
+
+			docker run -d \
+			  -v /home/docker/qinglong/data:/ql/data \
+			  -p ${docker_port}:5700 \
+			  --name qinglong \
+			  --hostname qinglong \
+			  --restart=always \
+			  whyour/qinglong:latest
+
+
+		}
+
+		local docker_describe="青龙面板是一个定时任务管理平台"
+		local docker_url="官网介绍: ${gh_proxy}github.com/whyour/qinglong"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+	  13|cloudreve)
+
+		local app_id="13"
+		local app_name="cloudreve网盘"
+		local app_text="cloudreve是一个支持多家云存储的网盘系统"
+		local app_url="视频介绍: https://www.bilibili.com/video/BV13F4m1c7h7?t=0.1"
+		local docker_name="cloudreve"
+		local docker_port="5212"
+		local app_size="2"
+
+		docker_app_install() {
+			cd /home/ && mkdir -p docker/cloud && cd docker/cloud && mkdir temp_data && mkdir -vp cloudreve/{uploads,avatar} && touch cloudreve/conf.ini && touch cloudreve/cloudreve.db && mkdir -p aria2/config && mkdir -p data/aria2 && chmod -R 777 data/aria2
+			curl -o /home/docker/cloud/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/cloudreve-docker-compose.yml
+			sed -i "s/5212:5212/${docker_port}:5212/g" /home/docker/cloud/docker-compose.yml
+			cd /home/docker/cloud/
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/cloud/ && docker compose down --rmi all
+			cd /home/docker/cloud/ && docker compose up -d
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/cloud/ && docker compose down --rmi all
+			rm -rf /home/docker/cloud
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+		  ;;
+
+	  14|easyimage)
+		local app_id="14"
+		local docker_name="easyimage"
+		local docker_img="ddsderek/easyimage:latest"
+		local docker_port=8014
+		docker_rum() {
+
+			docker run -d \
+			  --name easyimage \
+			  -p ${docker_port}:80 \
+			  -e TZ=Asia/Shanghai \
+			  -e PUID=1000 \
+			  -e PGID=1000 \
+			  -v /home/docker/easyimage/config:/app/web/config \
+			  -v /home/docker/easyimage/i:/app/web/i \
+			  --restart=always \
+			  ddsderek/easyimage:latest
+
+		}
+
+		local docker_describe="简单图床是一个简单的图床程序"
+		local docker_url="官网介绍: ${gh_proxy}github.com/icret/EasyImages2.0"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  15|emby)
+		local app_id="15"
+		local docker_name="emby"
+		local docker_img="linuxserver/emby:latest"
+		local docker_port=8015
+
+		docker_rum() {
+
+			docker run -d --name=emby --restart=always \
+				-v /home/docker/emby/config:/config \
+				-v /home/docker/emby/share1:/mnt/share1 \
+				-v /home/docker/emby/share2:/mnt/share2 \
+				-v /mnt/notify:/mnt/notify \
+				-p ${docker_port}:8096 \
+				-e UID=1000 -e GID=100 -e GIDLIST=100 \
+				linuxserver/emby:latest
+
+		}
+
+
+		local docker_describe="emby是一个主从式架构的媒体服务器软件，可以用来整理服务器上的视频和音频，并将音频和视频流式传输到客户端设备"
+		local docker_url="官网介绍: https://emby.media/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  16|looking)
+		local app_id="16"
+		local docker_name="looking-glass"
+		local docker_img="wikihostinc/looking-glass-server"
+		local docker_port=8016
+
+
+		docker_rum() {
+
+			docker run -d --name looking-glass --restart=always -p ${docker_port}:80 wikihostinc/looking-glass-server
+
+		}
+
+		local docker_describe="Speedtest测速面板是一个VPS网速测试工具，多项测试功能，还可以实时监控VPS进出站流量"
+		local docker_url="官网介绍: ${gh_proxy}github.com/wikihost-opensource/als"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+	  17|adguardhome)
+
+		local app_id="17"
+		local docker_name="adguardhome"
+		local docker_img="adguard/adguardhome"
+		local docker_port=8017
+
+		docker_rum() {
+
+			docker run -d \
+				--name adguardhome \
+				-v /home/docker/adguardhome/work:/opt/adguardhome/work \
+				-v /home/docker/adguardhome/conf:/opt/adguardhome/conf \
+				-p 53:53/tcp \
+				-p 53:53/udp \
+				-p ${docker_port}:3000/tcp \
+				--restart=always \
+				adguard/adguardhome
+
+
+		}
+
+
+		local docker_describe="AdGuardHome是一款全网广告拦截与反跟踪软件，未来将不止是一个DNS服务器。"
+		local docker_url="官网介绍: https://hub.docker.com/r/adguard/adguardhome"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  18|onlyoffice)
+
+		local app_id="18"
+		local docker_name="onlyoffice"
+		local docker_img="onlyoffice/documentserver"
+		local docker_port=8018
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:80 \
+				--restart=always \
+				--name onlyoffice \
+				-v /home/docker/onlyoffice/DocumentServer/logs:/var/log/onlyoffice  \
+				-v /home/docker/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data  \
+				 onlyoffice/documentserver
+
+
+		}
+
+		local docker_describe="onlyoffice是一款开源的在线office工具，太强大了！"
+		local docker_url="官网介绍: https://www.onlyoffice.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+
+		  ;;
+
+	  19|safeline)
+		send_stats "搭建雷池"
+
+		local app_id="19"
+		local docker_name=safeline-mgt
+		local docker_port=9443
+		while true; do
+			check_docker_app
+			clear
+			echo -e "雷池服务 $check_docker"
+			echo "雷池是长亭科技开发的WAF站点防火墙程序面板，可以反代站点进行自动化防御"
+			echo "视频介绍: https://www.bilibili.com/video/BV1mZ421T74c?t=0.1"
+			if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "$docker_name"; then
+				check_docker_app_ip
+			fi
+			echo ""
+
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "1. 安装           2. 更新           3. 重置密码           4. 卸载"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			echo "0. 返回上一级选单"
+			echo -e "${rw_cheng}------------------------${rw_lv}"
+			read -e -p "输入你的选择: " choice
+
+			case $choice in
+				1)
+					install_docker
+					check_disk_space 5
+					bash -c "$(curl -fsSLk https://waf-ce.chaitin.cn/release/latest/setup.sh)"
+
+					add_app_id
+					clear
+					echo "雷池WAF面板已经安装完成"
+					check_docker_app_ip
+					docker exec safeline-mgt resetadmin
+
+					;;
+
+				2)
+					bash -c "$(curl -fsSLk https://waf-ce.chaitin.cn/release/latest/upgrade.sh)"
+					docker rmi $(docker images | grep "safeline" | grep "none" | awk '{print $3}')
+					echo ""
+
+					add_app_id
+					clear
+					echo "雷池WAF面板已经更新完成"
+					check_docker_app_ip
+					;;
+				3)
+					docker exec safeline-mgt resetadmin
+					;;
+				4)
+					cd /data/safeline
+					docker compose down --rmi all
+
+					sed -i "/\b${app_id}\b/d" /home/docker/appno.txt
+					echo "如果你是默认安装目录那现在项目已经卸载。如果你是自定义安装目录你需要到安装目录下自行执行:"
+					echo "docker compose down && docker compose down --rmi all"
+					;;
+				*)
+					break
+					;;
+
+			esac
+			break_end
+		done
+
+		  ;;
+
+	  20|portainer)
+		local app_id="20"
+		local docker_name="portainer"
+		local docker_img="portainer/portainer"
+		local docker_port=8020
+
+		docker_rum() {
+
+			docker run -d \
+				--name portainer \
+				-p ${docker_port}:9000 \
+				-v /var/run/docker.sock:/var/run/docker.sock \
+				-v /home/docker/portainer:/data \
+				--restart=always \
+				portainer/portainer
+
+		}
+
+
+		local docker_describe="portainer是一个轻量级的docker容器管理面板"
+		local docker_url="官网介绍: https://www.portainer.io/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	  21|vscode)
+		local app_id="21"
+		local docker_name="vscode-web"
+		local docker_img="codercom/code-server"
+		local docker_port=8021
+
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:8080 -v /home/docker/vscode-web:/home/coder/.local/share/code-server --name vscode-web --restart=always codercom/code-server
+
+		}
+
+
+		local docker_describe="VScode是一款强大的在线代码编写工具"
+		local docker_url="官网介绍: ${gh_proxy}github.com/coder/code-server"
+		local docker_use="sleep 3"
+		local docker_passwd="docker exec vscode-web cat /home/coder/.config/code-server/config.yaml"
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  22|uptime-kuma)
+		local app_id="22"
+		local docker_name="uptime-kuma"
+		local docker_img="louislam/uptime-kuma:latest"
+		local docker_port=8022
+
+
+		docker_rum() {
+
+			docker run -d \
+				--name=uptime-kuma \
+				-p ${docker_port}:3001 \
+				-v /home/docker/uptime-kuma/uptime-kuma-data:/app/data \
+				--restart=always \
+				louislam/uptime-kuma:latest
+
+		}
+
+
+		local docker_describe="Uptime Kuma 易于使用的自托管监控工具"
+		local docker_url="官网介绍: ${gh_proxy}github.com/louislam/uptime-kuma"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  23|memos)
+		local app_id="23"
+		local docker_name="memos"
+		local docker_img="neosmemo/memos:stable"
+		local docker_port=8023
+
+		docker_rum() {
+
+			docker run -d --name memos -p ${docker_port}:5230 -v /home/docker/memos:/var/opt/memos --restart=always neosmemo/memos:stable
+
+		}
+
+		local docker_describe="Memos是一款轻量级、自托管的备忘录中心"
+		local docker_url="官网介绍: ${gh_proxy}github.com/usememos/memos"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  24|webtop)
+		local app_id="24"
+		local docker_name="webtop"
+		local docker_img="lscr.io/linuxserver/webtop:latest"
+		local docker_port=8024
+
+		docker_rum() {
+
+			read -e -p "设置登录用户名: " admin
+			read -e -p "设置登录用户密码: " admin_password
+			docker run -d \
+			  --name=webtop \
+			  --security-opt seccomp=unconfined \
+			  -e PUID=1000 \
+			  -e PGID=1000 \
+			  -e TZ=Etc/UTC \
+			  -e SUBFOLDER=/ \
+			  -e TITLE=Webtop \
+			  -e CUSTOM_USER=${admin} \
+			  -e PASSWORD=${admin_password} \
+			  -e LC_ALL=zh_CN.UTF-8 \
+			  -e DOCKER_MODS=linuxserver/mods:universal-package-install \
+			  -e INSTALL_PACKAGES=font-noto-cjk \
+			  -p ${docker_port}:3000 \
+			  -v /home/docker/webtop/data:/config \
+			  -v /var/run/docker.sock:/var/run/docker.sock \
+			  --shm-size="1gb" \
+			  --restart=always \
+			  lscr.io/linuxserver/webtop:latest
+
+		}
+
+
+		local docker_describe="webtop基于Alpine的中文版容器。若IP无法访问，请添加域名访问。"
+		local docker_url="官网介绍: https://docs.linuxserver.io/images/docker-webtop/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+		  ;;
+
+	  25|nextcloud)
+		local app_id="25"
+		local docker_name="nextcloud"
+		local docker_img="nextcloud:latest"
+		local docker_port=8025
+		local rootpasswd=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
+
+		docker_rum() {
+
+			docker run -d --name nextcloud --restart=always -p ${docker_port}:80 -v /home/docker/nextcloud:/var/www/html -e NEXTCLOUD_ADMIN_USER=nextcloud -e NEXTCLOUD_ADMIN_PASSWORD=$rootpasswd nextcloud
+
+		}
+
+		local docker_describe="Nextcloud拥有超过 400,000 个部署，是您可以下载的最受欢迎的本地内容协作平台"
+		local docker_url="官网介绍: https://nextcloud.com/"
+		local docker_use="echo \"账号: nextcloud  密码: $rootpasswd\""
+		local docker_passwd=""
+		local app_size="3"
+		docker_app
+		  ;;
+
+	  26|qd)
+		local app_id="26"
+		local docker_name="qd"
+		local docker_img="qdtoday/qd:latest"
+		local docker_port=8026
+
+		docker_rum() {
+
+			docker run -d --name qd -p ${docker_port}:80 -v /home/docker/qd/config:/usr/src/app/config qdtoday/qd
+
+		}
+
+		local docker_describe="QD-Today是一个HTTP请求定时任务自动执行框架"
+		local docker_url="官网介绍: https://qd-today.github.io/qd/zh_CN/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  27|dockge)
+		local app_id="27"
+		local docker_name="dockge"
+		local docker_img="louislam/dockge:latest"
+		local docker_port=8027
+
+		docker_rum() {
+
+			docker run -d --name dockge --restart=always -p ${docker_port}:5001 -v /var/run/docker.sock:/var/run/docker.sock -v /home/docker/dockge/data:/app/data -v  /home/docker/dockge/stacks:/home/docker/dockge/stacks -e DOCKGE_STACKS_DIR=/home/docker/dockge/stacks louislam/dockge
+
+		}
+
+		local docker_describe="dockge是一个可视化的docker-compose容器管理面板"
+		local docker_url="官网介绍: ${gh_proxy}github.com/louislam/dockge"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  28|speedtest)
+		local app_id="28"
+		local docker_name="speedtest"
+		local docker_img="ghcr.io/librespeed/speedtest"
+		local docker_port=8028
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:8080 --name speedtest --restart=always ghcr.io/librespeed/speedtest
+
+		}
+
+		local docker_describe="librespeed是用Javascript实现的轻量级速度测试工具，即开即用"
+		local docker_url="官网介绍: ${gh_proxy}github.com/librespeed/speedtest"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  29|searxng)
+		local app_id="29"
+		local docker_name="searxng"
+		local docker_img="searxng/searxng"
+		local docker_port=8029
+
+		docker_rum() {
+
+			docker run -d \
+			  --name searxng \
+			  --restart=always \
+			  -p ${docker_port}:8080 \
+			  -v "/home/docker/searxng:/etc/searxng" \
+			  searxng/searxng
+
+		}
+
+		local docker_describe="searxng是一个私有且隐私的搜索引擎站点"
+		local docker_url="官网介绍: https://hub.docker.com/r/alandoyle/searxng"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  30|photoprism)
+		local app_id="30"
+		local docker_name="photoprism"
+		local docker_img="photoprism/photoprism:latest"
+		local docker_port=8030
+		local rootpasswd=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c16)
+
+		docker_rum() {
+
+			docker run -d \
+				--name photoprism \
+				--restart=always \
+				--security-opt seccomp=unconfined \
+				--security-opt apparmor=unconfined \
+				-p ${docker_port}:2342 \
+				-e PHOTOPRISM_UPLOAD_NSFW="true" \
+				-e PHOTOPRISM_ADMIN_PASSWORD="$rootpasswd" \
+				-v /home/docker/photoprism/storage:/photoprism/storage \
+				-v /home/docker/photoprism/Pictures:/photoprism/originals \
+				photoprism/photoprism
+
+		}
+
+
+		local docker_describe="photoprism非常强大的私有相册系统"
+		local docker_url="官网介绍: https://www.photoprism.app/"
+		local docker_use="echo \"账号: admin  密码: $rootpasswd\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  31|s-pdf)
+		local app_id="31"
+		local docker_name="s-pdf"
+		local docker_img="frooodle/s-pdf:latest"
+		local docker_port=8031
+
+		docker_rum() {
+
+			docker run -d \
+				--name s-pdf \
+				--restart=always \
+				 -p ${docker_port}:8080 \
+				 -v /home/docker/s-pdf/trainingData:/usr/share/tesseract-ocr/5/tessdata \
+				 -v /home/docker/s-pdf/extraConfigs:/configs \
+				 -v /home/docker/s-pdf/logs:/logs \
+				 -e DOCKER_ENABLE_SECURITY=false \
+				 frooodle/s-pdf:latest
+		}
+
+		local docker_describe="这是一个强大的本地托管基于 Web 的 PDF 操作工具，使用 docker，允许您对 PDF 文件执行各种操作，例如拆分合并、转换、重新组织、添加图像、旋转、压缩等。"
+		local docker_url="官网介绍: ${gh_proxy}github.com/Stirling-Tools/Stirling-PDF"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  32|drawio)
+		local app_id="32"
+		local docker_name="drawio"
+		local docker_img="jgraph/drawio"
+		local docker_port=8032
+
+		docker_rum() {
+
+			docker run -d --restart=always --name drawio -p ${docker_port}:8080 -v /home/docker/drawio:/var/lib/drawio jgraph/drawio
+
+		}
+
+
+		local docker_describe="这是一个强大图表绘制软件。思维导图，拓扑图，流程图，都能画"
+		local docker_url="官网介绍: https://www.drawio.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  33|sun-panel)
+		local app_id="33"
+		local docker_name="sun-panel"
+		local docker_img="hslr/sun-panel"
+		local docker_port=8033
+
+		docker_rum() {
+
+			docker run -d --restart=always -p ${docker_port}:3002 \
+				-v /home/docker/sun-panel/conf:/app/conf \
+				-v /home/docker/sun-panel/uploads:/app/uploads \
+				-v /home/docker/sun-panel/database:/app/database \
+				--name sun-panel \
+				hslr/sun-panel
+
+		}
+
+		local docker_describe="Sun-Panel服务器、NAS导航面板、Homepage、浏览器首页"
+		local docker_url="官网介绍: https://doc.sun-panel.top/zh_cn/"
+		local docker_use="echo \"账号: admin@sun.cc  密码: 12345678\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  34|pingvin-share)
+		local app_id="34"
+		local docker_name="pingvin-share"
+		local docker_img="stonith404/pingvin-share"
+		local docker_port=8034
+
+		docker_rum() {
+
+			docker run -d \
+				--name pingvin-share \
+				--restart=always \
+				-p ${docker_port}:3000 \
+				-v /home/docker/pingvin-share/data:/opt/app/backend/data \
+				stonith404/pingvin-share
+		}
+
+		local docker_describe="Pingvin Share 是一个可自建的文件分享平台，是 WeTransfer 的一个替代品"
+		local docker_url="官网介绍: ${gh_proxy}github.com/stonith404/pingvin-share"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  35|moments)
+		local app_id="35"
+		local docker_name="moments"
+		local docker_img="kingwrcy/moments:latest"
+		local docker_port=8035
+
+		docker_rum() {
+
+			docker run -d --restart=always \
+				-p ${docker_port}:3000 \
+				-v /home/docker/moments/data:/app/data \
+				-v /etc/localtime:/etc/localtime:ro \
+				-v /etc/timezone:/etc/timezone:ro \
+				--name moments \
+				kingwrcy/moments:latest
+		}
+
+
+		local docker_describe="极简朋友圈，高仿微信朋友圈，记录你的美好生活"
+		local docker_url="官网介绍: ${gh_proxy}github.com/kingwrcy/moments?tab=readme-ov-file"
+		local docker_use="echo \"账号: admin  密码: a123456\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+
+	  36|lobe-chat)
+		local app_id="36"
+		local docker_name="lobe-chat"
+		local docker_img="lobehub/lobe-chat:latest"
+		local docker_port=8036
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:3210 \
+				--name lobe-chat \
+				--restart=always \
+				lobehub/lobe-chat
+		}
+
+		local docker_describe="LobeChat聚合市面上主流的AI大模型，ChatGPT/Claude/Gemini/Groq/Ollama"
+		local docker_url="官网介绍: ${gh_proxy}github.com/lobehub/lobe-chat"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+		  ;;
+
+	  37|myip)
+		local app_id="37"
+		local docker_name="myip"
+		local docker_img="jason5ng32/myip:latest"
+		local docker_port=8037
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:18966 --name myip jason5ng32/myip:latest
+
+		}
+
+
+		local docker_describe="是一个多功能IP工具箱，可以查看自己IP信息及连通性，用网页面板呈现"
+		local docker_url="官网介绍: ${gh_proxy}github.com/jason5ng32/MyIP/blob/main/README_ZH.md"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  38|xiaoya)
+		send_stats "小雅全家桶"
+		clear
+		install_docker
+		check_disk_space 1
+		bash -c "$(curl --insecure -fsSL https://ddsrem.com/xiaoya_install.sh)"
+		  ;;
+
+	  39|bililive)
+
+		if [ ! -d /home/docker/bililive-go/ ]; then
+			mkdir -p /home/docker/bililive-go/ > /dev/null 2>&1
+			wget -O /home/docker/bililive-go/config.yml ${gh_proxy}raw.githubusercontent.com/hr3lxphr6j/bililive-go/master/config.yml > /dev/null 2>&1
 		fi
 
-		# 系统架构检查
-		local _arch
-		_arch=$(uname -m 2>/dev/null || echo "")
-		case "$_arch" in
-			x86_64|amd64) _arch_ok=1 ;;
-			aarch64|arm64) _arch_ok=1 ;;
-			*)
-				red "不支持的系统架构: ${_arch:-未知}"
-				echo -e " ${rw_huang}1Panel 仅支持 x86_64 / arm64 架构${rw_lv}"
-				break_end
-				sub_choice=""
-				continue
+		local app_id="39"
+		local docker_name="bililive-go"
+		local docker_img="chigusa/bililive-go"
+		local docker_port=8039
+
+		docker_rum() {
+
+			docker run --restart=always --name bililive-go -v /home/docker/bililive-go/config.yml:/etc/bililive-go/config.yml -v /home/docker/bililive-go/Videos:/srv/bililive -p ${docker_port}:8080 -d chigusa/bililive-go
+
+		}
+
+		local docker_describe="Bililive-go是一个支持多种直播平台的直播录制工具"
+		local docker_url="官网介绍: ${gh_proxy}github.com/hr3lxphr6j/bililive-go"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  40|webssh)
+		local app_id="40"
+		local docker_name="webssh"
+		local docker_img="jrohy/webssh"
+		local docker_port=8040
+		docker_rum() {
+			docker run -d -p ${docker_port}:5032 --restart=always --name webssh -e TZ=Asia/Shanghai jrohy/webssh
+		}
+
+		local docker_describe="简易在线ssh连接工具和sftp工具"
+		local docker_url="官网介绍: ${gh_proxy}github.com/Jrohy/webssh"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  41|haozi|acepanel)
+
+		local app_id="41"
+		local lujing="[ -d "/www/server/panel" ]"
+		local panelname="AcePanel 原耗子面板"
+		local panelurl="官方地址: ${gh_proxy}github.com/acepanel/panel"
+
+		panel_app_install() {
+			cd ~
+			bash <(curl -sSLm 10 https://dl.acepanel.net/helper.sh)
+		}
+
+		panel_app_manage() {
+			acepanel help
+		}
+
+		panel_app_uninstall() {
+			cd ~
+			bash <(curl -sSLm 10 https://dl.acepanel.net/helper.sh)
+
+		}
+
+		install_panel
+
+		  ;;
+
+
+	  42|nexterm)
+		local app_id="42"
+		local docker_name="nexterm"
+		local docker_img="germannewsmaker/nexterm:latest"
+		local docker_port=8042
+
+		docker_rum() {
+
+			ENCRYPTION_KEY=$(openssl rand -hex 32)
+			docker run -d \
+			  --name nexterm \
+			  -e ENCRYPTION_KEY=${ENCRYPTION_KEY} \
+			  -p ${docker_port}:6989 \
+			  -v /home/docker/nexterm:/app/data \
+			  --restart=always \
+			  germannewsmaker/nexterm:latest
+
+		}
+
+		local docker_describe="nexterm是一款强大的在线SSH/VNC/RDP连接工具。"
+		local docker_url="官网介绍: ${gh_proxy}github.com/gnmyt/Nexterm"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  43|hbbs)
+		local app_id="43"
+		local docker_name="hbbs"
+		local docker_img="rustdesk/rustdesk-server"
+		local docker_port=0000
+
+		docker_rum() {
+
+			docker run --name hbbs -v /home/docker/hbbs/data:/root -td --net=host --restart=always rustdesk/rustdesk-server hbbs
+
+		}
+
+
+		local docker_describe="rustdesk开源的远程桌面(服务端)，类似自己的向日葵私服。"
+		local docker_url="官网介绍: https://rustdesk.com/zh-cn/"
+		local docker_use="docker logs hbbs"
+		local docker_passwd="echo \"把你的IP和key记录下，会在远程桌面客户端中用到。去44选项装中继端吧！\""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  44|hbbr)
+		local app_id="44"
+		local docker_name="hbbr"
+		local docker_img="rustdesk/rustdesk-server"
+		local docker_port=0000
+
+		docker_rum() {
+
+			docker run --name hbbr -v /home/docker/hbbr/data:/root -td --net=host --restart=always rustdesk/rustdesk-server hbbr
+
+		}
+
+		local docker_describe="rustdesk开源的远程桌面(中继端)，类似自己的向日葵私服。"
+		local docker_url="官网介绍: https://rustdesk.com/zh-cn/"
+		local docker_use="echo \"前往官网下载远程桌面的客户端: https://rustdesk.com/zh-cn/\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  45|registry)
+		local app_id="45"
+		local docker_name="registry"
+		local docker_img="registry:2"
+		local docker_port=8045
+
+		docker_rum() {
+
+			docker run -d \
+				-p ${docker_port}:5000 \
+				--name registry \
+				-v /home/docker/registry:/var/lib/registry \
+				-e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+				--restart=always \
+				registry:2
+
+		}
+
+		local docker_describe="Docker Registry 是一个用于存储和分发 Docker 镜像的服务。"
+		local docker_url="官网介绍: https://hub.docker.com/_/registry"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+		  ;;
+
+	  46|ghproxy)
+		local app_id="46"
+		local docker_name="ghproxy"
+		local docker_img="wjqserver/ghproxy:latest"
+		local docker_port=8046
+
+		docker_rum() {
+
+			docker run -d --name ghproxy --restart=always -p ${docker_port}:8080 -v /home/docker/ghproxy/config:/data/ghproxy/config wjqserver/ghproxy:latest
+
+		}
+
+		local docker_describe="使用Go实现的GHProxy，用于加速部分地区Github仓库的拉取。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/WJQSERVER-STUDIO/ghproxy"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  47|prometheus|grafana)
+
+		local app_id="47"
+		local app_name="普罗米修斯监控"
+		local app_text="Prometheus+Grafana企业级监控系统"
+		local app_url="官网介绍: https://prometheus.io"
+		local docker_name="grafana"
+		local docker_port="8047"
+		local app_size="2"
+
+		docker_app_install() {
+			prometheus_install
+			clear
+			ip_address
+			echo "已经安装完成"
+			check_docker_app_ip
+			echo "初始用户名密码均为: admin"
+		}
+
+		docker_app_update() {
+			docker rm -f node-exporter prometheus grafana
+			docker rmi -f prom/node-exporter
+			docker rmi -f prom/prometheus:latest
+			docker rmi -f grafana/grafana:latest
+			docker_app_install
+		}
+
+		docker_app_uninstall() {
+			docker rm -f node-exporter prometheus grafana
+			docker rmi -f prom/node-exporter
+			docker rmi -f prom/prometheus:latest
+			docker rmi -f grafana/grafana:latest
+
+			rm -rf /home/docker/monitoring
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+		  ;;
+
+	  48|node-exporter)
+		local app_id="48"
+		local docker_name="node-exporter"
+		local docker_img="prom/node-exporter"
+		local docker_port=8048
+
+		docker_rum() {
+
+			docker run -d \
+				--name=node-exporter \
+				-p ${docker_port}:9100 \
+				--restart=always \
+				prom/node-exporter
+
+
+		}
+
+		local docker_describe="这是一个普罗米修斯的主机数据采集组件，请部署在被监控主机上。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/prometheus/node_exporter"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  49|cadvisor)
+		local app_id="49"
+		local docker_name="cadvisor"
+		local docker_img="gcr.io/cadvisor/cadvisor:latest"
+		local docker_port=8049
+
+		docker_rum() {
+
+			docker run -d \
+				--name=cadvisor \
+				--restart=always \
+				-p ${docker_port}:8080 \
+				--volume=/:/rootfs:ro \
+				--volume=/var/run:/var/run:rw \
+				--volume=/sys:/sys:ro \
+				--volume=/var/lib/docker/:/var/lib/docker:ro \
+				gcr.io/cadvisor/cadvisor:latest \
+				-housekeeping_interval=10s \
+				-docker_only=true
+
+		}
+
+		local docker_describe="这是一个普罗米修斯的容器数据采集组件，请部署在被监控主机上。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/google/cadvisor"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  50|changedetection)
+		local app_id="50"
+		local docker_name="changedetection"
+		local docker_img="dgtlmoon/changedetection.io:latest"
+		local docker_port=8050
+
+		docker_rum() {
+
+			docker run -d --restart=always -p ${docker_port}:5000 \
+				-v /home/docker/datastore:/datastore \
+				--name changedetection dgtlmoon/changedetection.io:latest
+
+		}
+
+		local docker_describe="这是一款网站变化检测、补货监控和通知的小工具"
+		local docker_url="官网介绍: ${gh_https_url}github.com/dgtlmoon/changedetection.io"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  51|pve)
+		clear
+		send_stats "PVE开小鸡"
+		check_disk_space 1
+		curl -L ${gh_proxy}raw.githubusercontent.com/oneclickvirt/pve/main/scripts/install_pve.sh -o install_pve.sh && chmod +x install_pve.sh && bash install_pve.sh
+		  ;;
+
+
+	  52|dpanel)
+		local app_id="52"
+		local docker_name="dpanel"
+		local docker_img="dpanel/dpanel:lite"
+		local docker_port=8052
+
+		docker_rum() {
+
+			docker run -d --name dpanel --restart=always \
+				-p ${docker_port}:8080 -e APP_NAME=dpanel \
+				-v /var/run/docker.sock:/var/run/docker.sock \
+				-v /home/docker/dpanel:/dpanel \
+				dpanel/dpanel:lite
+
+		}
+
+		local docker_describe="Docker可视化面板系统，提供完善的docker管理功能。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/donknap/dpanel"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  53|llama3)
+		local app_id="53"
+		local docker_name="ollama"
+		local docker_img="ghcr.io/open-webui/open-webui:ollama"
+		local docker_port=8053
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:8080 -v /home/docker/ollama:/root/.ollama -v /home/docker/ollama/open-webui:/app/backend/data --name ollama --restart=always ghcr.io/open-webui/open-webui:ollama
+
+		}
+
+		local docker_describe="OpenWebUI一款大语言模型网页框架，接入全新的llama3大语言模型"
+		local docker_url="官网介绍: ${gh_https_url}github.com/open-webui/open-webui"
+		local docker_use="docker exec ollama ollama run llama3.2:1b"
+		local docker_passwd=""
+		local app_size="5"
+		docker_app
+		  ;;
+
+	  54|amh)
+
+		local app_id="54"
+		local lujing="[ -d "/www/server/panel" ]"
+		local panelname="AMH面板"
+		local panelurl="官方地址: https://amh.sh/index.htm?amh"
+
+		panel_app_install() {
+			cd ~
+			wget https://dl.amh.sh/amh.sh && bash amh.sh
+		}
+
+		panel_app_manage() {
+			panel_app_install
+		}
+
+		panel_app_uninstall() {
+			panel_app_install
+		}
+
+		install_panel
+		  ;;
+
+
+	  55|frps)
+		frps_panel
+		  ;;
+
+	  56|frpc)
+		frpc_panel
+		  ;;
+
+	  57|deepseek)
+		local app_id="57"
+		local docker_name="ollama"
+		local docker_img="ghcr.io/open-webui/open-webui:ollama"
+		local docker_port=8053
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:8080 -v /home/docker/ollama:/root/.ollama -v /home/docker/ollama/open-webui:/app/backend/data --name ollama --restart=always ghcr.io/open-webui/open-webui:ollama
+
+		}
+
+		local docker_describe="OpenWebUI一款大语言模型网页框架，接入全新的DeepSeek R1大语言模型"
+		local docker_url="官网介绍: ${gh_https_url}github.com/open-webui/open-webui"
+		local docker_use="docker exec ollama ollama run deepseek-r1:1.5b"
+		local docker_passwd=""
+		local app_size="5"
+		docker_app
+		  ;;
+
+
+	  58|dify)
+		local app_id="58"
+		local app_name="Dify知识库"
+		local app_text="是一款开源的大语言模型(LLM) 应用开发平台。自托管训练数据用于AI生成"
+		local app_url="官方网站: https://docs.dify.ai/zh-hans"
+		local docker_name="docker-nginx-1"
+		local docker_port="8058"
+		local app_size="3"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/langgenius/dify.git && cd dify/docker && cp .env.example .env
+			sed -i "s/^EXPOSE_NGINX_PORT=.*/EXPOSE_NGINX_PORT=${docker_port}/; s/^EXPOSE_NGINX_SSL_PORT=.*/EXPOSE_NGINX_SSL_PORT=8858/" /home/docker/dify/docker/.env
+
+			docker compose up -d
+
+			chown -R 1001:1001 /home/docker/dify/docker/volumes/app/storage
+			chmod -R 755 /home/docker/dify/docker/volumes/app/storage
+			docker compose down
+			docker compose up -d
+
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/dify/docker/ && docker compose down --rmi all
+			cd  /home/docker/dify/
+			git pull ${gh_proxy}github.com/langgenius/dify.git main > /dev/null 2>&1
+			sed -i 's/^EXPOSE_NGINX_PORT=.*/EXPOSE_NGINX_PORT=8058/; s/^EXPOSE_NGINX_SSL_PORT=.*/EXPOSE_NGINX_SSL_PORT=8858/' /home/docker/dify/docker/.env
+			cd  /home/docker/dify/docker/ && docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/dify/docker/ && docker compose down --rmi all
+			rm -rf /home/docker/dify
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+	  59|new-api)
+		local app_id="59"
+		local app_name="NewAPI"
+		local app_text="新一代大模型网关与AI资产管理系统"
+		local app_url="官方网站: ${gh_https_url}github.com/Calcium-Ion/new-api"
+		local docker_name="new-api"
+		local docker_port="8059"
+		local app_size="3"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/Calcium-Ion/new-api.git && cd new-api
+
+			sed -i -e "s/- \"3000:3000\"/- \"${docker_port}:3000\"/g" \
+				   -e 's/container_name: redis/container_name: redis-new-api/g' \
+				   -e 's/container_name: mysql/container_name: mysql-new-api/g' \
+				   docker-compose.yml
+
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/new-api/ && docker compose down --rmi all
+			cd  /home/docker/new-api/
+
+			git pull ${gh_proxy}github.com/Calcium-Ion/new-api.git main > /dev/null 2>&1
+			sed -i -e "s/- \"3000:3000\"/- \"${docker_port}:3000\"/g" \
+				   -e 's/container_name: redis/container_name: redis-new-api/g' \
+				   -e 's/container_name: mysql/container_name: mysql-new-api/g' \
+				   docker-compose.yml
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/new-api/ && docker compose down --rmi all
+			rm -rf /home/docker/new-api
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+	  60|jms)
+
+		local app_id="60"
+		local app_name="JumpServer开源堡垒机"
+		local app_text="是一个开源的特权访问管理 (PAM) 工具，该程序占用80端口不支持添加域名访问了"
+		local app_url="官方介绍: ${gh_https_url}github.com/jumpserver/jumpserver"
+		local docker_name="jms_web"
+		local docker_port="80"
+		local app_size="2"
+
+		docker_app_install() {
+			curl -sSL ${gh_proxy}github.com/jumpserver/jumpserver/releases/latest/download/quick_start.sh | bash
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+			echo "初始用户名: admin"
+			echo "初始密码: ChangeMe"
+		}
+
+
+		docker_app_update() {
+			cd /opt/jumpserver-installer*/
+			./jmsctl.sh upgrade
+			echo "应用已更新"
+		}
+
+
+		docker_app_uninstall() {
+			cd /opt/jumpserver-installer*/
+			./jmsctl.sh uninstall
+			cd /opt
+			rm -rf jumpserver-installer*/
+			rm -rf jumpserver
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+		  ;;
+
+	  61|libretranslate)
+		local app_id="61"
+		local docker_name="libretranslate"
+		local docker_img="libretranslate/libretranslate:latest"
+		local docker_port=8061
+
+		docker_rum() {
+
+			docker run -d \
+				-p ${docker_port}:5000 \
+				--name libretranslate \
+				libretranslate/libretranslate \
+				--load-only ko,zt,zh,en,ja,pt,es,fr,de,ru
+
+		}
+
+		local docker_describe="免费开源机器翻译 API，完全自托管，它的翻译引擎由开源Argos Translate库提供支持。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/LibreTranslate/LibreTranslate"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="5"
+		docker_app
+		  ;;
+
+
+
+	  62|ragflow)
+		local app_id="62"
+		local app_name="RAGFlow知识库"
+		local app_text="基于深度文档理解的开源 RAG（检索增强生成）引擎"
+		local app_url="官方网站: ${gh_https_url}github.com/infiniflow/ragflow"
+		local docker_name="ragflow-server"
+		local docker_port="8062"
+		local app_size="8"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/infiniflow/ragflow.git && cd ragflow/docker
+			sed -i "s/- 80:80/- ${docker_port}:80/; /- 443:443/d" docker-compose.yml
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/ragflow/docker/ && docker compose down --rmi all
+			cd  /home/docker/ragflow/
+			git pull ${gh_proxy}github.com/infiniflow/ragflow.git main > /dev/null 2>&1
+			cd  /home/docker/ragflow/docker/
+			sed -i "s/- 80:80/- ${docker_port}:80/; /- 443:443/d" docker-compose.yml
+			docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/ragflow/docker/ && docker compose down --rmi all
+			rm -rf /home/docker/ragflow
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+	  63|open-webui)
+		local app_id="63"
+		local docker_name="open-webui"
+		local docker_img="ghcr.io/open-webui/open-webui:main"
+		local docker_port=8063
+
+		docker_rum() {
+
+			docker run -d -p ${docker_port}:8080 -v /home/docker/open-webui:/app/backend/data --name open-webui --restart=always ghcr.io/open-webui/open-webui:main
+
+		}
+
+		local docker_describe="OpenWebUI一款大语言模型网页框架，官方精简版本，支持各大模型API接入"
+		local docker_url="官网介绍: ${gh_https_url}github.com/open-webui/open-webui"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="3"
+		docker_app
+		  ;;
+
+	  64|it-tools)
+		local app_id="64"
+		local docker_name="it-tools"
+		local docker_img="corentinth/it-tools:latest"
+		local docker_port=8064
+
+		docker_rum() {
+			docker run -d --name it-tools --restart=always -p ${docker_port}:80 corentinth/it-tools:latest
+		}
+
+		local docker_describe="对开发人员和 IT 工作者来说非常有用的工具"
+		local docker_url="官网介绍: ${gh_https_url}github.com/CorentinTh/it-tools"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  65|n8n)
+		local app_id="65"
+		local docker_name="n8n"
+		local docker_img="docker.n8n.io/n8nio/n8n"
+		local docker_port=8065
+
+		docker_rum() {
+
+			add_yuming
+			mkdir -p /home/docker/n8n
+			chmod -R 777 /home/docker/n8n
+
+			docker run -d --name n8n \
+			  --restart=always \
+			  -p ${docker_port}:5678 \
+			  -v /home/docker/n8n:/home/node/.n8n \
+			  -e N8N_HOST=${yuming} \
+			  -e N8N_PORT=5678 \
+			  -e N8N_PROTOCOL=https \
+			  -e WEBHOOK_URL=https://${yuming}/ \
+			  docker.n8n.io/n8nio/n8n
+
+			ldnmp_Proxy ${yuming} 127.0.0.1 ${docker_port}
+			block_container_port "$docker_name" "$ipv4_address"
+
+		}
+
+		local docker_describe="是一款功能强大的自动化工作流平台"
+		local docker_url="官网介绍: ${gh_https_url}github.com/n8n-io/n8n"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  66|yt)
+		yt_menu_pro
+		  ;;
+
+
+	  67|ddns)
+		local app_id="67"
+		local docker_name="ddns-go"
+		local docker_img="jeessy/ddns-go"
+		local docker_port=8067
+
+		docker_rum() {
+			docker run -d \
+				--name ddns-go \
+				--restart=always \
+				-p ${docker_port}:9876 \
+				-v /home/docker/ddns-go:/root \
+				jeessy/ddns-go
+
+		}
+
+		local docker_describe="自动将你的公网 IP（IPv4/IPv6）实时更新到各大 DNS 服务商，实现动态域名解析。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/jeessy2/ddns-go"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+	  68|allinssl)
+		local app_id="68"
+		local docker_name="allinssl"
+		local docker_img="allinssl/allinssl:latest"
+		local docker_port=8068
+
+		docker_rum() {
+			docker run -d --name allinssl -p ${docker_port}:8888 -v /home/docker/allinssl/data:/www/allinssl/data -e ALLINSSL_USER=allinssl -e ALLINSSL_PWD=allinssldocker -e ALLINSSL_URL=allinssl allinssl/allinssl:latest
+		}
+
+		local docker_describe="开源免费的 SSL 证书自动化管理平台"
+		local docker_url="官网介绍: https://allinssl.com"
+		local docker_use="echo \"安全入口: /allinssl\""
+		local docker_passwd="echo \"用户名: allinssl  密码: allinssldocker\""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  69|sftpgo)
+		local app_id="69"
+		local docker_name="sftpgo"
+		local docker_img="drakkan/sftpgo:latest"
+		local docker_port=8069
+
+		docker_rum() {
+
+			mkdir -p /home/docker/sftpgo/data
+			mkdir -p /home/docker/sftpgo/config
+			chown -R 1000:1000 /home/docker/sftpgo
+
+			docker run -d \
+			  --name sftpgo \
+			  --restart=always \
+			  -p ${docker_port}:8080 \
+			  -p 22022:2022 \
+			  --mount type=bind,source=/home/docker/sftpgo/data,target=/srv/sftpgo \
+			  --mount type=bind,source=/home/docker/sftpgo/config,target=/var/lib/sftpgo \
+			  drakkan/sftpgo:latest
+
+		}
+
+		local docker_describe="开源免费随时随地SFTP FTP WebDAV 文件传输工具"
+		local docker_url="官网介绍: https://sftpgo.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  70|astrbot)
+		local app_id="70"
+		local docker_name="astrbot"
+		local docker_img="soulter/astrbot:latest"
+		local docker_port=8070
+
+		docker_rum() {
+
+			mkdir -p /home/docker/astrbot/data
+
+			docker run -d \
+			  -p ${docker_port}:6185 \
+			  -p 6195:6195 \
+			  -p 6196:6196 \
+			  -p 6199:6199 \
+			  -p 11451:11451 \
+			  -v /home/docker/astrbot/data:/AstrBot/data \
+			  --restart=always \
+			  --name astrbot \
+			  soulter/astrbot:latest
+
+		}
+
+		local docker_describe="开源AI聊天机器人框架，支持微信，QQ，TG接入AI大模型"
+		local docker_url="官网介绍: https://astrbot.app/"
+		local docker_use="echo \"用户名: astrbot  密码: astrbot\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  71|navidrome)
+		local app_id="71"
+		local docker_name="navidrome"
+		local docker_img="deluan/navidrome:latest"
+		local docker_port=8071
+
+		docker_rum() {
+
+			docker run -d \
+			  --name navidrome \
+			  --restart=always \
+			  --user $(id -u):$(id -g) \
+			  -v /home/docker/navidrome/music:/music \
+			  -v /home/docker/navidrome/data:/data \
+			  -p ${docker_port}:4533 \
+			  -e ND_LOGLEVEL=info \
+			  deluan/navidrome:latest
+
+		}
+
+		local docker_describe="是一个轻量、高性能的音乐流媒体服务器"
+		local docker_url="官网介绍: https://www.navidrome.org/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+		  ;;
+
+
+	  72|bitwarden)
+
+		local app_id="72"
+		local docker_name="bitwarden"
+		local docker_img="vaultwarden/server"
+		local docker_port=8072
+
+		docker_rum() {
+
+			docker run -d \
+				--name bitwarden \
+				--restart=always \
+				-p ${docker_port}:80 \
+				-v /home/docker/bitwarden/data:/data \
+				vaultwarden/server
+
+		}
+
+		local docker_describe="一个你可以控制数据的密码管理器"
+		local docker_url="官网介绍: https://bitwarden.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+
+		  ;;
+
+
+
+	  73|libretv)
+
+		local app_id="73"
+		local docker_name="libretv"
+		local docker_img="bestzwei/libretv:latest"
+		local docker_port=8073
+
+		docker_rum() {
+
+			read -e -p "设置LibreTV的登录密码: " app_passwd
+
+			docker run -d \
+			  --name libretv \
+			  --restart=always \
+			  -p ${docker_port}:8080 \
+			  -e PASSWORD=${app_passwd} \
+			  bestzwei/libretv:latest
+
+		}
+
+		local docker_describe="免费在线视频搜索与观看平台"
+		local docker_url="官网介绍: ${gh_https_url}github.com/LibreSpark/LibreTV"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  74|moontv)
+
+		local app_id="74"
+
+		local app_name="moontv私有影视"
+		local app_text="免费在线视频搜索与观看平台"
+		local app_url="视频介绍: ${gh_https_url}github.com/MoonTechLab/LunaTV"
+		local docker_name="moontv-core"
+		local docker_port="8074"
+		local app_size="2"
+
+		docker_app_install() {
+			read -e -p "设置登录用户名: " admin
+			read -e -p "设置登录用户密码: " admin_password
+			read -e -p "输入授权码: " shouquanma
+
+
+			mkdir -p /home/docker/moontv
+			mkdir -p /home/docker/moontv/config
+			mkdir -p /home/docker/moontv/data
+			cd /home/docker/moontv
+
+			curl -o /home/docker/moontv/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/moontv-docker-compose.yml
+			sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/moontv/docker-compose.yml
+			sed -i "s|admin_password|${admin_password}|g" /home/docker/moontv/docker-compose.yml
+			sed -i "s|admin|${admin}|g" /home/docker/moontv/docker-compose.yml
+			sed -i "s|shouquanma|${shouquanma}|g" /home/docker/moontv/docker-compose.yml
+			cd /home/docker/moontv/
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/moontv/ && docker compose down --rmi all
+			cd /home/docker/moontv/ && docker compose up -d
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/moontv/ && docker compose down --rmi all
+			rm -rf /home/docker/moontv
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+	  75|melody)
+
+		local app_id="75"
+		local docker_name="melody"
+		local docker_img="foamzou/melody:latest"
+		local docker_port=8075
+
+		docker_rum() {
+
+			docker run -d \
+			  --name melody \
+			  --restart=always \
+			  -p ${docker_port}:5566 \
+			  -v /home/docker/melody/.profile:/app/backend/.profile \
+			  foamzou/melody:latest
+
+
+		}
+
+		local docker_describe="你的音乐精灵，旨在帮助你更好地管理音乐。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/foamzou/melody"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+
+		  ;;
+
+
+	  76|dosgame)
+
+		local app_id="76"
+		local docker_name="dosgame"
+		local docker_img="oldiy/dosgame-web-docker:latest"
+		local docker_port=8076
+
+		docker_rum() {
+			docker run -d \
+				--name dosgame \
+				--restart=always \
+				-p ${docker_port}:262 \
+				oldiy/dosgame-web-docker:latest
+
+		}
+
+		local docker_describe="是一个中文DOS游戏合集网站"
+		local docker_url="官网介绍: ${gh_https_url}github.com/rwv/chinese-dos-games"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+
+
+		  ;;
+
+	  77|xunlei)
+
+		local app_id="77"
+		local docker_name="xunlei"
+		local docker_img="cnk3x/xunlei"
+		local docker_port=8077
+
+		docker_rum() {
+
+			read -e -p "设置登录用户名: " app_use
+			read -e -p "设置登录密码: " app_passwd
+
+			docker run -d \
+			  --name xunlei \
+			  --restart=always \
+			  --privileged \
+			  -e XL_DASHBOARD_USERNAME=${app_use} \
+			  -e XL_DASHBOARD_PASSWORD=${app_passwd} \
+			  -v /home/docker/xunlei/data:/xunlei/data \
+			  -v /home/docker/xunlei/downloads:/xunlei/downloads \
+			  -p ${docker_port}:2345 \
+			  cnk3x/xunlei
+
+		}
+
+		local docker_describe="迅雷你的离线高速BT磁力下载工具"
+		local docker_url="官网介绍: ${gh_https_url}github.com/cnk3x/xunlei"
+		local docker_use="echo \"手机登录迅雷，再输入邀请码，邀请码: 迅雷牛通\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  78|PandaWiki)
+
+		local app_id="78"
+		local app_name="PandaWiki"
+		local app_text="PandaWiki是一款AI大模型驱动的开源智能文档管理系统，强烈建议不要自定义端口部署。"
+		local app_url="官方介绍: ${gh_https_url}github.com/chaitin/PandaWiki"
+		local docker_name="panda-wiki-nginx"
+		local docker_port="2443"
+		local app_size="2"
+
+		docker_app_install() {
+			bash -c "$(curl -fsSLk https://release.baizhi.cloud/panda-wiki/manager.sh)"
+		}
+
+		docker_app_update() {
+			docker_app_install
+		}
+
+
+		docker_app_uninstall() {
+			docker_app_install
+		}
+
+		docker_app_plus
+		  ;;
+
+
+
+	  79|beszel)
+
+		local app_id="79"
+		local docker_name="beszel"
+		local docker_img="henrygd/beszel"
+		local docker_port=8079
+
+		docker_rum() {
+
+			mkdir -p /home/docker/beszel && \
+			docker run -d \
+			  --name beszel \
+			  --restart=always \
+			  -v /home/docker/beszel:/beszel_data \
+			  -p ${docker_port}:8090 \
+			  henrygd/beszel
+
+		}
+
+		local docker_describe="Beszel轻量易用的服务器监控"
+		local docker_url="官网介绍: https://beszel.dev/zh/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  80|linkwarden)
+
+		  local app_id="80"
+		  local app_name="linkwarden书签管理"
+		  local app_text="一个开源的自托管书签管理平台，支持标签、搜索和团队协作。"
+		  local app_url="官方网站: https://linkwarden.app/"
+		  local docker_name="linkwarden-linkwarden-1"
+		  local docker_port="8080"
+		  local app_size="3"
+
+		  docker_app_install() {
+			  install git openssl
+			  mkdir -p /home/docker/linkwarden && cd /home/docker/linkwarden
+
+			  # 下载官方 docker-compose 和 env 文件
+			  curl -O ${gh_proxy}raw.githubusercontent.com/linkwarden/linkwarden/refs/heads/main/docker-compose.yml
+			  curl -L ${gh_proxy}raw.githubusercontent.com/linkwarden/linkwarden/refs/heads/main/.env.sample -o ".env"
+
+			  # 生成随机密钥与密码
+			  local ADMIN_EMAIL="admin@example.com"
+			  local ADMIN_PASSWORD=$(openssl rand -hex 8)
+
+			  sed -i "s|^NEXTAUTH_URL=.*|NEXTAUTH_URL=http://localhost:${docker_port}/api/v1/auth|g" .env
+			  sed -i "s|^NEXTAUTH_SECRET=.*|NEXTAUTH_SECRET=$(openssl rand -hex 32)|g" .env
+			  sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 16)|g" .env
+			  sed -i "s|^MEILI_MASTER_KEY=.*|MEILI_MASTER_KEY=$(openssl rand -hex 32)|g" .env
+
+			  # 追加管理员账号信息
+			  echo "ADMIN_EMAIL=${ADMIN_EMAIL}" >> .env
+			  echo "ADMIN_PASSWORD=${ADMIN_PASSWORD}" >> .env
+
+			  sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/linkwarden/docker-compose.yml
+
+			  # 启动容器
+			  docker compose up -d
+
+			  clear
+			  echo "已经安装完成"
+		  	  check_docker_app_ip
+
+		  }
+
+		  docker_app_update() {
+			  cd /home/docker/linkwarden && docker compose down --rmi all
+			  curl -O ${gh_proxy}raw.githubusercontent.com/linkwarden/linkwarden/refs/heads/main/docker-compose.yml
+			  curl -L ${gh_proxy}raw.githubusercontent.com/linkwarden/linkwarden/refs/heads/main/.env.sample -o ".env.new"
+
+			  # 保留原本的变量
+			  source .env
+			  mv .env.new .env
+			  echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env
+			  echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env
+			  echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+			  echo "MEILI_MASTER_KEY=$MEILI_MASTER_KEY" >> .env
+			  echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
+			  echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env
+			  sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/linkwarden/docker-compose.yml
+
+			  docker compose up -d
+		  }
+
+		  docker_app_uninstall() {
+			  cd /home/docker/linkwarden && docker compose down --rmi all
+			  rm -rf /home/docker/linkwarden
+			  echo "应用已卸载"
+		  }
+
+		  docker_app_plus
+
+		  ;;
+
+
+
+	  81|jitsi)
+		  local app_id="81"
+		  local app_name="JitsiMeet视频会议"
+		  local app_text="一个开源的安全视频会议解决方案，支持多人在线会议、屏幕共享与加密通信。"
+		  local app_url="官方网站: https://jitsi.org/"
+		  local docker_name="jitsi"
+		  local docker_port="8081"
+		  local app_size="3"
+
+		  docker_app_install() {
+
+			  add_yuming
+			  mkdir -p /home/docker/jitsi && cd /home/docker/jitsi
+			  wget $(wget -q -O - https://api.github.com/repos/jitsi/docker-jitsi-meet/releases/latest | grep zip | cut -d\" -f4)
+			  unzip "$(ls -t | head -n 1)"
+			  cd "$(ls -dt */ | head -n 1)"
+			  cp env.example .env
+			  ./gen-passwords.sh
+			  mkdir -p ~/.jitsi-meet-cfg/{web,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
+			  sed -i "s|^HTTP_PORT=.*|HTTP_PORT=${docker_port}|" .env
+			  sed -i "s|^#PUBLIC_URL=https://meet.example.com:\${HTTPS_PORT}|PUBLIC_URL=https://$yuming:443|" .env
+			  docker compose up -d
+
+			  ldnmp_Proxy ${yuming} 127.0.0.1 ${docker_port}
+			  block_container_port "$docker_name" "$ipv4_address"
+
+		  }
+
+		  docker_app_update() {
+			  cd /home/docker/jitsi
+			  cd "$(ls -dt */ | head -n 1)"
+			  docker compose down --rmi all
+			  docker compose up -d
+
+		  }
+
+		  docker_app_uninstall() {
+			  cd /home/docker/jitsi
+			  cd "$(ls -dt */ | head -n 1)"
+			  docker compose down --rmi all
+			  rm -rf /home/docker/jitsi
+			  echo "应用已卸载"
+		  }
+
+		  docker_app_plus
+
+		  ;;
+
+
+
+	  82|gpt-load)
+
+		local app_id="82"
+		local docker_name="gpt-load"
+		local docker_img="tbphp/gpt-load:latest"
+		local docker_port=8082
+
+		docker_rum() {
+
+			read -e -p "设置${docker_name}的登录密钥（sk-开头字母和数字组合）如: sk-159riwiyyds163: " app_passwd
+
+			mkdir -p /home/docker/gpt-load && \
+			docker run -d --name gpt-load \
+				-p ${docker_port}:3001 \
+				-e AUTH_KEY=${app_passwd} \
+				-v "/home/docker/gpt-load/data":/app/data \
+				tbphp/gpt-load:latest
+
+		}
+
+		local docker_describe="高性能AI接口透明代理服务"
+		local docker_url="官网介绍: https://www.gpt-load.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  83|komari)
+
+		local app_id="83"
+		local docker_name="komari"
+		local docker_img="ghcr.io/komari-monitor/komari:latest"
+		local docker_port=8083
+
+		docker_rum() {
+
+			mkdir -p /home/docker/komari && \
+			docker run -d \
+			  --name komari \
+			  -p ${docker_port}:25774 \
+			  -v /home/docker/komari:/app/data \
+			  -e ADMIN_USERNAME=admin \
+			  -e ADMIN_PASSWORD=1212156 \
+			  -e TZ=Asia/Shanghai \
+			  --restart=always \
+			  ghcr.io/komari-monitor/komari:latest
+
+		}
+
+		local docker_describe="轻量级的自托管服务器监控工具"
+		local docker_url="官网介绍: ${gh_https_url}github.com/komari-monitor/komari/tree/main"
+		local docker_use="echo \"默认账号: admin  默认密码: 1212156\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  84|wallos)
+
+		local app_id="84"
+		local docker_name="wallos"
+		local docker_img="bellamy/wallos:latest"
+		local docker_port=8084
+
+		docker_rum() {
+
+			mkdir -p /home/docker/wallos && \
+			docker run -d --name wallos \
+			  -v /home/docker/wallos/db:/var/www/html/db \
+			  -v /home/docker/wallos/logos:/var/www/html/images/uploads/logos \
+			  -e TZ=UTC \
+			  -p ${docker_port}:80 \
+			  --restart=always \
+			  bellamy/wallos:latest
+
+		}
+
+		local docker_describe="开源个人订阅追踪器，可用于财务管理"
+		local docker_url="官网介绍: ${gh_https_url}github.com/ellite/Wallos"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	  85|immich)
+
+		  local app_id="85"
+		  local app_name="immich图片视频管理器"
+		  local app_text="高性能自托管照片和视频管理解决方案。"
+		  local app_url="官网介绍: ${gh_https_url}github.com/immich-app/immich"
+		  local docker_name="immich_server"
+		  local docker_port="8085"
+		  local app_size="3"
+
+		  docker_app_install() {
+			  install git openssl wget
+			  mkdir -p /home/docker/${docker_name} && cd /home/docker/${docker_name}
+
+			  wget -O docker-compose.yml ${gh_proxy}github.com/immich-app/immich/releases/latest/download/docker-compose.yml
+			  wget -O .env ${gh_proxy}github.com/immich-app/immich/releases/latest/download/example.env
+			  sed -i "s/2283:2283/${docker_port}:2283/g" /home/docker/${docker_name}/docker-compose.yml
+
+			  docker compose up -d
+
+			  clear
+			  echo "已经安装完成"
+		  	  check_docker_app_ip
+
+		  }
+
+		  docker_app_update() {
+				cd /home/docker/${docker_name} && docker compose down --rmi all
+				docker_app_install
+		  }
+
+		  docker_app_uninstall() {
+			  cd /home/docker/${docker_name} && docker compose down --rmi all
+			  rm -rf /home/docker/${docker_name}
+			  echo "应用已卸载"
+		  }
+
+		  docker_app_plus
+
+
+		  ;;
+
+
+	  86|jellyfin)
+
+		local app_id="86"
+		local docker_name="jellyfin"
+		local docker_img="jellyfin/jellyfin"
+		local docker_port=8086
+
+		docker_rum() {
+
+			mkdir -p /home/docker/jellyfin/media
+			chmod -R 777 /home/docker/jellyfin
+
+			docker run -d \
+			  --name jellyfin \
+			  --user root \
+			  --volume /home/docker/jellyfin/config:/config \
+			  --volume /home/docker/jellyfin/cache:/cache \
+			  --mount type=bind,source=/home/docker/jellyfin/media,target=/media \
+			  -p ${docker_port}:8096 \
+			  -p 7359:7359/udp \
+			  --restart=always \
+			  jellyfin/jellyfin
+
+
+		}
+
+		local docker_describe="是一款开源媒体服务器软件"
+		local docker_url="官网介绍: https://jellyfin.org/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  87|synctv)
+
+		local app_id="87"
+		local docker_name="synctv"
+		local docker_img="synctvorg/synctv"
+		local docker_port=8087
+
+		docker_rum() {
+
+			docker run -d \
+				--name synctv \
+				-v /home/docker/synctv:/root/.synctv \
+				-p ${docker_port}:8080 \
+				--restart=always \
+				synctvorg/synctv
+
+		}
+
+		local docker_describe="远程一起观看电影和直播的程序。它提供了同步观影、直播、聊天等功能"
+		local docker_url="官网介绍: ${gh_https_url}github.com/synctv-org/synctv"
+		local docker_use="echo \"初始账号和密码: root  登陆后请及时修改登录密码\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  88|owncast)
+
+		local app_id="88"
+		local docker_name="owncast"
+		local docker_img="owncast/owncast:latest"
+		local docker_port=8088
+
+		docker_rum() {
+
+			docker run -d \
+				--name owncast \
+				-p ${docker_port}:8080 \
+				-p 1935:1935 \
+				-v /home/docker/owncast/data:/app/data \
+				--restart=always \
+				owncast/owncast:latest
+
+
+		}
+
+		local docker_describe="开源、免费的自建直播平台"
+		local docker_url="官网介绍: https://owncast.online"
+		local docker_use="echo \"访问地址后面带 /admin 访问管理员页面\""
+		local docker_passwd="echo \"初始账号: admin  初始密码: abc123  登陆后请及时修改登录密码\""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  89|file-code-box)
+
+		local app_id="89"
+		local docker_name="file-code-box"
+		local docker_img="lanol/filecodebox:latest"
+		local docker_port=8089
+
+		docker_rum() {
+
+			docker run -d \
+			  --name file-code-box \
+			  -p ${docker_port}:12345 \
+			  -v /home/docker/file-code-box/data:/app/data \
+			  --restart=always \
+			  lanol/filecodebox:latest
+
+		}
+
+		local docker_describe="匿名口令分享文本和文件，像拿快递一样取文件"
+		local docker_url="官网介绍: ${gh_https_url}github.com/vastsa/FileCodeBox"
+		local docker_use="echo \"访问地址后面带 /#/admin 访问管理员页面\""
+		local docker_passwd="echo \"管理员密码: FileCodeBox2023\""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+
+	  90|matrix)
+
+		local app_id="90"
+		local docker_name="matrix"
+		local docker_img="matrixdotorg/synapse:latest"
+		local docker_port=8090
+
+		docker_rum() {
+
+			add_yuming
+
+			if [ ! -d /home/docker/matrix/data ]; then
+				docker run --rm \
+				  -v /home/docker/matrix/data:/data \
+				  -e SYNAPSE_SERVER_NAME=${yuming} \
+				  -e SYNAPSE_REPORT_STATS=yes \
+				  --name matrix \
+				  matrixdotorg/synapse:latest generate
+			fi
+
+			docker run -d \
+			  --name matrix \
+			  -v /home/docker/matrix/data:/data \
+			  -p ${docker_port}:8008 \
+			  --restart=always \
+			  matrixdotorg/synapse:latest
+
+			echo "创建初始用户或管理员。请设置以下内容用户名和密码以及是否为管理员。"
+			docker exec -it matrix register_new_matrix_user \
+			  http://localhost:8008 \
+			  -c /data/homeserver.yaml
+
+			sed -i '/^enable_registration:/d' /home/docker/matrix/data/homeserver.yaml
+			sed -i '/^# vim:ft=yaml/i enable_registration: true' /home/docker/matrix/data/homeserver.yaml
+			sed -i '/^enable_registration_without_verification:/d' /home/docker/matrix/data/homeserver.yaml
+			sed -i '/^# vim:ft=yaml/i enable_registration_without_verification: true' /home/docker/matrix/data/homeserver.yaml
+
+			docker restart matrix
+
+			ldnmp_Proxy ${yuming} 127.0.0.1 ${docker_port}
+			block_container_port "$docker_name" "$ipv4_address"
+
+		}
+
+		local docker_describe="Matrix是一个去中心化的聊天协议"
+		local docker_url="官网介绍: https://matrix.org/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+	  91|gitea)
+
+		local app_id="91"
+
+		local app_name="gitea私有代码仓库"
+		local app_text="免费新一代的代码托管平台，提供接近 GitHub 的使用体验。"
+		local app_url="视频介绍: ${gh_https_url}github.com/go-gitea/gitea"
+		local docker_name="gitea"
+		local docker_port="8091"
+		local app_size="2"
+
+		docker_app_install() {
+
+			mkdir -p /home/docker/gitea
+			mkdir -p /home/docker/gitea/gitea
+			mkdir -p /home/docker/gitea/data
+			mkdir -p /home/docker/gitea/postgres
+			cd /home/docker/gitea
+
+			curl -o /home/docker/gitea/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/gitea-docker-compose.yml
+			sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/gitea/docker-compose.yml
+			cd /home/docker/gitea/
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/gitea/ && docker compose down --rmi all
+			cd /home/docker/gitea/ && docker compose up -d
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/gitea/ && docker compose down --rmi all
+			rm -rf /home/docker/gitea
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+
+	  92|filebrowser)
+
+		local app_id="92"
+		local docker_name="filebrowser"
+		local docker_img="hurlenko/filebrowser"
+		local docker_port=8092
+
+		docker_rum() {
+
+			docker run -d \
+				--name filebrowser \
+				--restart=always \
+				-p ${docker_port}:8080 \
+				-v /home/docker/filebrowser/data:/data \
+				-v /home/docker/filebrowser/config:/config \
+				-e FB_BASEURL=/filebrowser \
+				hurlenko/filebrowser
+
+		}
+
+		local docker_describe="是一个基于Web的文件管理器"
+		local docker_url="官网介绍: https://filebrowser.org/"
+		local docker_use="docker logs filebrowser"
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	93|dufs)
+
+		local app_id="93"
+		local docker_name="dufs"
+		local docker_img="sigoden/dufs"
+		local docker_port=8093
+
+		docker_rum() {
+
+			docker run -d \
+			  --name ${docker_name} \
+			  --restart=always \
+			  -v /home/docker/${docker_name}:/data \
+			  -p ${docker_port}:5000 \
+			  ${docker_img} /data -A
+
+		}
+
+		local docker_describe="极简静态文件服务器，支持上传下载"
+		local docker_url="官网介绍: ${gh_https_url}github.com/sigoden/dufs"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		;;
+
+	94|gopeed)
+
+		local app_id="94"
+		local docker_name="gopeed"
+		local docker_img="liwei2633/gopeed"
+		local docker_port=8094
+
+		docker_rum() {
+
+			read -e -p "设置登录用户名: " app_use
+			read -e -p "设置登录密码: " app_passwd
+
+			docker run -d \
+			  --name ${docker_name} \
+			  --restart=always \
+			  -v /home/docker/${docker_name}/downloads:/app/Downloads \
+			  -v /home/docker/${docker_name}/storage:/app/storage \
+			  -p ${docker_port}:9999 \
+			  ${docker_img} -u ${app_use} -p ${app_passwd}
+
+		}
+
+		local docker_describe="分布式高速下载工具，支持多种协议"
+		local docker_url="官网介绍: ${gh_https_url}github.com/GopeedLab/gopeed"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		;;
+
+
+
+	  95|paperless)
+
+		local app_id="95"
+
+		local app_name="paperless文档管理平台"
+		local app_text="开源的电子文档管理系统，它的主要用途是把你的纸质文件数字化并管理起来。"
+		local app_url="视频介绍: https://docs.paperless-ngx.com/"
+		local docker_name="paperless-webserver-1"
+		local docker_port="8095"
+		local app_size="2"
+
+		docker_app_install() {
+
+			mkdir -p /home/docker/paperless
+			mkdir -p /home/docker/paperless/export
+			mkdir -p /home/docker/paperless/consume
+			cd /home/docker/paperless
+
+			curl -o /home/docker/paperless/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/paperless-ngx/paperless-ngx/refs/heads/main/docker/compose/docker-compose.postgres-tika.yml
+			curl -o /home/docker/paperless/docker-compose.env ${gh_proxy}raw.githubusercontent.com/paperless-ngx/paperless-ngx/refs/heads/main/docker/compose/.env
+
+			sed -i "s/8000:8000/${docker_port}:8000/g" /home/docker/paperless/docker-compose.yml
+			cd /home/docker/paperless
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/paperless/ && docker compose down --rmi all
+			docker_app_install
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/paperless/ && docker compose down --rmi all
+			rm -rf /home/docker/paperless
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+	  96|2fauth)
+
+		local app_id="96"
+
+		local app_name="2FAuth自托管二步验证器"
+		local app_text="自托管的双重身份验证 (2FA) 账户管理和验证码生成工具。"
+		local app_url="官网: ${gh_https_url}github.com/Bubka/2FAuth"
+		local docker_name="2fauth"
+		local docker_port="8096"
+		local app_size="1"
+
+		docker_app_install() {
+
+			add_yuming
+
+			mkdir -p /home/docker/2fauth
+			mkdir -p /home/docker/2fauth/data
+			chmod -R 777 /home/docker/2fauth/
+			cd /home/docker/2fauth
+
+			curl -o /home/docker/2fauth/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/2fauth-docker-compose.yml
+
+			sed -i "s/8000:8000/${docker_port}:8000/g" /home/docker/2fauth/docker-compose.yml
+			sed -i "s/yuming.com/${yuming}/g" /home/docker/2fauth/docker-compose.yml
+			cd /home/docker/2fauth
+			docker compose up -d
+
+			ldnmp_Proxy ${yuming} 127.0.0.1 ${docker_port}
+			block_container_port "$docker_name" "$ipv4_address"
+
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/2fauth/ && docker compose down --rmi all
+			docker_app_install
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/2fauth/ && docker compose down --rmi all
+			rm -rf /home/docker/2fauth
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+	97|wgs)
+
+		local app_id="97"
+		local docker_name="wireguard"
+		local docker_img="lscr.io/linuxserver/wireguard:latest"
+		local docker_port=8097
+
+		docker_rum() {
+
+		read -e -p  "请输入组网的客户端数量 (默认 5): " COUNT
+		COUNT=${COUNT:-5}
+		read -e -p  "请输入 WireGuard 网段 (默认 10.13.13.0): " NETWORK
+		NETWORK=${NETWORK:-10.13.13.0}
+
+		PEERS=$(seq -f "wg%02g" 1 "$COUNT" | paste -sd,)
+
+		ip link delete wg0 &>/dev/null
+
+		ip_address
+		docker run -d \
+		  --name=wireguard \
+		  --network host \
+		  --cap-add=NET_ADMIN \
+		  --cap-add=SYS_MODULE \
+		  -e PUID=1000 \
+		  -e PGID=1000 \
+		  -e TZ=Etc/UTC \
+		  -e SERVERURL=${ipv4_address} \
+		  -e SERVERPORT=51820 \
+		  -e PEERS=${PEERS} \
+		  -e INTERNAL_SUBNET=${NETWORK} \
+		  -e ALLOWEDIPS=${NETWORK}/24 \
+		  -e PERSISTENTKEEPALIVE_PEERS=all \
+		  -e LOG_CONFS=true \
+		  -v /home/docker/wireguard/config:/config \
+		  -v /lib/modules:/lib/modules \
+		  --restart=always \
+		  lscr.io/linuxserver/wireguard:latest
+
+
+		sleep 3
+
+		docker exec wireguard sh -c "
+		f='/config/wg_confs/wg0.conf'
+		sed -i 's/51820/${docker_port}/g' \$f
+		"
+
+		docker exec wireguard sh -c "
+		for d in /config/peer_*; do
+		  sed -i 's/51820/${docker_port}/g' \$d/*.conf
+		done
+		"
+
+		docker exec wireguard sh -c '
+		for d in /config/peer_*; do
+		  sed -i "/^DNS/d" "$d"/*.conf
+		done
+		'
+
+		docker exec wireguard sh -c '
+		for d in /config/peer_*; do
+		  for f in "$d"/*.conf; do
+			grep -q "^PersistentKeepalive" "$f" || \
+			sed -i "/^AllowedIPs/ a PersistentKeepalive = 25" "$f"
+		  done
+		done
+		'
+
+		docker exec wireguard bash -c '
+		for d in /config/peer_*; do
+		  cd "$d" || continue
+		  conf_file=$(ls *.conf)
+		  base_name="${conf_file%.conf}"
+		  qrencode -o "$base_name.png" < "$conf_file"
+		done
+		'
+
+		docker restart wireguard
+
+		sleep 2
+		echo
+		echo -e "${rw_huang}所有客户端二维码配置: ${rw_lv}"
+		docker exec wireguard bash -c 'for i in $(ls /config | grep peer_ | sed "s/peer_//"); do echo "--- $i ---"; /app/show-peer $i; done'
+		sleep 2
+		echo
+		echo -e "${rw_huang}所有客户端配置代码: ${rw_lv}"
+		docker exec wireguard sh -c 'for d in /config/peer_*; do echo "# $(basename $d) "; cat $d/*.conf; echo; done'
+		sleep 2
+		echo -e "${rw_lv}${COUNT}个客户端配置全部输出，使用方法如下：${rw_lv}"
+		echo -e "${rw_lv}1. 手机下载wg的APP，扫描上方二维码，可以快速连接网络${rw_lv}"
+		echo -e "${rw_lv}2. Windows下载客户端，复制配置代码连接网络。${rw_lv}"
+		echo -e "${rw_lv}3. Linux用脚本部署WG客户端，复制配置代码连接网络。${rw_lv}"
+		echo -e "${rw_lv}官方客户端下载方式: https://www.wireguard.com/install/${rw_lv}"
+		break_end
+
+		}
+
+		local docker_describe="现代化、高性能的虚拟专用网络工具"
+		local docker_url="官网介绍: https://www.wireguard.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		;;
+
+
+	98|wgc)
+
+		local app_id="98"
+		local docker_name="wireguardc"
+		local docker_img="kjlion/wireguard:alpine"
+		local docker_port=51820
+
+		docker_rum() {
+
+			mkdir -p /home/docker/wireguard/config/
+
+			local CONFIG_FILE="/home/docker/wireguard/config/wg0.conf"
+
+			# 创建目录（如果不存在）
+			mkdir -p "$(dirname "$CONFIG_FILE")"
+
+			echo "请粘贴你的客户端配置，连续按两次回车保存："
+
+			# 初始化变量
+			input=""
+			empty_line_count=0
+
+			# 逐行读取用户输入
+			while IFS= read -r line; do
+				if [[ -z "$line" ]]; then
+					((empty_line_count++))
+					if [[ $empty_line_count -ge 2 ]]; then
+						break
+					fi
+				else
+					empty_line_count=0
+					input+="$line"$'\n'
+				fi
+			done
+
+			# 写入配置文件
+			echo "$input" > "$CONFIG_FILE"
+
+			echo "客户端配置已保存到 $CONFIG_FILE"
+
+			ip link delete wg0 &>/dev/null
+
+			docker run -d \
+			  --name wireguardc \
+			  --network host \
+			  --cap-add NET_ADMIN \
+			  --cap-add SYS_MODULE \
+			  -v /home/docker/wireguard/config:/config \
+			  -v /lib/modules:/lib/modules:ro \
+			  --restart=always \
+			  kjlion/wireguard:alpine
+
+			sleep 3
+
+			docker logs wireguardc
+
+		break_end
+
+		}
+
+		local docker_describe="现代化、高性能的虚拟专用网络工具"
+		local docker_url="官网介绍: https://www.wireguard.com/"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		;;
+
+
+	  99|dsm)
+
+		local app_id="99"
+
+		local app_name="dsm群晖虚拟机"
+		local app_text="Docker容器中的虚拟DSM"
+		local app_url="官网: ${gh_https_url}github.com/vdsm/virtual-dsm"
+		local docker_name="dsm"
+		local docker_port="8099"
+		local app_size="16"
+
+		docker_app_install() {
+
+			read -e -p "设置 CPU 核数 (默认 2): " CPU_CORES
+			local CPU_CORES=${CPU_CORES:-2}
+
+			read -e -p "设置内存大小 (默认 4G): " RAM_SIZE
+			local RAM_SIZE=${RAM_SIZE:-4}
+
+			mkdir -p /home/docker/dsm
+			mkdir -p /home/docker/dsm/dev
+			chmod -R 777 /home/docker/dsm/
+			cd /home/docker/dsm
+
+			curl -o /home/docker/dsm/docker-compose.yml ${gh_proxy}raw.githubusercontent.com/riwi/docker/main/dsm-docker-compose.yml
+
+			sed -i "s/5000:5000/${docker_port}:5000/g" /home/docker/dsm/docker-compose.yml
+			sed -i "s|CPU_CORES: "2"|CPU_CORES: "${CPU_CORES}"|g" /home/docker/dsm/docker-compose.yml
+			sed -i "s|RAM_SIZE: "2G"|RAM_SIZE: "${RAM_SIZE}G"|g" /home/docker/dsm/docker-compose.yml
+			cd /home/docker/dsm
+			docker compose up -d
+
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+
+		docker_app_update() {
+			cd /home/docker/dsm/ && docker compose down --rmi all
+			docker_app_install
+		}
+
+
+		docker_app_uninstall() {
+			cd /home/docker/dsm/ && docker compose down --rmi all
+			rm -rf /home/docker/dsm
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+	100|syncthing)
+
+		local app_id="100"
+		local docker_name="syncthing"
+		local docker_img="syncthing/syncthing:latest"
+		local docker_port=8100
+
+		docker_rum() {
+			docker run -d \
+			  --name=syncthing \
+			  --hostname=my-syncthing \
+			  --restart=always \
+			  -p ${docker_port}:8384 \
+			  -p 22000:22000/tcp \
+			  -p 22000:22000/udp \
+			  -p 21027:21027/udp \
+			  -v /home/docker/syncthing:/var/syncthing \
+			  syncthing/syncthing:latest
+		}
+
+		local docker_describe="开源的点对点文件同步工具，类似于 Dropbox、Resilio Sync，但完全去中心化。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/syncthing/syncthing"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		;;
+
+
+	  101|moneyprinterturbo)
+		local app_id="101"
+		local app_name="AI视频生成工具"
+		local app_text="MoneyPrinterTurbo是一款使用AI大模型合成高清短视频的工具"
+		local app_url="官方网站: ${gh_https_url}github.com/harry0703/MoneyPrinterTurbo"
+		local docker_name="moneyprinterturbo"
+		local docker_port="8101"
+		local app_size="3"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/harry0703/MoneyPrinterTurbo.git && cd MoneyPrinterTurbo/
+			sed -i "s/8501:8501/${docker_port}:8501/g" /home/docker/MoneyPrinterTurbo/docker-compose.yml
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/MoneyPrinterTurbo/ && docker compose down --rmi all
+			cd  /home/docker/MoneyPrinterTurbo/
+
+			git pull ${gh_proxy}github.com/harry0703/MoneyPrinterTurbo.git main > /dev/null 2>&1
+			sed -i "s/8501:8501/${docker_port}:8501/g" /home/docker/MoneyPrinterTurbo/docker-compose.yml
+			cd  /home/docker/MoneyPrinterTurbo/ && docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/MoneyPrinterTurbo/ && docker compose down --rmi all
+			rm -rf /home/docker/MoneyPrinterTurbo
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+	  102|vocechat)
+
+		local app_id="102"
+		local docker_name="vocechat-server"
+		local docker_img="privoce/vocechat-server:latest"
+		local docker_port=8102
+
+		docker_rum() {
+
+			docker run -d --restart=always \
+			  -p ${docker_port}:3000 \
+			  --name vocechat-server \
+			  -v /home/docker/vocechat/data:/home/vocechat-server/data \
+			  privoce/vocechat-server:latest
+
+		}
+
+		local docker_describe="是一款支持独立部署的个人云社交媒体聊天服务"
+		local docker_url="官网介绍: ${gh_https_url}github.com/Privoce/vocechat-web"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  103|umami)
+		local app_id="103"
+		local app_name="Umami网站统计工具"
+		local app_text="开源、轻量、隐私友好的网站分析工具，类似于GoogleAnalytics。"
+		local app_url="官方网站: ${gh_https_url}github.com/umami-software/umami"
+		local docker_name="umami-umami-1"
+		local docker_port="8103"
+		local app_size="1"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/umami-software/umami.git && cd umami
+			sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/umami/docker-compose.yml
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+			echo "初始用户名: admin"
+			echo "初始密码: umami"
+		}
+
+		docker_app_update() {
+			cd  /home/docker/umami/ && docker compose down --rmi all
+			cd  /home/docker/umami/
+			git pull ${gh_proxy}github.com/umami-software/umami.git main > /dev/null 2>&1
+			sed -i "s/8501:8501/${docker_port}:8501/g" /home/docker/umami/docker-compose.yml
+			cd  /home/docker/umami/ && docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/umami/ && docker compose down --rmi all
+			rm -rf /home/docker/umami
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+	  104|nginx-stream)
+		stream_panel
+		  ;;
+
+
+	  105|siyuan)
+
+		local app_id="105"
+		local docker_name="siyuan"
+		local docker_img="b3log/siyuan"
+		local docker_port=8105
+
+		docker_rum() {
+
+			read -e -p "设置登录密码: " app_passwd
+
+			docker run -d \
+			  --name siyuan \
+			  --restart=always \
+			  -v /home/docker/siyuan/workspace:/siyuan/workspace \
+			  -p ${docker_port}:6806 \
+			  -e PUID=1001 \
+			  -e PGID=1002 \
+			  b3log/siyuan \
+			  --workspace=/siyuan/workspace/ \
+			  --accessAuthCode="${app_passwd}"
+
+		}
+
+		local docker_describe="思源笔记是一款隐私优先的知识管理系统"
+		local docker_url="官网介绍: ${gh_https_url}github.com/siyuan-note/siyuan"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  106|drawnix)
+
+		local app_id="106"
+		local docker_name="drawnix"
+		local docker_img="pubuzhixing/drawnix"
+		local docker_port=8106
+
+		docker_rum() {
+
+			docker run -d \
+			   --restart=always  \
+			   --name drawnix \
+			   -p ${docker_port}:80 \
+			  pubuzhixing/drawnix
+
+		}
+
+		local docker_describe="是一款强大的开源白板工具，集成思维导图、流程图等。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/plait-board/drawnix"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  107|pansou)
+
+		local app_id="107"
+		local docker_name="pansou"
+		local docker_img="ghcr.io/fish2018/pansou-web"
+		local docker_port=8107
+
+		docker_rum() {
+
+			docker run -d \
+			  --name pansou \
+			  --restart=always \
+			  -p ${docker_port}:80 \
+			  -v /home/docker/pansou/data:/app/data \
+			  -v /home/docker/pansou/logs:/app/logs \
+			  -e ENABLED_PLUGINS="hunhepan,jikepan,panwiki,pansearch,panta,qupansou,
+susu,thepiratebay,wanou,xuexizhinan,panyq,zhizhen,labi,muou,ouge,shandian,
+duoduo,huban,cyg,erxiao,miaoso,fox4k,pianku,clmao,wuji,cldi,xiaozhang,
+libvio,leijing,xb6v,xys,ddys,hdmoli,yuhuage,u3c3,javdb,clxiong,jutoushe,
+sdso,xiaoji,xdyh,haisou,bixin,djgou,nyaa,xinjuc,aikanzy,qupanshe,xdpan,
+discourse,yunsou,ahhhhfs,nsgame,gying" \
+			  ghcr.io/fish2018/pansou-web
+
+		}
+
+		local docker_describe="PanSou是一个高性能的网盘资源搜索API服务。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/fish2018/pansou"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+
+
+	  108|langbot)
+		local app_id="108"
+		local app_name="LangBot聊天机器人"
+		local app_text="是一个开源的大语言模型原生即时通信机器人开发平台"
+		local app_url="官方网站: ${gh_https_url}github.com/langbot-app/LangBot"
+		local docker_name="langbot_plugin_runtime"
+		local docker_port="8108"
+		local app_size="1"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/langbot-app/LangBot && cd LangBot/docker
+			sed -i "s/5300:5300/${docker_port}:5300/g" /home/docker/LangBot/docker/docker-compose.yaml
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/LangBot/docker && docker compose down --rmi all
+			cd  /home/docker/LangBot/
+			git pull ${gh_proxy}github.com/langbot-app/LangBot main > /dev/null 2>&1
+			sed -i "s/5300:5300/${docker_port}:5300/g" /home/docker/LangBot/docker/docker-compose.yaml
+			cd  /home/docker/LangBot/docker/ && docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/LangBot/docker/ && docker compose down --rmi all
+			rm -rf /home/docker/LangBot
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+	  109|zfile)
+
+		local app_id="109"
+		local docker_name="zfile"
+		local docker_img="zhaojun1998/zfile:latest"
+		local docker_port=8109
+
+		docker_rum() {
+
+
+			docker run -d --name=zfile --restart=always \
+				-p ${docker_port}:8080 \
+				-v /home/docker/zfile/db:/root/.zfile-v4/db \
+				-v /home/docker/zfile/logs:/root/.zfile-v4/logs \
+				-v /home/docker/zfile/file:/data/file \
+				-v /home/docker/zfile/application.properties:/root/.zfile-v4/application.properties \
+				zhaojun1998/zfile:latest
+
+
+		}
+
+		local docker_describe="是一个适用于个人或小团队的在线网盘程序。"
+		local docker_url="官网介绍: ${gh_https_url}github.com/zfile-dev/zfile"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  110|karakeep)
+		local app_id="110"
+		local app_name="karakeep书签管理"
+		local app_text="是一款可自行托管的书签应用，带有人工智能功能，专为数据囤积者而设计。"
+		local app_url="官方网站: ${gh_https_url}github.com/karakeep-app/karakeep"
+		local docker_name="docker-web-1"
+		local docker_port="8110"
+		local app_size="1"
+
+		docker_app_install() {
+			install git
+			mkdir -p  /home/docker/ && cd /home/docker/ && git clone ${gh_proxy}github.com/karakeep-app/karakeep.git && cd karakeep/docker && cp .env.sample .env
+			sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/karakeep/docker/docker-compose.yml
+
+			docker compose up -d
+			clear
+			echo "已经安装完成"
+			check_docker_app_ip
+		}
+
+		docker_app_update() {
+			cd  /home/docker/karakeep/docker/ && docker compose down --rmi all
+			cd  /home/docker/karakeep/
+			git pull ${gh_proxy}github.com/karakeep-app/karakeep.git main > /dev/null 2>&1
+			sed -i "s/3000:3000/${docker_port}:3000/g" /home/docker/karakeep/docker/docker-compose.yml
+			cd  /home/docker/karakeep/docker/ && docker compose up -d
+		}
+
+		docker_app_uninstall() {
+			cd  /home/docker/karakeep/docker/ && docker compose down --rmi all
+			rm -rf /home/docker/karakeep
+			echo "应用已卸载"
+		}
+
+		docker_app_plus
+
+		  ;;
+
+
+
+	  111|convertx)
+
+		local app_id="111"
+		local docker_name="convertx"
+		local docker_img="ghcr.io/c4illin/convertx:latest"
+		local docker_port=8111
+
+		docker_rum() {
+
+			docker run -d --name=${docker_name} --restart=always \
+				-p ${docker_port}:3000 \
+				-v /home/docker/convertx:/app/data \
+				${docker_img}
+
+		}
+
+		local docker_describe="是一个功能强大的多格式文件转换工具（支持文档、图像、音频视频等）强烈建议添加域名访问"
+		local docker_url="项目地址: ${gh_https_url}github.com/c4illin/ConvertX"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="2"
+		docker_app
+
+		  ;;
+
+
+	  112|lucky)
+
+		local app_id="112"
+		local docker_name="lucky"
+		local docker_img="gdy666/lucky:v2"
+		# 由于 Lucky 使用 host 网络模式，这里的端口仅作记录/说明参考，实际由应用自身控制（默认16601）
+		local docker_port=8112
+
+		docker_rum() {
+
+			docker run -d --name=${docker_name} --restart=always \
+				--network host \
+				-v /home/docker/lucky/conf:/app/conf \
+				-v /var/run/docker.sock:/var/run/docker.sock \
+				${docker_img}
+
+			echo "正在等待 Lucky 初始化..."
+			sleep 10
+			docker exec lucky /app/lucky -rSetHttpAdminPort ${docker_port}
+
+		}
+
+		local docker_describe="Lucky 是一个大内网穿透及端口转发管理工具，支持 DDNS、反向代理、WOL 等功能。"
+		local docker_url="项目地址: ${gh_https_url}github.com/gdy666/lucky"
+		local docker_use="echo \"默认账号密码: 666\""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+
+	  113|firefox)
+
+		local app_id="113"
+		local docker_name="firefox"
+		local docker_img="jlesage/firefox:latest"
+		local docker_port=8113
+
+		docker_rum() {
+
+			read -e -p "设置登录密码: " admin_password
+
+			docker run -d --name=${docker_name} --restart=always \
+				-p ${docker_port}:5800 \
+				-v /home/docker/firefox:/config:rw \
+				-e ENABLE_CJK_FONT=1 \
+				-e WEB_AUDIO=1 \
+				-e VNC_PASSWORD="${admin_password}" \
+				${docker_img}
+		}
+
+		local docker_describe="是一个运行在 Docker 中的 Firefox 浏览器，支持通过网页直接访问桌面版浏览器界面。"
+		local docker_url="项目地址: ${gh_https_url}github.com/jlesage/docker-firefox"
+		local docker_use=""
+		local docker_passwd=""
+		local app_size="1"
+		docker_app
+
+		  ;;
+
+	  114|Moltbot|ClawdBot|moltbot|clawdbot|openclaw|OpenClaw)
+	  	  moltbot_menu
+		  ;;
+
+	  115|hermes)
+	  	  bash <(curl -sL ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/hermes_manager.sh)
+		  ;;
+
+	  b)
+	  	clear
+	  	send_stats "全部应用备份"
+
+	  	local backup_filename="app_$(date +"%Y%m%d%H%M%S").tar.gz"
+	  	echo -e "${rw_huang}正在备份 $backup_filename ...${rw_lv}"
+	  	cd / && tar czvf "$backup_filename" home
+
+	  	while true; do
+			clear
+			echo "备份文件已创建: /$backup_filename"
+			read -e -p "要传送备份数据到远程服务器吗？(Y/N): " choice
+			case "$choice" in
+			  [Yy])
+				kj_ssh_read_host_port "请输入远端服务器IP:  " "目标服务器SSH端口 [默认22]: " "22"
+				local remote_ip="$KJ_SSH_HOST"
+				local TARGET_PORT="$KJ_SSH_PORT"
+				local latest_tar=$(ls -t /app*.tar.gz | head -1)
+				if [ -n "$latest_tar" ]; then
+				  ssh-keygen -f "/root/.ssh/known_hosts" -R "$remote_ip"
+				  sleep 2  # 添加等待时间
+				  scp -P "$TARGET_PORT" -o StrictHostKeyChecking=no "$latest_tar" "root@$remote_ip:/"
+				  echo "文件已传送至远程服务器/根目录。"
+				else
+				  echo "未找到要传送的文件。"
+				fi
+				break
 				;;
-		esac
+			  *)
+				echo "注意: 目前备份仅包含docker项目，不包含宝塔，1panel等建站面板的数据备份。"
+				break
+				;;
+			esac
+	  	done
 
-		# 检查是否已安装
-		if command -v 1pctl &>/dev/null || systemctl is-active --quiet 1panel 2>/dev/null; then
-			green "检测到 1Panel 已安装"
-			echo -e " ${rw_huang}管理命令: 1pctl${rw_lv}"
-			echo -e " ${rw_huang}查看状态: 1pctl status${rw_lv}"
-			echo -e " ${rw_huang}查看访问信息: 1pctl user-info${rw_lv}"
-			echo ""
-			read -e -p " 是否重新安装/升级？(y/N): " _reinstall < /dev/tty
-			if [[ ! "$_reinstall" =~ ^[Yy]$ ]]; then
-				yellow "已取消"
-				break_end
-				sub_choice=""
-				continue
-			fi
-		fi
+		  ;;
 
-		# 下载并执行官方安装脚本
-		echo ""
-		echo -e " ${rw_huang}正在下载 1Panel 官方安装脚本...${rw_lv}"
-		local _install_script="/tmp/1panel_install_$$.sh"
-		local _download_ok=false
+	  r)
+	  	root_use
+	  	send_stats "全部应用还原"
+	  	echo "可用的应用备份"
+	  	echo -e "${rw_cheng}-------------------------${rw_lv}"
+	  	ls -lt /app*.gz | awk '{print $NF}'
+	  	echo ""
+	  	read -e -p  "回车键还原最新的备份，输入备份文件名还原指定的备份，输入0退出：" filename
 
-		# 优先使用 curl，回退 wget
-		if command -v curl &>/dev/null; then
-			if curl -fsSL "https://resource.fit2cloud.com/1panel/package/install.sh" -o "$_install_script" 2>/dev/null; then
-				_download_ok=true
-			fi
-		elif command -v wget &>/dev/null; then
-			if wget -q -O "$_install_script" "https://resource.fit2cloud.com/1panel/package/install.sh" 2>/dev/null; then
-				_download_ok=true
-			fi
-		else
-			# 都没有就装一个
-			install curl
-			if curl -fsSL "https://resource.fit2cloud.com/1panel/package/install.sh" -o "$_install_script" 2>/dev/null; then
-				_download_ok=true
-			fi
-		fi
+	  	if [ "$filename" == "0" ]; then
+			  break_end
+			  linux_panel
+	  	fi
 
-		if ! $_download_ok || [ ! -s "$_install_script" ]; then
-			red "下载安装脚本失败"
-			echo -e " ${rw_huang}可能原因:${rw_lv}"
-			echo -e "   - 网络不通或 DNS 解析失败"
-			echo -e "   - resource.fit2cloud.com 不可达"
-			echo -e " ${rw_huang}解决方案:${rw_lv}"
-			echo -e "   - 检查服务器网络和 DNS"
-			echo -e "   - 手动执行: ${rw_lv}curl -sSL https://resource.fit2cloud.com/1panel/package/install.sh | bash${rw_lv}"
-			rm -f "$_install_script" 2>/dev/null
-			break_end
-			sub_choice=""
-			continue
-		fi
+	  	# 如果用户没有输入文件名，使用最新的压缩包
+	  	if [ -z "$filename" ]; then
+			  local filename=$(ls -t /app*.tar.gz | head -1)
+	  	fi
 
-		green "安装脚本下载成功"
-		echo ""
-		echo -e " ${rw_huang}正在执行 1Panel 安装（请按提示交互）...${rw_lv}"
-		echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-		echo ""
+	  	if [ -n "$filename" ]; then
+		  	  echo -e "${rw_huang}正在解压 $filename ...${rw_lv}"
+		  	  cd / && tar -xzf "$filename"
+			  echo "应用数据已还原，目前请手动进入指定应用菜单，更新应用，即可还原应用。"
+	  	else
+			  echo "没有找到压缩包。"
+	  	fi
 
-		# 执行官方安装脚本（交互式）
-		bash "$_install_script"
-		local _install_rc=$?
+		  ;;
 
-		# 清理临时脚本
-		rm -f "$_install_script" 2>/dev/null
-
-		echo ""
-		echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-		if [ $_install_rc -eq 0 ]; then
-			green "1Panel 安装流程结束"
-			echo ""
-			echo -e " ${rw_huang}常用管理命令:${rw_lv}"
-			echo -e "   ${rw_lv}1pctl status${rw_lv}          — 查看服务状态"
-			echo -e "   ${rw_lv}1pctl user-info${rw_lv}       — 查看访问地址/用户名/密码"
-			echo -e "   ${rw_lv}1pctl restart${rw_lv}         — 重启 1Panel 服务"
-			echo -e "   ${rw_lv}1pctl stop${rw_lv}            — 停止 1Panel 服务"
-			echo -e "   ${rw_lv}1pctl version${rw_lv}         — 查看版本"
-			echo -e "   ${rw_lv}1pctl update${rw_lv}          — 升级到最新版"
-			echo ""
-			echo -e " ${rw_huang}官方文档: ${rw_lv}https://1panel.cn/docs${rw_lv}"
-			echo -e " ${rw_huang}如忘记访问信息，执行: ${rw_lv}1pctl user-info${rw_lv}"
-		else
-			red "1Panel 安装过程返回非零状态码 (退出码: $_install_rc)"
-			echo -e " ${rw_huang}请检查上方安装日志中的错误信息${rw_lv}"
-			echo -e " ${rw_huang}或参考官方文档: ${rw_lv}https://1panel.cn/docs${rw_lv}"
-		fi
-		;;
 	  0)
-		break
-		;;
+		  riwi
+		  ;;
 	  *)
-		red "无效的输入!"
-		;;
+		cd ~
+		install git
+		if [ ! -d apps/.git ]; then
+			timeout 10s git clone ${gh_proxy}github.com/riwi/apps.git
+		else
+			cd apps
+			# git pull origin main > /dev/null 2>&1
+			timeout 10s git pull ${gh_proxy}github.com/riwi/apps.git main > /dev/null 2>&1
+		fi
+		local custom_app="$HOME/apps/${sub_choice}.conf"
+		if [ -f "$custom_app" ]; then
+			. "$custom_app"
+		else
+			echo -e "${rw_hong}错误: 未找到编号为 ${sub_choice} 的应用配置${rw_lv}"
+		fi
+		  ;;
 	esac
 	break_end
 	sub_choice=""
@@ -19436,9 +23146,9 @@ while true; do
 	echo -e "${rw_cheng}━━━━━━━━━━━━  用户管理器  ━━━━━━━━━━━━${rw_lv}"
 	echo ""
 	echo -e " ${rw_huang}1.   ${rw_lv}创建用户${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}双证登录（公钥 + OTP 动态码）${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}三证登录（公钥 + 密码 + OTP 动态码）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}硬证登录（FIDO2 硬件密钥）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}双证登录（需要两样凭证）${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}三证登录（需要三样凭证）${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}硬证登录（需要硬件凭证）${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -19446,8 +23156,8 @@ while true; do
 
 	case $um_choice in
 	  1) root_manager ;;
-	  2) ssh_two_factor_manager ;;
-	  3) ssh_three_factor_manager ;;
+	  2) ssh_config_manager ;;
+	  3) ssh_mfa_manager ;;
 	  4) ssh_fido2_manager ;;
 	  0) break ;;
 	  *) red "无效的输入!" ;;
@@ -19456,350 +23166,62 @@ done
 }
 
 # ================================================================
-# SSH 认证管理 — 共用辅助函数
-# 以下函数被双证/三证/硬证三个管理器复用，统一状态探测、备份、
-# 冲突清理、语法检查、重启、回滚的执行逻辑。
+# SSH 多因素认证 (MFA/OTP) 管理器
+# 依赖: google-authenticator-libpam (Debian/Ubuntu) / google-authenticator (CentOS/RHEL)
 # ================================================================
-
-# ── 读取 sshd_config 中某个指令的生效值（去掉注释行，取第一个匹配）──
-# 用法: _ssh_cfg_get <key> [default]
-_ssh_cfg_get() {
-	local _key="$1" _default="${2:-}"
-	local _val
-	_val=$(grep -E "^[[:space:]]*${_key}[[:space:]]+" /etc/ssh/sshd_config 2>/dev/null | head -1 | awk '{print $2}')
-	[ -n "$_val" ] && echo "$_val" || echo "$_default"
-}
-
-# ── 探测当前实际生效的 SSH 认证模式 ──
-# 输出到全局变量 _SSH_MODE / _SSH_MODE_DESC / _SSH_MODE_REASON
-_ssh_current_auth_mode() {
-	_ssh_mode="unknown"
-	_ssh_mode_desc="未知"
-	_ssh_mode_reason=""
-
-	local _auth_methods _passauth _pubkeyauth _kbdint _pam_otp _has_sk
-
-	_auth_methods=$(_ssh_cfg_get AuthenticationMethods "")
-	_passauth=$(_ssh_cfg_get PasswordAuthentication yes)
-	_pubkeyauth=$(_ssh_cfg_get PubkeyAuthentication yes)
-	_kbdint=$(_ssh_cfg_get KbdInteractiveAuthentication "$(_ssh_cfg_get ChallengeResponseAuthentication no)")
-	if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-		_pam_otp=1
-	else
-		_pam_otp=0
-	fi
-	if [ -f "$HOME/.ssh/authorized_keys" ] && grep -q "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null; then
-		_has_sk=1
-	else
-		_has_sk=0
-	fi
-
-	# 优先用 AuthenticationMethods 判断（最权威）
-	case "$_auth_methods" in
-		*publickey*keyboard-interactive*|*keyboard-interactive*publickey*)
-			if echo "$_auth_methods" | grep -q "password"; then
-				_ssh_mode="3fa"
-				_ssh_mode_desc="三证（公钥+密码+OTP）"
-				_ssh_mode_reason="AuthenticationMethods=$_auth_methods, PAM OTP=$([ $_pam_otp -eq 1 ] && echo on || echo off)"
-			else
-				_ssh_mode="2fa"
-				_ssh_mode_desc="双证（公钥+OTP）"
-				_ssh_mode_reason="AuthenticationMethods=$_auth_methods, PAM OTP=$([ $_pam_otp -eq 1 ] && echo on || echo off)"
-			fi
-			;;
-		*publickey*password*|*password*publickey*)
-			_ssh_mode="pubkey-password"
-			_ssh_mode_desc="双证（公钥+密码）"
-			_ssh_mode_reason="AuthenticationMethods=$_auth_methods"
-			;;
-		"")
-			# 没有强制 AuthenticationMethods，看密码/公钥开关
-			if [ "$_passauth" = "no" ] && [ "$_pubkeyauth" = "yes" ]; then
-				if [ $_has_sk -eq 1 ] && [ "$_kbdint" != "yes" ]; then
-					_ssh_mode="fido2"
-					_ssh_mode_desc="硬证（FIDO2）"
-					_ssh_mode_reason="PubkeyAuthentication=yes, PasswordAuthentication=no, authorized_keys 含 sk- 公钥"
-				else
-					_ssh_mode="pubkey-only"
-					_ssh_mode_desc="仅公钥"
-					_ssh_mode_reason="PasswordAuthentication=no, PubkeyAuthentication=yes"
-				fi
-			elif [ "$_passauth" = "yes" ] && [ "$_pubkeyauth" = "yes" ]; then
-				_ssh_mode="pubkey-or-password"
-				_ssh_mode_desc="公钥或密码（任一即可）"
-				_ssh_mode_reason="PasswordAuthentication=yes, PubkeyAuthentication=yes, 无 AuthenticationMethods"
-			elif [ "$_passauth" = "yes" ] && [ "$_pubkeyauth" = "no" ]; then
-				_ssh_mode="password-only"
-				_ssh_mode_desc="仅密码"
-				_ssh_mode_reason="PasswordAuthentication=yes, PubkeyAuthentication=no"
-			else
-				_ssh_mode="unknown"
-				_ssh_mode_desc="未知"
-				_ssh_mode_reason="无法识别的组合: pass=$_passauth pubkey=$_pubkeyauth kbdint=$_kbdint"
-			fi
-			;;
-		*)
-			_ssh_mode="unknown"
-			_ssh_mode_desc="未知（自定义）"
-			_ssh_mode_reason="AuthenticationMethods=$_auth_methods"
-			;;
-	esac
-
-	# 导出给调用方
-	_SSH_MODE="$_ssh_mode"
-	_SSH_MODE_DESC="$_ssh_mode_desc"
-	_SSH_MODE_REASON="$_ssh_mode_reason"
-}
-
-# ── 统一状态面板（三个管理器顶部共用）──
-_ssh_status_panel() {
-	_ssh_current_auth_mode
-	local _port _root _pass _pubkey _kbdint _sshd_stat
-	_port=$(_ssh_cfg_get Port 22)
-	_root=$(_ssh_cfg_get PermitRootLogin prohibit-password)
-	_pass=$(_ssh_cfg_get PasswordAuthentication yes)
-	_pubkey=$(_ssh_cfg_get PubkeyAuthentication yes)
-	_kbdint=$(_ssh_cfg_get KbdInteractiveAuthentication "$(_ssh_cfg_get ChallengeResponseAuthentication no)")
-	if systemctl is-active --quiet sshd 2>/dev/null || systemctl is-active --quiet ssh 2>/dev/null; then
-		_sshd_stat="${rw_lv}运行中${rw_lv}"
-	else
-		_sshd_stat="${rw_hong}未运行${rw_lv}"
-	fi
-
-	# 颜色映射
-	local _c_root _c_pass _c_pubkey
-	case "$_root" in
-		yes) _c_root="${rw_hong}$_root${rw_lv}" ;;
-		no) _c_root="${rw_lv}$_root${rw_lv}" ;;
-		*) _c_root="${rw_huang}$_root${rw_lv}" ;;
-	esac
-	[ "$_pass" = "yes" ] && _c_pass="${rw_hong}yes${rw_lv}" || _c_pass="${rw_lv}no${rw_lv}"
-	[ "$_pubkey" = "yes" ] && _c_pubkey="${rw_lv}yes${rw_lv}" || _c_pubkey="${rw_hong}no${rw_lv}"
-
-	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 认证状态  ━━━━━━━━━━━━${rw_lv}"
-	echo -e " 当前模式: ${rw_huang}${_SSH_MODE_DESC}${rw_lv}"
-	echo -e " 端口: ${rw_huang}${_port}${rw_lv}   服务: ${_sshd_stat}"
-	echo -e " Root登录: ${_c_root}   密码: ${_c_pass}   公钥: ${_c_pubkey}   KbdInteractive: ${_kbdint}"
-	if [ -n "$_SSH_MODE_REASON" ]; then
-		echo -e " ${rw_lv}依据: ${_SSH_MODE_REASON}${rw_lv}"
-	fi
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-}
-
-# ── 统一备份 sshd_config + pam.d/sshd ──
-# 备份路径写入全局 _SSH_BACKUP_TAG / _SSH_BACKUP_DIR
-_ssh_backup_configs() {
-	_SSH_BACKUP_TAG=$(date +%Y%m%d%H%M%S)
-	_SSH_BACKUP_DIR="/tmp/riwi_ssh_backup_${_SSH_BACKUP_TAG}"
-	mkdir -p "$_SSH_BACKUP_DIR"
-	local _bk_count=0
-	if [ -f /etc/ssh/sshd_config ]; then
-		cp -a /etc/ssh/sshd_config "$_SSH_BACKUP_DIR/sshd_config"
-		_bk_count=$((_bk_count + 1))
-	fi
-	if [ -f /etc/pam.d/sshd ]; then
-		cp -a /etc/pam.d/sshd "$_SSH_BACKUP_DIR/pam_sshd"
-		_bk_count=$((_bk_count + 1))
-	fi
-	if [ -f "$HOME/.ssh/authorized_keys" ]; then
-		cp -a "$HOME/.ssh/authorized_keys" "$_SSH_BACKUP_DIR/authorized_keys"
-		_bk_count=$((_bk_count + 1))
-	fi
-	echo -e " ${rw_lv}已备份 ${_bk_count} 个文件到 ${rw_huang}${_SSH_BACKUP_DIR}${rw_lv}"
-}
-
-# ── 清理上一个认证模式留下的冲突项 ──
-# 清理目标: AuthenticationMethods / KbdInteractiveAuthentication /
-# ChallengeResponseAuthentication / PAM 中的 google_authenticator 行 /
-# 当前用户的 Match User 块（仅清理认证相关字段）
-_ssh_clear_conflicting_auth() {
-	local _cur_user _cur_user_esc
-	_cur_user=$(whoami)
-	_cur_user_esc=$(printf '%s\n' "$_cur_user" | sed 's/[.[\*^$(){}?+|/]/\\&/g')
-
-	# 1. 注释掉 AuthenticationMethods（用 #riwi-disabled 前缀，方便追溯）
-	if grep -qE '^[[:space:]]*AuthenticationMethods' /etc/ssh/sshd_config 2>/dev/null; then
-		sed -i -E 's/^([[:space:]]*)(AuthenticationMethods[[:space:]].*)/#riwi-disabled \1\2/' /etc/ssh/sshd_config
-		echo -e " ${rw_lv}已注释旧的 AuthenticationMethods${rw_lv}"
-	fi
-
-	# 2. 清理当前用户的 Match User 块中认证相关字段（保留块本身，删 PasswordAuthentication/PubkeyAuthentication/AuthenticationMethods 行）
-	#    简单做法：直接删除匹配当前用户的整个 Match 块，后续模式会按需重建
-	local _match_start
-	_match_start=$(grep -n -E "^[[:space:]]*Match[[:space:]]+User[[:space:]]+${_cur_user_esc}([[:space:]]|$)" /etc/ssh/sshd_config 2>/dev/null | head -1 | cut -d: -f1)
-	if [ -n "$_match_start" ]; then
-		local _match_end
-		_match_end=$(tail -n +"$_match_start" /etc/ssh/sshd_config | grep -n -E '^[[:space:]]*Match[[:space:]]' | head -2 | tail -1 | cut -d: -f1)
-		if [ -n "$_match_end" ]; then
-			_match_end=$((_match_start + _match_end - 1))
-			sed -i "${_match_start},${_match_end}d" /etc/ssh/sshd_config
-		else
-			sed -i "${_match_start},\$d" /etc/ssh/sshd_config
-		fi
-		echo -e " ${rw_lv}已清理 ${_cur_user} 的旧 Match User 块${rw_lv}"
-	fi
-
-	# 3. 移除 PAM 中的 google_authenticator 行（除非调用方明确要保留）
-	#    由调用方决定是否重新写入
-	if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-		sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd 2>/dev/null
-		echo -e " ${rw_lv}已移除 PAM 中的 google_authenticator 行${rw_lv}"
-	fi
-}
-
-# ── 设置 sshd_config 指令（存在则改，不存在则追加）──
-# 用法: _ssh_cfg_set <key> <value>
-_ssh_cfg_set() {
-	local _key="$1" _val="$2"
-	if grep -qE "^[[:space:]]*#?${_key}[[:space:]]+" /etc/ssh/sshd_config 2>/dev/null; then
-		sed -i -E "s|^[[:space:]]*#?${_key}[[:space:]].*|${_key} ${_val}|" /etc/ssh/sshd_config
-	else
-		echo "${_key} ${_val}" >> /etc/ssh/sshd_config
-	fi
-}
-
-# ── 语法检查 + 询问重启 ──
-# 失败时自动回滚 _SSH_BACKUP_DIR 中的备份
-# 用法: _ssh_apply_and_restart
-_ssh_apply_and_restart() {
-	if [ -z "$_SSH_BACKUP_DIR" ] || [ ! -d "$_SSH_BACKUP_DIR" ]; then
-		red "内部错误: 未找到备份目录，无法安全应用配置"
-		return 1
-	fi
-
-	echo ""
-	echo -e " ${rw_huang}正在执行 SSH 配置语法检查 (sshd -t)...${rw_lv}"
-	local _sshd_err
-	_sshd_err=$(sshd -t 2>&1)
-	if [ $? -ne 0 ]; then
-		red "SSH 配置语法检查失败！"
-		echo -e " ${rw_hong}错误信息: ${_sshd_err}${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}正在自动回滚备份...${rw_lv}"
-		_ssh_restore_backup
-		return 1
-	fi
-	green "SSH 配置语法检查通过"
-
-	echo ""
-	read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
-	if [[ "$_restart" =~ ^[Yy]$ ]]; then
-		if systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null || systemctl restart ssh 2>/dev/null; then
-			green "SSH 服务已重启，配置已生效"
-		else
-			red "SSH 服务重启失败，请手动检查"
-			echo -e " ${rw_huang}备份目录: ${_SSH_BACKUP_DIR}${rw_lv}"
-		fi
-	else
-		yellow "配置已保存，请稍后手动重启 SSH 服务使配置生效"
-		echo -e " ${rw_huang}提示: systemctl restart sshd${rw_lv}"
-	fi
-	return 0
-}
-
-# ── 从 _SSH_BACKUP_DIR 回滚 ──
-_ssh_restore_backup() {
-	if [ -z "$_SSH_BACKUP_DIR" ] || [ ! -d "$_SSH_BACKUP_DIR" ]; then
-		red "未找到备份目录，无法回滚"
-		return 1
-	fi
-	if [ -f "$_SSH_BACKUP_DIR/sshd_config" ]; then
-		cp -a "$_SSH_BACKUP_DIR/sshd_config" /etc/ssh/sshd_config
-		echo -e " ${rw_lv}已回滚 /etc/ssh/sshd_config${rw_lv}"
-	fi
-	if [ -f "$_SSH_BACKUP_DIR/pam_sshd" ]; then
-		cp -a "$_SSH_BACKUP_DIR/pam_sshd" /etc/pam.d/sshd
-		echo -e " ${rw_lv}已回滚 /etc/pam.d/sshd${rw_lv}"
-	fi
-	if [ -f "$_SSH_BACKUP_DIR/authorized_keys" ]; then
-		cp -a "$_SSH_BACKUP_DIR/authorized_keys" "$HOME/.ssh/authorized_keys"
-		echo -e " ${rw_lv}已回滚 ~/.ssh/authorized_keys${rw_lv}"
-	fi
-	green "回滚完成"
-}
-
-# ── 为指定用户配置 OTP（交互式运行 google-authenticator）──
-# 用法: _ssh_otp_configure_user <username>
-_ssh_otp_configure_user() {
-	local _target_u="$1"
-	local _target_home
-	_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
-	[ ! -d "$_target_home" ] && { red "无法获取用户 ${_target_u} 的 home 目录"; return 1; }
-
-	echo ""
-	echo -e " ${rw_huang}目标用户: ${rw_lv}${_target_u}"
-	echo -e " ${rw_hong}注意: 接下来会以 ${_target_u} 身份运行 google-authenticator${rw_lv}"
-	echo -e " ${rw_hong}请用手机 App (Google/Microsoft Authenticator) 扫码${rw_lv}"
-	echo ""
-	echo -e " ${rw_huang}google-authenticator 推荐回答:${rw_lv}"
-	echo -e "   Q1: 是否基于时间?                → ${rw_lv}y${rw_lv}"
-	echo -e "   Q2: 是否更新 ~/.google_authenticator? → ${rw_lv}y${rw_lv}"
-	echo -e "   Q3: 是否禁止多地点复用令牌?      → ${rw_lv}y${rw_lv}"
-	echo -e "   Q4: 是否扩大时间窗口?            → ${rw_lv}n${rw_lv}"
-	echo -e "   Q5: 是否启用限速?                → ${rw_lv}y${rw_lv}"
-	echo ""
-	read -e -p " 按回车开始交互配置（需手动操作）..." _dummy < /dev/tty
-	echo ""
-
-	# 优先用非交互参数生成，失败再退回交互
-	su - "$_target_u" -c "google-authenticator -t -d -f -W -r 3 -R 30" 2>&1 || \
-		su - "$_target_u" -c "google-authenticator" 2>&1
-
-	echo ""
-	if [ -f "${_target_home}/.google_authenticator" ]; then
-		green "OTP 配置文件已生成: ${_target_home}/.google_authenticator"
-		echo -e " ${rw_hong}⚠ 请务必保存好紧急备用码（无法找回）！${rw_lv}"
-		return 0
-	else
-		red "配置文件未生成，可能配置未完成"
-		return 1
-	fi
-}
-
-# ================================================================
-# 双证登录管理器（公钥 + OTP 动态码，不需要密码）
-# 登录流程: 1) 客户端用私钥通过公钥认证  2) 输入手机 App 中的 6 位 OTP
-# 依赖: google-authenticator (PAM 模块) + 已部署的 SSH 公钥
-# ================================================================
-ssh_two_factor_manager() {
+ssh_mfa_manager() {
 while true; do
 	clear
-	_ssh_status_panel
 
-	# 探测 OTP 依赖状态
-	local _otp_pkg _otp_pam _otp_users
-	if command -v google-authenticator &>/dev/null || \
-	   dpkg -l libpam-google-authenticator 2>/dev/null | grep -q "^ii" || \
-	   rpm -q google-authenticator 2>/dev/null | grep -q "google-authenticator"; then
-		_otp_pkg="${rw_lv}已安装${rw_lv}"
-	else
-		_otp_pkg="${rw_hong}未安装${rw_lv}"
-	fi
+	# ── 探测当前 MFA 状态 ──
+	local _mfa_pam=0 _mfa_pkg="未安装"
+	# 检查 PAM 配置中是否启用了 google-auth
 	if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-		_otp_pam="${rw_lv}已加载${rw_lv}"
-	else
-		_otp_pam="${rw_hong}未加载${rw_lv}"
+		_mfa_pam=1
 	fi
-	_otp_users=0
+	# 检查软件包是否安装
+	if command -v google-authenticator &>/dev/null; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	elif dpkg -l google-authenticator-libpam 2>/dev/null | grep -q "^ii"; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	elif rpm -q google-authenticator 2>/dev/null | grep -q "google-authenticator"; then
+		_mfa_pkg="${rw_lv}已安装${rw_lv}"
+	else
+		_mfa_pkg="${rw_hong}未安装${rw_lv}"
+	fi
+	local _mfa_status="${rw_hong}未启用${rw_lv}"
+	[ $_mfa_pam -eq 1 ] && _mfa_status="${rw_lv}已启用${rw_lv}"
+
+	# 统计已配置 MFA 的用户数
+	local _mfa_users=0 _mfa_user_list=""
 	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
 		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-		[ -f "${_home}/.google_authenticator" ] && _otp_users=$((_otp_users + 1))
-	done </etc/passwd 2>/dev/null
+		[ -f "${_home}/.google_authenticator" ] && {
+			_mfa_users=$((_mfa_users + 1))
+			_mfa_user_list="${_mfa_user_list} ${_u}"
+		}
+	done </etc/passwd
 
-	echo -e " OTP 软件包: ${_otp_pkg}   PAM 模块: ${_otp_pam}   已配 OTP 用户: ${rw_huang}${_otp_users}${rw_lv}"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 多因素认证 (MFA)  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " 软件包: ${_mfa_pkg}  MFA 状态: ${_mfa_status}  已配置用户: ${rw_huang}${_mfa_users}${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}──── 双证登录（公钥 + OTP）────${rw_lv}"
+	echo -e " ${rw_cheng}──── 安装与状态${rw_lv}"
 	echo -e " ${rw_huang}1.   ${rw_lv}安装 google-authenticator${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}为用户配置 OTP 动态码${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}启用双证登录（公钥 + OTP）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}禁用双证登录（恢复单一认证）${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}查看已配置 OTP 的用户${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}查看已配置 MFA 的用户${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 为用户启用 MFA${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}为指定用户配置 OTP (交互式)${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}为当前用户配置 OTP${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 全局开关${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}启用 SSH MFA (修改 sshd_config + PAM)${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}禁用 SSH MFA${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请输入你的选择: " tf_choice
+	read -e -p " 请输入你的选择: " mfa_choice
 
-	case $tf_choice in
+	case $mfa_choice in
 	  1)
 		# ── 安装 google-authenticator ──
 		echo ""
@@ -19810,21 +23232,13 @@ while true; do
 			break_end
 			continue
 		fi
+		echo -e " 正在检测系统包管理器..."
 		if command -v apt-get &>/dev/null; then
 			echo -e " 检测到 Debian/Ubuntu，使用 apt 安装..."
-			read -e -p " 确认安装 libpam-google-authenticator？(y/N): " _confirm < /dev/tty
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				apt-get update -y && apt-get install -y libpam-google-authenticator
 				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 libpam-google-authenticator"
-			else
-				yellow "已取消"
-			fi
-		elif command -v dnf &>/dev/null; then
-			echo -e " 检测到 Fedora/RHEL9+，使用 dnf 安装..."
-			read -e -p " 确认安装 google-authenticator？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				dnf install -y google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
 			else
 				yellow "已取消"
 			fi
@@ -19834,7 +23248,16 @@ while true; do
 			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				yum install -y google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 google-authenticator"
+			else
+				yellow "已取消"
+			fi
+		elif command -v dnf &>/dev/null; then
+			echo -e " 检测到 Fedora/RHEL9+，使用 dnf 安装..."
+			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				dnf install -y google-authenticator
+				[ $? -eq 0 ] && green "安装成功！" || red "安装失败，请手动安装 google-authenticator"
 			else
 				yellow "已取消"
 			fi
@@ -19848,22 +23271,40 @@ while true; do
 				yellow "已取消"
 			fi
 		else
-			red "无法识别包管理器，请手动安装"
+			red "无法识别包管理器，请手动安装 google-authenticator"
 			echo -e " Debian/Ubuntu: ${rw_huang}apt-get install libpam-google-authenticator${rw_lv}"
 			echo -e " CentOS/RHEL:   ${rw_huang}yum install google-authenticator${rw_lv}"
 		fi
 		;;
 	  2)
-		# ── 为用户配置 OTP ──
+		# ── 查看已配置 MFA 的用户 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 为用户配置 OTP ━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 已配置 MFA 的用户 ━━━━━━${rw_lv}"
+		echo ""
+		local _found=0
+		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
+			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
+			if [ -f "${_home}/.google_authenticator" ]; then
+				_found=1
+				local _ga_mtime=""
+				_ga_mtime=$(stat -c '%y' "${_home}/.google_authenticator" 2>/dev/null | cut -d' ' -f1 || \
+							 stat -f '%Sm' -t '%Y-%m-%d' "${_home}/.google_authenticator" 2>/dev/null || echo "未知")
+				printf "  ${rw_huang}%-15s${rw_lv}  HOME: %-25s  配置时间: %s\n" "$_u" "${_home}" "$_ga_mtime"
+			fi
+		done </etc/passwd
+		[ $_found -eq 0 ] && yellow "暂无用户配置 MFA"
+		echo ""
+		;;
+	  3)
+		# ── 为指定用户配置 OTP ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 为指定用户配置 OTP ━━━━━━${rw_lv}"
 		echo ""
 		if ! command -v google-authenticator &>/dev/null; then
-			red "google-authenticator 未安装，请先执行选项 1"
+			red "google-authenticator 未安装，请先执行选项 1 安装"
 			break_end
 			continue
 		fi
-
 		# 列出可用用户
 		echo -e " ${rw_cheng}── 可用用户 ──${rw_lv}"
 		local _avail_users=()
@@ -19871,14 +23312,12 @@ while true; do
 			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
 			[ -n "$_shell" ] && _avail_users+=("$_u")
 		done </etc/passwd
-		# root 也列入
-		_avail_users+=("root")
 		local _ui=1
 		for _u in "${_avail_users[@]}"; do
 			local _h=$(getent passwd "$_u" | cut -d: -f6)
-			local _otp_mark=""
-			[ -f "${_h}/.google_authenticator" ] && _otp_mark="${rw_lv}[已配OTP]${rw_lv}"
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_h} ${_otp_mark}"
+			local _mfa_mark=""
+			[ -f "${_h}/.google_authenticator" ] && _mfa_mark="${rw_lv}[已配置MFA]${rw_lv}"
+			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_h} ${_mfa_mark}"
 			((_ui++))
 		done
 		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
@@ -19897,144 +23336,231 @@ while true; do
 		done
 		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
 
-		_ssh_otp_configure_user "$_target_u"
-		;;
-	  3)
-		# ── 启用双证登录（公钥 + OTP）──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 启用双证登录（公钥 + OTP）━━━━━━${rw_lv}"
+		echo -e " ${rw_huang}目标用户: ${rw_lv}${_target_u}"
+		echo -e " ${rw_hong}注意: 接下来会以 ${_target_u} 身份运行 google-authenticator${rw_lv}"
+		echo -e " ${rw_hong}请用手机 App (Google/Microsoft Authenticator) 扫码${rw_lv}"
+		echo ""
+		read -e -p " 确认开始配置？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		local _target_home
+		_target_home=$(getent passwd "$_target_u" | cut -d: -f6)
+		[ ! -d "$_target_home" ] && { red "无法获取用户 home 目录"; break_end; continue; }
+
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 交互配置 (请以 ${_target_u} 身份运行) ━━━━━━${rw_lv}"
+		echo -e " ${rw_lv}即将运行: su - $_target_u -c 'google-authenticator'${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}推荐回答:${rw_lv}"
+		echo -e "   Q1: 是否基于时间? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q2: 是否更新配置文件? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q3: 是否禁止多地点复用令牌? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q4: 是否扩大时间窗口? → ${rw_lv}n${rw_lv}"
+		echo -e "   Q5: 是否启用限速? → ${rw_lv}y${rw_lv}"
+		echo ""
+		read -e -p " 按回车开始交互配置 (需要手动操作)..." _dummy < /dev/tty
 		echo ""
 
-		# 前置检查
+		# 用 expect 自动回答（如果 available），否则交互运行
+		if command -v expect &>/dev/null; then
+			echo -e " ${rw_huang}检测到 expect，将自动回答默认选项...${rw_lv}"
+			su - "$_target_u" -c "yes y | google-authenticator -t -d -f -w 3 -s ~/.google_authenticator"
+		else
+			su - "$_target_u" -c "google-authenticator"
+		fi
+
+		echo ""
+		if [ -f "${_target_home}/.google_authenticator" ]; then
+			green "MFA 配置文件已生成: ${_target_home}/.google_authenticator"
+			echo -e " ${rw_hong}⚠ 请务必保存好 ${rw_huang}紧急备用码${rw_hong}（无法找回）！${rw_lv}"
+			echo -e " ${rw_lv}下次 SSH 登录时需要输入: 密码 + 6位动态码${rw_lv}"
+		else
+			red "配置文件未生成，可能配置未完成"
+		fi
+		;;
+	  4)
+		# ── 为当前用户配置 OTP ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 为当前用户 ($(whoami)) 配置 OTP ━━━━━━${rw_lv}"
+		echo ""
 		if ! command -v google-authenticator &>/dev/null; then
-			red "google-authenticator 未安装，请先执行选项 1"
+			red "google-authenticator 未安装，请先执行选项 1 安装"
 			break_end
 			continue
 		fi
 		local _cur_u _cur_home
 		_cur_u=$(whoami)
-		_cur_home=$(getent passwd "$_cur_u" | cut -d: -f6)
-		[ -z "$_cur_home" ] && _cur_home="$HOME"
-		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
-			red "当前用户 (${_cur_u}) 的 authorized_keys 为空！"
-			echo -e " ${rw_huang}双证登录需要先部署公钥，否则启用后无法登录！${rw_lv}"
-			echo -e " ${rw_huang}请先到「主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥」部署公钥${rw_lv}"
-			break_end
-			continue
+		_cur_home="$HOME"
+		if [ -f "${_cur_home}/.google_authenticator" ]; then
+			echo -e " ${rw_huang}当前用户已配置 MFA${rw_lv}"
+			read -e -p " 是否重新配置？(y/N): " _reconfirm < /dev/tty
+			[[ ! "$_reconfirm" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 		fi
-		if [ ! -f "${_cur_home}/.google_authenticator" ]; then
-			red "当前用户 (${_cur_u}) 尚未配置 OTP！"
-			echo -e " ${rw_huang}请先执行选项 2 为当前用户配置 OTP${rw_lv}"
-			break_end
-			continue
+		echo -e " ${rw_hong}请用手机 App (Google/Microsoft Authenticator) 扫码${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}推荐回答:${rw_lv}"
+		echo -e "   Q1: 是否基于时间? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q2: 是否更新配置文件? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q3: 是否禁止多地点复用令牌? → ${rw_lv}y${rw_lv}"
+		echo -e "   Q4: 是否扩大时间窗口? → ${rw_lv}n${rw_lv}"
+		echo -e "   Q5: 是否启用限速? → ${rw_lv}y${rw_lv}"
+		echo ""
+		read -e -p " 按回车开始交互配置..." _dummy < /dev/tty
+		echo ""
+		google-authenticator
+		echo ""
+		if [ -f "${_cur_home}/.google_authenticator" ]; then
+			green "MFA 配置完成！"
+			echo -e " ${rw_hong}⚠ 请务必保存好 ${rw_huang}紧急备用码${rw_hong}（无法找回）！${rw_lv}"
 		fi
-
-		echo -e " ${rw_huang}即将执行的变更:${rw_lv}"
-		echo -e "   1) 备份 sshd_config + pam.d/sshd + authorized_keys"
-		echo -e "   2) 清理旧的认证模式残留 (AuthenticationMethods / Match 块 / PAM OTP)"
-		echo -e "   3) 写入 PAM: ${rw_huang}auth required pam_google_authenticator.so nullok${rw_lv}"
-		echo -e "   4) sshd_config:"
-		echo -e "      ${rw_huang}PasswordAuthentication no${rw_lv}        (双证不使用密码)"
-		echo -e "      ${rw_huang}PubkeyAuthentication yes${rw_lv}"
-		echo -e "      ${rw_huang}KbdInteractiveAuthentication yes${rw_lv} (新版 OpenSSH)"
-		echo -e "      ${rw_huang}ChallengeResponseAuthentication yes${rw_lv} (旧版兼容)"
-		echo -e "      ${rw_huang}AuthenticationMethods publickey,keyboard-interactive${rw_lv}"
-		echo -e "   5) sshd -t 语法检查 → 失败自动回滚 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}⚠ 登录流程将变为: 1) 客户端用私钥通过公钥认证  2) 输入手机 App 6 位 OTP${rw_lv}"
-		echo -e " ${rw_hong}⚠ 操作失误可通过腾讯云 VNC 控制台救援${rw_lv}"
-		echo ""
-		read -e -p " 确认启用双证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		# 1) 备份
-		_ssh_backup_configs
-
-		# 2) 清理冲突项
-		_ssh_clear_conflicting_auth
-
-		# 3) 写入 PAM（在 pam_unix.so 之后追加）
-		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-			if grep -q "pam_unix.so" /etc/pam.d/sshd 2>/dev/null; then
-				sed -i '/^auth.*pam_unix.so/a auth       required     pam_google_authenticator.so nullok' /etc/pam.d/sshd
-			else
-				echo "auth       required     pam_google_authenticator.so nullok" >> /etc/pam.d/sshd
-			fi
-			green "PAM 已加载 google_authenticator"
-		else
-			yellow "PAM 中已存在 google_authenticator（保留）"
-		fi
-
-		# 4) 写入 sshd_config
-		_ssh_cfg_set PasswordAuthentication no
-		_ssh_cfg_set PubkeyAuthentication yes
-		_ssh_cfg_set KbdInteractiveAuthentication yes
-		_ssh_cfg_set ChallengeResponseAuthentication yes
-		_ssh_cfg_set AuthenticationMethods "publickey,keyboard-interactive"
-		green "sshd_config 已更新"
-
-		# 5) 应用 + 重启
-		_ssh_apply_and_restart
-		;;
-	  4)
-		# ── 禁用双证登录 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁用双证登录 ━━━━━━${rw_lv}"
-		echo ""
-		_ssh_current_auth_mode
-		if [ "$_SSH_MODE" != "2fa" ]; then
-			yellow "当前认证模式为「${_SSH_MODE_DESC}」，并非双证模式"
-			echo -e " ${rw_huang}仍可继续清理 OTP 相关配置${rw_lv}"
-		fi
-		echo ""
-		echo -e " ${rw_huang}即将执行:${rw_lv}"
-		echo -e "   1) 备份当前配置"
-		echo -e "   2) 注释掉 AuthenticationMethods"
-		echo -e "   3) 设置 KbdInteractiveAuthentication no / ChallengeResponseAuthentication no"
-		echo -e "   4) 从 PAM 移除 google_authenticator 行"
-		echo -e "   5) PasswordAuthentication 恢复为 yes（避免锁死）"
-		echo -e "   6) sshd -t 检查 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}⚠ 禁用后将退回「公钥或密码」模式，OTP 不再要求${rw_lv}"
-		read -e -p " 确认禁用双证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_ssh_backup_configs
-		_ssh_clear_conflicting_auth
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		green "已禁用双证相关配置"
-
-		_ssh_apply_and_restart
 		;;
 	  5)
-		# ── 查看已配置 OTP 的用户 ──
+		# ── 启用 SSH MFA ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 已配置 OTP 的用户 ━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 启用 SSH MFA ━━━━━━${rw_lv}"
 		echo ""
-		local _found=0
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			if [ -f "${_home}/.google_authenticator" ]; then
-				_found=1
-				local _ga_mtime
-				_ga_mtime=$(stat -c '%y' "${_home}/.google_authenticator" 2>/dev/null | cut -d' ' -f1 || \
-							stat -f '%Sm' -t '%Y-%m-%d' "${_home}/.google_authenticator" 2>/dev/null || echo "未知")
-				printf "  ${rw_huang}%-15s${rw_lv}  HOME: %-25s  配置时间: %s\n" "$_u" "${_home}" "$_ga_mtime"
+		if ! command -v google-authenticator &>/dev/null; then
+			red "google-authenticator 未安装，请先执行选项 1"
+			break_end
+			continue
+		fi
+		if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			yellow "MFA 似乎已启用（/etc/pam.d/sshd 中已存在 pam_google_authenticator.so）"
+			read -e -p " 是否重新配置？(y/N): " _reconfirm < /dev/tty
+			[[ ! "$_reconfirm" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
+		fi
+		echo -e " ${rw_hong}⚠ 此操作将修改以下文件:${rw_lv}"
+		echo -e "   ${rw_huang}/etc/pam.d/sshd${rw_lv}  — 添加 MFA PAM 模块"
+		echo -e "   ${rw_huang}/etc/ssh/sshd_config${rw_lv}  — 启用 ChallengeResponseAuthentication"
+		echo ""
+		echo -e " ${rw_lv}登录流程将变为:  1) 输入密码  2) 输入 App 中的 6 位动态码${rw_lv}"
+		echo ""
+		read -e -p " 确认启用 SSH MFA？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# 备份原配置
+		cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		green "原配置已备份"
+
+		# 修改 PAM: 在 /etc/pam.d/sshd 中添加 google_authenticator
+		# 放在 auth 部分的最前，确保先验证 OTP
+		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			# 在文件开头（或第一个 auth 行之前）插入
+			sed -i '/^auth.*pam_unix.so/a auth       required     pam_google_authenticator.so nullok' /etc/pam.d/sshd 2>/dev/null
+			# 如果 sed 没匹配到，直接追加
+			if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+				echo "auth       required     pam_google_authenticator.so nullok" >> /etc/pam.d/sshd
 			fi
-		done </etc/passwd
-		[ $_found -eq 0 ] && yellow "暂无用户配置 OTP"
+			green "PAM 配置已更新: /etc/pam.d/sshd"
+		else
+			yellow "PAM 配置中已存在 google_authenticator 条目"
+		fi
+
+		# 修改 sshd_config: 启用 ChallengeResponseAuthentication (旧版) 或 KbdInteractiveAuthentication (新版)
+		# 新版 OpenSSH 用 KbdInteractiveAuthentication
+		if grep -q "KbdInteractiveAuthentication" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's/^#?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+			if ! grep -q "^KbdInteractiveAuthentication" /etc/ssh/sshd_config; then
+				echo "KbdInteractiveAuthentication yes" >> /etc/ssh/sshd_config
+			fi
+			green "已设置 KbdInteractiveAuthentication yes"
+		elif grep -q "ChallengeResponseAuthentication" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's/^#?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+			if ! grep -q "^ChallengeResponseAuthentication" /etc/ssh/sshd_config; then
+				echo "ChallengeResponseAuthentication yes" >> /etc/ssh/sshd_config
+			fi
+			green "已设置 ChallengeResponseAuthentication yes"
+		else
+			echo "KbdInteractiveAuthentication yes" >> /etc/ssh/sshd_config
+			green "已追加 KbdInteractiveAuthentication yes"
+		fi
+
+		# 设置 AuthenticationMethods: 强制公钥 + 键盘交互(OTP) 双因素认证
+		if grep -qE "^#?AuthenticationMethods" /etc/ssh/sshd_config 2>/dev/null; then
+			sed -i -E 's|^#?AuthenticationMethods.*|AuthenticationMethods publickey,keyboard-interactive|' /etc/ssh/sshd_config
+			green "已更新 AuthenticationMethods (强制: 公钥+OTP 双因素)"
+		else
+			echo "AuthenticationMethods publickey,keyboard-interactive" >> /etc/ssh/sshd_config
+			green "已追加 AuthenticationMethods (强制: 公钥+OTP 双因素)"
+		fi
+
+		# 语法检查
 		echo ""
+		echo -e " ${rw_huang}正在进行 SSH 配置语法检查...${rw_lv}"
+		if sshd -t 2>/dev/null; then
+			green "SSH 配置语法检查通过"
+			echo ""
+			read -e -p " 是否立即重启 SSH 服务使配置生效？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				[ $? -eq 0 ] && green "SSH 服务已重启，MFA 已生效！" || red "SSH 重启失败，请手动重启"
+			else
+				yellow "请稍后手动重启 SSH 服务使配置生效"
+			fi
+		else
+			red "SSH 配置语法检查失败，已自动回滚（备份文件未被删除）"
+			echo -e " ${rw_huang}请手动检查 /etc/ssh/sshd_config${rw_lv}"
+		fi
+		;;
+	  6)
+		# ── 禁用 SSH MFA ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 禁用 SSH MFA ━━━━━━${rw_lv}"
+		echo ""
+		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
+			yellow "MFA 似乎未启用（/etc/pam.d/sshd 中未找到 pam_google_authenticator.so）"
+			break_end
+			continue
+		fi
+		echo -e " ${rw_hong}⚠ 此操作将:${rw_lv}"
+		echo -e "   1) 从 /etc/pam.d/sshd 中移除 MFA PAM 模块"
+		echo -e "   2) 禁用 SSH 交互式认证"
+		echo ""
+		read -e -p " 确认禁用 SSH MFA？(y/N): " _confirm < /dev/tty
+		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
+			yellow "已取消"
+			break_end
+			continue
+		fi
+
+		# 备份
+		cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+		green "原配置已备份"
+
+		# 移除 PAM 中的 google_authenticator 行
+		sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd 2>/dev/null
+		green "PAM 配置已更新（已移除 MFA 模块）"
+
+		# 禁用 KbdInteractiveAuthentication
+		sed -i -E 's/^KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+		sed -i -E 's/^ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+		green "SSH 交互式认证已禁用"
+
+		# 语法检查 + 重启
+		echo ""
+		echo -e " ${rw_huang}正在进行 SSH 配置语法检查...${rw_lv}"
+		if sshd -t 2>/dev/null; then
+			green "SSH 配置语法检查通过"
+			read -e -p " 是否立即重启 SSH 服务？(y/N): " _restart < /dev/tty
+			if [[ "$_restart" =~ ^[Yy]$ ]]; then
+				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null
+				[ $? -eq 0 ] && green "SSH 服务已重启，MFA 已禁用！" || red "SSH 重启失败"
+			else
+				yellow "请稍后手动重启 SSH 服务"
+			fi
+		else
+			red "SSH 配置语法检查失败，请手动检查"
+		fi
 		;;
 	  0)
 		break
@@ -20048,310 +23574,30 @@ done
 }
 
 # ================================================================
-# 三证登录管理器（公钥 + 密码 + OTP 动态码）
-# 登录流程: 1) 客户端用私钥通过公钥认证  2) 输入账号密码  3) 输入手机 App OTP
-# 依赖: google-authenticator (PAM 模块) + 已部署的 SSH 公钥 + 用户密码
-# ================================================================
-ssh_three_factor_manager() {
-while true; do
-	clear
-	_ssh_status_panel
-
-	local _otp_pkg _otp_pam _otp_users
-	if command -v google-authenticator &>/dev/null || \
-	   dpkg -l libpam-google-authenticator 2>/dev/null | grep -q "^ii" || \
-	   rpm -q google-authenticator 2>/dev/null | grep -q "google-authenticator"; then
-		_otp_pkg="${rw_lv}已安装${rw_lv}"
-	else
-		_otp_pkg="${rw_hong}未安装${rw_lv}"
-	fi
-	if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-		_otp_pam="${rw_lv}已加载${rw_lv}"
-	else
-		_otp_pam="${rw_hong}未加载${rw_lv}"
-	fi
-	_otp_users=0
-	while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-		[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-		[ -f "${_home}/.google_authenticator" ] && _otp_users=$((_otp_users + 1))
-	done </etc/passwd 2>/dev/null
-
-	echo -e " OTP 软件包: ${_otp_pkg}   PAM 模块: ${_otp_pam}   已配 OTP 用户: ${rw_huang}${_otp_users}${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 三证登录（公钥 + 密码 + OTP）────${rw_lv}"
-	echo -e " ${rw_huang}1.   ${rw_lv}安装 google-authenticator${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}为用户配置 OTP 动态码${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}启用三证登录（公钥 + 密码 + OTP）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}禁用三证登录（恢复单一认证）${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}查看已配置 OTP 的用户${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请输入你的选择: " thf_choice
-
-	case $thf_choice in
-	  1)
-		# ── 安装 google-authenticator（与双证共用逻辑）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 安装 google-authenticator ━━━━━━${rw_lv}"
-		echo ""
-		if command -v google-authenticator &>/dev/null; then
-			green "google-authenticator 已经安装"
-			break_end
-			continue
-		fi
-		if command -v apt-get &>/dev/null; then
-			echo -e " 检测到 Debian/Ubuntu，使用 apt 安装..."
-			read -e -p " 确认安装 libpam-google-authenticator？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				apt-get update -y && apt-get install -y libpam-google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
-			else
-				yellow "已取消"
-			fi
-		elif command -v dnf &>/dev/null; then
-			echo -e " 检测到 Fedora/RHEL9+，使用 dnf 安装..."
-			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				dnf install -y google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
-			else
-				yellow "已取消"
-			fi
-		elif command -v yum &>/dev/null; then
-			echo -e " 检测到 CentOS/RHEL，使用 yum 安装..."
-			echo -e " ${rw_hong}提示: EPEL 仓库可能需要先启用${rw_lv}"
-			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				yum install -y google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
-			else
-				yellow "已取消"
-			fi
-		elif command -v apk &>/dev/null; then
-			echo -e " 检测到 Alpine，使用 apk 安装..."
-			read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				apk add --no-cache google-authenticator
-				[ $? -eq 0 ] && green "安装成功！" || red "安装失败"
-			else
-				yellow "已取消"
-			fi
-		else
-			red "无法识别包管理器，请手动安装"
-		fi
-		;;
-	  2)
-		# ── 为用户配置 OTP ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 为用户配置 OTP ━━━━━━${rw_lv}"
-		echo ""
-		if ! command -v google-authenticator &>/dev/null; then
-			red "google-authenticator 未安装，请先执行选项 1"
-			break_end
-			continue
-		fi
-		echo -e " ${rw_cheng}── 可用用户 ──${rw_lv}"
-		local _avail_users=()
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			[ -n "$_shell" ] && _avail_users+=("$_u")
-		done </etc/passwd
-		_avail_users+=("root")
-		local _ui=1
-		for _u in "${_avail_users[@]}"; do
-			local _h=$(getent passwd "$_u" | cut -d: -f6)
-			local _otp_mark=""
-			[ -f "${_h}/.google_authenticator" ] && _otp_mark="${rw_lv}[已配OTP]${rw_lv}"
-			echo -e " ${rw_huang}${_ui}.${rw_lv} $_u → ${_h} ${_otp_mark}"
-			((_ui++))
-		done
-		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
-		echo ""
-		read -e -p " 请选择用户编号: " _user_idx < /dev/tty
-		[ "$_user_idx" = "0" ] && continue
-		[ -z "$_user_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target_u=""
-		_ui=1
-		for _u in "${_avail_users[@]}"; do
-			if [ "$_ui" -eq "$_user_idx" ]; then
-				_target_u="$_u"
-				break
-			fi
-			((_ui++))
-		done
-		[ -z "$_target_u" ] && { red "无效选择"; break_end; continue; }
-
-		_ssh_otp_configure_user "$_target_u"
-		;;
-	  3)
-		# ── 启用三证登录（公钥 + 密码 + OTP）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 启用三证登录（公钥 + 密码 + OTP）━━━━━━${rw_lv}"
-		echo ""
-
-		if ! command -v google-authenticator &>/dev/null; then
-			red "google-authenticator 未安装，请先执行选项 1"
-			break_end
-			continue
-		fi
-		local _cur_u _cur_home
-		_cur_u=$(whoami)
-		_cur_home=$(getent passwd "$_cur_u" | cut -d: -f6)
-		[ -z "$_cur_home" ] && _cur_home="$HOME"
-		if [ ! -f "${_cur_home}/.ssh/authorized_keys" ] || [ ! -s "${_cur_home}/.ssh/authorized_keys" ]; then
-			red "当前用户 (${_cur_u}) 的 authorized_keys 为空！"
-			echo -e " ${rw_huang}三证登录需要先部署公钥，否则启用后无法登录！${rw_lv}"
-			echo -e " ${rw_huang}请先到「主菜单 → 12.密钥管理 → SSH 配置 → 添加 SSH 公钥」部署公钥${rw_lv}"
-			break_end
-			continue
-		fi
-		if [ ! -f "${_cur_home}/.google_authenticator" ]; then
-			red "当前用户 (${_cur_u}) 尚未配置 OTP！"
-			echo -e " ${rw_huang}请先执行选项 2 为当前用户配置 OTP${rw_lv}"
-			break_end
-			continue
-		fi
-
-		echo -e " ${rw_huang}即将执行的变更:${rw_lv}"
-		echo -e "   1) 备份 sshd_config + pam.d/sshd + authorized_keys"
-		echo -e "   2) 清理旧的认证模式残留 (AuthenticationMethods / Match 块 / PAM OTP)"
-		echo -e "   3) 写入 PAM: ${rw_huang}auth required pam_google_authenticator.so nullok${rw_lv}"
-		echo -e "   4) sshd_config:"
-		echo -e "      ${rw_huang}PasswordAuthentication yes${rw_lv}        (三证需要密码)"
-		echo -e "      ${rw_huang}PubkeyAuthentication yes${rw_lv}"
-		echo -e "      ${rw_huang}KbdInteractiveAuthentication yes${rw_lv} (新版 OpenSSH)"
-		echo -e "      ${rw_huang}ChallengeResponseAuthentication yes${rw_lv} (旧版兼容)"
-		echo -e "      ${rw_huang}AuthenticationMethods publickey,password,keyboard-interactive${rw_lv}"
-		echo -e "   5) sshd -t 语法检查 → 失败自动回滚 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}⚠ 登录流程: 1) 私钥通过公钥认证  2) 输入账号密码  3) 输入手机 App 6 位 OTP${rw_lv}"
-		echo -e " ${rw_hong}⚠ 操作失误可通过腾讯云 VNC 控制台救援${rw_lv}"
-		echo ""
-		read -e -p " 确认启用三证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_ssh_backup_configs
-		_ssh_clear_conflicting_auth
-
-		# 写入 PAM
-		if ! grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-			if grep -q "pam_unix.so" /etc/pam.d/sshd 2>/dev/null; then
-				sed -i '/^auth.*pam_unix.so/a auth       required     pam_google_authenticator.so nullok' /etc/pam.d/sshd
-			else
-				echo "auth       required     pam_google_authenticator.so nullok" >> /etc/pam.d/sshd
-			fi
-			green "PAM 已加载 google_authenticator"
-		else
-			yellow "PAM 中已存在 google_authenticator（保留）"
-		fi
-
-		# 写入 sshd_config（三证：密码 yes）
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		_ssh_cfg_set KbdInteractiveAuthentication yes
-		_ssh_cfg_set ChallengeResponseAuthentication yes
-		_ssh_cfg_set AuthenticationMethods "publickey,password,keyboard-interactive"
-		green "sshd_config 已更新"
-
-		_ssh_apply_and_restart
-		;;
-	  4)
-		# ── 禁用三证登录 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁用三证登录 ━━━━━━${rw_lv}"
-		echo ""
-		_ssh_current_auth_mode
-		if [ "$_SSH_MODE" != "3fa" ]; then
-			yellow "当前认证模式为「${_SSH_MODE_DESC}」，并非三证模式"
-			echo -e " ${rw_huang}仍可继续清理 OTP 相关配置${rw_lv}"
-		fi
-		echo ""
-		echo -e " ${rw_huang}即将执行:${rw_lv}"
-		echo -e "   1) 备份当前配置"
-		echo -e "   2) 注释掉 AuthenticationMethods"
-		echo -e "   3) 设置 KbdInteractiveAuthentication no / ChallengeResponseAuthentication no"
-		echo -e "   4) 从 PAM 移除 google_authenticator 行"
-		echo -e "   5) PasswordAuthentication 保持 yes / PubkeyAuthentication yes"
-		echo -e "   6) sshd -t 检查 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}⚠ 禁用后退回「公钥或密码」模式${rw_lv}"
-		read -e -p " 确认禁用三证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_ssh_backup_configs
-		_ssh_clear_conflicting_auth
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		green "已禁用三证相关配置"
-
-		_ssh_apply_and_restart
-		;;
-	  5)
-		# ── 查看已配置 OTP 的用户 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 已配置 OTP 的用户 ━━━━━━${rw_lv}"
-		echo ""
-		local _found=0
-		while IFS=: read -r _u _p _uid _gid _gcos _home _shell; do
-			[ "$_uid" -lt 1000 ] && [ "$_u" != "root" ] && continue
-			if [ -f "${_home}/.google_authenticator" ]; then
-				_found=1
-				local _ga_mtime
-				_ga_mtime=$(stat -c '%y' "${_home}/.google_authenticator" 2>/dev/null | cut -d' ' -f1 || \
-							stat -f '%Sm' -t '%Y-%m-%d' "${_home}/.google_authenticator" 2>/dev/null || echo "未知")
-				printf "  ${rw_huang}%-15s${rw_lv}  HOME: %-25s  配置时间: %s\n" "$_u" "${_home}" "$_ga_mtime"
-			fi
-		done </etc/passwd
-		[ $_found -eq 0 ] && yellow "暂无用户配置 OTP"
-		echo ""
-		;;
-	  0)
-		break
-		;;
-	  *)
-		red "无效的输入!"
-		;;
-	esac
-	break_end
-done
-}
-
-# ================================================================
-# SSH FIDO2 硬件密钥认证管理器（硬证登录）
-# 原理: OpenSSH ≥ 8.2 原生支持 sk-* 密钥类型，私钥锁在 FIDO2 硬件芯片内
-#       登录时 SSH 触发硬件密钥，用户触摸金属触点 + 输入 PIN 完成认证
-# 依赖: OpenSSH ≥ 8.2（服务端 + 客户端）、FIDO2 硬件密钥（YubiKey/Titan 等）
-# 服务端仅需 PubkeyAuthentication yes，无需安装任何 FIDO2 库
+# SSH FIDO2 硬件密钥认证管理器
+# 依赖: OpenSSH ≥ 8.2 (服务端+客户端)、FIDO2 硬件密钥 (YubiKey/Titan 等)
+# 原理: 利用 OpenSSH 内置的 sk-* 密钥类型，通过 FIDO2 硬件完成 SSH 认证
 # ================================================================
 ssh_fido2_manager() {
 while true; do
 	clear
 
 	# ── 探测 FIDO2 就绪状态 ──
-	local _fido_sshd_ver _fido_sshd_ok=0
+	local _fido_sshd_ver="" _fido_sshd_ok=0
 	_fido_sshd_ver=$(sshd -V 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
 	local _fido_sshd_major=0 _fido_sshd_minor=0
 	if [ -n "$_fido_sshd_ver" ]; then
 		_fido_sshd_major=$(echo "$_fido_sshd_ver" | cut -d. -f1)
 		_fido_sshd_minor=$(echo "$_fido_sshd_ver" | cut -d. -f2)
+		# OpenSSH >= 8.2 才原生支持 FIDO2
 		if [ "$_fido_sshd_major" -gt 8 ] || ([ "$_fido_sshd_major" -eq 8 ] && [ "$_fido_sshd_minor" -ge 2 ]); then
 			_fido_sshd_ok=1
 		fi
 	fi
 	_fido_sshd_ver="${_fido_sshd_ver:-未知}"
 
-	local _fido_cli_ver _fido_cli_ok=0
+	# 客户端 ssh 版本
+	local _fido_cli_ver="" _fido_cli_ok=0
 	_fido_cli_ver=$(ssh -V 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
 	local _fido_cli_major=0 _fido_cli_minor=0
 	if [ -n "$_fido_cli_ver" ]; then
@@ -20363,41 +23609,45 @@ while true; do
 	fi
 	_fido_cli_ver="${_fido_cli_ver:-未知}"
 
-	local _fido_keys=0 _fido_authorized=0
+	# 检查当前用户是否有 sk-* 密钥
+	local _fido_keys=0 _fido_key_list=""
+	local _fido_authorized=0 _fido_auth_user_list=""
 	if [ -d "$HOME/.ssh" ]; then
 		_fido_keys=$(ls "$HOME/.ssh"/id_*_sk 2>/dev/null | wc -l | tr -d ' ')
+		_fido_key_list=$(ls "$HOME/.ssh"/id_*_sk 2>/dev/null | while read -r f; do basename "$f"; done | tr '\n' ' ')
 	fi
+	# 检查 authorized_keys 中是否有 sk-* 公钥
 	if [ -f "$HOME/.ssh/authorized_keys" ]; then
-		_fido_authorized=$(grep -c "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
+		_fido_authorized=$(grep -c "sk-ssh" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
 	fi
 
+	# 服务端版本状态颜色
 	local _sshd_color="${rw_hong}"
 	[ $_fido_sshd_ok -eq 1 ] && _sshd_color="${rw_lv}"
 	local _cli_color="${rw_hong}"
 	[ $_fido_cli_ok -eq 1 ] && _cli_color="${rw_lv}"
 
-	_ssh_status_panel
-	echo -e " 服务端 OpenSSH: ${_sshd_color}${_fido_sshd_ver}${rw_lv} (≥8.2: $([ $_fido_sshd_ok -eq 1 ] && echo "✓" || echo "✗"))"
-	echo -e " 本地客户端:     ${_cli_color}${_fido_cli_ver}${rw_lv} (≥8.2: $([ $_fido_cli_ok -eq 1 ] && echo "✓" || echo "✗"))"
-	echo -e " FIDO2 密钥文件: ${rw_huang}${_fido_keys}${rw_lv} 个   authorized_keys 中: ${rw_huang}${_fido_authorized}${rw_lv} 个"
+	echo -e "${rw_cheng}━━━━━━━━  SSH FIDO2 硬件密钥认证  ━━━━━━━━${rw_lv}"
+	echo -e " 服务端 OpenSSH: ${_sshd_color}${_fido_sshd_ver}${rw_lv} (≥8.2: ${_sshd_color}$([ $_fido_sshd_ok -eq 1 ] && echo "✓" || echo "✗")${rw_lv})"
+	echo -e " 本地客户端:     ${_cli_color}${_fido_cli_ver}${rw_lv} (≥8.2: ${_cli_color}$([ $_fido_cli_ok -eq 1 ] && echo "✓" || echo "✗")${rw_lv})"
+	echo -e " 当前用户密钥:   ${rw_huang}${_fido_keys}${rw_lv} 个 FIDO2 密钥  authorized_keys 中: ${rw_huang}${_fido_authorized}${rw_lv} 个"
 	echo ""
-	echo -e " ${rw_cheng}──── 服务端配置 ────${rw_lv}"
+	echo -e " ${rw_cheng}──── 服务端准备${rw_lv}"
 	echo -e " ${rw_huang}1.   ${rw_lv}检查 FIDO2 环境兼容性${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}启用硬证登录（服务端配置）${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}禁用硬证登录（清理 FIDO2 配置）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}确保服务端配置正确 (PubkeyAuthentication)${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}──── 客户端密钥生成（在本地电脑执行）────${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}生成驻留密钥 (ed25519-sk, 推荐)${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}生成非驻留密钥 (ecdsa-sk)${rw_lv}"
+	echo -e " ${rw_cheng}──── 密钥生成与部署 (在本地客户端执行)${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}生成驻留密钥 (ed25519-sk, 推荐)${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}生成非驻留密钥 (ecdsa-sk)${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}部署公钥到服务器${rw_lv}"
 	echo ""
-	echo -e " ${rw_cheng}──── 部署与测试 ────${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}部署公钥到服务器${rw_lv}"
+	echo -e " ${rw_cheng}──── 管理与诊断${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}查看已注册的 FIDO2 密钥${rw_lv}"
 	echo -e " ${rw_huang}7.   ${rw_lv}测试 FIDO2 SSH 连接${rw_lv}"
-	echo -e " ${rw_huang}8.   ${rw_lv}多密钥备份（注册备用硬件密钥）${rw_lv}"
-	echo -e " ${rw_huang}9.   ${rw_lv}查看已注册的 FIDO2 密钥${rw_lv}"
-	echo ""
-	echo -e " ${rw_cheng}──── 其他 ────${rw_lv}"
-	echo -e " ${rw_huang}10.  ${rw_lv}📖 操作教程（快速上手指南）${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}多密钥备份 (注册备用硬件密钥)${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}9.   ${rw_lv}📖 操作教程 (快速上手指南)${rw_lv}"
+	echo -e " ${rw_huang}10.  ${rw_lv}🗑  卸载与删除 FIDO2 配置${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -20410,6 +23660,7 @@ while true; do
 		echo -e "${rw_cheng}━━━━━━ FIDO2 环境兼容性检查 ━━━━━━${rw_lv}"
 		echo ""
 
+		# 检查服务端 OpenSSH
 		echo -e " ${rw_cheng}── 1) 服务端 OpenSSH 版本 ──${rw_lv}"
 		if [ $_fido_sshd_ok -eq 1 ]; then
 			green "服务端 OpenSSH ${_fido_sshd_ver} ≥ 8.2 — 满足要求"
@@ -20417,10 +23668,11 @@ while true; do
 			red "服务端 OpenSSH ${_fido_sshd_ver} < 8.2 — 不满足要求"
 			echo -e " ${rw_huang}解决方案:${rw_lv}"
 			echo -e "   Ubuntu 20.04+/Debian 11+: 系统默认满足"
-			echo -e "   CentOS 7/Ubuntu 18.04: 需升级 OpenSSH"
+			echo -e "   CentOS 7/Ubuntu 18.04: 需升级 OpenSSH 或编译安装新版"
 			echo -e "   可使用本工具箱的 ${rw_huang}升级 OpenSSH${rw_lv} 功能"
 		fi
 
+		# 检查客户端 ssh
 		echo -e " ${rw_cheng}── 2) 本地客户端 OpenSSH 版本 ──${rw_lv}"
 		if [ $_fido_cli_ok -eq 1 ]; then
 			green "本地客户端 OpenSSH ${_fido_cli_ver} ≥ 8.2 — 满足要求"
@@ -20432,16 +23684,18 @@ while true; do
 			echo -e "   Linux: apt install openssh-client / yum install openssh-clients"
 		fi
 
+		# 检查 FIDO2 密钥类型支持
 		echo -e " ${rw_cheng}── 3) FIDO2 密钥类型支持 ──${rw_lv}"
-		if ssh-keygen --help 2>&1 | grep -q "ed25519-sk" || \
-		   ssh-keygen -t ed25519-sk -f /tmp/_fido_test_$$ -N "" 2>&1 | grep -qiv "not supported\|unknown\|invalid" 2>/dev/null; then
-			green "ed25519-sk 密钥类型已支持"
+		if ssh-keygen -t ed25519-sk -f /dev/null -N "" 2>&1 | grep -q "not supported\|unknown\|invalid"; then
+			echo -e " ${rw_hong}ed25519-sk 不支持 — 请升级 libfido2 库${rw_lv}"
+			echo -e " ${rw_huang}解决方案:${rw_lv}"
+			echo -e "   Debian/Ubuntu: apt-get install libfido2-1"
+			echo -e "   CentOS/RHEL:   yum install libfido2"
 		else
-			echo -e " ${rw_hong}ed25519-sk 可能不支持 — 请确认 libfido2 库已安装${rw_lv}"
-			echo -e " ${rw_huang}安装:${rw_lv} apt-get install libfido2-1 (Debian) / yum install libfido2 (RHEL)"
+			green "ed25519-sk 密钥类型已支持"
 		fi
-		rm -f /tmp/_fido_test_$$* 2>/dev/null
 
+		# 检查 USB 设备
 		echo -e " ${rw_cheng}── 4) FIDO2 USB 设备检测 ──${rw_lv}"
 		if command -v lsusb &>/dev/null; then
 			local _fido_devs
@@ -20456,6 +23710,7 @@ while true; do
 				echo -e " ${rw_lv}常见设备: YubiKey 5/5C/Nano, Google Titan, Feitian${rw_lv}"
 			fi
 		elif command -v system_profiler &>/dev/null; then
+			# macOS
 			local _usb_info
 			_usb_info=$(system_profiler SPUSBDataType 2>/dev/null | grep -iE "yubi|fido|security key" -A 2 || true)
 			if [ -n "$_usb_info" ]; then
@@ -20465,9 +23720,10 @@ while true; do
 				yellow "未检测到 FIDO2 设备，请确认硬件密钥已插入"
 			fi
 		else
-			echo -e " ${rw_huang}无法检测 USB 设备，请手动确认硬件密钥已插入${rw_lv}"
+			echo -e " ${rw_huang}无法检测 USB 设备 (缺少 lsusb)，请手动确认硬件密钥已插入${rw_lv}"
 		fi
 
+		# 检查 libfido2 (如果存在)
 		echo -e " ${rw_cheng}── 5) libfido2 库状态 ──${rw_lv}"
 		if ldconfig -p 2>/dev/null | grep -q libfido2; then
 			green "libfido2 已安装"
@@ -20479,89 +23735,45 @@ while true; do
 			yellow "libfido2 可能未安装，某些 FIDO2 功能可能受限"
 			echo -e " ${rw_huang}安装:${rw_lv} apt-get install libfido2-1 (Debian) / yum install libfido2 (RHEL)"
 		fi
+
 		echo ""
 		;;
 	  2)
-		# ── 启用硬证登录（服务端配置）──
+		# ── 确保服务端配置正确 ──
 		echo ""
-		echo -e "${rw_cheng}━━━━━━ 启用硬证登录（服务端配置）━━━━━━${rw_lv}"
+		echo -e "${rw_cheng}━━━━━━ 确保服务端配置正确 ━━━━━━${rw_lv}"
 		echo ""
-		if [ $_fido_sshd_ok -ne 1 ]; then
-			red "服务端 OpenSSH ${_fido_sshd_ver} < 8.2，不支持 FIDO2"
-			echo -e " ${rw_huang}请先升级 OpenSSH${rw_lv}"
-			break_end
-			continue
+		echo -e " ${rw_huang}FIDO2 SSH 认证仅需 sshd_config 中包含:${rw_lv}"
+		echo -e "   ${rw_lv}PubkeyAuthentication yes${rw_lv}"
+		echo -e " ${rw_hong}注意: 无需额外安装任何 FIDO2 库，OpenSSH 8.2+ 原生支持${rw_lv}"
+		echo ""
+
+		# 检查当前配置
+		if grep -qE '^PubkeyAuthentication[[:space:]]+yes' /etc/ssh/sshd_config 2>/dev/null; then
+			green "PubkeyAuthentication yes — 已正确配置"
+		else
+			red "PubkeyAuthentication 未启用"
+			read -e -p " 是否自动启用？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				sed -i -E 's/^#?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+				if ! grep -qE '^PubkeyAuthentication' /etc/ssh/sshd_config; then
+					echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+				fi
+				green "PubkeyAuthentication yes 已配置"
+				if sshd -t 2>/dev/null; then
+					green "SSH 配置语法检查通过"
+					systemctl reload sshd 2>/dev/null || service ssh reload 2>/dev/null
+					green "SSH 服务已重载"
+				else
+					red "SSH 配置语法错误，请手动检查"
+				fi
+			else
+				yellow "已取消"
+			fi
 		fi
-
-		_ssh_current_auth_mode
-		echo -e " 当前认证模式: ${rw_huang}${_SSH_MODE_DESC}${rw_lv}"
 		echo ""
-		echo -e " ${rw_huang}即将执行的变更:${rw_lv}"
-		echo -e "   1) 备份 sshd_config + pam.d/sshd + authorized_keys"
-		echo -e "   2) 清理旧认证模式残留 (AuthenticationMethods / Match 块 / PAM OTP)"
-		echo -e "   3) sshd_config:"
-		echo -e "      ${rw_huang}PubkeyAuthentication yes${rw_lv}"
-		echo -e "      ${rw_huang}PasswordAuthentication no${rw_lv}   (硬证不使用密码)"
-		echo -e "      ${rw_huang}KbdInteractiveAuthentication no${rw_lv}"
-		echo -e "      ${rw_huang}ChallengeResponseAuthentication no${rw_lv}"
-		echo -e "      注释掉 AuthenticationMethods（FIDO2 走标准公钥路径）"
-		echo -e "   4) sshd -t 语法检查 → 失败自动回滚 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}⚠ FIDO2 服务端无需额外库，OpenSSH 8.2+ 原生支持${rw_lv}"
-		echo -e " ${rw_hong}⚠ 启用后需客户端有 sk-* 公钥部署到 authorized_keys 才能登录${rw_lv}"
-		echo -e " ${rw_hong}⚠ 操作失误可通过腾讯云 VNC 控制台救援${rw_lv}"
-		echo ""
-		read -e -p " 确认启用硬证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_ssh_backup_configs
-		_ssh_clear_conflicting_auth
-		_ssh_cfg_set PubkeyAuthentication yes
-		_ssh_cfg_set PasswordAuthentication no
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		green "sshd_config 已更新（FIDO2 走标准公钥路径）"
-
-		_ssh_apply_and_restart
 		;;
 	  3)
-		# ── 禁用硬证登录（清理 FIDO2 配置）──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 禁用硬证登录 ━━━━━━${rw_lv}"
-		echo ""
-		_ssh_current_auth_mode
-		echo -e " 当前认证模式: ${rw_huang}${_SSH_MODE_DESC}${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}即将执行:${rw_lv}"
-		echo -e "   1) 备份 sshd_config"
-		echo -e "   2) PasswordAuthentication 恢复 yes（避免锁死）"
-		echo -e "   3) PubkeyAuthentication 保持 yes"
-		echo -e "   4) sshd -t 检查 → 询问重启"
-		echo ""
-		echo -e " ${rw_hong}注意: 此操作仅修改服务端 sshd_config，不删除已部署的 sk-* 公钥和本地密钥文件${rw_lv}"
-		echo -e " ${rw_huang}如需彻底清理 FIDO2 密钥文件，请使用选项 10 的卸载功能${rw_lv}"
-		echo ""
-		read -e -p " 确认禁用硬证登录？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_ssh_backup_configs
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		green "已禁用硬证配置（恢复密码登录）"
-
-		_ssh_apply_and_restart
-		;;
-	  4)
 		# ── 生成驻留密钥 (ed25519-sk) ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 生成驻留密钥 (ed25519-sk) ━━━━━━${rw_lv}"
@@ -20571,13 +23783,11 @@ while true; do
 			break_end
 			continue
 		fi
-		echo -e " ${rw_hong}⚠ 此操作在本地电脑执行，不是服务器！${rw_lv}"
-		echo ""
 		echo -e " ${rw_lv}密钥类型: ${rw_huang}ed25519-sk -O resident${rw_lv}"
 		echo -e " ${rw_lv}说明: 私钥将${rw_hong}永久存储在硬件密钥内${rw_lv}，本地仅保存"句柄"文件"
 		echo -e " ${rw_lv}优点: 硬件丢失也不泄露私钥，可多设备漫游${rw_lv}"
 		echo ""
-		echo -e " ${rw_huang}操作步骤:${rw_lv}"
+		echo -e " ${rw_hong}操作步骤:${rw_lv}"
 		echo -e " 1. 确保 FIDO2 硬件密钥已插入 USB 端口"
 		echo -e " 2. 按回车后，终端将提示触摸硬件密钥"
 		echo -e " 3. 触摸硬件密钥上的金属触点"
@@ -20615,7 +23825,7 @@ while true; do
 			echo -e " 公钥内容:"
 			cat "${_key_path}.pub"
 			echo ""
-			echo -e " ${rw_huang}下一步: 使用选项 6 将公钥部署到服务器${rw_lv}"
+			echo -e " ${rw_huang}下一步: 使用选项5将公钥部署到服务器${rw_lv}"
 		else
 			red "密钥生成失败"
 			echo -e " ${rw_huang}常见原因:${rw_lv}"
@@ -20624,7 +23834,7 @@ while true; do
 			echo -e "  - 缺少 libfido2 库"
 		fi
 		;;
-	  5)
+	  4)
 		# ── 生成非驻留密钥 (ecdsa-sk) ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 生成非驻留密钥 (ecdsa-sk) ━━━━━━${rw_lv}"
@@ -20634,8 +23844,6 @@ while true; do
 			break_end
 			continue
 		fi
-		echo -e " ${rw_hong}⚠ 此操作在本地电脑执行，不是服务器！${rw_lv}"
-		echo ""
 		echo -e " ${rw_lv}密钥类型: ${rw_huang}ecdsa-sk${rw_lv}"
 		echo -e " ${rw_lv}说明: 私钥存储在本地文件，硬件密钥仅用于签名验证${rw_lv}"
 		echo -e " ${rw_lv}适用场景: 需要在多台机器间共享密钥但不想购买多把硬件密钥${rw_lv}"
@@ -20676,12 +23884,13 @@ while true; do
 			red "密钥生成失败"
 		fi
 		;;
-	  6)
+	  5)
 		# ── 部署公钥到服务器 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 部署公钥到服务器 ━━━━━━${rw_lv}"
 		echo ""
 
+		# 列出可用的 sk-* 公钥
 		local _sk_keys=()
 		if [ -d "$HOME/.ssh" ]; then
 			while IFS= read -r -d '' _f; do
@@ -20691,7 +23900,7 @@ while true; do
 
 		if [ ${#_sk_keys[@]} -eq 0 ]; then
 			yellow "未找到任何 FIDO2 公钥 (.pub 文件中含 sk- 前缀)"
-			echo -e " ${rw_huang}请先使用选项 4 或 5 生成 FIDO2 密钥${rw_lv}"
+			echo -e " ${rw_huang}请先使用选项 3 或 4 生成 FIDO2 密钥${rw_lv}"
 			break_end
 			continue
 		fi
@@ -20724,9 +23933,10 @@ while true; do
 		echo -e "  内容: ${rw_lv}${_pk_content}${rw_lv}"
 		echo ""
 
+		# 选择部署方式
 		echo -e " 部署方式:"
 		echo -e " ${rw_huang}1.   ${rw_lv}自动追加到当前用户的 authorized_keys${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}手动指定目标用户和服务器 (ssh-copy-id)${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}手动指定目标用户和服务器${rw_lv}"
 		echo -e " ${rw_huang}0.   ${rw_lv}取消${rw_lv}"
 		echo ""
 		read -e -p " 请选择: " _deploy_way < /dev/tty
@@ -20774,12 +23984,63 @@ while true; do
 		echo -e "   ${rw_lv}ssh -i $(basename "$_selected_pk" .pub) user@server_ip${rw_lv}"
 		echo -e " ${rw_lv}连接时会提示 \"Touch your authenticator\"，触摸硬件密钥即可登录${rw_lv}"
 		;;
+	  6)
+		# ── 查看已注册的 FIDO2 密钥 ──
+		echo ""
+		echo -e "${rw_cheng}━━━━━━ 已注册的 FIDO2 密钥 ━━━━━━${rw_lv}"
+		echo ""
+
+		# 检查当前用户的 sk-* 密钥文件
+		echo -e " ${rw_cheng}── 本地 FIDO2 密钥文件 ──${rw_lv}"
+		if [ -d "$HOME/.ssh" ]; then
+			local _found_sk=0
+			for _f in "$HOME/.ssh"/id_*_sk "$HOME/.ssh"/*_sk; do
+				if [ -f "$_f" ] && [[ "$_f" != *.pub ]]; then
+					_found_sk=1
+					local _f_pub="${_f}.pub"
+					local _f_type="未知"
+					local _f_date=""
+					if [ -f "$_f_pub" ]; then
+						_f_type=$(awk '{print $1}' "$_f_pub")
+					fi
+					_f_date=$(stat -c '%y' "$_f" 2>/dev/null | cut -d' ' -f1 || \
+							  stat -f '%Sm' -t '%Y-%m-%d' "$_f" 2>/dev/null || echo "未知")
+					printf "  ${rw_huang}%-35s${rw_lv}  类型: %-15s  创建: %s\n" "$(basename "$_f")" "$_f_type" "$_f_date"
+				fi
+			done
+			[ $_found_sk -eq 0 ] && yellow "  未找到本地 FIDO2 密钥文件"
+		else
+			yellow "  ~/.ssh 目录不存在"
+		fi
+
+		# 检查 authorized_keys 中的 sk-* 公钥
+		echo ""
+		echo -e " ${rw_cheng}── authorized_keys 中的 FIDO2 公钥 ──${rw_lv}"
+		if [ -f "$HOME/.ssh/authorized_keys" ]; then
+			local _sk_count=0
+			while IFS= read -r _line; do
+				if echo "$_line" | grep -q "^sk-"; then
+					_sk_count=$((_sk_count + 1))
+					local _sk_type _sk_comment
+					_sk_type=$(echo "$_line" | awk '{print $1}')
+					_sk_comment=$(echo "$_line" | awk '{print $NF}')
+					echo -e "  ${rw_huang}${_sk_count}.${rw_lv} 类型: $_sk_type  注释: ${_sk_comment:-无}"
+				fi
+			done < "$HOME/.ssh/authorized_keys"
+			[ $_sk_count -eq 0 ] && yellow "  未找到 FIDO2 公钥条目"
+			echo -e "  ${rw_huang}共 ${_sk_count} 个 FIDO2 公钥${rw_lv}"
+		else
+			yellow "  ~/.ssh/authorized_keys 不存在"
+		fi
+		echo ""
+		;;
 	  7)
 		# ── 测试 FIDO2 SSH 连接 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 测试 FIDO2 SSH 连接 ━━━━━━${rw_lv}"
 		echo ""
 
+		# 列出可用的 sk-* 私钥
 		local _sk_privs=()
 		if [ -d "$HOME/.ssh" ]; then
 			for _f in "$HOME/.ssh"/id_*_sk "$HOME/.ssh"/*_sk; do
@@ -20789,7 +24050,7 @@ while true; do
 
 		if [ ${#_sk_privs[@]} -eq 0 ]; then
 			yellow "未找到任何 FIDO2 私钥文件"
-			echo -e " ${rw_huang}请先使用选项 4 或 5 生成密钥${rw_lv}"
+			echo -e " ${rw_huang}请先使用选项 3 或 4 生成密钥${rw_lv}"
 			break_end
 			continue
 		fi
@@ -20832,7 +24093,7 @@ while true; do
 		else
 			red "连接测试失败 (退出码: $_test_rc)"
 			echo -e " ${rw_huang}常见原因:${rw_lv}"
-			echo -e "  - 公钥未部署到目标服务器 (请使用选项 6 部署)"
+			echo -e "  - 公钥未部署到目标服务器 (请使用选项5部署)"
 			echo -e "  - 服务端 PubkeyAuthentication 未启用"
 			echo -e "  - 防火墙/安全组未放行 SSH 端口"
 			echo -e "  - 硬件密钥未被客户端识别"
@@ -20849,9 +24110,9 @@ while true; do
 		echo ""
 		echo -e " ${rw_huang}操作步骤:${rw_lv}"
 		echo -e " 1. 插入备用 FIDO2 硬件密钥"
-		echo -e " 2. 使用选项 4 生成新的驻留密钥 (不同文件名)"
+		echo -e " 2. 使用选项 3 生成新的驻留密钥 (不同文件名)"
 		echo -e "   例如: ${rw_lv}id_ed25519_sk_cvm_backup${rw_lv}"
-		echo -e " 3. 使用选项 6 将备用公钥也部署到服务器"
+		echo -e " 3. 使用选项 5 将备用公钥也部署到服务器"
 		echo ""
 		echo -e " ${rw_lv}这样，任意一把硬件密钥都可独立登录服务器${rw_lv}"
 		echo ""
@@ -20868,6 +24129,7 @@ while true; do
 		fi
 		echo ""
 
+		# 快速备份：直接生成第二把密钥
 		read -e -p " 是否立即生成备用 FIDO2 密钥？(y/N): " _gen_backup < /dev/tty
 		if [[ "$_gen_backup" =~ ^[Yy]$ ]]; then
 			if [ $_fido_cli_ok -ne 1 ]; then
@@ -20895,7 +24157,7 @@ while true; do
 				green "备用密钥生成成功！"
 				echo -e " ${rw_huang}备用公钥:${rw_lv} ${_bk_path}.pub"
 				echo ""
-				echo -e " ${rw_huang}下一步: 使用选项 6 将备用公钥也部署到服务器${rw_lv}"
+				echo -e " ${rw_huang}下一步: 使用选项5将备用公钥也部署到服务器${rw_lv}"
 			else
 				red "备用密钥生成失败"
 			fi
@@ -20903,53 +24165,8 @@ while true; do
 			yellow "已取消"
 		fi
 		;;
-	  9)
-		# ── 查看已注册的 FIDO2 密钥 ──
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 已注册的 FIDO2 密钥 ━━━━━━${rw_lv}"
-		echo ""
-
-		echo -e " ${rw_cheng}── 本地 FIDO2 密钥文件 ──${rw_lv}"
-		if [ -d "$HOME/.ssh" ]; then
-			local _found_sk=0
-			for _f in "$HOME/.ssh"/id_*_sk "$HOME/.ssh"/*_sk; do
-				if [ -f "$_f" ] && [[ "$_f" != *.pub ]]; then
-					_found_sk=1
-					local _f_pub="${_f}.pub"
-					local _f_type="未知"
-					local _f_date=""
-					if [ -f "$_f_pub" ]; then
-						_f_type=$(awk '{print $1}' "$_f_pub")
-					fi
-					_f_date=$(stat -c '%y' "$_f" 2>/dev/null | cut -d' ' -f1 || \
-							  stat -f '%Sm' -t '%Y-%m-%d' "$_f" 2>/dev/null || echo "未知")
-					printf "  ${rw_huang}%-35s${rw_lv}  类型: %-15s  创建: %s\n" "$(basename "$_f")" "$_f_type" "$_f_date"
-				fi
-			done
-			[ $_found_sk -eq 0 ] && yellow "  未找到本地 FIDO2 密钥文件"
-		else
-			yellow "  ~/.ssh 目录不存在"
-		fi
-
-		echo ""
-		echo -e " ${rw_cheng}── authorized_keys 中的 FIDO2 公钥 ──${rw_lv}"
-		if [ -f "$HOME/.ssh/authorized_keys" ]; then
-			local _sk_count=0
-			while IFS= read -r _line; do
-				if echo "$_line" | grep -q "^sk-"; then
-					_sk_count=$((_sk_count + 1))
-					local _sk_type _sk_comment
-					_sk_type=$(echo "$_line" | awk '{print $1}')
-					_sk_comment=$(echo "$_line" | awk '{print $NF}')
-					echo -e "  ${rw_huang}${_sk_count}.${rw_lv} 类型: $_sk_type  注释: ${_sk_comment:-无}"
-				fi
-			done < "$HOME/.ssh/authorized_keys"
-			[ $_sk_count -eq 0 ] && yellow "  未找到 FIDO2 公钥条目"
-			echo -e "  ${rw_huang}共 ${_sk_count} 个 FIDO2 公钥${rw_lv}"
-		else
-			yellow "  ~/.ssh/authorized_keys 不存在"
-		fi
-		echo ""
+	  0)
+		break
 		;;
 	  10)
 		# ── 卸载与删除 FIDO2 配置 ──
@@ -21035,9 +24252,12 @@ while true; do
 			echo ""
 			read -e -p " 确认一键清理？(y/N): " _confirm < /dev/tty
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				# 删除本地密钥文件
+				local _deleted=0
 				find "$HOME/.ssh" -maxdepth 1 \( -name "*_sk" -o -name "*_sk.pub" \) -print0 2>/dev/null | while IFS= read -r -d '' _f; do
 					rm -f "$_f" && echo -e "   ${rw_lv}已删除: $(basename "$_f")${rw_lv}"
 				done
+				# 删除 authorized_keys 中的 sk- 行
 				if [ -f "$HOME/.ssh/authorized_keys" ]; then
 					local _sk_before _sk_after
 					_sk_before=$(grep -c "^sk-" "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)
@@ -21056,6 +24276,7 @@ while true; do
 			echo ""
 			local _found_any=0
 
+			# 检查本地密钥文件
 			echo -e " ${rw_huang}1) 本地 FIDO2 密钥文件:${rw_lv}"
 			local _sk_remains
 			_sk_remains=$(find "$HOME/.ssh" -maxdepth 1 \( -name "*_sk" -o -name "*_sk.pub" \) 2>/dev/null || true)
@@ -21068,6 +24289,7 @@ while true; do
 				echo -e "   ${rw_lv}✓ 无残留${rw_lv}"
 			fi
 
+			# 检查 authorized_keys
 			echo -e " ${rw_huang}2) authorized_keys 中的 sk-* 公钥:${rw_lv}"
 			if [ -f "$HOME/.ssh/authorized_keys" ]; then
 				local _sk_count
@@ -21082,6 +24304,7 @@ while true; do
 				echo -e "   ${rw_lv}✓ authorized_keys 不存在${rw_lv}"
 			fi
 
+			# 检查 ssh_config (是否有 FIDO2 密钥引用)
 			echo -e " ${rw_huang}3) SSH 客户端配置引用:${rw_lv}"
 			if [ -f "$HOME/.ssh/config" ]; then
 				if grep -q "_sk" "$HOME/.ssh/config" 2>/dev/null; then
@@ -21109,7 +24332,7 @@ while true; do
 			;;
 		esac
 		;;
-	  11)
+	  9)
 		# ── 操作教程 ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━━━━━━━  FIDO2 SSH 快速上手指南  ━━━━━━━━━━━━${rw_lv}"
@@ -21120,32 +24343,28 @@ while true; do
 		echo ""
 		echo -e "  ┌──────────────────────────────────────────────────────────┐"
 		echo -e "  │                                                         │"
-		echo -e "  │  ${rw_huang}第1步  ▸ 菜单选项 [1] 检查 FIDO2 环境兼容性${rw_lv}                 │"
-		echo -e "  │    确认服务端/客户端 OpenSSH ≥ 8.2，硬件密钥已识别       │"
+		echo -e "  │  ${rw_huang}第1步  ▸ 菜单选项 [1] 检查 FIDO2 环境兼容性${rw_lv}              │"
+		echo -e "  │    确认服务器/客户端 OpenSSH ≥ 8.2，检测 USB 硬件密钥   │"
 		echo -e "  │                                                         │"
-		echo -e "  │  ${rw_huang}第2步  ▸ 菜单选项 [4] 生成驻留密钥 (在本地电脑执行)${rw_lv}          │"
-		echo -e "  │    ${rw_hong}★ 推荐!${rw_lv} 私钥永久存入硬件芯片，本地仅存"句柄"            │"
+		echo -e "  │  ${rw_huang}第2步  ▸ 菜单选项 [2] 确保服务端配置正确${rw_lv}                  │"
+		echo -e "  │    确认 PubkeyAuthentication yes（脚本自动修复）        │"
+		echo -e "  │                                                         │"
+		echo -e "  │  ${rw_huang}第3步  ▸ 菜单选项 [3] 生成驻留密钥${rw_lv}                        │"
+		echo -e "  │    ${rw_hong}★ 推荐!${rw_lv} 在本地电脑执行，私钥永久存入硬件芯片           │"
 		echo -e "  │    按提示触摸硬件密钥 + 输入 PIN 完成                   │"
 		echo -e "  │                                                         │"
-		echo -e "  │  ${rw_huang}第3步  ▸ 菜单选项 [6] 部署公钥到服务器${rw_lv}                    │"
+		echo -e "  │  ${rw_huang}第4步  ▸ 菜单选项 [5] 部署公钥到服务器${rw_lv}                    │"
 		echo -e "  │    自动将 .pub 公钥追加到 ~/.ssh/authorized_keys         │"
 		echo -e "  │    或使用 ssh-copy-id 部署到远程服务器                  │"
-		echo -e "  │                                                         │"
-		echo -e "  │  ${rw_huang}第4步  ▸ 菜单选项 [2] 启用硬证登录 (服务端配置)${rw_lv}            │"
-		echo -e "  │    写入 PubkeyAuthentication=yes, PasswordAuthentication=no │"
-		echo -e "  │    自动清理旧认证模式残留 + sshd -t 检查 + 重启          │"
 		echo -e "  │                                                         │"
 		echo -e "  │  ${rw_huang}第5步  ▸ 菜单选项 [7] 测试 FIDO2 SSH 连接${rw_lv}                 │"
 		echo -e "  │    终端提示 \"Touch your authenticator\" 时触摸硬件密钥    │"
 		echo -e "  │                                                         │"
 		echo -e "  └──────────────────────────────────────────────────────────┘"
 		echo ""
-		echo -e "  ${rw_cheng}━━━━━━ 卸载与删除指南 (不需要时执行) ━━━━━━${rw_lv}"
+		echo -e "  ${rw_cheng}━━━━━━ 卸载与删除指南 (不需要时执行) ━━━━━━${rw_cv}"
 		echo ""
 		echo -e "  ┌──────────────────────────────────────────────────────────┐"
-		echo -e "  │                                                         │"
-		echo -e "  │  ${rw_huang}▸ 菜单选项 [3] 禁用硬证登录${rw_lv}                              │"
-		echo -e "  │    恢复密码登录，不删除密钥文件                          │"
 		echo -e "  │                                                         │"
 		echo -e "  │  ${rw_huang}▸ 菜单选项 [10] 卸载与删除 FIDO2 配置${rw_lv}                     │"
 		echo -e "  │    内含 4 个子选项:                                     │"
@@ -21165,9 +24384,6 @@ while true; do
 		echo -e "  ${rw_hong}⚠ 注意${rw_lv}  腾讯云控制台"通行密钥" ≠ SSH FIDO2，不能用于 SSH 登录"
 		echo ""
 		echo -e "  ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-		;;
-	  0)
-		break
 		;;
 	  *)
 		red "无效的输入!"
