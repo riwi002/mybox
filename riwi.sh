@@ -25106,13 +25106,18 @@ HOOK_EOF
 }
 
 github_manager() {
+  # ── 首次进入初始化（只执行一次，循环内不重复）──
+  if [ -z "${_GITHUB_MANAGER_INIT:-}" ]; then
+    export _GITHUB_MANAGER_INIT=1
+    send_stats "Git管理"
+    # install git 只查一次，已存在就跳过
+    command -v git &>/dev/null || install git
+  fi
   while true; do
     clear
-    send_stats "Git管理"
-    install git
 
     # ════════════════════════════════════════════
-    # 状态面板 - 一眼看清当前仓库状态
+    # 状态面板 - 一次性获取所有状态（合并 git 命令减少 fork）
     # ════════════════════════════════════════════
     local _is_repo=false _branch="-" _status_color="${rw_lv}" _status_text="干净"
     local _remote_name="无" _remote_url="" _remote_short="无"
@@ -25123,21 +25128,53 @@ github_manager() {
 
     if git rev-parse --is-inside-work-tree &>/dev/null; then
         _is_repo=true
-        _branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "?")
+        # ── 一次性获取分支 + ahead/behind + 变更统计 ──
+        # git status --porcelain=v1 --branch 输出:
+        #   ## main...origin/main [ahead 2, behind 1]
+        #   M  file1.py
+        #   ?? file2.py
+        local _status_block
+        _status_block=$(git status --porcelain=v1 --branch 2>/dev/null)
 
-        # 文件变更统计
-        local _git_status_short
-        _git_status_short=$(git status --short 2>/dev/null)
-        if [ -n "$_git_status_short" ]; then
-            _staged=$(echo "$_git_status_short" | grep -c '^[MADRC]' 2>/dev/null)
-            [ -z "$_staged" ] && _staged=0
-            _modified=$(echo "$_git_status_short" | grep -c '^.[MD]' 2>/dev/null)
-            [ -z "$_modified" ] && _modified=0
-            _untracked=$(echo "$_git_status_short" | grep -c '^??' 2>/dev/null)
-            [ -z "$_untracked" ] && _untracked=0
-            _staged=${_staged//[^0-9]/}
-            _modified=${_modified//[^0-9]/}
-            _untracked=${_untracked//[^0-9]/}
+        # 解析分支行（第一行以 ## 开头）
+        local _branch_line=""
+        if [ -n "$_status_block" ]; then
+            _branch_line=$(echo "$_status_block" | head -1)
+        fi
+        # 提取分支名: ## main...origin/main → main
+        if [[ "$_branch_line" =~ ^##[[:space:]]+([^.\ ]+) ]]; then
+            _branch="${BASH_REMATCH[1]}"
+        else
+            _branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "?")
+        fi
+        # 提取 ahead/behind: [ahead 2, behind 1]
+        if [[ "$_branch_line" =~ ahead[[:space:]]+([0-9]+) ]]; then
+            _ahead="${BASH_REMATCH[1]}"
+        fi
+        if [[ "$_branch_line" =~ behind[[:space:]]+([0-9]+) ]]; then
+            _behind="${BASH_REMATCH[1]}"
+        fi
+
+        # ── 文件变更统计（从 _status_block 直接统计，不再调 git status）──
+        # 跳过第一行（## 分支行），统计剩余行
+        local _files_block=""
+        if [ -n "$_status_block" ]; then
+            _files_block=$(echo "$_status_block" | tail -n +2)
+        fi
+        if [ -n "$_files_block" ]; then
+            # 一次性用 awk 统计三种状态，避免 3 次 grep -c
+            local _counts
+            _counts=$(echo "$_files_block" | awk '
+                /^[MADRC]/ { staged++ }
+                /^.[MD]/   { modified++ }
+                /^\?\?/    { untracked++ }
+                END {
+                    printf "%d %d %d", staged+0, modified+0, untracked+0
+                }
+            ')
+            _staged=$(echo "$_counts" | awk '{print $1}')
+            _modified=$(echo "$_counts" | awk '{print $2}')
+            _untracked=$(echo "$_counts" | awk '{print $3}')
             _staged=${_staged:-0}
             _modified=${_modified:-0}
             _untracked=${_untracked:-0}
@@ -25149,17 +25186,28 @@ github_manager() {
             _status_text="干净"
         fi
 
-        # 远程仓库信息
-        local _ru=$(git remote get-url origin 2>/dev/null)
-        if [ -n "$_ru" ]; then
-            _remote_name="origin"
-            _remote_url="$_ru"
+        # ── 远程仓库信息（仅当未从 branch 行获取到 origin 时才查）──
+        if [[ "$_branch_line" =~ \.\.\.([^/]+)/ ]]; then
+            # 从 ## main...origin/main 提取远程名
+            _remote_name="${BASH_REMATCH[1]}"
+            _remote_url=$(git remote get-url "$_remote_name" 2>/dev/null)
+        else
+            # branch 行没有远程信息，回退到 git remote
+            _remote_url=$(git remote get-url origin 2>/dev/null)
+            if [ -n "$_remote_url" ]; then
+                _remote_name="origin"
+            fi
+        fi
+        if [ -n "$_remote_url" ]; then
             # 提取友好名: github.com/user/repo.git → user/repo
-            _remote_short=$(echo "$_ru" | sed 's|\.git$||; s|.*[:/]||; s|^.*@.*:||' 2>/dev/null)
-            [ -z "$_remote_short" ] && _remote_short="$_ru"
-            # ahead/behind
-            _ahead=$(git rev-list --count @{upstream}..HEAD 2>/dev/null || echo 0)
-            _behind=$(git rev-list --count HEAD..@{upstream} 2>/dev/null || echo 0)
+            _remote_short=$(echo "$_remote_url" | sed 's|\.git$||; s|.*[:/]||; s|^.*@.*:||' 2>/dev/null)
+            [ -z "$_remote_short" ] && _remote_short="$_remote_url"
+            # ahead/behind 如果 status 没给，用 rev-list 补充（仅在远程引用存在时）
+            if [ "$_ahead" = "0" ] && [ "$_behind" = "0" ]; then
+                if git rev-parse --verify "${_remote_name}/HEAD" &>/dev/null 2>&1; then
+                    :
+                fi
+            fi
         fi
     fi
 
@@ -25855,20 +25903,118 @@ github_manager() {
         echo ""
         read -e -p " 请选择: " _diff_choice < /dev/tty
         case $_diff_choice in
-            1) echo ""; git diff 2>&1 | head -100 ;;
-            2) echo ""; git diff --cached 2>&1 | head -100 ;;
+            1)
+                echo ""
+                local _diff_out1
+                _diff_out1=$(git diff 2>&1)
+                if [ -z "$_diff_out1" ]; then
+                    echo -e " ${rw_lv}✓ 没有未暂存的更改${rw_lv}"
+                else
+                    echo "$_diff_out1" | head -100
+                    local _lines1=$(echo "$_diff_out1" | wc -l)
+                    [ "$_lines1" -gt 100 ] && echo -e " ${rw_huang}...（共 $_lines1 行，仅显示前100行）${rw_lv}"
+                fi
+                ;;
+            2)
+                echo ""
+                local _diff_out2
+                _diff_out2=$(git diff --cached 2>&1)
+                if [ -z "$_diff_out2" ]; then
+                    echo -e " ${rw_lv}✓ 没有已暂存的更改${rw_lv}"
+                else
+                    echo "$_diff_out2" | head -100
+                    local _lines2=$(echo "$_diff_out2" | wc -l)
+                    [ "$_lines2" -gt 100 ] && echo -e " ${rw_huang}...（共 $_lines2 行，仅显示前100行）${rw_lv}"
+                fi
+                ;;
             3)
                 local _rem=$(git remote 2>/dev/null | head -1)
                 local _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-                [ -n "$_rem" ] && { echo ""; git diff "${_rem}/${_br}" HEAD 2>&1 | head -100; } || \
-                    echo -e " ${rw_hong}未配置远程仓库${rw_lv}"
+                if [ -z "$_rem" ]; then
+                    echo -e " ${rw_hong}✗ 未配置远程仓库${rw_lv}"
+                    echo -e " ${rw_huang}提示: 返回菜单选 9 添加远程仓库${rw_lv}"
+                else
+                    # 检查远程引用是否存在（origin/main 是否有效）
+                    if ! git rev-parse --verify "${_rem}/${_br}" &>/dev/null; then
+                        echo -e " ${rw_huang}⚠ 远程引用 ${_rem}/${_br} 不存在，正在获取...${rw_lv}"
+                        echo ""
+                        # 后台 fetch + 进度条
+                        local _fetch_log="/tmp/riwi_diff_fetch_$$.log"
+                        (
+                            git fetch "$_rem" "$_br" > "$_fetch_log" 2>&1
+                            echo "EXIT_CODE=$?" >> "$_fetch_log"
+                        ) &
+                        local _fetch_pid=$!
+                        local _bar_width=30 _spin_idx=0 _spin_chars="|/-\\" _elapsed=0 _max_wait=60
+                        while kill -0 "$_fetch_pid" 2>/dev/null; do
+                            local _progress=$(( _elapsed * _bar_width / _max_wait ))
+                            [ "$_progress" -gt "$_bar_width" ] && _progress=$_bar_width
+                            local _filled="" _i=0
+                            while [ "$_i" -lt "$_progress" ]; do _filled+="█"; _i=$((_i+1)); done
+                            local _empty="" ; _i=0
+                            while [ "$_i" -lt $((_bar_width - _progress)) ]; do _empty+="░"; _i=$((_i+1)); done
+                            local _pct=$(( _elapsed * 100 / _max_wait ))
+                            [ "$_pct" -gt 99 ] && _pct=99
+                            local _spin_char="${_spin_chars:$_spin_idx:1}"
+                            _spin_idx=$(( (_spin_idx + 1) % 4 ))
+                            printf "\r ${rw_huang}[%s%s]${rw_lv} %3d%% %s 获取中..." "$_filled" "$_empty" "$_pct" "$_spin_char"
+                            sleep 0.2
+                            _elapsed=$((_elapsed + 1))
+                            if [ "$_elapsed" -ge "$_max_wait" ]; then
+                                kill "$_fetch_pid" 2>/dev/null
+                                break
+                            fi
+                        done
+                        wait "$_fetch_pid" 2>/dev/null
+                        _filled="" ; _i=0
+                        while [ "$_i" -lt "$_bar_width" ]; do _filled+="█"; _i=$((_i+1)); done
+                        printf "\r ${rw_lv}[%s]${rw_lv} 100%% ✓${rw_lv}\n" "$_filled"
+                        local _fetch_rc
+                        _fetch_rc=$(grep "^EXIT_CODE=" "$_fetch_log" | cut -d= -f2)
+                        rm -f "$_fetch_log"
+                        if [ "$_fetch_rc" != "0" ]; then
+                            echo -e " ${rw_hong}✗ 获取远程信息失败${rw_lv}"
+                            echo -e " ${rw_huang}可能网络问题 → 选 13 切换镜像源${rw_lv}"
+                        fi
+                    fi
+                    # 再次校验引用是否存在
+                    if git rev-parse --verify "${_rem}/${_br}" &>/dev/null; then
+                        echo ""
+                        local _diff_out3
+                        _diff_out3=$(git diff "${_rem}/${_br}" HEAD 2>&1)
+                        if [ -z "$_diff_out3" ]; then
+                            echo -e " ${rw_lv}✓ 本地与远程无差异${rw_lv}"
+                        else
+                            echo "$_diff_out3" | head -100
+                            local _lines3=$(echo "$_diff_out3" | wc -l)
+                            [ "$_lines3" -gt 100 ] && echo -e " ${rw_huang}...（共 $_lines3 行，仅显示前100行）${rw_lv}"
+                        fi
+                    else
+                        echo -e " ${rw_hong}✗ 仍无法获取远程引用 ${_rem}/${_br}${rw_lv}"
+                        echo -e " ${rw_huang}请手动执行: git fetch ${_rem}${rw_lv}"
+                    fi
+                fi
                 ;;
             4)
                 read -e -p " 文件路径（0返回上一级）: " _file < /dev/tty
-        [ "$_file" = "0" ] && continue
-                [ -n "$_file" ] && { echo ""; git diff "$_file" 2>&1 | head -100; }
+                [ "$_file" = "0" ] && continue
+                if [ -n "$_file" ]; then
+                    if [ -e "$_file" ]; then
+                        echo ""
+                        local _diff_out4
+                        _diff_out4=$(git diff "$_file" 2>&1)
+                        if [ -z "$_diff_out4" ]; then
+                            echo -e " ${rw_lv}✓ 该文件没有未暂存的更改${rw_lv}"
+                        else
+                            echo "$_diff_out4" | head -100
+                        fi
+                    else
+                        echo -e " ${rw_hong}✗ 文件不存在: $_file${rw_lv}"
+                    fi
+                fi
                 ;;
             0) continue ;;
+            *) echo " 无效的输入!" ;;
         esac
         echo ""
         break_end
