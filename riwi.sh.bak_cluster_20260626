@@ -8179,200 +8179,6 @@ rsync_manager() {
 
 
 
-# ================================================================
-# 常用快捷工具菜单 (原 riwi_Affiliates 占位，2026-06-26 重写)
-# ================================================================
-linux_quick_tools() {
-while true; do
-	clear
-	send_stats "常用快捷工具"
-
-	# ── 顶部状态速览 ──
-	local _mem_total=$(free -m 2>/dev/null | awk 'NR==2{printf "%.0f", $2}')
-	local _mem_used=$(free -m 2>/dev/null | awk 'NR==2{printf "%.0f", $3}')
-	local _disk_root=$(df -h / 2>/dev/null | awk 'NR==2{print $5}')
-	local _load1=$(awk '{print $1}' /proc/loadavg 2>/dev/null || echo "-")
-	local _proc_count=$(ls /proc 2>/dev/null | grep -E '^[0-9]+$' | wc -l)
-
-	echo -e "${rw_cheng}━━━━━━━━━━━━  常用快捷  ━━━━━━━━━━━━${rw_lv}"
-	if [ -n "$_mem_total" ]; then
-		echo -e " 内存 ${rw_lv}${_mem_used}/${_mem_total}MB${rw_lv}  根分区 ${rw_lv}${_disk_root}${rw_lv}  1分钟负载 ${rw_lv}${_load1}${rw_lv}  进程数 ${rw_lv}${_proc_count}${rw_lv}"
-	fi
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-
-	echo -e " ${rw_cheng}──── 进程与资源${rw_lv}"
-	echo -e "  ${rw_huang}1${rw_lv}  CPU 占用 Top10           ${rw_huang}2${rw_lv}  内存占用 Top10"
-	echo -e "  ${rw_huang}3${rw_lv}  磁盘大文件 Top20         ${rw_huang}4${rw_lv}  僵尸进程检测"
-	echo ""
-	echo -e " ${rw_cheng}──── 网络诊断${rw_lv}"
-	echo -e "  ${rw_huang}5${rw_lv}  查看监听端口            ${rw_huang}6${rw_lv}  当前 TCP 连接数"
-	echo -e "  ${rw_huang}7${rw_lv}  SSH 登录失败记录         ${rw_huang}8${rw_lv}  当前在线用户"
-	echo ""
-	echo -e " ${rw_cheng}──── 系统日志${rw_lv}"
-	echo -e "  ${rw_huang}9${rw_lv}  查看系统日志            ${rw_huang}10${rw_lv} 最近登录记录"
-	echo -e "  ${rw_huang}11${rw_lv} 系统启动时长与启动项"
-	echo ""
-	echo -e " ${rw_cheng}──── 快捷操作${rw_lv}"
-	echo -e "  ${rw_huang}12${rw_lv} 清理内存缓存            ${rw_huang}13${rw_lv} 查看磁盘分区表"
-	echo -e "  ${rw_huang}14${rw_lv} 查看 cron 定时任务"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请选择: " _qt_choice < /dev/tty
-
-	case $_qt_choice in
-	  1)
-		# CPU 占用 Top10
-		echo -e "\n${rw_cheng}━━ CPU 占用 Top10 ━━${rw_lv}"
-		ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu 2>/dev/null | head -11 || \
-			ps aux 2>/dev/null | sort -k3 -rn | head -10
-		;;
-	  2)
-		# 内存占用 Top10
-		echo -e "\n${rw_cheng}━━ 内存占用 Top10 ━━${rw_lv}"
-		ps -eo pid,user,%cpu,%mem,comm --sort=-%mem 2>/dev/null | head -11 || \
-			ps aux 2>/dev/null | sort -k4 -rn | head -10
-		;;
-	  3)
-		# 磁盘大文件 Top20
-		echo -e "\n${rw_cheng}━━ 磁盘大文件 Top20（可能耗时）━━${rw_lv}"
-		read -e -p " 扫描目录（默认 /）: " _scan_dir < /dev/tty
-		_scan_dir="${_scan_dir:-/}"
-		if [ -d "$_scan_dir" ]; then
-			find "$_scan_dir" -xdev -type f -size +50M 2>/dev/null | \
-				xargs ls -lhS 2>/dev/null | head -20 | \
-				awk '{print $5"\t"$NF}'
-		else
-			echo -e "${rw_hong}目录不存在${rw_lv}"
-		fi
-		;;
-	  4)
-		# 僵尸进程检测
-		echo -e "\n${rw_cheng}━━ 僵尸进程检测 ━━${rw_lv}"
-		local _zombie=$(ps -eo stat,pid,user,comm 2>/dev/null | awk '$1 ~ /^Z/{count++} END{print count+0}')
-		if [ "$_zombie" -eq 0 ]; then
-			echo -e "${rw_lv}✓ 无僵尸进程${rw_lv}"
-		else
-			echo -e "${rw_hong}发现 $_zombie 个僵尸进程${rw_lv}"
-			ps -eo stat,pid,ppid,user,comm 2>/dev/null | awk '$1 ~ /^Z/'
-			echo ""
-			echo -e "${rw_huang}提示: kill 父进程 (PPID) 可清理僵尸${rw_lv}"
-		fi
-		;;
-	  5)
-		# 查看监听端口
-		echo -e "\n${rw_cheng}━━ 监听端口 ━━${rw_lv}"
-		if command -v ss &>/dev/null; then
-			ss -tulnp 2>/dev/null | head -30
-		else
-			netstat -tulnp 2>/dev/null | head -30
-		fi
-		;;
-	  6)
-		# 当前 TCP 连接数
-		echo -e "\n${rw_cheng}━━ TCP 连接统计 ━━${rw_lv}"
-		if command -v ss &>/dev/null; then
-			echo -e " 状态分布:"
-			ss -ant 2>/dev/null | awk 'NR>1{count[$1]++} END{for (s in count) printf "  %-15s %d\n", s, count[s]}'
-			echo ""
-			echo -e " 连接数 Top10 远程 IP:"
-			ss -ant 2>/dev/null | awk 'NR>1{split($5,a,":"); print a[1]}' | sort | uniq -c | sort -rn | head -10
-		else
-			netstat -ant 2>/dev/null | awk 'NR>2{count[$6]++} END{for (s in count) printf "  %-15s %d\n", s, count[s]}'
-		fi
-		;;
-	  7)
-		# SSH 登录失败记录
-		echo -e "\n${rw_cheng}━━ SSH 登录失败记录 (最近20条) ━━${rw_lv}"
-		if [ -f /var/log/auth.log ]; then
-			grep -E "Failed password|Invalid user|authentication failure" /var/log/auth.log 2>/dev/null | tail -20
-		elif command -v journalctl &>/dev/null; then
-			journalctl -u sshd --no-pager -g "Failed\|Invalid\|failure" 2>/dev/null | tail -20
-		elif [ -f /var/log/secure ]; then
-			grep -E "Failed password|Invalid user" /var/log/secure 2>/dev/null | tail -20
-		else
-			echo -e "${rw_huang}无可用日志源${rw_lv}"
-		fi
-		;;
-	  8)
-		# 当前在线用户
-		echo -e "\n${rw_cheng}━━ 当前在线用户 ━━${rw_lv}"
-		w 2>/dev/null || who 2>/dev/null
-		;;
-	  9)
-		# 系统日志
-		echo -e "\n${rw_cheng}━━ 系统日志 (最近30条) ━━${rw_lv}"
-		if command -v journalctl &>/dev/null; then
-			journalctl --no-pager -n 30 2>/dev/null
-		elif [ -f /var/log/syslog ]; then
-			tail -30 /var/log/syslog 2>/dev/null
-		elif [ -f /var/log/messages ]; then
-			tail -30 /var/log/messages 2>/dev/null
-		else
-			echo -e "${rw_huang}无可用日志源${rw_lv}"
-		fi
-		;;
-	  10)
-		# 最近登录记录
-		echo -e "\n${rw_cheng}━━ 最近登录记录 ━━${rw_lv}"
-		last -n 20 2>/dev/null || echo -e "${rw_huang}last 命令不可用${rw_lv}"
-		;;
-	  11)
-		# 系统启动时长与启动项
-		echo -e "\n${rw_cheng}━━ 系统启动信息 ━━${rw_lv}"
-		if [ -f /proc/uptime ]; then
-			local _up_sec=$(awk '{print int($1)}' /proc/uptime)
-			local _days=$((_up_sec / 86400))
-			local _hours=$((_up_sec % 86400 / 3600))
-			local _mins=$((_up_sec % 3600 / 60))
-			echo -e " 已运行: ${rw_lv}${_days}天 ${_hours}时 ${_mins}分${rw_lv}"
-		fi
-		echo ""
-		echo -e "${rw_cheng}── 自启服务 ──${rw_lv}"
-		if command -v systemctl &>/dev/null; then
-			systemctl list-unit-files --state=enabled --type=service 2>/dev/null | head -20
-		else
-			echo -e "${rw_huang}非 systemd 系统${rw_lv}"
-		fi
-		;;
-	  12)
-		# 清理内存缓存
-		echo -e "\n${rw_cheng}━━ 清理内存缓存 ━━${rw_lv}"
-		echo -e " ${rw_huang}说明: 仅清理 PageCache/dentries/inodes，不影响运行进程${rw_lv}"
-		read -e -p " 确认清理？(y/N): " _sync_confirm < /dev/tty
-		if [[ "$_sync_confirm" =~ ^[Yy]$ ]]; then
-			sync
-			echo 3 > /proc/sys/vm/drop_caches 2>/dev/null && \
-				echo -e "${rw_lv}✓ 已清理${rw_lv}" || \
-				echo -e "${rw_hong}清理失败（需 root 权限或非 Linux 系统）${rw_lv}"
-		else
-			echo -e " 已取消"
-		fi
-		;;
-	  13)
-		# 磁盘分区表
-		echo -e "\n${rw_cheng}━━ 磁盘分区表 ━━${rw_lv}"
-		lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT 2>/dev/null || \
-			df -h 2>/dev/null
-		;;
-	  14)
-		# cron 定时任务
-		echo -e "\n${rw_cheng}━━ Cron 定时任务 ━━${rw_lv}"
-		echo -e " ${rw_cheng}── 当前用户 crontab ──${rw_lv}"
-		crontab -l 2>/dev/null || echo -e "  ${rw_huang}无${rw_lv}"
-		if [ "$(id -u)" = "0" ]; then
-			echo ""
-			echo -e " ${rw_cheng}── 系统级 /etc/cron* ──${rw_lv}"
-			ls -la /etc/cron.d/ /etc/cron.daily/ /etc/cron.hourly/ /etc/cron.weekly/ 2>/dev/null | head -20
-		fi
-		;;
-	  0) return ;;
-	  *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-	esac
-	break_end
-done
-}
-
 linux_info() {
 
 
@@ -9142,6 +8948,7 @@ ldnmp_builder_menu() {
     clear
     send_stats "LDNMP建站"
 
+    # ── 使用缓存的状态探测 ──
     if _should_refresh_cache; then
         refresh_status_cache
     fi
@@ -9150,680 +8957,89 @@ ldnmp_builder_menu() {
     local _mysql_stat="${rw_hong}未运行${rw_lv}"
     local _php_stat="${rw_hong}未运行${rw_lv}"
     local _site_cnt=0
-    local _ssl_cnt=0
 
+    # Nginx 状态：优先 Docker 容器，再使用缓存
     if docker inspect nginx &>/dev/null 2>&1; then
-        docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_lv}" || _nginx_stat="${rw_huang}已停止${rw_lv}"
+        docker inspect -f '{{.State.Running}}' nginx 2>/dev/null | grep -q true && _nginx_stat="${rw_lv}运行中${rw_lv}"
     elif $_CACHE_NGINX_ACTIVE; then
         _nginx_stat="${rw_lv}运行中${rw_lv}"
     fi
 
+    # MySQL 状态：优先 Docker 容器，再使用缓存
     if docker inspect mysql &>/dev/null 2>&1 || docker inspect mariadb &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' mysql 2>/dev/null | grep -q true 2>/dev/null; then
             _mysql_stat="${rw_lv}运行中${rw_lv}"
         elif docker inspect -f '{{.State.Running}}' mariadb 2>/dev/null | grep -q true 2>/dev/null; then
             _mysql_stat="${rw_lv}运行中${rw_lv}"
-        else
-            _mysql_stat="${rw_huang}已停止${rw_lv}"
         fi
     elif $_CACHE_MYSQL_ACTIVE; then
         _mysql_stat="${rw_lv}运行中${rw_lv}"
     fi
 
+    # PHP 状态：优先 Docker 容器，再使用缓存
     if docker inspect php &>/dev/null 2>&1 || docker inspect php-fpm &>/dev/null 2>&1; then
         if docker inspect -f '{{.State.Running}}' php 2>/dev/null | grep -q true 2>/dev/null; then
             _php_stat="${rw_lv}运行中${rw_lv}"
         elif docker inspect -f '{{.State.Running}}' php-fpm 2>/dev/null | grep -q true 2>/dev/null; then
             _php_stat="${rw_lv}运行中${rw_lv}"
-        else
-            _php_stat="${rw_huang}已停止${rw_lv}"
         fi
     elif $_CACHE_PHP_ACTIVE; then
         _php_stat="${rw_lv}运行中${rw_lv}"
     fi
 
     [ -d /home/web/conf.d ] && _site_cnt=$(ls /home/web/conf.d/*.conf 2>/dev/null | grep -vc 'map\|default')
-    [ -d /etc/letsencrypt/live ] && _ssl_cnt=$(ls -d /etc/letsencrypt/live/*/ 2>/dev/null | wc -l)
 
-    echo -e "${rw_cheng}━━━━━━━━━━━━  建站部署  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " Nginx ${_nginx_stat}  MySQL ${_mysql_stat}  PHP ${_php_stat}"
-    echo -e " 站点 ${rw_lv}${_site_cnt}${rw_lv} 个  SSL证书 ${rw_lv}${_ssl_cnt}${rw_lv} 个"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo ""
-    echo -e " ${rw_cheng}──── 快速开始${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  一键建站向导（新手推荐）"
+    echo -e "${rw_cheng}━━━━━━━━━━━━  LDNMP 建站  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " Nginx ${_nginx_stat}  MySQL ${_mysql_stat}  PHP ${_php_stat}  站点 ${rw_lv}${_site_cnt}${rw_lv}"
     echo ""
     echo -e " ${rw_cheng}──── 环境安装${rw_lv}"
-    echo -e "  ${rw_huang}2${rw_lv}  安装LDNMP环境        ${rw_huang}3${rw_lv}  仅安装Nginx"
+    echo -e " ${rw_huang}1${rw_lv}  安装LDNMP环境        ${rw_huang}2${rw_lv}  安装Typecho博客"
+    echo -e " ${rw_huang}3${rw_lv}  仅安装Nginx          ${rw_huang}4${rw_lv}  MySQL管理"
+    echo -e " ${rw_huang}5${rw_lv}  PHP管理"
     echo ""
     echo -e " ${rw_cheng}──── 站点管理${rw_lv}"
-    echo -e "  ${rw_huang}4${rw_lv}  站点管理（列表/创建/删除/备份/还原）"
-    echo -e "  ${rw_huang}5${rw_lv}  反向代理与重定向"
-    echo -e "  ${rw_huang}6${rw_lv}  SSL证书管理"
+    echo -e " ${rw_huang}6${rw_lv}  Nginx管理             ${rw_huang}7${rw_lv}  站点数据管理"
+    echo -e " ${rw_huang}13${rw_lv} 自定义静态站点        ${rw_huang}14${rw_lv} 反向代理-负载均衡"
+    echo -e " ${rw_huang}15${rw_lv} 反向代理+域名         ${rw_huang}16${rw_lv} 站点重定向"
+    echo -e " ${rw_huang}17${rw_lv} 反向代理+IP+端口"
     echo ""
-    echo -e " ${rw_cheng}──── 组件管理${rw_lv}"
-    echo -e "  ${rw_huang}7${rw_lv}  组件管理（Nginx / MySQL / PHP）"
+    echo -e " ${rw_cheng}──── 数据管理${rw_lv}"
+    echo -e " ${rw_huang}8${rw_lv}  定时远程备份         ${rw_huang}12${rw_lv} 还原全站数据"
     echo ""
-    echo -e " ${rw_cheng}──── 运维${rw_lv}"
-    echo -e "  ${rw_huang}8${rw_lv}  环境优化与安全防护"
-    echo -e "  ${rw_huang}9${rw_lv}  定时远程备份        ${rw_huang}10${rw_lv} 更新LDNMP环境"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回主菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " choice < /dev/tty
+    echo -e " ${rw_cheng}──── 环境维护${rw_lv}"
+    echo -e " ${rw_huang}9${rw_lv}  防护LDNMP环境         ${rw_huang}10${rw_lv} 更新LDNMP环境"
+    echo -e " ${rw_huang}11${rw_lv} 优化LDNMP环境"
+    echo ""
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    read -e -p " 请选择: " choice
     choice=${choice:-0}
 
     case $choice in
-      1) ldnmp_quick_wizard ;;
-      2) ldnmp_install_env ;;
+      1) ldnmp_install_env ;;
+      2) ldnmp_install_typecho ;;
       3) ldnmp_install_nginx_only ;;
-      4) ldnmp_site_manager ;;
-      5) ldnmp_proxy_manager ;;
-      6) ldnmp_ssl_manager ;;
-      7) ldnmp_components_manager ;;
-      8) ldnmp_optimize_protect ;;
-      9) ldnmp_scheduled_backup ;;
+      4) ldnmp_mysql_manager ;;
+      5) ldnmp_php_manager ;;
+      6) ldnmp_nginx_manage ;;
+      7) ldnmp_site_data_manage ;;
+      8) ldnmp_scheduled_backup ;;
+      9) ldnmp_protect_env ;;
       10) ldnmp_update_env ;;
+      11) ldnmp_optimize_env ;;
+      12) ldnmp_restore_full ;;
+      13) ldnmp_custom_static ;;
+      14) ldnmp_proxy_load_balance ;;
+      15) ldnmp_proxy_domain ;;
+      16) ldnmp_site_redirect ;;
+      17) ldnmp_proxy_ip_port ;;
       0) break ;;
-      *) echo -e "${rw_hong}无效的输入!${rw_lv}" ;;
+      *) echo "无效的输入!" ;;
     esac
     break_end
   done
 }
-
-
-# ================================================================
-# 一键建站向导 (2026-06-26 新增)
-# ================================================================
-ldnmp_quick_wizard() {
-  clear
-  send_stats "一键建站向导"
-  echo -e "${rw_cheng}━━━━━━━━━━━━  一键建站向导  ━━━━━━━━━━━━${rw_lv}"
-  echo -e " ${rw_huang}本向导将引导你完成建站全流程${rw_lv}"
-  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-  echo ""
-  echo -e " 流程预览:"
-  echo -e "  ${rw_huang}1${rw_lv}. 检查/安装 LDNMP 环境"
-  echo -e "  ${rw_huang}2${rw_lv}. 输入域名（需已解析到本机IP）"
-  echo -e "  ${rw_huang}3${rw_lv}. 选择站点类型"
-  echo -e "  ${rw_huang}4${rw_lv}. 自动创建数据库 + 申请 SSL 证书"
-  echo -e "  ${rw_huang}5${rw_lv}. 显示访问地址和管理信息"
-  echo ""
-  read -e -p " 是否开始？(y/N): " _wizard_start < /dev/tty
-  if ! [[ "$_wizard_start" =~ ^[Yy]$ ]]; then
-    echo -e " ${rw_huang}已取消${rw_lv}"
-    return
-  fi
-
-  echo ""
-  echo -e "${rw_cheng}── 步骤 1/5: 检查 LDNMP 环境 ──${rw_lv}"
-  if docker inspect php &>/dev/null 2>&1; then
-    echo -e " ${rw_lv}✓ LDNMP 环境已安装${rw_lv}"
-  else
-    echo -e " ${rw_huang}LDNMP 环境未安装，开始安装...${rw_lv}"
-    ldnmp_install_all
-    if ! docker inspect php &>/dev/null 2>&1; then
-      echo -e " ${rw_hong}环境安装失败，向导终止${rw_lv}"
-      read -e -p " 按回车返回: " < /dev/tty
-      return
-    fi
-  fi
-
-  echo ""
-  echo -e "${rw_cheng}── 步骤 2/5: 输入域名 ──${rw_lv}"
-  echo -e " ${rw_huang}注意: 域名需已解析到本机IP，否则SSL申请会失败${rw_lv}"
-  add_yuming
-  if [ -z "$yuming" ]; then
-    echo -e " ${rw_huang}未输入域名，向导终止${rw_lv}"
-    return
-  fi
-  repeat_add_yuming
-
-  echo ""
-  echo -e "${rw_cheng}── 步骤 3/5: 选择站点类型 ──${rw_lv}"
-  echo -e "  ${rw_huang}1${rw_lv}  WordPress（功能丰富的博客/CMS）"
-  echo -e "  ${rw_huang}2${rw_lv}  Typecho（轻量博客）"
-  echo -e "  ${rw_huang}3${rw_lv}  自定义静态站点"
-  read -e -p " 请选择（默认1）: " _site_type < /dev/tty
-  _site_type="${_site_type:-1}"
-
-  echo ""
-  echo -e "${rw_cheng}── 步骤 4/5: 创建站点 + 数据库 + SSL ──${rw_lv}"
-  case $_site_type in
-    1) echo -e " ${rw_huang}正在部署 WordPress...${rw_lv}"; ldnmp_wp ;;
-    2) echo -e " ${rw_huang}正在部署 Typecho...${rw_lv}"; ldnmp_install_typecho ;;
-    3) echo -e " ${rw_huang}正在创建静态站点...${rw_lv}"; ldnmp_custom_static ;;
-    *) echo -e " ${rw_hong}无效选择${rw_lv}"; return ;;
-  esac
-
-  echo ""
-  echo -e "${rw_cheng}── 步骤 5/5: 建站完成 ──${rw_lv}"
-  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-  echo -e " ${rw_lv}✓ 站点已创建${rw_lv}"
-  echo -e " 访问地址: ${rw_huang}https://${yuming}${rw_lv}"
-  echo -e " 网站根目录: ${rw_huang}/home/web/html/${yuming}${rw_lv}"
-  echo -e " Nginx配置: ${rw_huang}/home/web/conf.d/${yuming}.conf${rw_lv}"
-  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-  read -e -p " 按回车返回菜单: " < /dev/tty
-}
-
-
-# ================================================================
-# 站点管理子菜单 (2026-06-26 新增，整合原 7/12/13 选项)
-# ================================================================
-ldnmp_site_manager() {
-  while true; do
-    clear
-    send_stats "站点管理"
-
-    local _site_list=""
-    local _site_total=0
-    if [ -d /home/web/conf.d ]; then
-      for conf in /home/web/conf.d/*.conf; do
-        [ -f "$conf" ] || continue
-        local _sname=$(basename "$conf" .conf)
-        [ "$_sname" = "map" ] && continue
-        [ "$_sname" = "default" ] && continue
-        _site_total=$((_site_total + 1))
-        local _ssl_mark="${rw_hong}无SSL${rw_lv}"
-        [ -d "/etc/letsencrypt/live/${_sname}" ] && _ssl_mark="${rw_lv}有SSL${rw_lv}"
-        local _type="未知"
-        if [ -f "/home/web/html/${_sname}/wordpress/wp-config.php" ]; then
-          _type="WordPress"
-        elif [ -f "/home/web/html/${_sname}/index.php" ]; then
-          _type="PHP"
-        elif [ -f "/home/web/html/${_sname}/index.html" ]; then
-          _type="静态"
-        elif grep -q "proxy_pass" "$conf" 2>/dev/null; then
-          _type="反代"
-        elif grep -q "upstream" "$conf" 2>/dev/null; then
-          _type="负载均衡"
-        elif grep -q "return 30" "$conf" 2>/dev/null; then
-          _type="重定向"
-        fi
-        _site_list+="  ${rw_huang}$(printf '%-2d' $_site_total)${rw_lv}  $(printf '%-30s' "$_sname")  $(printf '%-8s' "$_type")  $_ssl_mark\n"
-      done
-    fi
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  站点管理  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " 共 ${rw_lv}${_site_total}${rw_lv} 个站点"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    if [ -n "$_site_list" ]; then
-      echo -e " 编号  域名                            类型      SSL"
-      echo -e "$_site_list"
-    else
-      echo -e "  ${rw_huang}暂无站点，请先创建${rw_lv}"
-      echo ""
-    fi
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  创建新站点            ${rw_huang}2${rw_lv}  查看站点配置"
-    echo -e "  ${rw_huang}3${rw_lv}  删除站点              ${rw_huang}4${rw_lv}  备份站点"
-    echo -e "  ${rw_huang}5${rw_lv}  还原全站数据"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _sm_choice < /dev/tty
-    _sm_choice=${_sm_choice:-0}
-
-    case $_sm_choice in
-      1)
-        clear
-        echo -e "${rw_cheng}━━━━ 创建新站点 ━━━━${rw_lv}"
-        echo -e "  ${rw_huang}1${rw_lv}  WordPress"
-        echo -e "  ${rw_huang}2${rw_lv}  Typecho"
-        echo -e "  ${rw_huang}3${rw_lv}  自定义静态站点"
-        echo -e "  ${rw_huang}0${rw_lv}  取消"
-        read -e -p " 请选择类型: " _new_type < /dev/tty
-        case $_new_type in
-          1) ldnmp_wp ;;
-          2) ldnmp_install_typecho ;;
-          3) ldnmp_custom_static ;;
-          0) continue ;;
-          *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-        esac
-        ;;
-      2)
-        if [ "$_site_total" -eq 0 ]; then
-          echo -e " ${rw_huang}暂无站点${rw_lv}"
-          sleep 1; continue
-        fi
-        echo ""
-        read -e -p " 请输入站点编号（从上方列表）: " _view_idx < /dev/tty
-        local _cur=0 _target=""
-        for conf in /home/web/conf.d/*.conf; do
-          [ -f "$conf" ] || continue
-          local _sname=$(basename "$conf" .conf)
-          [ "$_sname" = "map" ] && continue
-          [ "$_sname" = "default" ] && continue
-          _cur=$((_cur + 1))
-          [ "$_cur" = "$_view_idx" ] && _target="$_sname" && break
-        done
-        if [ -n "$_target" ] && [ -f "/home/web/conf.d/${_target}.conf" ]; then
-          clear
-          echo -e "${rw_cheng}━━━━ ${_target} 配置 ━━━━${rw_lv}"
-          cat "/home/web/conf.d/${_target}.conf"
-          echo -e "${rw_cheng}────────────────────${rw_lv}"
-          read -e -p " 按回车继续: " < /dev/tty
-        else
-          echo -e " ${rw_hong}无效编号${rw_lv}"
-          sleep 1
-        fi
-        ;;
-      3) web_del ;;
-      4)
-        clear
-        echo -e "${rw_cheng}━━━━ 备份站点 ━━━━${rw_lv}"
-        echo -e "  ${rw_huang}1${rw_lv}  备份指定站点"
-        echo -e "  ${rw_huang}2${rw_lv}  备份所有站点"
-        echo -e "  ${rw_huang}0${rw_lv}  取消"
-        read -e -p " 请选择: " _bk_type < /dev/tty
-        case $_bk_type in
-          1)
-            read -e -p " 请输入要备份的域名: " _bk_domain < /dev/tty
-            if [ -n "$_bk_domain" ]; then
-              local _bk_path="/home/web_backup_$(date +%Y%m%d_%H%M%S)"
-              mkdir -p "$_bk_path/conf.d" "$_bk_path/html"
-              cp "/home/web/conf.d/${_bk_domain}.conf" "$_bk_path/conf.d/" 2>/dev/null
-              cp -r "/home/web/html/${_bk_domain}" "$_bk_path/html/" 2>/dev/null
-              echo -e " ${rw_lv}✓ 已备份到 $_bk_path${rw_lv}"
-            fi
-            ;;
-          2)
-            local _bk_path="/home/web_backup_$(date +%Y%m%d_%H%M%S)"
-            cp -r /home/web "$_bk_path" 2>/dev/null
-            echo -e " ${rw_lv}✓ 全站已备份到 $_bk_path${rw_lv}"
-            ;;
-        esac
-        sleep 1
-        ;;
-      5) ldnmp_restore_full ;;
-      0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-    esac
-    break_end
-  done
-}
-
-
-# ================================================================
-# 反向代理与重定向子菜单 (2026-06-26 新增，合并原 13/14/15/16/17)
-# ================================================================
-ldnmp_proxy_manager() {
-  while true; do
-    clear
-    send_stats "反向代理与重定向"
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  反向代理与重定向  ━━━━━━━━━━━━${rw_lv}"
-    echo ""
-    echo -e " ${rw_cheng}── 反向代理${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  反代到 IP:端口       ${rw_huang}2${rw_lv}  反代到域名"
-    echo -e "  ${rw_huang}3${rw_lv}  负载均衡（多后端）"
-    echo ""
-    echo -e " ${rw_cheng}── 重定向${rw_lv}"
-    echo -e "  ${rw_huang}4${rw_lv}  站点重定向（301/302）"
-    echo ""
-    echo -e " ${rw_cheng}── 高级${rw_lv}"
-    echo -e "  ${rw_huang}5${rw_lv}  4层负载均衡（TCP/UDP）"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _pm_choice < /dev/tty
-    _pm_choice=${_pm_choice:-0}
-
-    case $_pm_choice in
-      1) ldnmp_proxy_ip_port ;;
-      2) ldnmp_proxy_domain ;;
-      3) ldnmp_proxy_load_balance ;;
-      4) ldnmp_site_redirect ;;
-      5) ldnmp_Proxy_backend_stream ;;
-      0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-    esac
-    break_end
-  done
-}
-
-
-# ================================================================
-# SSL 证书管理子菜单 (2026-06-26 新增)
-# ================================================================
-ldnmp_ssl_manager() {
-  while true; do
-    clear
-    send_stats "SSL证书管理"
-
-    local _cert_total=0
-    local _cert_list=""
-    if [ -d /etc/letsencrypt/live ]; then
-      for cert_dir in /etc/letsencrypt/live/*/; do
-        [ -d "$cert_dir" ] || continue
-        local _domain=$(basename "$cert_dir")
-        local _cert_file="${cert_dir}fullchain.pem"
-        local _expire="" _days_left="" _status=""
-        if [ -f "$_cert_file" ]; then
-          _cert_total=$((_cert_total + 1))
-          local _expire_date=$(openssl x509 -noout -enddate -in "$_cert_file" 2>/dev/null | awk -F'=' '{print $2}')
-          _expire=$(portable_date "$_expire_date" '+%Y-%m-%d' 2>/dev/null || echo "?")
-          if [ -n "$_expire_date" ]; then
-            local _expire_epoch=$(portable_date "$_expire_date" '+%s' 2>/dev/null)
-            local _now_epoch=$(date '+%s')
-            _days_left=$(( ( _expire_epoch - _now_epoch ) / 86400 ))
-            if [ "$_days_left" -lt 0 ]; then
-              _status="${rw_hong}已过期${rw_lv}"
-            elif [ "$_days_left" -lt 7 ]; then
-              _status="${rw_hong}即将过期(${_days_left}天)${rw_lv}"
-            elif [ "$_days_left" -lt 30 ]; then
-              _status="${rw_huang}剩余${_days_left}天${rw_lv}"
-            else
-              _status="${rw_lv}剩余${_days_left}天${rw_lv}"
-            fi
-          fi
-          _cert_list+="  ${rw_huang}$(printf '%-2d' $_cert_total)${rw_lv}  $(printf '%-30s' "$_domain")  $_expire  $_status\n"
-        fi
-      done
-    fi
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  SSL 证书管理  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " 共 ${rw_lv}${_cert_total}${rw_lv} 个证书"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    if [ -n "$_cert_list" ]; then
-      echo -e " 编号  域名                            到期时间    状态"
-      echo -e "$_cert_list"
-    else
-      echo -e "  ${rw_huang}暂无证书${rw_lv}"
-    fi
-    echo ""
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  申请SSL证书          ${rw_huang}2${rw_lv}  查看证书详情"
-    echo -e "  ${rw_huang}3${rw_lv}  删除SSL证书          ${rw_huang}4${rw_lv}  手动续签所有证书"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _ssl_choice < /dev/tty
-    _ssl_choice=${_ssl_choice:-0}
-
-    case $_ssl_choice in
-      1)
-        clear
-        echo -e "${rw_cheng}━━━━ 申请 SSL 证书 ━━━━${rw_lv}"
-        echo -e " ${rw_huang}注意: 域名需已解析到本机IP且80端口可访问${rw_lv}"
-        echo ""
-        add_ssl
-        ;;
-      2)
-        if [ "$_cert_total" -eq 0 ]; then
-          echo -e " ${rw_huang}暂无证书${rw_lv}"
-          sleep 1; continue
-        fi
-        echo ""
-        read -e -p " 请输入证书编号: " _cert_idx < /dev/tty
-        local _cur=0 _target=""
-        for cert_dir in /etc/letsencrypt/live/*/; do
-          [ -d "$cert_dir" ] || continue
-          _cur=$((_cur + 1))
-          [ "$_cur" = "$_cert_idx" ] && _target=$(basename "$cert_dir") && break
-        done
-        if [ -n "$_target" ]; then
-          clear
-          echo -e "${rw_cheng}━━━━ 证书: $_target ━━━━${rw_lv}"
-          openssl x509 -in "/etc/letsencrypt/live/${_target}/fullchain.pem" -noout -subject -issuer -dates -ext subjectAltName 2>/dev/null
-          echo -e "${rw_cheng}────────────────────${rw_lv}"
-          read -e -p " 按回车继续: " < /dev/tty
-        else
-          echo -e " ${rw_hong}无效编号${rw_lv}"
-          sleep 1
-        fi
-        ;;
-      3)
-        if [ "$_cert_total" -eq 0 ]; then
-          echo -e " ${rw_huang}暂无证书${rw_lv}"
-          sleep 1; continue
-        fi
-        echo ""
-        read -e -p " 请输入要删除的证书域名: " _del_domain < /dev/tty
-        if [ -n "$_del_domain" ] && [ -d "/etc/letsencrypt/live/${_del_domain}" ]; then
-          read -e -p " $(echo -e "${rw_hong}确认删除 ${_del_domain} 的证书？(y/N): ${rw_lv}")" _del_confirm < /dev/tty
-          if [[ "$_del_confirm" =~ ^[Yy]$ ]]; then
-            docker run --rm -v /etc/letsencrypt/:/etc/letsencrypt certbot/certbot delete --cert-name "$_del_domain" -n 2>/dev/null
-            echo -e " ${rw_lv}✓ 证书已删除${rw_lv}"
-          fi
-        else
-          echo -e " ${rw_hong}证书不存在${rw_lv}"
-        fi
-        sleep 1
-        ;;
-      4)
-        clear
-        echo -e "${rw_cheng}━━━━ 手动续签所有证书 ━━━━${rw_lv}"
-        echo -e " ${rw_huang}正在续签...${rw_lv}"
-        docker run --rm -v /etc/letsencrypt/:/etc/letsencrypt certbot/certbot renew 2>/dev/null
-        echo -e " ${rw_lv}✓ 续签完成${rw_lv}"
-        if docker inspect nginx &>/dev/null 2>&1; then
-          docker exec nginx nginx -s reload 2>/dev/null
-          echo -e " ${rw_lv}Nginx 已重载${rw_lv}"
-        fi
-        read -e -p " 按回车继续: " < /dev/tty
-        ;;
-      0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-    esac
-    break_end
-  done
-}
-
-
-# ================================================================
-# 组件管理子菜单 (2026-06-26 新增，整合原 4/5/6 选项)
-# ================================================================
-ldnmp_components_manager() {
-  while true; do
-    clear
-    send_stats "组件管理"
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  组件管理  ━━━━━━━━━━━━${rw_lv}"
-    echo ""
-    echo -e "  ${rw_huang}1${rw_lv}  Nginx 管理"
-    echo -e "  ${rw_huang}2${rw_lv}  MySQL 管理"
-    echo -e "  ${rw_huang}3${rw_lv}  PHP 管理"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _cm_choice < /dev/tty
-    _cm_choice=${_cm_choice:-0}
-
-    case $_cm_choice in
-      1) ldnmp_nginx_manage ;;
-      2) ldnmp_mysql_manager ;;
-      3) ldnmp_php_manager ;;
-      0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-    esac
-    break_end
-  done
-}
-
-
-# ================================================================
-# 环境优化与安全防护子菜单 (2026-06-26 新增，合并原 9/11)
-# ================================================================
-ldnmp_optimize_protect() {
-  while true; do
-    clear
-    send_stats "环境优化与安全防护"
-
-    local _gzip_stat="${rw_hong}未开启${rw_lv}" _brotli_stat="${rw_hong}未开启${rw_lv}"
-    local _f2b_stat="${rw_hong}未运行${rw_lv}" _ngx_ver_stat="${rw_huang}显示${rw_lv}"
-
-    if [ -f /home/web/nginx.conf ]; then
-      grep -q "^gzip on;" /home/web/nginx.conf 2>/dev/null && _gzip_stat="${rw_lv}已开启${rw_lv}"
-      grep -q "^brotli on;" /home/web/nginx.conf 2>/dev/null && _brotli_stat="${rw_lv}已开启${rw_lv}"
-      grep -q "server_tokens off;" /home/web/nginx.conf 2>/dev/null && _ngx_ver_stat="${rw_lv}已隐藏${rw_lv}"
-    fi
-    if command -v fail2ban-client &>/dev/null && fail2ban-client ping &>/dev/null 2>&1; then
-      _f2b_stat="${rw_lv}运行中${rw_lv}"
-    elif command -v fail2ban-client &>/dev/null; then
-      _f2b_stat="${rw_huang}已安装未运行${rw_lv}"
-    fi
-
-    echo -e "${rw_cheng}━━━━━━━━━━━━  环境优化与安全防护  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " Gzip ${_gzip_stat}  Brotli ${_brotli_stat}  Nginx版本 ${_ngx_ver_stat}  fail2ban ${_f2b_stat}"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo ""
-    echo -e " ${rw_cheng}── 性能优化${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  开启Gzip压缩        ${rw_huang}2${rw_lv}  开启Brotli压缩"
-    echo -e "  ${rw_huang}3${rw_lv}  配置缓存策略        ${rw_huang}4${rw_lv}  优化PHP配置"
-    echo ""
-    echo -e " ${rw_cheng}── 安全防护${rw_lv}"
-    echo -e "  ${rw_huang}5${rw_lv}  安装fail2ban防护    ${rw_huang}6${rw_lv}  开放80/443端口"
-    echo -e "  ${rw_huang}7${rw_lv}  隐藏Nginx版本号     ${rw_huang}8${rw_lv}  禁用不安全HTTP方法"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _op_choice < /dev/tty
-    _op_choice=${_op_choice:-0}
-
-    case $_op_choice in
-      1) _ldnmp_gzip_on ;;
-      2) _ldnmp_brotli_on ;;
-      3) _ldnmp_cache_on ;;
-      4) _ldnmp_php_optimize ;;
-      5) _ldnmp_install_fail2ban ;;
-      6) _ldnmp_open_web_ports ;;
-      7) _ldnmp_hide_nginx_ver ;;
-      8) _ldnmp_disable_unsafe_methods ;;
-      0) break ;;
-      *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
-    esac
-    break_end
-  done
-}
-
-# ── 优化与防护的原子操作 ──
-_ldnmp_gzip_on() {
-  clear
-  echo -e "${rw_huang}开启Gzip压缩...${rw_lv}"
-  if [ -f /home/web/nginx.conf ]; then
-    sed -i 's/# gzip on;/gzip on;/' /home/web/nginx.conf 2>/dev/null
-    sed -i 's/# gzip_vary on;/gzip_vary on;/' /home/web/nginx.conf 2>/dev/null
-    sed -i 's/# gzip_proxied any;/gzip_proxied any;/' /home/web/nginx.conf 2>/dev/null
-    docker exec nginx nginx -s reload 2>/dev/null
-    echo -e "${rw_lv}✓ 已开启Gzip压缩${rw_lv}"
-  else
-    echo -e "${rw_hong}Nginx配置文件不存在${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_brotli_on() {
-  clear
-  echo -e "${rw_huang}开启Brotli压缩...${rw_lv}"
-  if [ -f /home/web/nginx.conf ]; then
-    sed -i 's/# brotli on;/brotli on;/' /home/web/nginx.conf 2>/dev/null
-    docker exec nginx nginx -s reload 2>/dev/null
-    echo -e "${rw_lv}✓ 已开启Brotli压缩${rw_lv}"
-  else
-    echo -e "${rw_hong}Nginx配置文件不存在${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_cache_on() {
-  clear
-  echo -e "${rw_huang}配置缓存策略...${rw_lv}"
-  if [ -f /home/web/nginx.conf ]; then
-    sed -i 's/# proxy_cache_path/proxy_cache_path/' /home/web/nginx.conf 2>/dev/null
-    docker exec nginx nginx -s reload 2>/dev/null
-    echo -e "${rw_lv}✓ 已配置缓存策略${rw_lv}"
-  else
-    echo -e "${rw_hong}Nginx配置文件不存在${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_php_optimize() {
-  clear
-  echo -e "${rw_huang}优化PHP配置...${rw_lv}"
-  if docker ps --filter "name=php" --filter "status=running" 2>/dev/null | grep -q php; then
-    docker exec php sed -i 's/memory_limit = .*/memory_limit = 256M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null || \
-        docker exec php bash -c 'echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/zzz-custom.ini'
-    docker exec php sed -i 's/upload_max_filesize = .*/upload_max_filesize = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
-    docker exec php sed -i 's/post_max_size = .*/post_max_size = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
-    docker exec php php-fpm 2>/dev/null
-    echo -e "${rw_lv}✓ 已优化PHP配置${rw_lv}"
-  else
-    echo -e "${rw_hong}PHP容器未运行${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_install_fail2ban() {
-  clear
-  echo -e "${rw_huang}安装fail2ban...${rw_lv}"
-  if command -v dnf &>/dev/null; then
-    dnf install -y fail2ban 2>/dev/null
-  elif command -v yum &>/dev/null; then
-    yum install -y fail2ban 2>/dev/null
-  elif command -v apt &>/dev/null || command -v apt-get &>/dev/null; then
-    apt-get update -qq && apt-get install -y fail2ban 2>/dev/null
-  fi
-  systemctl enable fail2ban 2>/dev/null
-  systemctl start fail2ban 2>/dev/null
-  echo -e "${rw_lv}✓ fail2ban安装完成${rw_lv}"
-  sleep 1
-}
-
-_ldnmp_open_web_ports() {
-  clear
-  echo -e "${rw_huang}开放80/443端口...${rw_lv}"
-  if command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --add-port=80/tcp 2>/dev/null
-    firewall-cmd --permanent --add-port=443/tcp 2>/dev/null
-    firewall-cmd --reload 2>/dev/null
-    echo -e "${rw_lv}✓ firewalld: 已开放80/443端口${rw_lv}"
-  elif command -v ufw &>/dev/null; then
-    ufw allow 80/tcp 2>/dev/null
-    ufw allow 443/tcp 2>/dev/null
-    echo -e "${rw_lv}✓ ufw: 已开放80/443端口${rw_lv}"
-  elif command -v iptables &>/dev/null; then
-    iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null
-    iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null
-    echo -e "${rw_lv}✓ iptables: 已开放80/443端口${rw_lv}"
-  else
-    echo -e "${rw_hong}未检测到支持的防火墙工具${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_hide_nginx_ver() {
-  clear
-  echo -e "${rw_huang}隐藏Nginx版本号...${rw_lv}"
-  if [ -f /home/web/nginx.conf ]; then
-    sed -i 's/^server_tokens .*/server_tokens off;/' /home/web/nginx.conf 2>/dev/null
-    sed -i 's/^server_names_hash_bucket_size.*/server_names_hash_bucket_size 512;/' /home/web/nginx.conf 2>/dev/null
-    docker exec nginx nginx -s reload 2>/dev/null
-    echo -e "${rw_lv}✓ 已隐藏Nginx版本号${rw_lv}"
-  else
-    echo -e "${rw_hong}Nginx配置文件不存在${rw_lv}"
-  fi
-  sleep 1
-}
-
-_ldnmp_disable_unsafe_methods() {
-  clear
-  echo -e "${rw_huang}禁用不安全HTTP方法...${rw_lv}"
-  if [ -f /home/web/nginx.conf ]; then
-    if ! grep -q "if (\$request_method !~" /home/web/nginx.conf; then
-      sed -i '/http {/a\    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) { return 444; }' /home/web/nginx.conf
-    fi
-    docker exec nginx nginx -s reload 2>/dev/null
-    echo -e "${rw_lv}✓ 已禁用不安全HTTP方法${rw_lv}"
-  else
-    echo -e "${rw_hong}Nginx配置文件不存在${rw_lv}"
-  fi
-  sleep 1
-}
-
-
 
 
 ldnmp_install_env() {
@@ -10397,6 +9613,87 @@ PROXYEOF
   read -e -p "按回车返回菜单: "
 }
 
+ldnmp_site_data_manage() {
+  while true; do
+    clear
+    send_stats "站点数据管理"
+    echo -e "${rw_huang}站点数据管理${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}查看所有站点"
+    echo -e "${rw_huang}2.   ${rw_lv}查看站点配置"
+    echo -e "${rw_huang}3.   ${rw_lv}删除站点"
+    echo -e "${rw_huang}4.   ${rw_lv}备份站点数据"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}所有站点列表：${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -d /home/web/conf.d ]; then
+          for conf in /home/web/conf.d/*.conf; do
+            [ -f "$conf" ] || continue
+            sname=$(basename "$conf" .conf)
+            [ "$sname" = "map" ] && continue
+            echo "  • $sname"
+          done
+        else
+          echo "  暂无站点"
+        fi
+        echo ""
+        read -e -p "按回车继续..."
+        ;;
+      2)
+        clear
+        read -e -p "请输入要查看的站点域名: " view_domain
+        if [ -f "/home/web/conf.d/${view_domain}.conf" ]; then
+          echo -e "${rw_huang}${view_domain} 配置文件内容：${rw_lv}"
+          echo -e "${rw_cheng}------------------------${rw_lv}"
+          cat "/home/web/conf.d/${view_domain}.conf"
+          echo ""
+          read -e -p "按回车继续..."
+        else
+          echo -e "${rw_hong}站点配置文件不存在${rw_lv}"
+          sleep 1
+        fi
+        ;;
+      3)
+        clear
+        web_del
+        ;;
+      4)
+        clear
+        read -e -p "请输入要备份的站点域名（回车备份所有站点）: " backup_domain
+        backup_domain=${backup_domain:-ALL}
+        backup_path="/home/web_backup_$(date +%Y%m%d_%H%M%S)"
+        echo -e "${rw_huang}正在备份到 ${backup_path} ...${rw_lv}"
+        if [ "$backup_domain" = "ALL" ]; then
+          cp -r /home/web "$backup_path" 2>/dev/null
+        else
+          mkdir -p "$backup_path/conf.d" "$backup_path/html"
+          cp "/home/web/conf.d/${backup_domain}.conf" "$backup_path/conf.d/" 2>/dev/null
+          cp -r "/home/web/html/${backup_domain}" "$backup_path/html/" 2>/dev/null
+        fi
+        if [ $? -eq 0 ]; then
+          echo -e "${rw_lv}备份完成：$backup_path${rw_lv}"
+        else
+          echo -e "${rw_hong}备份失败${rw_lv}"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
 ldnmp_scheduled_backup() {
   while true; do
     clear
@@ -10480,6 +9777,99 @@ ldnmp_scheduled_backup() {
   done
 }
 
+ldnmp_protect_env() {
+  while true; do
+    clear
+    send_stats "防护LDNMP环境"
+    echo -e "${rw_huang}防护LDNMP环境${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}安装fail2ban登录防护"
+    echo -e "${rw_huang}2.   ${rw_lv}配置防火墙（开放80/443端口）"
+    echo -e "${rw_huang}3.   ${rw_lv}隐藏Nginx版本号"
+    echo -e "${rw_huang}4.   ${rw_lv}禁用不安全HTTP方法"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}安装fail2ban登录防护${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if command -v dnf &>/dev/null; then
+          dnf install -y fail2ban 2>/dev/null
+        elif command -v yum &>/dev/null; then
+          yum install -y fail2ban 2>/dev/null
+        elif command -v apt &>/dev/null || command -v apt-get &>/dev/null; then
+          apt-get update -qq && apt-get install -y fail2ban 2>/dev/null
+        fi
+        systemctl enable fail2ban 2>/dev/null
+        systemctl start fail2ban 2>/dev/null
+        echo -e "${rw_lv}fail2ban安装完成${rw_lv}"
+        sleep 1
+        ;;
+      2)
+        clear
+        echo -e "${rw_huang}配置防火墙（开放80/443端口）${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if command -v firewall-cmd &>/dev/null; then
+          firewall-cmd --permanent --add-port=80/tcp 2>/dev/null
+          firewall-cmd --permanent --add-port=443/tcp 2>/dev/null
+          firewall-cmd --reload 2>/dev/null
+          echo "firewalld: 已开放80/443端口"
+        elif command -v ufw &>/dev/null; then
+          ufw allow 80/tcp 2>/dev/null
+          ufw allow 443/tcp 2>/dev/null
+          echo "ufw: 已开放80/443端口"
+        elif command -v iptables &>/dev/null; then
+          iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null
+          iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null
+          echo "iptables: 已开放80/443端口"
+        else
+          echo "未检测到支持的防火墙工具"
+        fi
+        sleep 1
+        ;;
+      3)
+        clear
+        echo -e "${rw_huang}隐藏Nginx版本号${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/^server_tokens .*/server_tokens off;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/^server_names_hash_bucket_size.*/server_names_hash_bucket_size 512;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已隐藏Nginx版本号${rw_lv}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      4)
+        clear
+        echo -e "${rw_huang}禁用不安全HTTP方法${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -f /home/web/nginx.conf ]; then
+          if ! grep -q "if (\$request_method !~" /home/web/nginx.conf; then
+            sed -i '/http {/a\    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$) { return 444; }' /home/web/nginx.conf
+          fi
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已禁用不安全HTTP方法${rw_lv}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
+}
+
 ldnmp_update_env() {
   clear
   send_stats "更新LDNMP环境"
@@ -10496,6 +9886,88 @@ ldnmp_update_env() {
   docker compose up -d 2>/dev/null
   echo -e "${rw_lv}LDNMP环境更新完成${rw_lv}"
   read -e -p "按回车返回菜单: "
+}
+
+ldnmp_optimize_env() {
+  while true; do
+    clear
+    send_stats "优化LDNMP环境"
+    echo -e "${rw_huang}优化LDNMP环境${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo ""
+    echo -e "${rw_huang}请选择操作：${rw_lv}"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}1.   ${rw_lv}开启Gzip压缩"
+    echo -e "${rw_huang}2.   ${rw_lv}开启Brotli压缩"
+    echo -e "${rw_huang}3.   ${rw_lv}配置缓存策略"
+    echo -e "${rw_huang}4.   ${rw_lv}优化PHP配置"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    echo -e "${rw_huang}0.   ${rw_lv}返回上级菜单"
+    echo -e "${rw_cheng}------------------------${rw_lv}"
+    read -e -p "请输入你的选择（回车默认0返回）: " sub_choice
+    sub_choice=${sub_choice:-0}
+    case $sub_choice in
+      1)
+        clear
+        echo -e "${rw_huang}开启Gzip压缩${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# gzip on;/gzip on;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/# gzip_vary on;/gzip_vary on;/' /home/web/nginx.conf 2>/dev/null
+          sed -i 's/# gzip_proxied any;/gzip_proxied any;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已开启Gzip压缩${rw_lv}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      2)
+        clear
+        echo -e "${rw_huang}开启Brotli压缩${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# brotli on;/brotli on;/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已开启Brotli压缩${rw_lv}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      3)
+        clear
+        echo -e "${rw_huang}配置缓存策略${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -f /home/web/nginx.conf ]; then
+          sed -i 's/# proxy_cache_path/proxy_cache_path/' /home/web/nginx.conf 2>/dev/null
+          docker exec nginx nginx -s reload 2>/dev/null
+          echo -e "${rw_lv}已配置缓存策略${rw_lv}"
+        else
+          echo "Nginx配置文件不存在"
+        fi
+        sleep 1
+        ;;
+      4)
+        clear
+        echo -e "${rw_huang}优化PHP配置${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if docker ps --filter "name=php" --filter "status=running" | grep -q php; then
+          docker exec php sed -i 's/memory_limit = .*/memory_limit = 256M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null ||             docker exec php bash -c 'echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/zzz-custom.ini'
+          docker exec php sed -i 's/upload_max_filesize = .*/upload_max_filesize = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
+          docker exec php sed -i 's/post_max_size = .*/post_max_size = 100M/' /usr/local/etc/php/conf.d/zzz-custom.ini 2>/dev/null
+          docker exec php php-fpm 2>/dev/null
+          echo -e "${rw_lv}已优化PHP配置${rw_lv}"
+        else
+          echo "PHP容器未运行"
+        fi
+        sleep 1
+        ;;
+      0) break ;;
+      *) echo "无效的输入!" ;;
+    esac
+    break_end
+  done
 }
 
 ldnmp_restore_full() {
@@ -16490,8 +15962,11 @@ while true; do
 	clear
 
 	# ── 状态探测 ──
-	local _tmux_stat="${rw_hong}未安装${rw_lv}" _session_count=0 _session_list=""
+	local _tmux_stat="${rw_hong}未安装${rw_lv}" _tmux_ver="" _session_count=0 _session_list=""
+	local _sshd_stat="${rw_hong}关闭${rw_lv}"
+
 	if command -v tmux &>/dev/null; then
+		_tmux_ver=$(tmux -V 2>/dev/null | sed -n -E 's/.*([0-9]+\.[0-9]+).*/\1/p' | head -1)
 		if pgrep -x tmux &>/dev/null; then
 			_tmux_stat="${rw_lv}运行中${rw_lv}"
 		else
@@ -16501,162 +15976,102 @@ while true; do
 		_session_count=$(echo "$_session_list" | grep -c . 2>/dev/null || echo 0)
 		[ "$_session_count" -le 0 ] && _session_count=0
 	fi
-
-	echo -e "${rw_cheng}━━━━━━━━━━━━  后台工作区  ━━━━━━━━━━━━${rw_lv}"
-	echo -e " tmux ${_tmux_stat}   活跃会话 ${rw_huang}${_session_count}${rw_lv} 个"
-	echo ""
-
-	# 显示当前会话列表（如果有）
-	if [ "$_session_count" -gt 0 ] && [ -n "$_session_list" ]; then
-		echo -e " ${rw_cheng}── 当前会话 ──${rw_lv}"
-		echo "$_session_list" | while IFS= read -r _line; do
-			local _name="${_line%%:*}"
-			echo -e "   ${rw_huang}•${rw_lv} ${_name}"
-		done
-		echo ""
+	if grep -q 'tmux attach-session -t sshd || tmux new-session -s sshd' ~/.bashrc 2>/dev/null; then
+		_sshd_stat="${rw_lv}开启${rw_lv}"
 	fi
 
-	echo -e " ${rw_cheng}──── 快速操作 ──${rw_lv}"
-	echo -e " ${rw_huang}1${rw_lv}  新建工作区并进入"
-	echo -e " ${rw_huang}2${rw_lv}  进入已有会话（选择编号）"
-	echo -e " ${rw_huang}3${rw_lv}  后台执行命令（不进入）"
-	echo -e " ${rw_huang}4${rw_lv}  删除会话"
-	echo -e " ${rw_huang}5${rw_lv}  删除全部会话"
+	echo -e "${rw_cheng}━━━━━━━━━━━━  后台工作区  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " tmux ${_tmux_stat}  v${_tmux_ver:-?}  会话 ${rw_lv}${_session_count}${rw_lv}  SSH常驻 ${_sshd_stat}"
 	echo ""
-	echo -e " ${rw_cheng}──── SSH 常驻 ──${rw_lv}"
-	echo -e " ${rw_huang}6${rw_lv}  开启（登录自动进入 tmux）"
-	echo -e " ${rw_huang}7${rw_lv}  关闭"
+	echo -e " ${rw_cheng}──── 快速进入${rw_lv}"
+	echo -e " ${rw_huang}1${rw_lv}  1号工作区        ${rw_huang}2${rw_lv} 2号工作区        ${rw_huang}3${rw_lv}  3号工作区"
+	echo -e " ${rw_huang}4${rw_lv}  4号工作区        ${rw_huang}5${rw_lv} 5号工作区        ${rw_huang}6${rw_lv}  6号工作区"
+	echo -e " ${rw_huang}7${rw_lv}  7号工作区        ${rw_huang}8${rw_lv} 8号工作区        ${rw_huang}9${rw_lv}  9号工作区"
+	echo -e " ${rw_huang}10${rw_lv} 10号工作区"
 	echo ""
-	echo -e " ${rw_lv}提示: 退出工作区按 Ctrl+b 再按 d${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_cheng}──── 工作区管理${rw_lv}"
+	echo -e " ${rw_huang}11${rw_lv} 创建/进入工作区     ${rw_huang}12${rw_lv} 删除指定工作区"
+	echo -e " ${rw_huang}13${rw_lv} 注入命令到后台      ${rw_huang}14${rw_lv} 查看会话列表"
+	echo ""
+	echo -e " ${rw_cheng}──── SSH常驻模式${rw_lv}"
+	echo -e " ${rw_huang}15${rw_lv} 开启SSH常驻        ${rw_huang}16${rw_lv} 关闭SSH常驻"
+	echo ""
+	echo -e " ${rw_cheng}──── 操作提示${rw_lv}"
+	echo -e " ${rw_lv}退出工作区: Ctrl+b d   切换窗口: Ctrl+b n${rw_lv}"
+
+	# ── 显示当前会话列表 ──
+	if [ "$_session_count" -gt 0 ]; then
+		echo ""
+		echo -e " ${rw_cheng}──── 当前会话${rw_lv}"
+		echo "$_session_list" | while IFS= read -r _line; do
+			echo -e " ${rw_lv}$_line${rw_lv}"
+		done
+	fi
+
+	echo ""
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
 	read -e -p " 请选择: " _wk_choice
 
 	case $_wk_choice in
-		1)
-			# 新建工作区
-			read -e -p " 工作区名称 [默认: work]: " _name < /dev/tty
-			_name="${_name:-work}"
+		1|2|3|4|5|6|7|8|9|10)
+			clear
 			install tmux
-			if tmux has-session -t "$_name" 2>/dev/null; then
-				echo -e " ${rw_huang}会话 $_name 已存在，直接进入${rw_lv}"
-			else
-				send_stats "新建工作区 $_name"
-			fi
-			tmux new -s "$_name" 2>/dev/null || tmux attach-session -t "$_name"
+			local SESSION_NAME="work${_wk_choice}"
+			send_stats "启动工作区$SESSION_NAME"
+			tmux_run
 			;;
-		2)
-			# 进入已有会话
-			if [ "$_session_count" -eq 0 ]; then
-				echo -e " ${rw_hong}当前无活跃会话${rw_lv}"
-				break_end
-				continue
-			fi
-			echo ""
-			echo "$_session_list" | nl -ba | sed 's/^/   /'
-			echo ""
-			read -e -p " 选择会话编号: " _idx < /dev/tty
-			local _target
-			_target=$(echo "$_session_list" | sed -n "${_idx}p" | cut -d: -f1)
-			if [ -z "$_target" ]; then
-				echo -e " ${rw_hong}无效选择${rw_lv}"
-				break_end
-				continue
-			fi
-			tmux attach-session -t "$_target"
-			;;
-		3)
-			# 后台执行命令
-			read -e -p " 要后台执行的命令: " _cmd < /dev/tty
-			if [ -z "$_cmd" ]; then
-				echo -e " ${rw_hong}命令不能为空${rw_lv}"
-				break_end
-				continue
-			fi
+		11)
+			read -e -p "请输入工作区名称 (如 1001/kj001/work1): " SESSION_NAME
 			install tmux
-			local _bg_name="bg1"
-			local _n=1
-			while tmux has-session -t "$_bg_name" 2>/dev/null; do
-				_n=$((_n + 1))
-				_bg_name="bg${_n}"
-			done
-			tmux new -d -s "$_bg_name" "$_cmd"
-			echo -e " ${rw_lv}✓ 已在后台会话 ${rw_huang}${_bg_name}${rw_lv}${rw_lv} 执行${rw_lv}"
-			echo -e " ${rw_huang}查看: tmux attach -t ${_bg_name}${rw_lv}"
-			send_stats "后台执行命令"
-			break_end
+			tmux_run
+			send_stats "自定义工作区"
 			;;
-		4)
-			# 删除单个会话
-			if [ "$_session_count" -eq 0 ]; then
-				echo -e " ${rw_hong}当前无活跃会话${rw_lv}"
-				break_end
-				continue
-			fi
-			echo ""
-			echo "$_session_list" | nl -ba | sed 's/^/   /'
-			echo ""
-			read -e -p " 选择要删除的会话编号: " _idx < /dev/tty
-			local _target
-			_target=$(echo "$_session_list" | sed -n "${_idx}p" | cut -d: -f1)
-			if [ -n "$_target" ]; then
-				tmux kill-session -t "$_target" 2>/dev/null && \
-					green "✓ 会话 $_target 已删除" || red "删除失败"
-			else
-				red "无效选择"
-			fi
-			break_end
+		12)
+			read -e -p "请输入要删除的工作区名称: " gongzuoqu_name
+			tmux kill-session -t "$gongzuoqu_name" 2>/dev/null && \
+				echo -e "${rw_lv}工作区 ${gongzuoqu_name} 已删除${rw_lv}" || \
+				echo -e "${rw_hong}工作区 ${gongzuoqu_name} 不存在或删除失败${rw_lv}"
+			send_stats "删除工作区"
 			;;
-		5)
-			# 删除全部会话
-			if [ "$_session_count" -eq 0 ]; then
-				echo -e " ${rw_hong}当前无活跃会话${rw_lv}"
-				break_end
-				continue
-			fi
-			read -e -p " 确认删除全部 ${_session_count} 个会话？(y/N): " _confirm < /dev/tty
-			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-				tmux kill-server 2>/dev/null
-				green "✓ 全部会话已删除"
-			else
-				yellow "已取消"
-			fi
-			break_end
-			;;
-		6)
-			# 开启 SSH 常驻
+		13)
+			read -e -p "请输入要后台执行的命令: " tmuxd
 			install tmux
-			if ! grep -q "tmux attach-session -t sshd" ~/.bashrc 2>/dev/null; then
-				cat >> ~/.bashrc << 'BASHEOF'
-
-# riwi SSH 常驻模式: 登录自动进入 tmux
-if [[ -z "$TMUX" ]]; then
-    tmux attach-session -t sshd 2>/dev/null || tmux new-session -s sshd
-fi
-BASHEOF
-				green "✓ SSH 常驻已开启（下次登录自动进入 tmux）"
-			else
-				yellow "SSH 常驻已开启，无需重复操作"
-			fi
-			send_stats "开启SSH常驻"
-			break_end
+			tmux_run_d
+			send_stats "注入命令到后台工作区"
 			;;
-		7)
-			# 关闭 SSH 常驻
-			sed -i '/# riwi SSH 常驻模式/,+4d' ~/.bashrc 2>/dev/null
-			sed -i '/tmux attach-session -t sshd/d' ~/.bashrc 2>/dev/null
+		14)
+			clear
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+			if command -v tmux &>/dev/null; then
+				tmux list-sessions 2>/dev/null || echo -e "${rw_huang}当前无活跃会话${rw_lv}"
+			else
+				echo -e "${rw_hong}tmux 未安装${rw_lv}"
+			fi
+			echo -e "${rw_cheng}────────────────────────────────────${rw_lv}"
+			send_stats "查看会话列表"
+			;;
+		15)
+			install tmux
+			local SESSION_NAME="sshd"
+			send_stats "开启SSH常驻模式"
+			grep -q "tmux attach-session -t sshd" ~/.bashrc 2>/dev/null || \
+				echo -e "\n# 自动进入 tmux 会话\nif [[ -z \"\$TMUX\" ]]; then\n    tmux attach-session -t sshd || tmux new-session -s sshd\nfi" >> ~/.bashrc
+			source ~/.bashrc 2>/dev/null
+			tmux_run
+			;;
+		16)
+			send_stats "关闭SSH常驻模式"
+			sed -i '/# 自动进入 tmux 会话/,+4d' ~/.bashrc
 			tmux kill-session -t sshd 2>/dev/null
-			green "✓ SSH 常驻已关闭"
-			send_stats "关闭SSH常驻"
-			break_end
+			echo -e "${rw_lv}SSH常驻模式已关闭${rw_lv}"
 			;;
 		0)
-			break
+			riwi
 			;;
 		*)
-			red "无效的输入!"
-			sleep 1
+			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
 	break_end
@@ -17654,115 +17069,23 @@ EOF
 # ================================================================
 # 服务器集群控制函数
 # ================================================================
-
-# ── 集群配置解析器 ──
-# 读取 ~/cluster/servers.conf（KEY=VALUE 简单格式，每行一台），输出到全局数组
-# 格式: name|ip|port|user   （#开头为注释，空行跳过）
-# 全局变量:
-#   _CLUSTER_COUNT  — 服务器数量
-#   _CLUSTER_NAME[]  _CLUSTER_IP[]  _CLUSTER_PORT[]  _CLUSTER_USER[]
-_cluster_load() {
-	_CLUSTER_COUNT=0
-	_CLUSTER_NAME=()
-	_CLUSTER_IP=()
-	_CLUSTER_PORT=()
-	_CLUSTER_USER=()
-	local _f="${HOME}/cluster/servers.conf"
-	[ ! -f "$_f" ] && return 0
-	local _line _n _ip _p _u
-	while IFS= read -r _line || [ -n "$_line" ]; do
-		_line="${_line%%#*}"          # 去注释
-		_line="${_line#"${_line%%[![:space:]]*}"}"  # 去前导空格
-		_line="${_line%"${_line##*[![:space:]]}"}"  # 去尾随空格
-		[ -z "$_line" ] && continue
-		IFS='|' read -r _n _ip _p _u <<< "$_line"
-		[ -z "$_n" ] && continue
-		_p="${_p:-22}"
-		_u="${_u:-root}"
-		_CLUSTER_NAME+=("$_n")
-		_CLUSTER_IP+=("$_ip")
-		_CLUSTER_PORT+=("$_p")
-		_CLUSTER_USER+=("$_u")
-		_CLUSTER_COUNT=$((_CLUSTER_COUNT + 1))
-	done < "$_f"
-}
-
-# ── 保存单台服务器到配置 ──
-_cluster_add_server() {
-	local _n="$1" _ip="$2" _p="$3" _u="$4"
-	mkdir -p "${HOME}/cluster"
-	local _f="${HOME}/cluster/servers.conf"
-	[ ! -f "$_f" ] && echo "# 集群服务器配置 格式: name|ip|port|user" > "$_f"
-	echo "${_n}|${_ip}|${_p}|${_u}" >> "$_f"
-}
-
-# ── 删除单台服务器 ──
-_cluster_del_server() {
-	local _n="$1"
-	local _f="${HOME}/cluster/servers.conf"
-	[ ! -f "$_f" ] && return 1
-	# 用 awk 精确匹配行首 name|，跨平台兼容（BSD sed 不支持 \#分隔符）
-	local _tmp="${_f}.tmp.$$"
-	awk -v n="$_n" 'BEGIN{FS="|"} $1!=n' "$_f" > "$_tmp" && mv "$_tmp" "$_f"
-}
-
-# ── 通过 SSH 在单台服务器执行命令（带超时）──
-# 用法: _cluster_ssh_exec <index> <command>
-_cluster_ssh_exec() {
-	local _idx="$1" _cmd="$2"
-	[ "$_idx" -ge "$_CLUSTER_COUNT" ] 2>/dev/null && return 1
-	ssh -o ConnectTimeout=8 -o StrictHostKeyChecking=no -o BatchMode=yes \
-		-p "${_CLUSTER_PORT[$_idx]}" "${_CLUSTER_USER[$_idx]}@${_CLUSTER_IP[$_idx]}" "$_cmd" 2>&1
-}
-
-# ── 批量并发执行命令并汇总 ──
-# 用法: _cluster_run_all <command>
-# 依赖: _cluster_load 已调用
-_cluster_run_all() {
-	local _cmd="$1"
-	local _i _tmpdir
-	_tmpdir=$(mktemp -d)
-	for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-		(
-			local _out
-			_out=$(_cluster_ssh_exec "$_i" "$_cmd" 2>&1)
-			printf '%s\n' "$_out" > "${_tmpdir}/${_i}.out"
-		) &
-	done
-	wait
-	for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-		echo -e " ${rw_huang}[$((_i + 1))] ${_CLUSTER_NAME[$_i]} (${_CLUSTER_IP[$_i]})${rw_lv}"
-		if [ -s "${_tmpdir}/${_i}.out" ]; then
-			sed 's/^/   /' "${_tmpdir}/${_i}.out"
-		else
-			echo -e "   ${rw_lv}(无输出)${rw_lv}"
-		fi
-	done
-	rm -rf "$_tmpdir"
-}
-
 linux_cluster() {
   mkdir -p ~/cluster
   while true; do
     clear
     send_stats "集群控制中心"
 
-    # 加载配置
-    _cluster_load
-    # 兼容旧 servers.py: 如果存在旧文件但新文件不存在，提示迁移
-    if [ "$_CLUSTER_COUNT" -eq 0 ] && [ -f ~/cluster/servers.py ] && [ ! -f ~/cluster/servers.conf ]; then
-      echo -e " ${rw_huang}检测到旧配置 servers.py，建议迁移到新格式 servers.conf${rw_lv}"
-      echo -e " ${rw_huang}可在选项 6「迁移旧配置」一键完成${rw_lv}"
-      echo ""
-    fi
+    # ── 状态探测 ──
+    local _server_cnt=0
+    [ -f ~/cluster/servers.py ] && _server_cnt=$(grep -c '"name"' ~/cluster/servers.py 2>/dev/null || echo 0)
 
     echo -e "${rw_cheng}━━━━━━━━━━━━  服务器集群控制  ━━━━━━━━━━━━${rw_lv}"
-    echo -e " 集群服务器数量 ${rw_lv}${_CLUSTER_COUNT}${rw_lv} 台  配置文件 ${rw_huang}~/cluster/servers.conf${rw_lv}"
+    echo -e " 集群服务器数量 ${rw_lv}${_server_cnt}${rw_lv} 台  配置文件 ${rw_huang}~/cluster/servers.py${rw_lv}"
     echo ""
     echo -e " ${rw_cheng}──── 服务器管理${rw_lv}"
     echo -e " ${rw_huang}1${rw_lv}  添加服务器           ${rw_huang}2${rw_lv}  删除服务器"
     echo -e " ${rw_huang}3${rw_lv}  查看服务器列表       ${rw_huang}4${rw_lv}  测试连接"
-    echo -e " ${rw_huang}5${rw_lv}  编辑服务器配置       ${rw_huang}6${rw_lv}  迁移旧 servers.py"
+    echo -e " ${rw_huang}5${rw_lv}  编辑服务器配置"
     echo ""
     echo -e " ${rw_cheng}──── 批量执行任务${rw_lv}"
     echo -e " ${rw_huang}11${rw_lv} 批量执行命令         ${rw_huang}12${rw_lv} 批量上传文件"
@@ -17793,22 +17116,24 @@ linux_cluster() {
         ssh_user=${ssh_user:-root}
 
         if [ -z "$server_name" ] || [ -z "$server_ip" ]; then
-          red "服务器名称和IP不能为空"
+          echo -e "${rw_hong}服务器名称和IP不能为空${rw_lv}"
           break_end
           continue
         fi
-        # 检查重名
-        _cluster_load
-        local _i
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          if [ "${_CLUSTER_NAME[$_i]}" = "$server_name" ]; then
-            red "服务器名称 $server_name 已存在"
-            break_end
-            continue 2
-          fi
-        done
-        _cluster_add_server "$server_name" "$server_ip" "$ssh_port" "$ssh_user"
-        green "✓ 服务器 $server_name 添加成功"
+
+        echo -e "${rw_huang}正在添加服务器 $server_name ...${rw_lv}"
+        mkdir -p ~/cluster
+        if [ ! -f ~/cluster/servers.py ]; then
+          cat > ~/cluster/servers.py << 'EOF'
+# 集群服务器配置
+servers = [
+]
+EOF
+        fi
+
+        # 添加服务器到配置文件
+        cat >> ~/cluster/servers.py <<< "  {\"name\": \"$server_name\", \"ip\": \"$server_ip\", \"port\": $ssh_port, \"user\": \"$ssh_user\"},"
+        echo -e "${rw_lv}✓ 服务器 $server_name 添加成功${rw_lv}"
         break_end
         ;;
 
@@ -17818,25 +17143,22 @@ linux_cluster() {
         echo -e "${rw_huang}从集群删除服务器${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
+        if [ ! -f ~/cluster/servers.py ]; then
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        local _i
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          echo -e " ${rw_huang}$((_i + 1)).${rw_lv} ${_CLUSTER_NAME[$_i]} (${_CLUSTER_IP[$_i]})"
-        done
+        echo -e "${rw_huang}当前服务器列表:${rw_lv}"
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/'
         echo ""
-        read -e -p "请输入要删除的服务器名称或编号: " server_name
-        [ -z "$server_name" ] && { red "不能为空"; break_end; continue; }
-        # 编号删除
-        if [[ "$server_name" =~ ^[0-9]+$ ]] && [ "$server_name" -ge 1 ] 2>/dev/null && [ "$server_name" -le $_CLUSTER_COUNT ] 2>/dev/null; then
-          server_name="${_CLUSTER_NAME[$((server_name - 1))]}"
+        read -e -p "请输入要删除的服务器名称: " server_name
+        if [ -z "$server_name" ]; then
+          echo -e "${rw_hong}服务器名称不能为空${rw_lv}"
+          break_end
+          continue
         fi
-        _cluster_del_server "$server_name"
-        green "✓ 服务器 $server_name 已删除"
+        sed -i "/\"name\": \"$server_name\"/d" ~/cluster/servers.py
+        echo -e "${rw_lv}✓ 服务器 $server_name 已删除${rw_lv}"
         break_end
         ;;
 
@@ -17846,19 +17168,13 @@ linux_cluster() {
         echo -e "${rw_huang}集群服务器列表${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
+        if [ ! -f ~/cluster/servers.py ]; then
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        printf "  %-4s %-15s %-18s %-8s %-12s\n" "序号" "名称" "IP" "端口" "用户"
-        echo "  ──────────────────────────────────────────────────"
-        local _i
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          printf "  ${rw_huang}%-4s${rw_lv} %-15s %-18s %-8s %-12s\n" \
-            "$((_i + 1))" "${_CLUSTER_NAME[$_i]}" "${_CLUSTER_IP[$_i]}" "${_CLUSTER_PORT[$_i]}" "${_CLUSTER_USER[$_i]}"
-        done
+        echo -e "${rw_lv}服务器列表:${rw_lv}"
+        grep -A 3 '"name"' ~/cluster/servers.py | grep -E '"name"|"ip"|"port"|"user"' | sed 's/.*"name": "\(.*\)",.*/  名称: \1/' | sed 's/.*"ip": "\(.*\)",.*/  IP: \1/' | sed 's/.*"port": \([0-9]*\),.*/  端口: \1/' | sed 's/.*"user": "\(.*\)",.*/  用户: \1/'
         echo ""
         break_end
         ;;
@@ -17869,34 +17185,21 @@ linux_cluster() {
         echo -e "${rw_huang}测试集群服务器连接${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
+        if [ ! -f ~/cluster/servers.py ]; then
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在测试连接（SSH + Ping 双重检测）...${rw_lv}"
-        local _i _ok=0 _fail=0
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          local _ip="${_CLUSTER_IP[$_i]}" _name="${_CLUSTER_NAME[$_i]}"
-          printf "  %-15s (%-15s): " "$_name" "$_ip"
-          # 先 ping
-          if ! ping -c 1 -W 2 "$_ip" &>/dev/null; then
-            echo -e "${rw_hong}✗ Ping 不通${rw_lv}"
-            _fail=$((_fail + 1))
-            continue
-          fi
-          # 再测 SSH 端口
-          if _cluster_ssh_exec "$_i" "echo ok" 2>/dev/null | grep -q "ok"; then
-            echo -e "${rw_lv}✓ SSH 可连接${rw_lv}"
-            _ok=$((_ok + 1))
+        echo -e "${rw_huang}正在测试连接...${rw_lv}"
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          echo -e " 测试 $server_name ($server_ip)..."
+          if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
+            echo -e "    ${rw_lv}✓ 连接正常${rw_lv}"
           else
-            echo -e "${rw_huang}△ Ping 通但 SSH 不通（需配免密或检查 sshd）${rw_lv}"
-            _fail=$((_fail + 1))
+            echo -e "    ${rw_hong}✗ 连接失败${rw_lv}"
           fi
         done
-        echo ""
-        echo -e " 汇总: ${rw_lv}SSH 可连 ${_ok}${rw_lv} 台    ${rw_hong}不可连 ${_fail}${rw_lv} 台"
         echo ""
         break_end
         ;;
@@ -17907,60 +17210,18 @@ linux_cluster() {
         echo -e "${rw_huang}编辑服务器配置文件${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        local _f="${HOME}/cluster/servers.conf"
-        [ ! -f "$_f" ] && echo "# 集群服务器配置 格式: name|ip|port|user" > "$_f"
-        echo -e " ${rw_huang}格式说明: 每行一台，字段用 | 分隔${rw_lv}"
-        echo -e " ${rw_huang}示例: web01|192.168.1.10|22|root${rw_lv}"
-        echo -e " ${rw_huang}# 开头为注释${rw_lv}"
-        echo ""
-        if command -v vim &>/dev/null; then
-          vim "$_f"
-        elif command -v nano &>/dev/null; then
-          nano "$_f"
-        else
-          echo -e "${rw_hong}未找到编辑器 (vim/nano)${rw_lv}"
-        fi
-        break_end
-        ;;
-
-      6)
-        # ── 迁移旧 servers.py 到 servers.conf ──
-        clear
-        send_stats "迁移旧配置"
-        echo -e "${rw_huang}迁移旧 servers.py 到新 servers.conf${rw_lv}"
-        echo -e "${rw_cheng}------------------------${rw_lv}"
-        echo ""
         if [ ! -f ~/cluster/servers.py ]; then
-          yellow "未找到旧配置 servers.py，无需迁移"
+          echo -e "${rw_hong}配置文件不存在${rw_lv}"
           break_end
           continue
         fi
-        if [ -f ~/cluster/servers.conf ] && [ -s ~/cluster/servers.conf ]; then
-          echo -e "${rw_huang}servers.conf 已存在内容，将备份后合并${rw_lv}"
-          cp -a ~/cluster/servers.conf ~/cluster/servers.conf.bak.$(date +%Y%m%d%H%M%S)
-        fi
-        # 用 python 解析旧 JSON-like 格式更可靠
-        local _migrated=0
-        python3 - <<'PYEOF' 2>/dev/null
-import re, os
-src = os.path.expanduser('~/cluster/servers.py')
-dst = os.path.expanduser('~/cluster/servers.conf')
-content = open(src, encoding='utf-8', errors='ignore').read()
-# 提取 {"name": "...", "ip": "...", "port": N, "user": "..."}
-pattern = r'\{\s*"name":\s*"([^"]+)"\s*,\s*"ip":\s*"([^"]+)"\s*,\s*"port":\s*(\d+)\s*,\s*"user":\s*"([^"]+)"\s*\}'
-items = re.findall(pattern, content)
-with open(dst, 'a', encoding='utf-8') as f:
-    for n, ip, p, u in items:
-        f.write(f'{n}|{ip}|{p}|{u}\n')
-print(len(items))
-PYEOF
-        _migrated=$?
-        if [ "$_migrated" -gt 0 ]; then
-          green "✓ 已迁移 ${_migrated} 台服务器到 servers.conf"
-          echo -e " ${rw_huang}旧文件已保留为 servers.py（可手动删除）${rw_lv}"
+        echo -e "${rw_huang}正在打开配置文件...${rw_lv}"
+        if command -v vim &>/dev/null; then
+          vim ~/cluster/servers.py
+        elif command -v nano &>/dev/null; then
+          nano ~/cluster/servers.py
         else
-          yellow "未解析到服务器记录，或 python3 不可用"
-          echo -e " ${rw_huang}建议手动编辑 servers.conf${rw_lv}"
+          echo -e "${rw_hong}未找到编辑器 (vim/nano)${rw_lv}"
         fi
         break_end
         ;;
@@ -17971,21 +17232,20 @@ PYEOF
         echo -e "${rw_huang}批量在集群服务器执行命令${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
         read -e -p "请输入要执行的命令: " cmd
         if [ -z "$cmd" ]; then
-          red "命令不能为空"
+          echo -e "${rw_hong}命令不能为空${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在并发执行: $cmd${rw_lv}"
-        echo ""
-        _cluster_run_all "$cmd"
+        echo -e "${rw_huang}正在执行命令: $cmd${rw_lv}"
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
+          server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
+          echo -e "${rw_huang}在 $server_name 上执行...${rw_lv}"
+          ssh -p "$server_port" "$server_user@$server_ip" "$cmd" 2>/dev/null || echo -e "${rw_hong}执行失败${rw_lv}"
+        done
         echo ""
         break_end
         ;;
@@ -17996,450 +17256,100 @@ PYEOF
         echo -e "${rw_huang}批量上传文件到集群服务器${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
-        read -e -p "请输入本地文件/目录路径: " local_file
+        read -e -p "请输入本地文件路径: " local_file
         read -e -p "请输入远程目标路径: " remote_file
         if [ -z "$local_file" ] || [ -z "$remote_file" ]; then
-          red "路径不能为空"
+          echo -e "${rw_hong}路径不能为空${rw_lv}"
           break_end
           continue
         fi
-        if [ ! -e "$local_file" ]; then
-          red "本地文件/目录不存在"
+        if [ ! -f "$local_file" ]; then
+          echo -e "${rw_hong}本地文件不存在${rw_lv}"
           break_end
           continue
         fi
-        # 目录用 -r
-        local _scp_opt=""
-        [ -d "$local_file" ] && _scp_opt="-r"
-        echo -e "${rw_huang}正在并发上传...${rw_lv}"
-        local _i _ok=0 _fail=0
-        local _tmpdir
-        _tmpdir=$(mktemp -d)
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          (
-            scp -o ConnectTimeout=8 -o StrictHostKeyChecking=no -o BatchMode=yes $_scp_opt \
-              -P "${_CLUSTER_PORT[$_i]}" "$local_file" \
-              "${_CLUSTER_USER[$_i]}@${_CLUSTER_IP[$_i]}:$remote_file" >/dev/null 2>&1 \
-              && echo ok > "${_tmpdir}/${_i}.st" || echo fail > "${_tmpdir}/${_i}.st"
-          ) &
+        echo -e "${rw_huang}正在上传文件...${rw_lv}"
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/\1/' | while read server_name; do
+          server_ip=$(grep -A 1 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          server_user=$(grep -A 3 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"user"' | sed 's/.*"user": "\(.*\)",.*/\1/')
+          server_port=$(grep -A 2 "\"name\": \"$server_name\"" ~/cluster/servers.py | grep '"port"' | sed 's/.*"port": $.∗$,.*/\1/')
+          echo -e "  上传到 $server_name ..."
+          scp -P "$server_port" "$local_file" "$server_user@$server_ip:$remote_file" 2>/dev/null && echo -e "${rw_lv}✓ 成功${rw_lv}" || echo -e "${rw_hong}✗ 失败${rw_lv}"
         done
-        wait
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          printf "  %-15s: " "${_CLUSTER_NAME[$_i]}"
-          if [ "$(cat "${_tmpdir}/${_i}.st")" = "ok" ]; then
-            echo -e "${rw_lv}✓ 成功${rw_lv}"
-            _ok=$((_ok + 1))
-          else
-            echo -e "${rw_hong}✗ 失败${rw_lv}"
-            _fail=$((_fail + 1))
-          fi
-        done
-        rm -rf "$_tmpdir"
-        echo ""
-        echo -e " 汇总: ${rw_lv}成功 ${_ok}${rw_lv}    ${rw_hong}失败 ${_fail}${rw_lv}"
         echo ""
         break_end
         ;;
-
       13)
-        # ── 批量下载文件 ──
         clear
         send_stats "批量下载文件"
         echo -e "${rw_huang}批量从集群服务器下载文件${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
-        read -e -p "请输入远程文件路径: " remote_file
-        read -e -p "请输入本地保存目录 [默认:~/cluster/downloads]: " local_dir
-        local_dir="${local_dir:-${HOME}/cluster/downloads}"
-        if [ -z "$remote_file" ]; then
-          red "远程文件路径不能为空"
-          break_end
-          continue
-        fi
-        mkdir -p "$local_dir"
-        echo -e "${rw_huang}正在并发下载到 ${local_dir} ...${rw_lv}"
-        local _i _ok=0 _fail=0
-        local _tmpdir
-        _tmpdir=$(mktemp -d)
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          (
-            local _name="${_CLUSTER_NAME[$_i]}"
-            # 文件名加服务器名后缀避免覆盖
-            local _base
-            _base=$(basename "$remote_file")
-            scp -o ConnectTimeout=8 -o StrictHostKeyChecking=no -o BatchMode=yes \
-              -P "${_CLUSTER_PORT[$_i]}" \
-              "${_CLUSTER_USER[$_i]}@${_CLUSTER_IP[$_i]}:$remote_file" \
-              "${local_dir}/${_name}_${_base}" >/dev/null 2>&1 \
-              && echo ok > "${_tmpdir}/${_i}.st" || echo fail > "${_tmpdir}/${_i}.st"
-          ) &
-        done
-        wait
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          printf "  %-15s: " "${_CLUSTER_NAME[$_i]}"
-          if [ "$(cat "${_tmpdir}/${_i}.st")" = "ok" ]; then
-            echo -e "${rw_lv}✓ 已下载到 ${local_dir}/${_CLUSTER_NAME[$_i]}_*${rw_lv}"
-            _ok=$((_ok + 1))
-          else
-            echo -e "${rw_hong}✗ 失败${rw_lv}"
-            _fail=$((_fail + 1))
-          fi
-        done
-        rm -rf "$_tmpdir"
-        echo ""
-        echo -e " 汇总: ${rw_lv}成功 ${_ok}${rw_lv}    ${rw_hong}失败 ${_fail}${rw_lv}"
-        echo ""
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       14)
-        # ── 批量安装软件 ──
         clear
         send_stats "批量安装软件"
         echo -e "${rw_huang}批量在集群服务器安装软件${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
-        echo -e " ${rw_huang}支持 apt/dnf/yum 自动识别${rw_lv}"
-        echo ""
-        read -e -p "请输入软件包名（多个用空格分隔）: " pkgs
-        if [ -z "$pkgs" ]; then
-          red "软件包名不能为空"
-          break_end
-          continue
-        fi
-        echo -e "${rw_huang}正在并发安装: $pkgs${rw_lv}"
-        echo ""
-        # 远程执行: 自动判断包管理器
-        local _remote_cmd
-        _remote_cmd="if command -v apt-get >/dev/null 2>&1; then DEBIAN_FRONTEND=noninteractive apt-get update -y && apt-get install -y $pkgs; elif command -v dnf >/dev/null 2>&1; then dnf install -y $pkgs; elif command -v yum >/dev/null 2>&1; then yum install -y $pkgs; else echo '未识别的包管理器'; exit 1; fi"
-        _cluster_run_all "$_remote_cmd"
-        echo ""
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       15)
-        # ── 查看集群状态（增强版：CPU/内存/磁盘/负载/uptime）──
         clear
         send_stats "查看集群状态"
-        echo -e "${rw_huang}集群服务器状态${rw_lv}"
+        echo -e "${rw_huang}查看集群服务器状态${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
+        if [ ! -f ~/cluster/servers.py ]; then
+          echo -e "${rw_hong}没有服务器配置${rw_lv}"
           break_end
           continue
         fi
-        echo -e "${rw_huang}正在并发采集状态...${rw_lv}"
-        echo ""
-        # 远程采集脚本：输出 TSV 格式  status|uptime|load|cpu%|mem_used|mem_total|disk_used|disk_total
-        local _stat_cmd
-        _stat_cmd='
-_out=""
-ping -c 1 -W 1 127.0.0.1 >/dev/null 2>&1 || true
-# uptime
-_up=$(uptime -p 2>/dev/null | sed "s/up //" || echo "?")
-# load avg
-_load=$(cat /proc/loadavg 2>/dev/null | awk "{print \$1,\$2,\$3}" || echo "? ? ?")
-# CPU 使用率（采样1秒）
-_cpu=$(top -bn1 2>/dev/null | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100-\$1}" || echo "?")
-# 内存
-_mem_u=$(free -m 2>/dev/null | awk "/Mem:/{print \$3}")
-_mem_t=$(free -m 2>/dev/null | awk "/Mem:/{print \$2}")
-# 磁盘根分区
-_dsk_u=$(df -m / 2>/dev/null | awk "NR==2{print \$3}")
-_dsk_t=$(df -m / 2>/dev/null | awk "NR==2{print \$2}")
-printf "OK\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$_up" "$_load" "$_cpu" "$_mem_u" "$_mem_t" "$_dsk_u" "$_dsk_t"
-'
-        local _tmpdir
-        _tmpdir=$(mktemp -d)
-        local _i
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          (
-            _cluster_ssh_exec "$_i" "$_stat_cmd" > "${_tmpdir}/${_i}.out" 2>&1
-          ) &
-        done
-        wait
-        # 表格输出
-        printf "  %-15s %-8s %-18s %-10s %-12s %-12s %-10s\n" "服务器" "状态" "负载(1/5/15)" "CPU%" "内存(M)" "磁盘(M)" "Uptime"
-        echo "  ──────────────────────────────────────────────────────────────────────────"
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          local _name="${_CLUSTER_NAME[$_i]}" _ip="${_CLUSTER_IP[$_i]}"
-          local _line _status="离线" _up="-" _load="-" _cpu="-" _mem="-" _dsk="-"
-          if [ -s "${_tmpdir}/${_i}.out" ]; then
-            _line=$(head -1 "${_tmpdir}/${_i}.out")
-            if [[ "$_line" == OK* ]]; then
-              _status="在线"
-              IFS=$'\t' read -r _ _up _load _cpu _mem_u _mem_t _dsk_u _dsk_t <<< "$_line"
-              [ -n "$_mem_u" ] && [ -n "$_mem_t" ] && _mem="${_mem_u}/${_mem_t}"
-              [ -n "$_dsk_u" ] && [ -n "$_dsk_t" ] && _dsk="${_dsk_u}/${_dsk_t}"
-            fi
+        echo -e "${rw_lv}集群状态:${rw_lv}"
+        grep '"name"' ~/cluster/servers.py | sed 's/.*"name": "\(.*\)",.*/  • \1/' | while read server_name; do
+          server_ip=$(grep -A 1 ""name": "$server_name"" ~/cluster/servers.py | grep '"ip"' | sed 's/.*"ip": "\(.*\)",.*/\1/')
+          if ping -c 1 -W 2 "$server_ip" &>/dev/null; then
+            echo -e "  $server_name ($server_ip): ${rw_lv}在线${rw_lv}"
+          else
+            echo -e "  $server_name ($server_ip): ${rw_hong}离线${rw_lv}"
           fi
-          local _color="${rw_hong}"
-          [ "$_status" = "在线" ] && _color="${rw_lv}"
-          printf "  ${rw_huang}%-15s${rw_lv} ${_color}%-8s${rw_lv} %-18s %-10s %-12s %-12s %-10s\n" \
-            "$_name" "$_status" "$_load" "${_cpu}%" "$_mem" "$_dsk" "$_up"
         done
-        rm -rf "$_tmpdir"
         echo ""
         break_end
         ;;
 
       21)
-        # ── 实时监控（每 N 秒刷新集群状态）──
         clear
         send_stats "实时监控"
         echo -e "${rw_huang}集群服务器实时监控${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
-        read -e -p "刷新间隔秒数 [默认:5]: " _interval
-        _interval="${_interval:-5}"
-        if ! [[ "$_interval" =~ ^[0-9]+$ ]] || [ "$_interval" -lt 1 ]; then
-          red "无效间隔"
-          break_end
-          continue
-        fi
-        echo -e " ${rw_huang}每 ${_interval} 秒刷新一次，按 Ctrl+C 退出${rw_lv}"
-        echo ""
-        read -e -p "按回车开始监控..." _dummy < /dev/tty
-        while true; do
-          clear
-          echo -e "${rw_cheng}━━━━━━ 集群实时监控 ($(date '+%H:%M:%S')) ━━━━━━${rw_lv}"
-          echo ""
-          local _i
-          local _tmpdir
-          _tmpdir=$(mktemp -d)
-          for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-            (
-              _cluster_ssh_exec "$_i" "uptime; free -m | grep Mem; df -m / | tail -1" > "${_tmpdir}/${_i}.out" 2>&1
-            ) &
-          done
-          wait
-          printf "  %-15s %-8s %-22s %-12s %-15s\n" "服务器" "状态" "负载" "内存(M)" "磁盘"
-          echo "  ────────────────────────────────────────────────────────────"
-          for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-            local _name="${_CLUSTER_NAME[$_i]}"
-            if [ -s "${_tmpdir}/${_i}.out" ]; then
-              local _load _mem _dsk
-              _load=$(grep -oE 'load average:.*' "${_tmpdir}/${_i}.out" | sed 's/load average: //' || echo "-")
-              _mem=$(grep '^Mem:' "${_tmpdir}/${_i}.out" | awk '{printf "%s/%s", $3, $2}' || echo "-")
-              _dsk=$(grep '^/' "${_tmpdir}/${_i}.out" | awk '{printf "%s%%", $5}' || echo "-")
-              printf "  ${rw_huang}%-15s${rw_lv} ${rw_lv}%-8s${rw_lv} %-22s %-12s %-15s\n" "$_name" "在线" "$_load" "$_mem" "$_dsk"
-            else
-              printf "  ${rw_huang}%-15s${rw_lv} ${rw_hong}%-8s${rw_lv} %-22s %-12s %-15s\n" "$_name" "离线" "-" "-" "-"
-            fi
-          done
-          rm -rf "$_tmpdir"
-          echo ""
-          echo -e " ${rw_huang}下次刷新: ${_interval} 秒后  (Ctrl+C 退出)${rw_lv}"
-          sleep "$_interval"
-        done
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
+        break_end
         ;;
 
       22)
-        # ── 资源统计（汇总集群总资源）──
         clear
         send_stats "资源统计"
         echo -e "${rw_huang}集群服务器资源统计${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        _cluster_load
-        if [ $_CLUSTER_COUNT -eq 0 ]; then
-          red "没有服务器配置"
-          break_end
-          continue
-        fi
-        echo -e "${rw_huang}正在并发采集资源数据...${rw_lv}"
-        echo ""
-        local _stat_cmd
-        _stat_cmd='
-_cpu=$(nproc 2>/dev/null || echo 0)
-_mem_t=$(free -m 2>/dev/null | awk "/Mem:/{print \$2}")
-_mem_u=$(free -m 2>/dev/null | awk "/Mem:/{print \$3}")
-_dsk_t=$(df -m / 2>/dev/null | awk "NR==2{print \$2}")
-_dsk_u=$(df -m / 2>/dev/null | awk "NR==2{print \$3}")
-_dsk_p=$(df / 2>/dev/null | awk "NR==2{print \$5}")
-printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$_cpu" "$_mem_t" "$_mem_u" "$_dsk_t" "$_dsk_u" "$_dsk_p"
-'
-        local _tmpdir
-        _tmpdir=$(mktemp -d)
-        local _i
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          (
-            _cluster_ssh_exec "$_i" "$_stat_cmd" > "${_tmpdir}/${_i}.out" 2>&1
-          ) &
-        done
-        wait
-        # 明细表
-        printf "  %-15s %-6s %-14s %-14s %-10s\n" "服务器" "CPU核" "内存(M)" "磁盘(M)" "磁盘用%"
-        echo "  ──────────────────────────────────────────────────"
-        local _tot_cpu=0 _tot_mem_t=0 _tot_mem_u=0 _tot_dsk_t=0 _tot_dsk_u=0 _alive=0
-        for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-          local _name="${_CLUSTER_NAME[$_i]}"
-          if [ -s "${_tmpdir}/${_i}.out" ]; then
-            local _cpu _mt _mu _dt _du _dp
-            IFS=$'\t' read -r _cpu _mt _mu _dt _du _dp <<< "$(head -1 "${_tmpdir}/${_i}.out")"
-            if [ -n "$_cpu" ] && [ "$_cpu" != "?" ]; then
-              printf "  ${rw_huang}%-15s${rw_lv} %-6s %-14s %-14s %-10s\n" "$_name" "$_cpu" "${_mu}/${_mt}" "${_du}/${_dt}" "$_dp"
-              _tot_cpu=$((_tot_cpu + _cpu))
-              _tot_mem_t=$((_tot_mem_t + _mt))
-              _tot_mem_u=$((_tot_mem_u + _mu))
-              _tot_dsk_t=$((_tot_dsk_t + _dt))
-              _tot_dsk_u=$((_tot_dsk_u + _du))
-              _alive=$((_alive + 1))
-            else
-              printf "  ${rw_huang}%-15s${rw_lv} ${rw_hong}%-6s${rw_lv} %-14s %-14s %-10s\n" "$_name" "离线" "-" "-" "-"
-            fi
-          else
-            printf "  ${rw_huang}%-15s${rw_lv} ${rw_hong}%-6s${rw_lv} %-14s %-14s %-10s\n" "$_name" "离线" "-" "-" "-"
-          fi
-        done
-        rm -rf "$_tmpdir"
-        echo ""
-        echo -e " ${rw_cheng}── 集群资源汇总（${_alive}/${_CLUSTER_COUNT} 台在线）──${rw_lv}"
-        printf "  总 CPU 核心: ${rw_huang}%s${rw_lv}    总内存: ${rw_huang}%s/%s M${rw_lv}    总磁盘: ${rw_huang}%s/%s M${rw_lv}\n" \
-          "$_tot_cpu" "$_tot_mem_u" "$_tot_mem_t" "$_tot_dsk_u" "$_tot_dsk_t"
-        if [ $_tot_mem_t -gt 0 ] 2>/dev/null; then
-          local _mem_pct=$((_tot_mem_u * 100 / _tot_mem_t))
-          echo -e "  内存使用率: ${rw_huang}${_mem_pct}%${rw_lv}"
-        fi
-        echo ""
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
       23)
-        # ── 告警设置（配置 CPU/内存/磁盘 阈值，生成 cron 检测脚本）──
         clear
         send_stats "告警设置"
         echo -e "${rw_huang}集群告警设置${rw_lv}"
         echo -e "${rw_cheng}------------------------${rw_lv}"
         echo ""
-        local _alert_conf="${HOME}/cluster/alert.conf"
-        if [ -f "$_alert_conf" ]; then
-          echo -e " ${rw_huang}当前告警配置:${rw_lv}"
-          cat "$_alert_conf" | sed 's/^/   /'
-          echo ""
-        fi
-        echo -e " ${rw_huang}设置阈值（留空使用默认值）${rw_lv}"
-        read -e -p " CPU 使用率告警阈值% [默认:80]: " _cpu_thr
-        _cpu_thr="${_cpu_thr:-80}"
-        read -e -p " 内存使用率告警阈值% [默认:85]: " _mem_thr
-        _mem_thr="${_mem_thr:-85}"
-        read -e -p " 磁盘使用率告警阈值% [默认:90]: " _dsk_thr
-        _dsk_thr="${_dsk_thr:-90}"
-        read -e -p " 检查间隔分钟 [默认:5]: " _check_int
-        _check_int="${_check_int:-5}"
-        read -e -p " 告警日志路径 [默认:~/cluster/alert.log]: " _alert_log
-        _alert_log="${_alert_log:-${HOME}/cluster/alert.log}"
-
-        # 校验
-        for _v in "$_cpu_thr" "$_mem_thr" "$_dsk_thr" "$_check_int"; do
-          if ! [[ "$_v" =~ ^[0-9]+$ ]]; then
-            red "阈值必须是数字"
-            break_end
-            continue 2
-          fi
-        done
-
-        mkdir -p "${HOME}/cluster"
-        cat > "$_alert_conf" << EOF
-# 集群告警配置
-CPU_THRESHOLD=$_cpu_thr
-MEM_THRESHOLD=$_mem_thr
-DSK_THRESHOLD=$_dsk_thr
-CHECK_INTERVAL=$_check_int
-ALERT_LOG=$_alert_log
-EOF
-
-        # 生成检测脚本
-        local _check_script="${HOME}/cluster/alert_check.sh"
-        cat > "$_check_script" << 'SCRIPT'
-#!/bin/bash
-# 集群告警检测脚本（由 riwi.sh 集群控制生成）
-CONF="${HOME}/cluster/alert.conf"
-[ -f "$CONF" ] || exit 0
-source "$CONF"
-LOG="${ALERT_LOG:-${HOME}/cluster/alert.log}"
-_cluster_load() {
-  _CLUSTER_COUNT=0
-  _CLUSTER_NAME=(); _CLUSTER_IP=(); _CLUSTER_PORT=(); _CLUSTER_USER=()
-  local _f="${HOME}/cluster/servers.conf"
-  [ ! -f "$_f" ] && return 0
-  while IFS= read -r _line || [ -n "$_line" ]; do
-    _line="${_line%%#*}"
-    [ -z "${_line// }" ] && continue
-    IFS='|' read -r _n _ip _p _u <<< "$_line"
-    [ -z "$_n" ] && continue
-    _CLUSTER_NAME+=("$_n"); _CLUSTER_IP+=("$_ip")
-    _CLUSTER_PORT+=("${_p:-22}"); _CLUSTER_USER+=("${_u:-root}")
-    _CLUSTER_COUNT=$((_CLUSTER_COUNT + 1))
-  done < "$_f"
-}
-_cluster_load
-[ $_CLUSTER_COUNT -eq 0 ] && exit 0
-_now=$(date '+%Y-%m-%d %H:%M:%S')
-for _i in $(seq 0 $((_CLUSTER_COUNT - 1))); do
-  _out=$(ssh -o ConnectTimeout=5 -o BatchMode=yes -p "${_CLUSTER_PORT[$_i]}" \
-    "${_CLUSTER_USER[$_i]}@${_CLUSTER_IP[$_i]}" \
-    "top -bn1|grep Cpu|sed 's/.*, *\([0-9.]*\)%* id.*/\1/'|awk '{print 100-\$1}'; \
-     free|awk '/Mem:/{printf \"%s %s\", \$3, \$2}'; \
-     df /|awk 'NR==2{print \$5}'" 2>/dev/null)
-  [ -z "$_out" ] && continue
-  _cpu=$(echo "$_out" | sed -n '1p' | awk '{printf "%.0f", $1}')
-  _mem_u=$(echo "$_out" | sed -n '2p' | awk '{print $1}')
-  _mem_t=$(echo "$_out" | sed -n '2p' | awk '{print $2}')
-  _dsk_p=$(echo "$_out" | sed -n '3p' | tr -d '%')
-  _mem_p=0
-  [ -n "$_mem_t" ] && [ "$_mem_t" -gt 0 ] 2>/dev/null && _mem_p=$(( _mem_u * 100 / _mem_t ))
-  _name="${_CLUSTER_NAME[$_i]}"
-  _alerts=""
-  (( $(echo "${_cpu:-0} > $CPU_THRESHOLD" | bc -l 2>/dev/null || echo 0) )) && _alerts="CPU=${_cpu}% "
-  [ -n "$_mem_p" ] && [ "$_mem_p" -gt "$MEM_THRESHOLD" ] 2>/dev/null && _alerts="${_alerts}MEM=${_mem_p}% "
-  [ -n "$_dsk_p" ] && [ "$_dsk_p" -gt "$DSK_THRESHOLD" ] 2>/dev/null && _alerts="${_alerts}DSK=${_dsk_p}% "
-  if [ -n "$_alerts" ]; then
-    echo "[${_now}] ${_name} (${_CLUSTER_IP[$_i]}) 告警: ${_alerts}" >> "$LOG"
-  fi
-done
-SCRIPT
-        chmod +x "$_check_script"
-
-        # 写入 crontab（去重）
-        local _cron_job="*/${_check_int} * * * * ${_check_script}"
-        (crontab -l 2>/dev/null | grep -v "alert_check.sh"; echo "$_cron_job") | crontab -
-        green "✓ 告警配置已保存"
-        echo -e "   阈值: CPU>${_cpu_thr}%  内存>${_mem_thr}%  磁盘>${_dsk_thr}%"
-        echo -e "   间隔: 每 ${_check_int} 分钟"
-        echo -e "   日志: ${_alert_log}"
-        echo -e "   检测脚本: ${_check_script}"
-        echo -e "   已写入 crontab"
-        echo ""
-        echo -e " ${rw_huang}查看告警: tail -f ${_alert_log}${rw_lv}"
-        echo -e " ${rw_huang}停止告警: crontab -l | grep -v alert_check.sh | crontab -${rw_lv}"
-        echo ""
+        echo -e "${rw_hong}功能开发中...${rw_lv}"
         break_end
         ;;
 
@@ -19755,7 +18665,7 @@ echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}日常运维${rw_lv}"
 echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}环境配置${rw_lv}"
 echo -e "${rw_huang}4.   ${rw_lv}${rw_lv}版本控制${rw_lv}"
 echo -e "${rw_huang}5.   ${rw_lv}${rw_lv}应用市场${rw_lv}"
-echo -e "${rw_huang}6.   ${rw_lv}${rw_lv}常用快捷${rw_lv}"
+echo -e "${rw_huang}6.   ${rw_lv}${rw_lv}热门专栏${rw_lv}"
 echo -e "${rw_huang}7.   ${rw_lv}${rw_lv}综合管理${rw_lv}"
 echo -e "${rw_huang}8.   ${rw_lv}${rw_lv}后台工作${rw_lv}"
 echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}容器管理${rw_lv}"
@@ -19773,7 +18683,7 @@ case $choice in
   3) linux_tools ;;
   4) github_manager ;;
   5) linux_panel ;;
-  6) linux_quick_tools ;;
+  6) riwi_Affiliates ;;
   7) other_panel_manager ;;
   8) linux_work ;;
   9) docker_manager_menu ;;
@@ -20491,7 +19401,6 @@ while true; do
 	echo -e " ${rw_huang}4.   ${rw_lv}三证登录（公钥 + 密码 + OTP 动态码）${rw_lv}"
 	echo -e " ${rw_huang}5.   ${rw_lv}硬证登录（FIDO2 硬件密钥）${rw_lv}"
 	echo -e " ${rw_huang}6.   ${rw_lv}飞书扫码（SSH 登录飞书确认）${rw_lv}"
-	echo -e " ${rw_huang}7.   ${rw_lv}${rw_hong}应急救援（一键恢复登录 / 解锁 / 诊断）${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -20504,460 +19413,8 @@ while true; do
 	  4) ssh_three_factor_manager ;;
 	  5) ssh_fido2_manager ;;
 	  6) feishu_ssh_manager ;;
-	  7) ssh_emergency_rescue ;;
 	  0) break ;;
 	  *) red "无效的输入!" ;;
-	esac
-done
-}
-
-# ================================================================
-# SSH 应急救援管理器
-# 场景: 双证/三证/禁密码后把自己锁外面，或 PAM 配错 sshd 起不来
-# 前提: 已通过 VNC/物理终端进入服务器，运行本脚本
-# 功能: 一键恢复登录 / 解锁用户 / 诊断 / 查看日志 / 回滚配置
-# ================================================================
-ssh_emergency_rescue() {
-while true; do
-	clear
-	echo -e "${rw_cheng}━━━━━━━━━━━━  SSH 应急救援  ━━━━━━━━━━━━${rw_lv}"
-	echo ""
-
-	# ── 紧急状态速览 ──
-	local _sshd_stat="未知" _sshd_mode="未知" _lock_warn=""
-	if systemctl is-active sshd &>/dev/null || systemctl is-active ssh &>/dev/null; then
-		_sshd_stat="${rw_lv}运行中${rw_lv}"
-	else
-		_sshd_stat="${rw_hong}已停止${rw_lv}"
-		_lock_warn="1"
-	fi
-	_ssh_current_auth_mode
-	_sshd_mode="${_SSH_MODE_DESC}"
-
-	# 检查是否有锁死风险
-	local _passauth _pubkeyauth _authmethods
-	_passauth=$(_ssh_cfg_get PasswordAuthentication yes)
-	_pubkeyauth=$(_ssh_cfg_get PubkeyAuthentication yes)
-	_authmethods=$(_ssh_cfg_get AuthenticationMethods "")
-	if [ "$_passauth" = "no" ] && [ "$_pubkeyauth" = "no" ]; then
-		_lock_warn="1"
-	elif [ -n "$_authmethods" ]; then
-		# 有 AuthenticationMethods 但密码和公钥都关了 = 锁死
-		if ! echo "$_authmethods" | grep -qE 'password|publickey|keyboard-interactive'; then
-			_lock_warn="1"
-		fi
-	fi
-
-	echo -e " SSH 服务: ${_sshd_stat}    认证模式: ${rw_huang}${_sshd_mode}${rw_lv}"
-	if [ -n "$_lock_warn" ]; then
-		echo -e " ${rw_hong}⚠ 检测到锁死风险！建议立即执行选项 1 恢复${rw_lv}"
-	fi
-	echo ""
-	echo -e " ${rw_cheng}──── 紧急恢复 ──${rw_lv}"
-	echo -e " ${rw_huang}1${rw_lv}  ${rw_hong}一键恢复登录（恢复密码+公钥，清除所有认证限制）${rw_lv}"
-	echo -e " ${rw_huang}2${rw_lv}  仅清除双证/三证（保留密码+公钥登录）"
-	echo -e " ${rw_huang}3${rw_lv}  重启 SSH 服务"
-	echo -e " ${rw_huang}4${rw_lv}  解锁用户（清除 faillock / pam_tally2 失败计数）"
-	echo ""
-	echo -e " ${rw_cheng}──── 诊断 ──${rw_lv}"
-	echo -e " ${rw_huang}11${rw_lv} SSH 配置语法检查 (sshd -t)"
-	echo -e " ${rw_huang}12${rw_lv} 查看当前认证配置"
-	echo -e " ${rw_huang}13${rw_lv} 查看最近 SSH 登录日志"
-	echo -e " ${rw_huang}14${rw_lv} 查看所有用户公钥状态"
-	echo ""
-	echo -e " ${rw_cheng}──── 回滚 ──${rw_lv}"
-	echo -e " ${rw_huang}21${rw_lv} 列出配置备份并回滚"
-	echo -e " ${rw_huang}22${rw_lv} 清理 /tmp 下的旧备份"
-	echo ""
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0${rw_lv}  返回上级菜单"
-	echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-	read -e -p " 请选择: " er_choice
-
-	case $er_choice in
-	  1)
-		# ── 一键恢复登录 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 一键恢复登录 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_hong}⚠ 此操作将:${rw_lv}"
-		echo -e "   1) 备份当前 sshd_config + pam.d/sshd"
-		echo -e "   2) 注释掉 AuthenticationMethods"
-		echo -e "   3) PasswordAuthentication = yes"
-		echo -e "   4) PubkeyAuthentication = yes"
-		echo -e "   5) KbdInteractiveAuthentication = no"
-		echo -e "   6) ChallengeResponseAuthentication = no"
-		echo -e "   7) 从 PAM 移除 pam_google_authenticator"
-		echo -e "   8) 从 PAM 移除 riwi_feishu_ssh_notify"
-		echo -e "   9) 清理所有 Match 块中的认证字段"
-		echo -e "  10) sshd -t 检查 → 重启 SSH"
-		echo ""
-		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		# 备份
-		_ssh_backup_configs
-		local _bk_dir="$_SSH_BACKUP_DIR"
-
-		# 1-2: 注释 AuthenticationMethods
-		if grep -qE '^[[:space:]]*AuthenticationMethods' /etc/ssh/sshd_config 2>/dev/null; then
-			sed -i -E 's/^([[:space:]]*)(AuthenticationMethods[[:space:]].*)/#riwi-rescue \1\2/' /etc/ssh/sshd_config
-			green "✓ 已注释 AuthenticationMethods"
-		fi
-
-		# 3-6: 恢复基础认证
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		green "✓ 已恢复 PasswordAuthentication=yes, PubkeyAuthentication=yes"
-
-		# 7: 移除 PAM google_authenticator
-		if grep -q "pam_google_authenticator.so" /etc/pam.d/sshd 2>/dev/null; then
-			sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd 2>/dev/null
-			green "✓ 已从 PAM 移除 google_authenticator"
-		fi
-
-		# 8: 移除 PAM feishu notify
-		if grep -q "riwi_feishu_ssh_notify" /etc/pam.d/sshd 2>/dev/null; then
-			sed -i '/riwi_feishu_ssh_notify/d' /etc/pam.d/sshd 2>/dev/null
-			green "✓ 已从 PAM 移除 feishu_notify"
-		fi
-
-		# 9: 清理 Match 块中的认证字段
-		if grep -qE '^[[:space:]]*Match[[:space:]]' /etc/ssh/sshd_config 2>/dev/null; then
-			awk '
-				/^[[:space:]]*Match[[:space:]]/ { in_match=1 }
-				{
-					if (in_match && /^[[:space:]]*(AuthenticationMethods|KbdInteractiveAuthentication|ChallengeResponseAuthentication|PasswordAuthentication|PubkeyAuthentication)[[:space:]]/) {
-						print "#riwi-rescue " $0
-					} else {
-						print
-					}
-				}
-			' /etc/ssh/sshd_config > /tmp/riwi_rescue_sshd.$$.tmp && mv /tmp/riwi_rescue_sshd.$$.tmp /etc/ssh/sshd_config
-			green "✓ 已清理 Match 块中的认证字段"
-		fi
-
-		# 10: 语法检查 + 重启
-		echo ""
-		local _sshd_err
-		_sshd_err=$(sshd -t 2>&1)
-		if [ $? -ne 0 ]; then
-			red "✗ sshd -t 失败: $_sshd_err"
-			echo -e " ${rw_huang}备份在 ${_bk_dir}，可手动回滚${rw_lv}"
-			break_end
-			continue
-		fi
-		green "✓ sshd -t 通过"
-
-		if systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null || systemctl restart ssh 2>/dev/null; then
-			green "✓ SSH 服务已重启"
-		else
-			red "✗ SSH 重启失败，请手动: systemctl restart sshd"
-		fi
-		echo ""
-		echo -e " ${rw_lv}现在可以用密码或公钥登录了${rw_lv}"
-		echo -e " ${rw_huang}备份目录: ${_bk_dir}${rw_lv}"
-		echo ""
-		break_end
-		;;
-
-	  2)
-		# ── 仅清除双证/三证（保留密码+公钥）──
-		clear
-		echo -e "${rw_huang}━━━━━━ 清除双证/三证 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}比选项1温和: 只移除 OTP/认证链，不改动密码/公钥开关${rw_lv}"
-		echo ""
-		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-		_ssh_backup_configs
-		_ssh_clear_conflicting_auth
-		_ssh_cfg_set KbdInteractiveAuthentication no
-		_ssh_cfg_set ChallengeResponseAuthentication no
-		_ssh_cfg_set PasswordAuthentication yes
-		_ssh_cfg_set PubkeyAuthentication yes
-		sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd 2>/dev/null
-		green "✓ 已清除双证/三证配置"
-		_ssh_apply_and_restart
-		;;
-
-	  3)
-		# ── 重启 SSH 服务 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 重启 SSH 服务 ━━━━━━${rw_lv}"
-		echo ""
-		local _sshd_err
-		_sshd_err=$(sshd -t 2>&1)
-		if [ $? -ne 0 ]; then
-			red "✗ 语法检查失败，拒绝重启: $_sshd_err"
-			echo -e " ${rw_huang}建议先执行选项 1 恢复${rw_lv}"
-			break_end
-			continue
-		fi
-		green "✓ 语法检查通过"
-		if systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null || systemctl restart ssh 2>/dev/null; then
-			green "✓ SSH 服务已重启"
-		else
-			red "✗ 重启失败，请手动检查"
-		fi
-		break_end
-		;;
-
-	  4)
-		# ── 解锁用户（清除登录失败计数）──
-		clear
-		echo -e "${rw_huang}━━━━━━ 解锁用户 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}清除 faillock / pam_tally2 记录的登录失败次数${rw_lv}"
-		echo ""
-
-		# 列出被锁定的用户
-		local _locked_users=""
-		if command -v faillock &>/dev/null; then
-			echo -e " ${rw_huang}通过 faillock 检测:${rw_lv}"
-			while IFS=: read -r _u _ _ _ _ _ _ _; do
-				if faillock --user "$_u" 2>/dev/null | grep -q "Authentication failure"; then
-					_locked_users="${_locked_users}$_u "
-					echo -e "   ${rw_hong}$_u 有失败记录${rw_lv}"
-				fi
-			done </etc/passwd 2>/dev/null
-		elif command -v pam_tally2 &>/dev/null; then
-			echo -e " ${rw_huang}通过 pam_tally2 检测:${rw_lv}"
-			pam_tally2 2>/dev/null | grep -v "Login" | while read -r _u _c _r _l; do
-				[ -n "$_u" ] && echo -e "   ${rw_hong}$_u 失败 $_c 次${rw_lv}"
-			done
-		else
-			yellow "faillock 和 pam_tally2 都不可用，将解锁所有普通用户"
-		fi
-		echo ""
-		read -e -p " 输入要解锁的用户名（留空=解锁所有）: " _target_u < /dev/tty
-		if [ -z "$_target_u" ]; then
-			# 解锁所有
-			while IFS=: read -r _u _ _ _ _ _ _ _; do
-				[ "$_u" = "root" ] && continue
-				command -v faillock &>/dev/null && faillock --user "$_u" --reset 2>/dev/null
-				command -v pam_tally2 &>/dev/null && pam_tally2 --user "$_u" --reset 2>/dev/null
-			done </etc/passwd 2>/dev/null
-			# root 也解
-			command -v faillock &>/dev/null && faillock --user root --reset 2>/dev/null
-			command -v pam_tally2 &>/dev/null && pam_tally2 --user root --reset 2>/dev/null
-			green "✓ 已解锁所有用户"
-		else
-			command -v faillock &>/dev/null && faillock --user "$_target_u" --reset 2>/dev/null
-			command -v pam_tally2 &>/dev/null && pam_tally2 --user "$_target_u" --reset 2>/dev/null
-			green "✓ 用户 $_target_u 已解锁"
-		fi
-		echo ""
-		break_end
-		;;
-
-	  11)
-		# ── sshd -t 语法检查 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ SSH 配置语法检查 ━━━━━━${rw_lv}"
-		echo ""
-		local _sshd_err
-		_sshd_err=$(sshd -t 2>&1)
-		if [ $? -eq 0 ]; then
-			green "✓ 语法检查通过"
-		else
-			red "✗ 语法错误:"
-			echo -e " ${rw_hong}$_sshd_err${rw_lv}"
-			echo ""
-			echo -e " ${rw_huang}常见原因:${rw_lv}"
-			echo -e "   - AuthenticationMethods 拼写错误"
-			echo -e "   - Match 块未正确闭合"
-			echo -e "   - PAM 模块路径不对"
-		fi
-		echo ""
-		break_end
-		;;
-
-	  12)
-		# ── 查看当前认证配置 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 当前 SSH 认证配置 ━━━━━━${rw_lv}"
-		echo ""
-		_ssh_current_auth_mode
-		echo -e " 认证模式: ${rw_huang}${_SSH_MODE_DESC}${rw_lv}"
-		echo -e " 判断依据: ${_SSH_MODE_REASON}"
-		echo ""
-		echo -e " ${rw_cheng}── sshd_config 关键项 ──${rw_lv}"
-		local _k
-		for _k in Port PermitRootLogin PasswordAuthentication PubkeyAuthentication \
-				  KbdInteractiveAuthentication ChallengeResponseAuthentication AuthenticationMethods; do
-			local _v
-			_v=$(grep -E "^[[:space:]]*#?${_k}[[:space:]]+" /etc/ssh/sshd_config 2>/dev/null | tail -1 | awk '{print $2}')
-			[ -n "$_v" ] && printf "  %-40s %s\n" "$_k" "$_v"
-		done
-		echo ""
-		echo -e " ${rw_cheng}── PAM sshd 中的 OTP/飞书 ──${rw_lv}"
-		grep -E "pam_google_authenticator|riwi_feishu" /etc/pam.d/sshd 2>/dev/null | sed 's/^/  /' || echo "  (无)"
-		echo ""
-		echo -e " ${rw_cheng}── Match 块 ──${rw_lv}"
-		if grep -qE '^[[:space:]]*Match' /etc/ssh/sshd_config 2>/dev/null; then
-			grep -nE '^[[:space:]]*Match' /etc/ssh/sshd_config | sed 's/^/  /'
-		else
-			echo "  (无 Match 块)"
-		fi
-		echo ""
-		break_end
-		;;
-
-	  13)
-		# ── 查看最近 SSH 登录日志 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 最近 SSH 登录日志 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}最近 50 条 SSH 相关日志:${rw_lv}"
-		echo ""
-		if [ -f /var/log/auth.log ]; then
-			grep -iE 'sshd|accepted|failed|invalid' /var/log/auth.log 2>/dev/null | tail -50 | sed 's/^/  /'
-		elif command -v journalctl &>/dev/null; then
-			journalctl -u sshd --no-pager -n 50 2>/dev/null | sed 's/^/  /'
-		elif [ -f /var/log/secure ]; then
-			grep -iE 'sshd|accepted|failed|invalid' /var/log/secure 2>/dev/null | tail -50 | sed 's/^/  /'
-		else
-			yellow "未找到 SSH 日志文件"
-		fi
-		echo ""
-		break_end
-		;;
-
-	  14)
-		# ── 查看所有用户公钥状态 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 用户公钥状态 ━━━━━━${rw_lv}"
-		echo ""
-		printf "  %-15s %-25s %-8s %-8s %-8s\n" "用户" "HOME" "公钥数" "OTP" "状态"
-		echo "  ────────────────────────────────────────────────────────"
-		local _u _uid _home _pk_cnt _has_otp
-		while IFS=: read -r _u _ _uid _ _ _home _; do
-			[ "$_uid" -lt 1000 ] 2>/dev/null && [ "$_u" != "root" ] && continue
-			[ -z "$_home" ] && continue
-			_pk_cnt=0
-			_has_otp="无"
-			[ -f "${_home}/.ssh/authorized_keys" ] && _pk_cnt=$(grep -cE '^(ssh-|ecdsa-|sk-)' "${_home}/.ssh/authorized_keys" 2>/dev/null || echo 0)
-			[ -f "${_home}/.google_authenticator" ] && _has_otp="有"
-			local _status="${rw_lv}正常${rw_lv}"
-			# 检查 .ssh 权限
-			if [ -d "${_home}/.ssh" ]; then
-				local _perm
-				_perm=$(stat -c '%a' "${_home}/.ssh" 2>/dev/null || stat -f '%Lp' "${_home}/.ssh" 2>/dev/null)
-				[ "$_perm" != "700" ] && _status="${rw_hong}权限异常(${_perm})${rw_lv}"
-			fi
-			printf "  ${rw_huang}%-15s${rw_lv} %-25s %-8s %-8s %-8s\n" "$_u" "$_home" "$_pk_cnt" "$_has_otp" "$_status"
-		done </etc/passwd 2>/dev/null
-		echo ""
-		break_end
-		;;
-
-	  21)
-		# ── 列出备份并回滚 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 配置备份回滚 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}可用备份（/tmp/riwi_ssh_backup_*）:${rw_lv}"
-		echo ""
-		local _backups=()
-		local _bk
-		while IFS= read -r _bk; do
-			_backups+=("$_bk")
-		done < <(ls -d /tmp/riwi_ssh_backup_* 2>/dev/null | sort -r)
-		if [ ${#_backups[@]} -eq 0 ]; then
-			yellow "没有找到备份"
-			break_end
-			continue
-		fi
-		local _i=1
-		for _bk in "${_backups[@]}"; do
-			local _time _files
-			_time=$(basename "$_bk" | sed 's/riwi_ssh_backup_//')
-			_files=$(ls "$_bk" 2>/dev/null | tr '\n' ' ')
-			echo -e " ${rw_huang}${_i}.${rw_lv} ${_time}  文件: ${_files}"
-			((_i++))
-		done
-		echo -e " ${rw_huang}0.${rw_lv} 取消"
-		echo ""
-		read -e -p " 选择要回滚的备份编号: " _bk_idx < /dev/tty
-		[ "$_bk_idx" = "0" ] && continue
-		[ -z "$_bk_idx" ] && { red "无效选择"; break_end; continue; }
-		local _target_bk="${_backups[$((_bk_idx - 1))]}"
-		[ -z "$_target_bk" ] && { red "无效选择"; break_end; continue; }
-
-		echo ""
-		echo -e " ${rw_hong}⚠ 将回滚到: ${_target_bk}${rw_lv}"
-		echo -e " ${rw_hong}当前配置会被覆盖${rw_lv}"
-		read -e -p " 确认回滚？(y/N): " _confirm < /dev/tty
-		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			break_end
-			continue
-		fi
-
-		_SSH_BACKUP_DIR="$_target_bk"
-		_ssh_restore_backup
-
-		# 回滚后检查语法
-		local _sshd_err
-		_sshd_err=$(sshd -t 2>&1)
-		if [ $? -ne 0 ]; then
-			red "✗ 回滚后语法检查失败: $_sshd_err"
-			echo -e " ${rw_huang}建议手动检查 /etc/ssh/sshd_config${rw_lv}"
-		else
-			green "✓ 语法检查通过"
-			read -e -p " 是否重启 SSH 使回滚生效？(y/N): " _restart < /dev/tty
-			if [[ "$_restart" =~ ^[Yy]$ ]]; then
-				systemctl restart sshd 2>/dev/null || service ssh restart 2>/dev/null || systemctl restart ssh 2>/dev/null
-				green "✓ SSH 已重启"
-			fi
-		fi
-		echo ""
-		break_end
-		;;
-
-	  22)
-		# ── 清理旧备份 ──
-		clear
-		echo -e "${rw_huang}━━━━━━ 清理旧备份 ━━━━━━${rw_lv}"
-		echo ""
-		local _cnt
-		_cnt=$(ls -d /tmp/riwi_ssh_backup_* 2>/dev/null | wc -l)
-		if [ "$_cnt" -eq 0 ]; then
-			yellow "没有旧备份可清理"
-			break_end
-			continue
-		fi
-		echo -e " 发现 ${rw_huang}${_cnt}${rw_lv} 个备份，占用:"
-		du -sh /tmp/riwi_ssh_backup_* 2>/dev/null | sed 's/^/  /'
-		echo ""
-		read -e -p " 确认删除所有旧备份？(y/N): " _confirm < /dev/tty
-		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-			rm -rf /tmp/riwi_ssh_backup_*
-			green "✓ 已清理"
-		else
-			yellow "已取消"
-		fi
-		break_end
-		;;
-
-	  0)
-		break
-		;;
-	  *)
-		red "无效的输入!"
-		sleep 1
-		;;
 	esac
 done
 }
@@ -25080,924 +23537,919 @@ github_manager() {
   while true; do
     clear
     send_stats "Git管理"
-    install git
 
-    # ════════════════════════════════════════════
-    # 状态面板 - 一眼看清当前仓库状态
-    # ════════════════════════════════════════════
-    local _is_repo=false _branch="-" _status_color="${rw_lv}" _status_text="干净"
-    local _remote_name="无" _remote_url="" _remote_short="无"
-    local _ahead=0 _behind=0 _staged=0 _modified=0 _untracked=0 _total_changes=0
-    local _current_dir=""
-
-    _current_dir=$(basename "$(pwd)" 2>/dev/null || echo "?")
+    # ── 状态探测 ──
+    local _git_repo="${rw_hong}未初始化${rw_lv}"
+    local _git_branch="" _git_status="${rw_lv}干净${rw_lv}"
+    local _git_remote="${rw_hong}无${rw_lv}"
 
     if git rev-parse --is-inside-work-tree &>/dev/null; then
-        _is_repo=true
-        _branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "?")
-
-        # 文件变更统计
-        local _git_status_short
-        _git_status_short=$(git status --short 2>/dev/null)
-        if [ -n "$_git_status_short" ]; then
-            _staged=$(echo "$_git_status_short" | grep -c '^[MADRC]' 2>/dev/null)
-            [ -z "$_staged" ] && _staged=0
-            _modified=$(echo "$_git_status_short" | grep -c '^.[MD]' 2>/dev/null)
-            [ -z "$_modified" ] && _modified=0
-            _untracked=$(echo "$_git_status_short" | grep -c '^??' 2>/dev/null)
-            [ -z "$_untracked" ] && _untracked=0
-            _staged=${_staged//[^0-9]/}
-            _modified=${_modified//[^0-9]/}
-            _untracked=${_untracked//[^0-9]/}
-            _staged=${_staged:-0}
-            _modified=${_modified:-0}
-            _untracked=${_untracked:-0}
-            _total_changes=$((_staged + _modified + _untracked))
-            _status_color="${rw_huang}"
-            _status_text="有变更"
-        else
-            _status_color="${rw_lv}"
-            _status_text="干净"
+        _git_repo="${rw_lv}已初始化${rw_lv}"
+        _git_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
+        # 检查工作区状态
+        if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+            _git_status="${rw_huang}已修改${rw_lv}"
         fi
-
-        # 远程仓库信息
-        local _ru=$(git remote get-url origin 2>/dev/null)
-        if [ -n "$_ru" ]; then
-            _remote_name="origin"
-            _remote_url="$_ru"
-            # 提取友好名: github.com/user/repo.git → user/repo
-            _remote_short=$(echo "$_ru" | sed 's|\.git$||; s|.*[:/]||; s|^.*@.*:||' 2>/dev/null)
-            [ -z "$_remote_short" ] && _remote_short="$_ru"
-            # ahead/behind
-            _ahead=$(git rev-list --count @{upstream}..HEAD 2>/dev/null || echo 0)
-            _behind=$(git rev-list --count HEAD..@{upstream} 2>/dev/null || echo 0)
+        # 检查远程仓库
+        local _remote_url=$(git remote get-url origin 2>/dev/null)
+        if [ -n "$_remote_url" ]; then
+            _git_remote="${rw_lv}${_remote_url##*/}${rw_lv}"
         fi
     fi
 
-    # ════════════════════════════════════════════
-    # 顶部状态面板
-    # ════════════════════════════════════════════
-    echo -e "${rw_cheng}━━━━━━━━━━━━  Git 版本控制  ━━━━━━━━━━━━${rw_lv}"
-
-    if [ "$_is_repo" = true ]; then
-        # 第一行: 目录 + 分支 + 状态
-        echo -e " 目录 ${rw_huang}${_current_dir}${rw_lv}  分支 ${rw_huang}${_branch}${rw_lv}  状态 ${_status_color}${_status_text}${rw_lv}"
-
-        # 第二行: 变更明细
-        if [ "$_total_changes" -gt 0 ]; then
-            local _change_detail=""
-            [ "$_staged" -gt 0 ] && _change_detail+="已暂存 ${rw_lv}${_staged}${rw_lv}  "
-            [ "$_modified" -gt 0 ] && _change_detail+="已修改 ${rw_huang}${_modified}${rw_lv}  "
-            [ "$_untracked" -gt 0 ] && _change_detail+="未跟踪 ${rw_hong}${_untracked}${rw_lv}  "
-            echo -e " 变更: ${_change_detail}共 ${rw_huang}${_total_changes}${rw_lv} 个文件"
-        fi
-
-        # 第三行: 远程仓库 + ahead/behind
-        if [ "$_remote_name" != "无" ]; then
-            local _sync_info=""
-            if [ "$_ahead" -gt 0 ] 2>/dev/null; then
-                _sync_info+="  ${rw_huang}↑${_ahead}待推送${rw_lv}"
-            fi
-            if [ "$_behind" -gt 0 ] 2>/dev/null; then
-                _sync_info+="  ${rw_huang}↓${_behind}待拉取${rw_lv}"
-            fi
-            [ -z "$_sync_info" ] && _sync_info="  ${rw_lv}✓已同步${rw_lv}"
-            echo -e " 远程 ${rw_huang}${_remote_name}${rw_lv}: ${rw_lv}${_remote_short}${rw_lv}${_sync_info}"
-        else
-            echo -e " 远程 ${rw_hong}未配置${rw_lv}  提示: 选 7 添加远程仓库"
-        fi
-    else
-        echo -e " ${rw_hong}当前目录不是 git 仓库${rw_lv}"
-        echo -e " 提示: 选 8 初始化新仓库  或  选 9 克隆远程仓库"
-    fi
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-
-    # ════════════════════════════════════════════
-    # 菜单选项
-    # ════════════════════════════════════════════
+    echo -e "${rw_cheng}━━━━━━━━━━━━  GitHub 管理器  ━━━━━━━━━━━━${rw_lv}"
+    echo -e " 仓库 ${_git_repo}  分支 ${rw_huang}${_git_branch:-?}${rw_lv}  状态 ${_git_status}  远程 ${_git_remote}"
     echo ""
-    echo -e " ${rw_cheng}──── 提交与推送（日常最常用）────${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  快速提交并推送       ${rw_huang}2${rw_lv}  拉取更新"
-    echo -e "  ${rw_huang}3${rw_lv}  仅推送               ${rw_huang}4${rw_lv}  查看状态"
-    echo -e "  ${rw_huang}5${rw_lv}  提交日志             ${rw_huang}6${rw_lv}  查看文件差异"
+    echo -e " ${rw_cheng}──── 仓库操作${rw_lv}"
+    echo -e "  ${rw_huang}1${rw_lv} 克隆仓库             ${rw_huang}2${rw_lv} 初始化本地仓库"
     echo ""
-    echo -e " ${rw_cheng}──── 版本回退 ────${rw_lv}"
-    echo -e "  ${rw_huang}7${rw_lv}  撤销上次提交         ${rw_huang}8${rw_lv}  回退到历史版本"
+    echo -e " ${rw_cheng}──── 分支管理${rw_lv}"
+    echo -e "  ${rw_huang}3${rw_lv} 列出本地分支         ${rw_huang}4${rw_lv} 创建新分支"
+    echo -e "  ${rw_huang}5${rw_lv} 切换分支             ${rw_huang}6${rw_lv} 删除分支"
     echo ""
-    echo -e " ${rw_cheng}──── 仓库管理 ────${rw_lv}"
-    echo -e "  ${rw_huang}9${rw_lv}  远程仓库管理         ${rw_huang}10${rw_lv} 初始化新仓库"
-    echo -e "  ${rw_huang}11${rw_lv} 克隆仓库             ${rw_huang}12${rw_lv} 分支管理"
+    echo -e " ${rw_cheng}──── 文件操作${rw_lv}"
+    echo -e       " ${rw_huang}7${rw_lv} 查看状态              ${rw_huang}8${rw_lv} 暂存所有文件"
+    echo -e       " ${rw_huang}9${rw_lv} 暂存指定文件         ${rw_huang}10${rw_lv} 取消暂存文件"
     echo ""
-    echo -e " ${rw_cheng}──── 高级 ────${rw_lv}"
-    echo -e "  ${rw_huang}13${rw_lv} 切换 Git 镜像源      ${rw_huang}14${rw_lv} GitHooks 部署"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回主菜单"
-    echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-    read -e -p " 请选择: " sub_choice < /dev/tty
-    sub_choice=${sub_choice:-0}
+    echo -e " ${rw_cheng}──── 提交与推送${rw_lv}"
+    echo -e " ${rw_huang}11${rw_lv} 提交全部文件         ${rw_huang}12${rw_lv} 自定义提交"
+    echo -e " ${rw_huang}13${rw_lv} 推送到远程           ${rw_huang}14${rw_lv} 拉取远程更新"
+    echo ""
+    echo -e " ${rw_cheng}──── 远程仓库${rw_lv}"
+    echo -e " ${rw_huang}15${rw_lv} 查看远程仓库         ${rw_huang}16${rw_lv} 添加远程仓库"
+    echo -e " ${rw_huang}17${rw_lv} 移除远程仓库         ${rw_huang}18${rw_lv} 移除远程分支"
+    echo ""
+    echo -e " ${rw_cheng}──── 其他${rw_lv}"
+    echo -e " ${rw_huang}19${rw_lv} 切换Git源          ${rw_huang}20${rw_lv} GitHooks 部署"
+    echo ""
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+    echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+    read -e -p " 请选择: " sub_choice
 
     case $sub_choice in
       1)
-        # ════════════════════════════════════════════
-        # 1. 快速提交并推送 - 最常用功能
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  快速提交并推送  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            echo -e " ${rw_huang}提示: 返回菜单选 10 初始化新仓库${rw_lv}"
-            break_end; continue
-        fi
-
-        # ── 显示变更文件 ──
-        local _changes
-        _changes=$(git status --short 2>/dev/null)
-        if [ -z "$_changes" ]; then
-            echo -e " ${rw_lv}✓ 工作区干净，没有可提交的更改${rw_lv}"
-            break_end; continue
-        fi
-
-        echo -e " ${rw_cheng}── 待提交文件 ──${rw_lv}"
-        echo "$_changes" | while IFS= read -r line; do
-            local _flag="${line:0:2}"
-            local _file="${line:3}"
-            local _color="$rw_lv" _mark=""
-            case "$_flag" in
-                M*)  _color="$rw_huang"; _mark="[修改]" ;;
-                A*)  _color="$rw_lv";   _mark="[新增]" ;;
-                D*)  _color="$rw_hong"; _mark="[删除]" ;;
-                R*)  _color="$rw_lv";   _mark="[重命名]" ;;
-                ??*) _color="$rw_hong"; _mark="[未跟踪]" ;;
-                *)   _color="$rw_lv";   _mark="[其他]" ;;
-            esac
-            echo -e "   ${_color}${_mark}${rw_lv}  ${_file}"
-        done
-        local _total
-        _total=$(echo "$_changes" | wc -l)
-        echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-        echo -e " 共 ${rw_huang}${_total}${rw_lv} 个文件变更"
-        echo ""
-
-        # ── 提交信息输入 ──
-        echo -e " ${rw_cheng}── 提交信息 ──${rw_lv}"
-        echo -e " ${rw_huang}推荐格式:${rw_lv}"
-        echo -e "   feat: 新功能    fix: 修复bug    docs: 文档"
-        echo -e "   style: 格式     refactor: 重构  chore: 杂项"
-        echo -e " ${rw_huang}直接回车 = 自动时间戳${rw_lv}"
-        echo ""
-        read -e -p " 提交信息（0返回上一级）: " _msg < /dev/tty
-        [ "$_msg" = "0" ] && continue
-        [ -z "$_msg" ] && _msg="更新 $(date '+%Y-%m-%d %H:%M')"
-
-        # ── 执行提交 ──
-        echo ""
-        echo -e " ${rw_cheng}── 执行提交 ──${rw_lv}"
-        git add -A 2>&1 | head -3
-        local _commit_out
-        _commit_out=$(GIT_EDITOR=true git commit -m "$_msg" 2>&1)
-        local _commit_rc=$?
-
-        if [ $_commit_rc -ne 0 ]; then
-            echo -e " ${rw_hong}✗ 提交失败${rw_lv}"
-            echo "$_commit_out" | head -5
-            # 权限问题自动修复
-            if echo "$_commit_out" | grep -qi "permission\|denied\|owner"; then
-                echo ""
-                echo -e " ${rw_huang}检测到权限问题，尝试修复 .git 属主...${rw_lv}"
-                chown -R "$(whoami):$(id -gn)" .git 2>/dev/null
-                if [ $? -eq 0 ]; then
-                    echo -e " ${rw_lv}✓ 权限已修复，重新提交...${rw_lv}"
-                    _commit_out=$(GIT_EDITOR=true git commit -m "$_msg" 2>&1)
-                    if [ $? -eq 0 ]; then
-                        echo -e " ${rw_lv}✓ 提交成功${rw_lv}"
-                        echo "$_commit_out" | head -3
-                    else
-                        echo -e " ${rw_hong}✗ 仍然失败，请手动: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
-                        break_end; continue
-                    fi
-                else
-                    echo -e " ${rw_hong}修复失败，请手动: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
-                    break_end; continue
-                fi
-            else
-                break_end; continue
-            fi
-        else
-            echo -e " ${rw_lv}✓ 提交成功${rw_lv}"
-            echo "$_commit_out" | head -3
-        fi
-
-        # ── 推送到远程 ──
-        echo ""
-        local _remote_chk
-        _remote_chk=$(git remote 2>/dev/null | head -1)
-        if [ -z "$_remote_chk" ]; then
-            echo -e " ${rw_huang}⚠ 未配置远程仓库${rw_lv}"
-            echo -e " ${rw_huang}提示: 返回菜单选 9 添加远程仓库${rw_lv}"
-            echo -e " ${rw_huang}或选 10 初始化并关联 GitHub${rw_lv}"
-        else
-            local _br
-            _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-            local _ru=$(git remote get-url "$_remote_chk" 2>/dev/null)
-            echo -e " ${rw_cheng}── 推送到远程 ──${rw_lv}"
-            echo -e " 远程: ${rw_huang}${_remote_chk}${rw_lv}  分支: ${rw_huang}${_br}${rw_lv}"
-            echo -e " 地址: ${rw_lv}${_ru}${rw_lv}"
-            echo ""
-            read -e -p " 是否推送到远程？(Y/n): " _push < /dev/tty
-            if [[ ! "$_push" =~ ^[Nn]$ ]]; then
-                if git push "$_remote_chk" "$_br" 2>&1; then
-                    echo ""
-                    echo -e " ${rw_lv}✓ 推送成功${rw_lv}"
-                    echo -e " ${rw_huang}${_remote_chk}/${_br}${rw_lv}"
-                else
-                    echo ""
-                    echo -e " ${rw_hong}✗ 推送失败${rw_lv}"
-                    echo -e " ${rw_huang}可能原因:${rw_lv}"
-                    echo -e "   1. 本地落后于远程 → 选 2 拉取更新"
-                    echo -e "   2. 权限问题 → 检查 SSH密钥/Token"
-                    echo -e "   3. 网络问题 → 选 13 切换镜像源"
-                    echo ""
-                    read -e -p " 是否先拉取再推送？(y/N): " _retry < /dev/tty
-                    if [[ "$_retry" =~ ^[Yy]$ ]]; then
-                        git pull --rebase "$_remote_chk" "$_br" 2>&1
-                        if git push "$_remote_chk" "$_br" 2>&1; then
-                            echo -e " ${rw_lv}✓ 拉取并推送成功${rw_lv}"
-                        else
-                            echo -e " ${rw_hong}✗ 仍有冲突，请手动处理${rw_lv}"
-                            echo -e " ${rw_huang}手动步骤: git pull → 解决冲突 → git add → git commit → git push${rw_lv}"
-                        fi
-                    fi
-                fi
-            fi
-        fi
-        echo ""
-        break_end
-        ;;
-
-      2)
-        # ════════════════════════════════════════════
-        # 2. 拉取更新
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  拉取更新  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-        local _br _rem _ru
-        _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
-        _rem=$(git remote 2>/dev/null | head -1)
-        _ru=$(git remote get-url "$_rem" 2>/dev/null)
-        if [ -z "$_rem" ]; then
-            echo -e " ${rw_hong}✗ 未配置远程仓库${rw_lv}"
-            echo -e " ${rw_huang}提示: 返回菜单选 9 添加远程仓库${rw_lv}"
-            break_end; continue
-        fi
-        echo -e " 分支: ${rw_huang}${_br:-未知}${rw_lv}"
-        echo -e " 远程: ${rw_huang}${_rem}${rw_lv}  地址: ${rw_lv}${_ru}${rw_lv}"
-        echo ""
-        echo -e " ${rw_cheng}── 执行拉取 ──${rw_lv}"
-        git pull "$_rem" "${_br:-main}" 2>&1
-        if [ $? -eq 0 ]; then
-            echo ""
-            echo -e " ${rw_lv}✓ 拉取成功${rw_lv}"
-        else
-            echo ""
-            echo -e " ${rw_hong}✗ 拉取失败${rw_lv}"
-            echo -e " ${rw_huang}可能原因:${rw_lv}"
-            echo -e "   1. 有未提交的本地更改 → 先提交或 stash"
-            echo -e "   2. 合并冲突 → 手动解决后提交"
-            echo -e "   3. 网络问题 → 选 13 切换镜像源"
-        fi
-        echo ""
-        break_end
-        ;;
-
-      3)
-        # ════════════════════════════════════════════
-        # 3. 仅推送
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  推送提交  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-        local _br _rem _ru
-        _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-        _rem=$(git remote 2>/dev/null | head -1)
-        _ru=$(git remote get-url "$_rem" 2>/dev/null)
-        if [ -z "$_rem" ]; then
-            echo -e " ${rw_hong}✗ 未配置远程仓库${rw_lv}"
-            echo -e " ${rw_huang}提示: 返回菜单选 9 添加远程仓库${rw_lv}"
-            break_end; continue
-        fi
-
-        # 显示待推送的提交
-        local _ahead_cnt
-        _ahead_cnt=$(git rev-list --count @{upstream}..HEAD 2>/dev/null || echo 0)
-        echo -e " 分支: ${rw_huang}${_br}${rw_lv}  远程: ${rw_huang}${_rem}${rw_lv}"
-        echo -e " 地址: ${rw_lv}${_ru}${rw_lv}"
-        if [ "$_ahead_cnt" -gt 0 ] 2>/dev/null; then
-            echo -e " 待推送: ${rw_huang}${_ahead_cnt}${rw_lv} 个提交"
-            echo ""
-            echo -e " ${rw_cheng}── 待推送提交 ──${rw_lv}"
-            git log --oneline @{upstream}..HEAD 2>/dev/null | head -10 | sed 's/^/   /'
-        else
-            echo -e " ${rw_lv}✓ 没有待推送的提交${rw_lv}"
-        fi
-        echo ""
-        echo -e " ${rw_cheng}── 执行推送 ──${rw_lv}"
-        if git push "$_rem" "$_br" 2>&1; then
-            echo ""
-            echo -e " ${rw_lv}✓ 推送成功${rw_lv}"
-        else
-            echo ""
-            echo -e " ${rw_hong}✗ 推送失败${rw_lv}"
-            echo -e " ${rw_huang}可能原因:${rw_lv}"
-            echo -e "   1. 本地落后于远程 → 选 2 拉取更新"
-            echo -e "   2. 权限问题 → 检查 SSH密钥/Token"
-            echo -e "   3. 网络问题 → 选 13 切换镜像源"
-            echo ""
-            read -e -p " 是否先拉取再推送？(y/N): " _retry < /dev/tty
-            if [[ "$_retry" =~ ^[Yy]$ ]]; then
-                git pull --rebase "$_rem" "$_br" 2>&1
-                if git push "$_rem" "$_br" 2>&1; then
-                    echo -e " ${rw_lv}✓ 拉取并推送成功${rw_lv}"
-                else
-                    echo -e " ${rw_hong}✗ 仍有冲突，请手动处理${rw_lv}"
-                fi
-            fi
-        fi
-        echo ""
-        break_end
-        ;;
-
-      4)
-        # ════════════════════════════════════════════
-        # 4. 查看状态
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  Git 状态  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-        translate_git_status
-        echo ""
-        break_end
-        ;;
-
-      5)
-        # ════════════════════════════════════════════
-        # 5. 提交日志
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  提交日志  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-        echo -e " ${rw_cheng}── 最近 20 条提交 ──${rw_lv}"
-        echo ""
-        git log --oneline --graph --decorate -20 2>/dev/null || echo -e " ${rw_huang}无提交记录${rw_lv}"
-        echo ""
-        break_end
-        ;;
-
-      6)
-        # ════════════════════════════════════════════
-        # 6. 查看文件差异
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  文件差异  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-        echo -e " ${rw_huang}1${rw_lv}  查看未暂存的更改"
-        echo -e " ${rw_huang}2${rw_lv}  查看已暂存的更改"
-        echo -e " ${rw_huang}3${rw_lv}  查看与远程的差异"
-        echo -e " ${rw_huang}4${rw_lv}  指定文件查看差异"
-        echo -e " ${rw_huang}0${rw_lv}  返回"
-        echo ""
-        read -e -p " 请选择: " _diff_choice < /dev/tty
-        case $_diff_choice in
-            1) echo ""; git diff 2>&1 | head -100 ;;
-            2) echo ""; git diff --cached 2>&1 | head -100 ;;
-            3)
-                local _rem=$(git remote 2>/dev/null | head -1)
-                local _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-                [ -n "$_rem" ] && { echo ""; git diff "${_rem}/${_br}" HEAD 2>&1 | head -100; } || \
-                    echo -e " ${rw_hong}未配置远程仓库${rw_lv}"
-                ;;
-            4)
-                read -e -p " 文件路径（0返回上一级）: " _file < /dev/tty
-        [ "$_file" = "0" ] && continue
-                [ -n "$_file" ] && { echo ""; git diff "$_file" 2>&1 | head -100; }
-                ;;
-            0) continue ;;
-        esac
-        echo ""
-        break_end
-        ;;
-
-      7)
-        # ════════════════════════════════════════════
-        # 7. 撤销上次提交（保留更改）
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  撤销上次提交  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-
-        # 显示最近一条提交
-        echo -e " ${rw_cheng}最近一条提交:${rw_lv}"
-        git log -1 --oneline 2>/dev/null | sed 's/^/   /'
-        echo ""
-        echo -e " ${rw_huang}撤销方式:${rw_lv}"
-        echo -e "   ${rw_huang}1${rw_lv} 软撤销（保留更改在暂存区，推荐）"
-        echo -e "   ${rw_huang}2${rw_lv} 混合撤销（保留更改在工作区）"
-        echo -e "   ${rw_huang}3${rw_lv} 硬撤销（${rw_hong}丢弃所有更改，不可恢复！${rw_lv}）"
-        echo -e "   ${rw_huang}0${rw_lv} 取消"
-        echo ""
-        read -e -p " 请选择: " _reset_choice < /dev/tty
-        case $_reset_choice in
-            1) git reset --soft HEAD~1 2>&1 && echo -e " ${rw_lv}✓ 已软撤销，更改保留在暂存区${rw_lv}" ;;
-            2) git reset --mixed HEAD~1 2>&1 && echo -e " ${rw_lv}✓ 已混合撤销，更改保留在工作区${rw_lv}" ;;
-            3)
-                read -e -p " $(echo -e "${rw_hong}确认硬撤销？所有更改将丢失！(输入 YES): ${rw_lv}")" _hard_confirm < /dev/tty
-                if [ "$_hard_confirm" = "YES" ]; then
-                    git reset --hard HEAD~1 2>&1 && echo -e " ${rw_lv}✓ 已硬撤销${rw_lv}"
-                else
-                    echo -e " ${rw_huang}已取消${rw_lv}"
-                fi
-                ;;
-            0) continue ;;
-        esac
-        echo ""
-        break_end
-        ;;
-
-      8)
-        # ════════════════════════════════════════════
-        # 8. 回退到历史版本
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  回退到历史版本  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-            echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-            break_end; continue
-        fi
-
-        echo -e " ${rw_cheng}最近 20 条提交:${rw_lv}"
-        echo ""
-        git log --oneline -20 2>/dev/null | nl | sed 's/^/   /'
-        echo ""
-        read -e -p " 输入要回退的提交ID（前6位即可，0返回上一级）: " _commit_id < /dev/tty
-        [ "$_commit_id" = "0" ] && continue
-        [ -z "$_commit_id" ] && continue
-
-        echo ""
-        echo -e " ${rw_huang}回退方式:${rw_lv}"
-        echo -e "   ${rw_huang}1${rw_lv} 软回退（保留更改在暂存区）"
-        echo -e "   ${rw_huang}2${rw_lv} 硬回退（${rw_hong}丢弃所有更改！${rw_lv}）"
-        echo -e "   ${rw_huang}0${rw_lv} 取消"
-        read -e -p " 请选择: " _reset_choice < /dev/tty
-        case $_reset_choice in
-            1) git reset --soft "$_commit_id" 2>&1 && echo -e " ${rw_lv}✓ 已软回退到 $_commit_id${rw_lv}" ;;
-            2)
-                read -e -p " $(echo -e "${rw_hong}确认硬回退？(输入 YES): ${rw_lv}")" _confirm < /dev/tty
-                [ "$_confirm" = "YES" ] && git reset --hard "$_commit_id" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已硬回退到 $_commit_id${rw_lv}" || echo -e " ${rw_huang}已取消${rw_lv}"
-                ;;
-            0) continue ;;
-        esac
-        echo ""
-        break_end
-        ;;
-
-      9)
-        # ════════════════════════════════════════════
-        # 9. 远程仓库管理
-        # ════════════════════════════════════════════
-        _git_remote_manager
-        ;;
-
-      10)
-        # ════════════════════════════════════════════
-        # 10. 初始化新仓库
-        # ════════════════════════════════════════════
-        clear
-        echo -e "${rw_cheng}━━━━━━━━━━━━  初始化新仓库  ━━━━━━━━━━━━${rw_lv}"
-        echo ""
-        read -e -p " 目录路径（回车=当前目录，0返回上一级）: " _dir < /dev/tty
-        [ "$_dir" = "0" ] && continue
-        _dir="${_dir:-.}"
-        cd "$_dir" 2>/dev/null || { echo -e " ${rw_hong}✗ 目录不存在${rw_lv}"; break_end; continue; }
-
-        git init 2>&1
-
-        # 自动创建 .gitignore
-        if [ ! -f ".gitignore" ]; then
-            cat > .gitignore << 'GIEOF'
-.DS_Store
-*.log
-node_modules/
-__pycache__/
-*.pyc
-.env
-.idea/
-.vscode/
-GIEOF
-            echo -e " ${rw_lv}✓ 已创建 .gitignore${rw_lv}"
-        fi
-
-        # 询问是否关联远程
-        echo ""
-        read -e -p " 是否关联远程仓库？(y/N): " _link_remote < /dev/tty
-        if [[ "$_link_remote" =~ ^[Yy]$ ]]; then
-            echo -e " ${rw_huang}URL 示例:${rw_lv}"
-            echo -e "   https://github.com/user/repo.git"
-            echo -e "   git@github.com:user/repo.git"
-            read -e -p " 远程URL: " _url < /dev/tty
-            if [ -n "$_url" ]; then
-                git remote add origin "$_url" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已关联远程: $_url${rw_lv}" || \
-                    echo -e " ${rw_hong}✗ 关联失败（可能已存在）${rw_lv}"
-                # 首次提交并推送
-                git add -A 2>/dev/null
-                GIT_EDITOR=true git commit -m "Initial commit" 2>/dev/null
-                read -e -p " 是否推送初始提交到远程？(y/N): " _push_init < /dev/tty
-                if [[ "$_push_init" =~ ^[Yy]$ ]]; then
-                    git push -u origin main 2>/dev/null || \
-                    git push -u origin master 2>/dev/null || \
-                    echo -e " ${rw_hong}✗ 推送失败${rw_lv}"
-                fi
-            fi
-        fi
-
-        echo ""
-        echo -e " ${rw_lv}✓ 仓库已初始化: $(pwd)${rw_lv}"
-        echo ""
-        break_end
-        ;;
-
-      11)
-        # ════════════════════════════════════════════
-        # 11. 克隆仓库
-        # ════════════════════════════════════════════
         clear
         echo -e "${rw_cheng}━━━━━━━━━━━━  克隆仓库  ━━━━━━━━━━━━${rw_lv}"
         echo ""
+
+        # ── 1. 确保 git 已安装（install 函数内部已自动 sudo）──
+        if ! command -v git &>/dev/null; then
+            echo -e " ${rw_huang}git 未安装，正在安装...${rw_lv}"
+            install git
+            # 再次检查
+            if ! command -v git &>/dev/null; then
+                red "✗ git 安装失败，请手动安装后重试"
+                echo -e " ${rw_huang}Debian/Ubuntu: ${rw_lv}sudo apt install git${rw_lv}"
+                echo -e " ${rw_huang}CentOS/RHEL:   ${rw_lv}sudo yum install git${rw_lv}"
+                break_end
+                continue
+            fi
+            green "✓ git 已安装"
+        fi
+        echo ""
+
         echo -e " ${rw_huang}URL 示例:${rw_lv}"
-        echo -e "   https://github.com/user/repo.git"
-        echo -e "   git@github.com:user/repo.git"
-        echo -e " ${rw_huang}回车默认克隆工具箱仓库${rw_lv}"
+        echo -e "   ${rw_lv}https://github.com/riwi002/mybox.git${rw_lv}"
+        echo -e "   ${rw_lv}git@github.com:riwi002/mybox.git${rw_lv}"
         echo ""
-        read -e -p " 仓库URL（0返回上一级）: " _url < /dev/tty
-        [ "$_url" = "0" ] && continue
-        [ -z "$_url" ] && _url="https://github.com/riwi002/mybox.git"
-        read -e -p " 目标目录（回车=仓库名，0返回上一级）: " _dir < /dev/tty
-        [ "$_dir" = "0" ] && continue
+        echo -e " ${rw_huang}当前目录: ${rw_lv}$(pwd)${rw_lv}"
+        echo -e " ${rw_huang}当前用户: ${rw_lv}$(whoami)${rw_lv}  (uid=$(id -u))${rw_lv}"
+        echo ""
+        echo -e " ${rw_huang}提示: 直接回车默认克隆工具箱仓库${rw_lv}"
+        echo ""
 
-        echo ""
-        if [ -n "$_dir" ]; then
-            git clone "$_url" "$_dir" 2>&1
+        read -e -p " 请输入仓库URL（回车默认工具箱地址，0返回）: " repo_url
+        if [ "$repo_url" = "0" ]; then continue; fi
+        [ -z "$repo_url" ] && repo_url="https://github.com/riwi002/mybox.git"
+
+        read -e -p " 请输入目标目录（回车使用仓库名，0返回）: " target_dir
+        if [ "$target_dir" = "0" ]; then continue; fi
+
+        # ── 2. 清理旧的 git url 替换配置 ──
+        git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
+          git config --global --unset "$key" 2>/dev/null
+        done
+
+        # ── 3. 判断目标目录是否可写，决定是否需要 sudo ──
+        local _target_path
+        if [ -n "$target_dir" ]; then
+            _target_path="$target_dir"
         else
-            git clone "$_url" 2>&1
+            _target_path="$(pwd)/$(basename "$repo_url" .git)"
         fi
-        if [ $? -eq 0 ]; then
-            echo -e " ${rw_lv}✓ 克隆成功${rw_lv}"
+        local _target_parent
+        _target_parent=$(dirname "$_target_path" 2>/dev/null)
+        [ -z "$_target_parent" ] && _target_parent="$(pwd)"
+
+        local _use_sudo=false
+        local _sudo_prefix=""
+
+        # 如果当前不是 root 且目标父目录不可写，检查 sudo
+        if [ "$EUID" -ne 0 ] && [ ! -w "$_target_parent" ]; then
+            # 检查是否有 sudo 权限
+            local _can_sudo=false
+            if sudo -n true 2>/dev/null; then
+                _can_sudo=true
+            elif getent group sudo 2>/dev/null | grep -qw "$(whoami)" || \
+                 getent group wheel 2>/dev/null | grep -qw "$(whoami)"; then
+                _can_sudo=true
+            fi
+
+            if $_can_sudo; then
+                echo ""
+                echo -e " ${rw_hong}目标目录 ${_target_parent} 不可写，需要使用 sudo 克隆${rw_lv}"
+                echo -e " ${rw_huang}需要验证 sudo 密码:${rw_lv}"
+                if sudo -v 2>/dev/null; then
+                    green "✓ sudo 密码验证成功"
+                    _use_sudo=true
+                    _sudo_prefix="sudo"
+                else
+                    red "sudo 密码验证失败"
+                    break_end
+                    continue
+                fi
+            else
+                red "目标目录 ${_target_parent} 不可写，且当前用户无 sudo 权限"
+                echo -e " ${rw_huang}请换到有权限的目录再试，或联系管理员${rw_lv}"
+                break_end
+                continue
+            fi
+        fi
+
+        # ── 4. 执行克隆 ──
+        echo ""
+        echo -e " ${rw_huang}正在克隆...${rw_lv}"
+        echo -e " ${rw_lv}URL: ${repo_url}${rw_lv}"
+        if [ -n "$target_dir" ]; then
+            echo -e " ${rw_lv}目标: ${target_dir}${rw_lv}"
         else
-            echo -e " ${rw_hong}✗ 克隆失败${rw_lv}"
-            echo -e " ${rw_huang}可能原因:${rw_lv}"
-            echo -e "   1. URL错误或仓库不存在"
-            echo -e "   2. 网络问题 → 选 13 切换镜像源"
-            echo -e "   3. 权限不足 → 检查 SSH密钥/Token"
+            echo -e " ${rw_lv}目标: $(basename "$repo_url" .git)${rw_lv}"
+        fi
+        if $_use_sudo; then
+            echo -e " ${rw_lv}模式: sudo 克隆${rw_lv}"
+        else
+            echo -e " ${rw_lv}模式: 普通克隆${rw_lv}"
         fi
         echo ""
-        break_end
-        ;;
 
-      12)
-        # ════════════════════════════════════════════
-        # 12. 分支管理
-        # ════════════════════════════════════════════
-        _git_branch_manager
-        ;;
-
-      13)
-        switch_git_mirror
-        ;;
-
-      14)
-        git_hooks_deploy
-        ;;
-
-      0)
-        clear; return
-        ;;
-
-      *)
-        echo -e " ${rw_hong}无效的输入！${rw_lv}"
-        sleep 1
-        ;;
-    esac
-  done
-}
-
-
-# ================================================================
-# 远程仓库管理子菜单
-# ================================================================
-_git_remote_manager() {
-  while true; do
-    clear
-    echo -e "${rw_cheng}━━━━━━━━━━━━  远程仓库管理  ━━━━━━━━━━━━${rw_lv}"
-    echo ""
-
-    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-        echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-        break_end; return
-    fi
-
-    # 列出远程仓库
-    local _remotes
-    _remotes=$(git remote 2>/dev/null)
-    if [ -n "$_remotes" ]; then
-        echo -e " ${rw_cheng}── 已配置的远程仓库 ──${rw_lv}"
-        echo ""
-        local _idx=1
-        _GIT_REMOTE_NAMES=()
-        while IFS= read -r _rname; do
-            local _rurl
-            _rurl=$(git remote get-url "$_rname" 2>/dev/null)
-            # 提取友好名
-            local _short
-            _short=$(echo "$_rurl" | sed 's|\.git$||; s|.*[:/]||; s|^.*@.*:||' 2>/dev/null)
-            echo -e "  ${rw_huang}${_idx}.${rw_lv} ${rw_huang}${_rname}${rw_lv}  ${rw_lv}${_short}${rw_lv}"
-            echo -e "     ${rw_huang}${_rurl}${rw_lv}"
-            _GIT_REMOTE_NAMES+=("$_rname")
-            _idx=$((_idx + 1))
-        done <<< "$_remotes"
-        echo ""
-    else
-        echo -e " ${rw_huang}未配置任何远程仓库${rw_lv}"
-        echo ""
-    fi
-
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  添加远程仓库"
-    echo -e "  ${rw_huang}2${rw_lv}  移除远程仓库"
-    echo -e "  ${rw_huang}3${rw_lv}  修改远程URL"
-    echo -e "  ${rw_huang}4${rw_lv}  重命名远程"
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _rm_choice < /dev/tty
-    _rm_choice=${_rm_choice:-0}
-
-    case $_rm_choice in
-      1)
-        echo ""
-        read -e -p " 远程名称（默认 origin，0返回上一级）: " _name < /dev/tty
-        [ "$_name" = "0" ] && continue
-        _name="${_name:-origin}"
-        echo -e " ${rw_huang}URL 示例:${rw_lv}"
-        echo -e "   https://github.com/user/repo.git"
-        echo -e "   git@github.com:user/repo.git"
-        read -e -p " 远程URL（0返回上一级）: " _url < /dev/tty
-        [ "$_url" = "0" ] && continue
-        if [ -z "$_url" ]; then
-            echo -e " ${rw_hong}URL不能为空${rw_lv}"
-            sleep 1; continue
+        local _clone_rc=0
+        if $_use_sudo; then
+            # sudo 克隆：sudo git clone，然后把属主改回当前用户
+            local _cur_user
+            _cur_user=$(whoami)
+            if [ -z "$target_dir" ]; then
+                $_sudo_prefix git clone "$repo_url"
+                _clone_rc=$?
+                local _repo_name
+                _repo_name=$(basename "$repo_url" .git)
+                if [ -d "$_repo_name" ]; then
+                    $_sudo_prefix chown -R "$_cur_user":"$(id -gn "$_cur_user")" "$_repo_name" 2>/dev/null
+                    green "✓ 已将 ${_repo_name} 属主改为 $_cur_user"
+                fi
+            else
+                $_sudo_prefix git clone "$repo_url" "$target_dir"
+                _clone_rc=$?
+                if [ -d "$target_dir" ]; then
+                    $_sudo_prefix chown -R "$_cur_user":"$(id -gn "$_cur_user")" "$target_dir" 2>/dev/null
+                    green "✓ 已将 ${target_dir} 属主改为 $_cur_user"
+                fi
+            fi
+        else
+            if [ -z "$target_dir" ]; then
+                git clone "$repo_url"
+                _clone_rc=$?
+            else
+                git clone "$repo_url" "$target_dir"
+                _clone_rc=$?
+            fi
         fi
-        git remote add "$_name" "$_url" 2>&1 && \
-            echo -e " ${rw_lv}✓ 已添加远程: $_name${rw_lv}" || \
-            echo -e " ${rw_hong}✗ 添加失败（可能已存在）${rw_lv}"
-        sleep 1
+
+        echo ""
+        if [ $_clone_rc -eq 0 ]; then
+            green "✓ 克隆成功"
+        else
+            red "✗ 克隆失败 (退出码: $_clone_rc)"
+            echo -e " ${rw_huang}常见原因:${rw_lv}"
+            echo -e "   - 仓库 URL 错误或不存在"
+            echo -e "   - 网络不通或 DNS 解析失败"
+            echo -e "   - 目标目录已存在且非空"
+            echo -e "   - 权限不足（sudo 模式可解决）"
+        fi
+        echo ""
+        read -e -p " 按回车继续..."
         ;;
       2)
-        if [ -z "$_remotes" ]; then
-            echo -e " ${rw_huang}没有可移除的远程仓库${rw_lv}"
-            sleep 1; continue
-        fi
+        clear
+        install git
+        echo -e "${rw_huang}初始化本地仓库${rw_lv}"
+        echo -e "目录路径示例: ${rw_hong}./myproject${rw_lv}, ${rw_hong}/home/user/projects/newrepo${rw_lv}"
+        echo -e "直接回车使用当前目录"
         echo ""
-        read -e -p " 输入要移除的远程编号（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_REMOTE_NAMES[@]} ]; then
-            local _target="${_GIT_REMOTE_NAMES[$((_idx - 1))]}"
-            read -e -p " 确认移除 ${_target}？(y/N): " _confirm < /dev/tty
-            if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-                git remote remove "$_target" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已移除: $_target${rw_lv}"
-            fi
-        else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "请输入仓库目录（回车使用当前目录）: " repo_dir
+        if [ "$repo_dir" = "0" ]; then continue; fi
+        if [ -z "$repo_dir" ]; then
+          repo_dir="."
         fi
-        sleep 1
+        cd "$repo_dir" || { echo "目录不存在!"; read -e -p "按回车继续..."; continue; }
+        git init
+        echo -e "${rw_lv}仓库已初始化！${rw_lv}"
+        read -e -p "按回车继续..."
+        cd ~
         ;;
       3)
-        if [ -z "$_remotes" ]; then
-            echo -e " ${rw_huang}没有可修改的远程仓库${rw_lv}"
-            sleep 1; continue
+        clear
+        echo -e "${rw_huang}列出本地分支${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -d ".git" ]; then
+          git branch -a
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
         echo ""
-        read -e -p " 输入要修改的远程编号（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_REMOTE_NAMES[@]} ]; then
-            local _target="${_GIT_REMOTE_NAMES[$((_idx - 1))]}"
-            echo -e " 当前URL: ${rw_huang}$(git remote get-url "$_target" 2>/dev/null)${rw_lv}"
-            read -e -p " 新URL（0返回上一级）: " _new_url < /dev/tty
-            [ "$_new_url" = "0" ] && continue
-            if [ -n "$_new_url" ]; then
-                git remote set-url "$_target" "$_new_url" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已修改 ${_target} 的URL${rw_lv}"
-            fi
-        else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
-        fi
-        sleep 1
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "按回车继续..." input_choice
+        if [ "$input_choice" = "0" ]; then continue; fi
         ;;
       4)
-        if [ -z "$_remotes" ]; then
-            echo -e " ${rw_huang}没有可重命名的远程仓库${rw_lv}"
-            sleep 1; continue
-        fi
+        clear
+        echo -e "${rw_huang}创建新分支${rw_lv}"
+        echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}, ${rw_hong}bugfix/issue-123${rw_lv}"
         echo ""
-        read -e -p " 输入要重命名的远程编号（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_REMOTE_NAMES[@]} ]; then
-            local _old="${_GIT_REMOTE_NAMES[$((_idx - 1))]}"
-            read -e -p " 新名称（0返回上一级）: " _new < /dev/tty
-            [ "$_new" = "0" ] && continue
-            if [ -n "$_new" ]; then
-                git remote rename "$_old" "$_new" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已重命名: $_old → $_new${rw_lv}"
-            fi
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "请输入新分支名称: " branch_name
+        if [ "$branch_name" = "0" ]; then continue; fi
+        if [ -d ".git" ]; then
+          git checkout -b "$branch_name"
+          echo -e "${rw_lv}分支 $branch_name 已创建并切换！${rw_lv}"
         else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
-        sleep 1
-        ;;
-      0) break ;;
-    esac
-  done
-}
-
-
-# ================================================================
-# 分支管理子菜单
-# ================================================================
-_git_branch_manager() {
-  while true; do
-    clear
-    echo -e "${rw_cheng}━━━━━━━━━━━━  分支管理  ━━━━━━━━━━━━${rw_lv}"
-    echo ""
-
-    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-        echo -e " ${rw_hong}✗ 当前目录不是 git 仓库${rw_lv}"
-        break_end; return
-    fi
-
-    # 当前分支
-    local _cur_br
-    _cur_br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "?")
-    echo -e " 当前分支: ${rw_huang}${_cur_br}${rw_lv}"
-    echo ""
-
-    # 列出本地分支
-    echo -e " ${rw_cheng}── 本地分支 ──${rw_lv}"
-    local _idx=1
-    _GIT_BRANCH_NAMES=()
-    while IFS= read -r _bline; do
-        local _bname="${_bline//\*/}"
-        _bname="$(echo "$_bname" | xargs)"
-        local _mark=""
-        [[ "$_bline" == *\** ]] && _mark="${rw_lv} ← 当前${rw_lv}"
-        echo -e "  ${rw_huang}${_idx}.${rw_lv} ${_bname}${_mark}"
-        _GIT_BRANCH_NAMES+=("$_bname")
-        _idx=$((_idx + 1))
-    done < <(git branch 2>/dev/null)
-
-    # 远程分支
-    local _remote_brs
-    _remote_brs=$(git branch -r 2>/dev/null | head -10)
-    if [ -n "$_remote_brs" ]; then
-        echo ""
-        echo -e " ${rw_cheng}── 远程分支（前10个）──${rw_lv}"
-        echo "$_remote_brs" | sed 's/^/   /'
-    fi
-
-    echo ""
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}1${rw_lv}  切换到已有分支      ${rw_huang}2${rw_lv}  创建新分支"
-    echo -e "  ${rw_huang}3${rw_lv}  删除分支            ${rw_huang}4${rw_lv}  合并分支"
-    echo -e "  ${rw_huang}5${rw_lv}  推送新分支到远程"
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    echo -e "  ${rw_huang}0${rw_lv}  返回上级菜单"
-    echo -e " ${rw_cheng}────────────────────────${rw_lv}"
-    read -e -p " 请选择: " _bm_choice < /dev/tty
-    _bm_choice=${_bm_choice:-0}
-
-    case $_bm_choice in
-      1)
-        echo ""
-        read -e -p " 输入分支编号切换（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_BRANCH_NAMES[@]} ]; then
-            local _target="${_GIT_BRANCH_NAMES[$((_idx - 1))]}"
-            git checkout "$_target" 2>&1 && \
-                echo -e " ${rw_lv}✓ 已切换到: $_target${rw_lv}" || \
-                echo -e " ${rw_hong}✗ 切换失败${rw_lv}"
-        else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
-        fi
-        sleep 1
-        ;;
-      2)
-        echo ""
-        read -e -p " 新分支名称（0返回上一级）: " _new_br < /dev/tty
-        [ "$_new_br" = "0" ] && continue
-        if [ -z "$_new_br" ]; then
-            echo -e " ${rw_hong}名称不能为空${rw_lv}"
-            sleep 1; continue
-        fi
-        git checkout -b "$_new_br" 2>&1 && \
-            echo -e " ${rw_lv}✓ 已创建并切换到: $_new_br${rw_lv}" || \
-            echo -e " ${rw_hong}✗ 创建失败${rw_lv}"
-        sleep 1
-        ;;
-      3)
-        echo ""
-        read -e -p " 输入要删除的分支编号（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_BRANCH_NAMES[@]} ]; then
-            local _target="${_GIT_BRANCH_NAMES[$((_idx - 1))]}"
-            [ "$_target" = "$_cur_br" ] && { echo -e " ${rw_hong}不能删除当前所在分支${rw_lv}"; sleep 1; continue; }
-            read -e -p " 确认删除分支 $_target？(y/N): " _confirm < /dev/tty
-            if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-                git branch -d "$_target" 2>&1 && \
-                    echo -e " ${rw_lv}✓ 已删除: $_target${rw_lv}" || \
-                    echo -e " ${rw_hong}✗ 删除失败（可能未合并，用 -D 强制删除）${rw_lv}"
-            fi
-        else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
-        fi
-        sleep 1
-        ;;
-      4)
-        echo ""
-        echo -e " ${rw_cheng}将指定分支合并到当前分支 ${rw_huang}${_cur_br}${rw_lv}"
-        read -e -p " 输入要合并的分支编号（0返回上一级）: " _idx < /dev/tty
-        [ "$_idx" = "0" ] && continue
-        if [[ "$_idx" =~ ^[0-9]+$ ]] && [ "$_idx" -ge 1 ] && [ "$_idx" -le ${#_GIT_BRANCH_NAMES[@]} ]; then
-            local _target="${_GIT_BRANCH_NAMES[$((_idx - 1))]}"
-            git merge "$_target" 2>&1
-            [ $? -eq 0 ] && echo -e " ${rw_lv}✓ 合并成功${rw_lv}" || \
-                echo -e " ${rw_hong}✗ 合并冲突，请手动解决${rw_lv}"
-        else
-            echo -e " ${rw_hong}无效编号${rw_lv}"
-        fi
-        sleep 1
+        read -e -p "按回车继续..."
         ;;
       5)
+        clear
+        echo -e "${rw_huang}切换分支${rw_lv}"
+        if [ -d ".git" ]; then
+          git branch
+          echo ""
+          echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          read -e -p "请输入要切换的分支名称: " branch_name
+          if [ "$branch_name" = "0" ]; then continue; fi
+          git checkout "$branch_name"
+          echo -e "${rw_lv}已切换到分支 $branch_name${rw_lv}"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      6)
+        clear
+        echo -e "${rw_huang}删除分支${rw_lv}"
+        if [ -d ".git" ]; then
+          git branch
+          echo ""
+          echo -e "分支名称示例: ${rw_hong}feature/login${rw_lv}, ${rw_hong}bugfix/issue-123${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          read -e -p "请输入要删除的分支名称: " branch_name
+          if [ "$branch_name" = "0" ]; then continue; fi
+          read -e -p "确定要删除分支 $branch_name 吗? (y/n): " confirm
+          if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+            git branch -d "$branch_name"
+            echo -e "${rw_lv}分支已删除${rw_lv}"
+          else
+            echo -e "${rw_huang}已取消操作${rw_lv}"
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      7)
+        clear
+        echo -e "${rw_huang}查看状态${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        if [ -d ".git" ]; then
+          translate_git_status
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
         echo ""
-        local _br _rem
-        _br=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
-        _rem=$(git remote 2>/dev/null | head -1)
-        if [ -z "$_br" ] || [ -z "$_rem" ]; then
-            echo -e " ${rw_hong}无法获取分支或远程信息${rw_lv}"
-            sleep 1; continue
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "按回车继续..." input_choice
+        if [ "$input_choice" = "0" ]; then continue; fi
+        ;;
+      8)
+        clear
+        echo -e "${rw_huang}暂存所有文件${rw_lv}"
+        echo ""
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "按回车继续..." input_choice
+        if [ "$input_choice" = "0" ]; then continue; fi
+        if [ -d ".git" ]; then
+          git add .
+          echo -e "${rw_lv}所有文件已暂存${rw_lv}"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
-        echo -e " 将推送分支 ${rw_huang}${_br}${rw_lv} 到远程 ${rw_huang}${_rem}${rw_lv}"
-        read -e -p " 确认？(y/N): " _confirm < /dev/tty
-        if [[ "$_confirm" =~ ^[Yy]$ ]]; then
-            git push -u "$_rem" "$_br" 2>&1 && \
-                echo -e " ${rw_lv}✓ 推送成功${rw_lv}" || \
-                echo -e " ${rw_hong}✗ 推送失败${rw_lv}"
+        read -e -p "按回车继续..."
+        ;;
+      9)
+        clear
+        echo -e "${rw_huang}暂存指定文件${rw_lv}"
+        echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}, ${rw_hong}*.txt${rw_lv}"
+        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_lv}"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        if [ -d ".git" ]; then
+          read -e -p "请输入要暂存的文件名（多个用空格分隔）: " files
+          if [ "$files" = "0" ]; then continue; fi
+          git add $files 2>&1
+          _git_add_ret=$?
+          if [ $_git_add_ret -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！${rw_lv}"
+            echo -e "${rw_huang}详细错误:${rw_lv}"
+            git add $files 2>&1 | head -5
+            echo ""
+            echo -e "${rw_huang}常见原因: .git 目录权限不足（所有者不是当前用户）${rw_lv}"
+            echo -e "${rw_lv}修复命令: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            echo ""
+            read -e -p "按回车继续..."
+            continue
+          fi
+          echo -e "${rw_lv}文件已暂存: ${rw_lv}$files"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
         fi
+        read -e -p "按回车继续..."
+        ;;
+      10)
+        clear
+        echo -e "${rw_huang}取消暂存文件${rw_lv}"
+        echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}"
+        echo -e "取消所有暂存: ${rw_hong}.${rw_lv}"
+        echo -e "多个文件用空格分隔: ${rw_hong}file1.txt file2.py${rw_lv}"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        if [ -d ".git" ]; then
+          read -e -p "请输入要取消暂存的文件名（多个用空格分隔，. 表示全部）: " files
+          if [ "$files" = "0" ]; then continue; fi
+          git reset HEAD $files
+          echo -e "${rw_lv}文件已取消暂存${rw_lv}"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      12)
+        clear
+        echo -e "${rw_huang}自定义提交${rw_lv}"
+        if [ -d ".git" ]; then
+          echo -e "文件路径示例: ${rw_hong}README.md${rw_lv}, ${rw_hong}src/main.py${rw_lv}, ${rw_hong}*.txt${rw_lv}"
+          echo -e "文件夹路径示例: ${rw_hong}src/${rw_lv}, ${rw_hong}docs/${rw_lv}"
+          echo -e "多个文件/文件夹用空格分隔，支持通配符"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          read -e -p "请输入要提交的文件或文件夹: " files
+          if [ "$files" = "0" ]; then continue; fi
+          if [ -z "$files" ]; then
+            echo -e "${rw_hong}文件列表不能为空${rw_lv}"
+            read -e -p "按回车继续..."
+            continue
+          fi
+
+          # ── 检查 .git 目录权限 ──
+          local _git_owner12
+          _git_owner12=$(stat -c '%U' .git 2>/dev/null || stat -f '%Su' .git 2>/dev/null || echo "")
+          local _cur_user12
+          _cur_user12=$(whoami)
+          if [ -n "$_git_owner12" ] && [ "$_git_owner12" != "$_cur_user12" ]; then
+            echo -e "${rw_hong}⚠ .git 目录所有者是 ${_git_owner12}，当前用户是 ${_cur_user12}${rw_lv}"
+            echo -e "${rw_huang}   这会导致 git add/commit 因权限不足而失败${rw_lv}"
+            read -e -p " 是否尝试修复 .git 目录权限（chown -R）？(y/N): " _fix_perm12 < /dev/tty
+            if [[ "$_fix_perm12" =~ ^[Yy]$ ]]; then
+              chown -R "$_cur_user12":"$(id -gn)" .git 2>/dev/null && \
+                green "已修复 .git 目录权限" || \
+                red "修复失败，可能需要 sudo 权限"
+            else
+              yellow "未修复权限，git 操作可能失败"
+            fi
+          fi
+
+          git add $files
+          if [ $? -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！常见原因：.git 目录权限不足${rw_lv}"
+            echo -e "${rw_huang}尝试修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            read -e -p "按回车继续..."
+            continue
+          fi
+          echo -e "${rw_lv}指定文件已暂存: ${rw_lv}$files"
+          echo ""
+
+          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_lv}"
+          echo -e "                  ${rw_hong}fix: 修复bug${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}默认:${rw_lv}${rw_lv}不填写-自带时间提交${rw_lv}"
+          echo ""
+          read -e -p "请输入提交信息: " commit_msg
+          if [ "$commit_msg" = "0" ]; then continue; fi
+          if [ -z "$commit_msg" ]; then
+            commit_msg=$(date "+%Y年%m月%d日%H:%M")
+          fi
+          rm -f .git/COMMIT_EDITMSG 2>/dev/null
+          local _commit_output12
+          _commit_output12=$(GIT_EDITOR=true git commit -m "$commit_msg" 2>&1)
+          local _commit_ret12=$?
+          if [ $_commit_ret12 -ne 0 ]; then
+            echo -e "${rw_hong}提交失败${rw_lv}"
+            echo -e "${rw_huang}错误详情:${rw_lv}"
+            echo "$_commit_output12"
+            if echo "$_commit_output12" | grep -q "insufficient permission"; then
+              echo -e "${rw_huang}原因: .git 目录权限不足${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            fi
+          else
+            echo -e "${rw_lv}提交成功${rw_lv}"
+            echo "$_commit_output12" | head -5
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      11)
+        clear
+        echo -e "${rw_huang}提交全部文件${rw_lv}"
+        if [ -d ".git" ]; then
+          local current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无提交）")
+          echo -e "${rw_huang}位于分支 ${rw_lv}$current_branch${rw_lv}"
+          echo ""
+          
+          if [ ! -f ".gitignore" ]; then
+            echo -e "${rw_lv}检测到新仓库，自动创建 .gitignore 排除系统目录...${rw_lv}"
+            cat > .gitignore << 'GITIGNORE_EOF'
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# User Directories (macOS)
+Music/
+Pictures/
+Movies/
+Library/
+Documents/
+Desktop/
+Downloads/
+GITIGNORE_EOF
+            echo -e "${rw_lv}.gitignore 已创建${rw_lv}"
+            echo ""
+          fi
+          
+          # ── 检查 .git 目录权限 ──
+          local _git_owner
+          _git_owner=$(stat -c '%U' .git 2>/dev/null || stat -f '%Su' .git 2>/dev/null || echo "")
+          local _cur_user
+          _cur_user=$(whoami)
+          if [ -n "$_git_owner" ] && [ "$_git_owner" != "$_cur_user" ]; then
+            echo -e "${rw_hong}⚠ .git 目录所有者是 ${_git_owner}，当前用户是 ${_cur_user}${rw_lv}"
+            echo -e "${rw_huang}   这会导致 git add/commit 因权限不足而失败${rw_lv}"
+            echo ""
+            read -e -p " 是否尝试修复 .git 目录权限（chown -R）？(y/N): " _fix_perm < /dev/tty
+            if [[ "$_fix_perm" =~ ^[Yy]$ ]]; then
+              chown -R "$_cur_user":"$(id -gn)" .git 2>/dev/null && \
+                green "已修复 .git 目录权限" || \
+                red "修复失败，可能需要 sudo 权限"
+            else
+              yellow "未修复权限，git 操作可能失败"
+            fi
+            echo ""
+          fi
+          
+          # ── git add ──
+          echo -e "${rw_huang}正在执行: git add .${rw_lv}"
+          git add . 2>&1
+          _git_add_ret=$?
+          if [ $_git_add_ret -ne 0 ]; then
+            echo -e "${rw_hong}git add 失败！${rw_lv}"
+            echo -e "${rw_huang}详细错误:${rw_lv}"
+            git add . 2>&1 | head -5
+            echo ""
+            echo -e "${rw_huang}常见原因: .git 目录权限不足（所有者不是当前用户）${rw_lv}"
+            echo -e "${rw_lv}修复命令: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            echo ""
+            read -e -p "按回车继续..."
+            continue
+          fi
+          echo -e "${rw_lv}git add 成功${rw_lv}"
+          
+          has_head=0
+          git rev-parse --verify HEAD >/dev/null 2>&1 && has_head=1
+          
+          if [ $has_head -eq 1 ]; then
+            if git diff --cached --quiet 2>/dev/null; then
+              echo -e "${rw_lv}没有可提交的内容，工作区是干净的${rw_lv}"
+              echo ""
+              read -e -p "按回车继续..."
+              continue
+            fi
+          else
+            if [ -z "$(git diff --cached --name-only 2>/dev/null)" ]; then
+              echo -e "${rw_lv}没有可提交的内容${rw_lv}"
+              echo ""
+              read -e -p "按回车继续..."
+              continue
+            fi
+          fi
+          
+          echo -e "${rw_lv}所有文件已暂存${rw_lv}"
+          echo ""
+          echo -e "提交信息格式示例: ${rw_hong}feat: 添加新功能${rw_lv}"
+          echo -e "                  ${rw_hong}fix: 修复bug${rw_lv}"
+          echo -e "                  ${rw_hong}docs: 更新文档${rw_lv}"
+          echo -e "                  ${rw_hong}style: 代码格式调整${rw_lv}"
+          echo -e "                  ${rw_hong}refactor: 代码重构${rw_lv}"
+          echo -e "                  ${rw_hong}chore: 构建/工具更新${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}默认:${rw_lv}${rw_lv}不填写-自带时间提交${rw_lv}"
+          echo ""
+          read -e -p "请输入提交信息: " commit_msg
+          if [ "$commit_msg" = "0" ]; then continue; fi
+          if [ -z "$commit_msg" ]; then
+            commit_msg=$(date "+%Y年%m月%d日%H:%M")
+          fi
+          rm -f .git/COMMIT_EDITMSG 2>/dev/null
+          local _commit_output
+          _commit_output=$(GIT_EDITOR=true git commit -m "$commit_msg" 2>&1)
+          local _commit_ret=$?
+          if [ $_commit_ret -ne 0 ]; then
+            echo -e "${rw_hong}提交失败${rw_lv}"
+            echo -e "${rw_huang}错误详情:${rw_lv}"
+            echo "$_commit_output"
+            echo ""
+            # 根据错误类型给出针对性提示
+            if echo "$_commit_output" | grep -q "insufficient permission"; then
+              echo -e "${rw_huang}原因: .git 目录权限不足${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            elif echo "$_commit_output" | grep -q "nothing to commit\|no changes"; then
+              echo -e "${rw_huang}原因: 没有可提交的更改${rw_lv}"
+            elif echo "$_commit_output" | grep -q "Error building trees"; then
+              echo -e "${rw_huang}原因: git add 可能因权限失败，暂存区为空${rw_lv}"
+              echo -e "${rw_lv}修复: sudo chown -R $(whoami):$(id -gn) .git${rw_lv}"
+            fi
+          else
+            echo -e "${rw_lv}提交成功${rw_lv}"
+            echo "$_commit_output" | head -5
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      13)
+        clear
+        echo -e "${rw_huang}推送到远程${rw_lv}"
+        if [ -d ".git" ]; then
+          git remote -v
+          echo ""
+          current_remote=$(git remote | head -n 1)
+          if [ -z "$current_remote" ]; then
+            current_remote="（无远程）"
+          fi
+          echo -e "${rw_huang}当前远程: ${rw_lv}$current_remote${rw_lv}"
+          echo ""
+          current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "未知")
+          echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_lv}"
+          echo ""
+          echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv}, upstream, myrepo"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          read -e -p "请输入远程仓库名称: " remote_name
+          if [ "$remote_name" = "0" ]; then continue; fi
+          if [ -z "$remote_name" ]; then
+            remote_name="origin"
+          fi
+          echo ""
+          echo -e "分支名称示例: ${rw_hong}main${rw_lv}, ${rw_hong}master${rw_lv}, ${rw_hong}dev${rw_lv}, ${rw_hong}feature/login${rw_lv}"
+          read -e -p "请输入分支名称（默认当前分支）: " branch_name
+          if [ "$branch_name" = "0" ]; then continue; fi
+          if [ -z "$branch_name" ]; then
+            branch_name=$(git symbolic-ref --short HEAD 2>/dev/null || echo "（无分支）")
+          fi
+          
+          echo -e "${rw_lv}正在推送到 ${remote_name}/${branch_name}...${rw_lv}"
+          run_with_timeout 60 git push "$remote_name" "$branch_name"
+          push_result=$?
+          
+          if [ $push_result -eq 124 ]; then
+            echo -e "${rw_hong}推送超时（60秒）${rw_lv}"
+            echo -e "${rw_huang}提示: 请检查网络连接或远程仓库地址${rw_lv}"
+          elif [ $push_result -ne 0 ]; then
+            echo -e "${rw_hong}推送失败${rw_lv}"
+            echo ""
+            echo -e "${rw_huang}错误原因: 本地分支落后于远程分支 (non-fast-forward)${rw_lv}"
+            echo ""
+            echo -e "${rw_huang}解决方案:${rw_lv}"
+            echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}拉取并合并远程更新 (git pull)${rw_lv}"
+            echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}拉取并变基 (git pull --rebase) - 保持线性历史${rw_lv}"
+            echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}强制推送 (git push --force) - 会覆盖远程分支，有风险${rw_lv}"
+            echo ""
+            read -e -p "请选择解决方案 (1/2/3): " solution_choice
+            if [ "$solution_choice" = "0" ]; then continue; fi
+            
+            case $solution_choice in
+              1)
+                echo -e "${rw_lv}正在拉取远程更新...${rw_lv}"
+                run_with_timeout 60 git pull "$remote_name" "$branch_name"
+                if [ $? -eq 0 ]; then
+                  echo -e "${rw_lv}拉取成功，重新推送...${rw_lv}"
+                  run_with_timeout 60 git push "$remote_name" "$branch_name"
+                  if [ $? -eq 0 ]; then
+                    echo -e "${rw_lv}推送成功${rw_lv}"
+                  else
+                    echo -e "${rw_hong}重新推送失败，请手动处理冲突${rw_lv}"
+                  fi
+                else
+                  echo -e "${rw_hong}拉取失败，可能存在冲突需要手动处理${rw_lv}"
+                fi
+                ;;
+              2)
+                echo -e "${rw_lv}正在拉取并变基...${rw_lv}"
+                run_with_timeout 60 git pull --rebase "$remote_name" "$branch_name"
+                if [ $? -eq 0 ]; then
+                  echo -e "${rw_lv}变基成功，重新推送...${rw_lv}"
+                  run_with_timeout 60 git push "$remote_name" "$branch_name"
+                  if [ $? -eq 0 ]; then
+                    echo -e "${rw_lv}推送成功${rw_lv}"
+                  else
+                    echo -e "${rw_hong}重新推送失败${rw_lv}"
+                  fi
+                else
+                  echo -e "${rw_hong}变基失败，可能存在冲突需要手动处理${rw_lv}"
+                fi
+                ;;
+              3)
+                read -e -p "$(echo -e "${rw_hong}警告: ${rw_lv}强制推送会覆盖远程分支，请确认是否继续? (y/N): ")" force_confirm
+                if [ "$force_confirm" = "0" ]; then continue; fi
+                if [ "$force_confirm" = "y" ] || [ "$force_confirm" = "Y" ]; then
+                  echo -e "${rw_lv}正在强制推送...${rw_lv}"
+                  run_with_timeout 60 git push --force "$remote_name" "$branch_name"
+                  if [ $? -eq 0 ]; then
+                    echo -e "${rw_lv}强制推送成功${rw_lv}"
+                  else
+                    echo -e "${rw_hong}强制推送失败${rw_lv}"
+                  fi
+                else
+                  echo -e "${rw_huang}已取消强制推送${rw_lv}"
+                fi
+                ;;
+              *)
+                echo -e "${rw_huang}未选择解决方案${rw_lv}"
+                ;;
+            esac
+          else
+            echo -e "${rw_lv}推送成功${rw_lv}"
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      14)
+        clear
+        echo -e "${rw_huang}拉取远程更新${rw_lv}"
+        if [ -d ".git" ]; then
+          git config --global --list 2>/dev/null | grep -i "url.*insteadof" | while IFS='=' read -r key value; do
+            git config --global --unset "$key" 2>/dev/null
+          done
+          
+          echo "远程仓库列表:"
+          git remote -v
+          echo ""
+          echo -e "${rw_huang}请选择操作:${rw_lv}"
+          echo -e "${rw_huang}1.   ${rw_lv}${rw_lv}拉取当前分支${rw_lv}"
+          echo -e "${rw_huang}2.   ${rw_lv}${rw_lv}拉取指定分支${rw_lv}"
+          echo -e "${rw_huang}3.   ${rw_lv}${rw_lv}拉取所有分支${rw_lv}"
+          echo ""
+          echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+          echo ""
+          read -e -p "请输入你的选择（默认1）: " pull_choice
+          
+          if [ "$pull_choice" = "0" ]; then continue; fi
+          if [ -z "$pull_choice" ]; then pull_choice="1"; fi
+          
+          case $pull_choice in
+            1)
+              echo -e "${rw_huang}正在拉取当前分支...${rw_lv}"
+              current_branch=$(git branch --show-current 2>/dev/null)
+              if [ -z "$current_branch" ]; then
+                current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+              fi
+              
+              if [ -n "$current_branch" ]; then
+                echo -e "${rw_huang}当前分支: ${rw_lv}$current_branch${rw_lv}"
+                if git pull origin "$current_branch" 2>/dev/null; then
+                  echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
+                elif git pull 2>/dev/null; then
+                  echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
+                else
+                  echo -e "${rw_huang}提示: 当前分支未设置上游跟踪${rw_lv}"
+                  echo -e "${rw_huang}建议: 输入 2 手动指定分支和远程仓库${rw_lv}"
+                  echo -e "${rw_huang}是否自动设置上游分支？(Y/N)${rw_lv}"
+                  read -e -p "请输入你的选择: " set_upstream
+                  if [ "$set_upstream" = "Y" ] || [ "$set_upstream" = "y" ]; then
+                    if git branch --set-upstream-to=origin/"$current_branch" 2>/dev/null; then
+                      echo -e "${rw_lv}✓ 已设置上游分支为 origin/$current_branch${rw_lv}"
+                      echo -e "${rw_huang}正在重新拉取...${rw_lv}"
+                      if git pull; then
+                        echo -e "${rw_lv}✓ 拉取成功${rw_lv}"
+                      else
+                        echo -e "${rw_hong}✗ 拉取失败${rw_lv}"
+                      fi
+                    else
+                      echo -e "${rw_hong}✗ 设置上游分支失败，可能远程不存在该分支${rw_lv}"
+                    fi
+                  else
+                    echo -e "${rw_huang}已取消，可输入 2 手动指定分支${rw_lv}"
+                  fi
+                fi
+              else
+                echo -e "${rw_hong}✗ 无法获取当前分支名称${rw_lv}"
+                echo -e "${rw_huang}提示: 请手动切换到分支后再拉取${rw_lv}"
+              fi
+              ;;
+            2)
+              echo -e "${rw_huang}当前分支: $(git branch --show-current)${rw_lv}"
+              echo -e "${rw_huang}可用的远程分支:${rw_lv}"
+              git branch -r | head -10
+              echo ""
+              read -e -p "请输入要拉取的分支名称（如 master 或 main）: " branch_name
+              if [ -n "$branch_name" ]; then
+                echo -e "${rw_huang}请输入远程仓库名称（默认 origin）: ${rw_lv}"
+                read -e -p "请输入远程仓库名称: " remote_name
+                if [ -z "$remote_name" ]; then remote_name="origin"; fi
+                
+                echo -e "${rw_huang}正在拉取 $remote_name/$branch_name ...${rw_lv}"
+                git pull "$remote_name" "$branch_name"
+                if [ $? -eq 0 ]; then
+                  echo -e "${rw_lv}拉取成功${rw_lv}"
+                else
+                  echo -e "${rw_hong}拉取失败，请检查分支名称和仓库状态${rw_lv}"
+                fi
+              else
+                echo -e "${rw_hong}分支名称不能为空${rw_lv}"
+              fi
+              ;;
+            3)
+              echo -e "${rw_huang}正在拉取所有分支...${rw_lv}"
+              git fetch --all
+              if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}获取所有分支成功${rw_lv}"
+                echo -e "${rw_huang}提示: 使用 'git checkout' 切换到其他分支${rw_lv}"
+              else
+                echo -e "${rw_hong}获取失败${rw_lv}"
+              fi
+              ;;
+            *)
+              echo -e "${rw_huang}无效选择，正在拉取当前分支...${rw_lv}"
+              git pull
+              if [ $? -eq 0 ]; then
+                echo -e "${rw_lv}拉取成功${rw_lv}"
+              else
+                echo -e "${rw_hong}拉取失败${rw_lv}"
+              fi
+              ;;
+          esac
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      15)
+        clear
+        echo -e "${rw_huang}查看远程仓库${rw_lv}"
+        echo -e "远程仓库通常包括: ${rw_hong}origin${rw_lv} (主仓库), ${rw_hong}upstream${rw_lv} (上游仓库)"
+        echo ""
+        if [ -d ".git" ]; then
+          git remote -v
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        echo ""
+        echo -e "${rw_huang}提示: 按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        read -e -p "按回车继续..." input_choice
+        if [ "$input_choice" = "0" ]; then continue; fi
+        ;;
+      16)
+        clear
+        echo -e "${rw_huang}添加远程仓库${rw_lv}"
+        echo -e "${rw_cheng}------------------------${rw_lv}"
+        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv} (默认), upstream, myrepo"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        if [ -d ".git" ]; then
+          read -e -p "请输入远程仓库名称（如 origin）: " remote_name
+          if [ "$remote_name" = "0" ]; then continue; fi
+          echo ""
+          echo "远程仓库URL示例:"
+          echo "  - HTTPS: https://github.com/username/repo.git"
+          echo "  - SSH:   git@github.com:username/repo.git"
+          echo ""
+          read -e -p "请输入远程仓库URL: " remote_url
+          if [ "$remote_url" = "0" ]; then continue; fi
+          git remote add "$remote_name" "$remote_url"
+          echo ""
+          echo -e "${rw_lv}远程仓库已添加${rw_lv}"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      17)
+        clear
+        echo -e "${rw_huang}移除远程仓库${rw_lv}"
+        echo -e "远程仓库名称示例: ${rw_hong}origin${rw_lv}, ${rw_hong}upstream${rw_lv}, ${rw_hong}myrepo${rw_lv}"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        if [ -d ".git" ]; then
+          git remote -v
+          echo ""
+          read -e -p "请输入要移除的远程仓库名称: " remote_name
+          if [ "$remote_name" = "0" ]; then continue; fi
+          git remote remove "$remote_name"
+          echo -e "${rw_lv}远程仓库已移除${rw_lv}"
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      18)
+        echo -e "${rw_huang}移除远程分支${rw_lv}"
+        echo -e "示例: ${rw_hong}git push origin --delete feature-branch${rw_lv}"
+        echo ""
+        echo -e "${rw_huang}提示: 输入完成后按回车继续，输入 0 返回上一级${rw_lv}"
+        echo ""
+        if [ -d ".git" ]; then
+          git remote -v
+          echo ""
+          read -e -p "请输入远程仓库名称 (如 origin): " remote_name
+          if [ "$remote_name" = "0" ]; then continue; fi
+          git branch -r | grep "^  ${remote_name}/" | head -20
+          echo ""
+          read -e -p "请输入要删除的远程分支名称: " branch_name
+          if [ "$branch_name" = "0" ]; then continue; fi
+          echo ""
+          echo -e "${rw_hong}警告: 即将删除远程仓库 ${remote_name} 的分支 ${branch_name}${rw_lv}"
+          read -e -p "确认删除？(y/n): " confirm
+          if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+            git push "$remote_name" --delete "$branch_name"
+            echo -e "${rw_lv}远程分支 ${branch_name} 已删除${rw_lv}"
+          else
+            echo -e "${rw_huang}操作已取消${rw_lv}"
+          fi
+        else
+          echo -e "${rw_hong}错误: 当前目录不是git仓库${rw_lv}"
+        fi
+        read -e -p "按回车继续..."
+        ;;
+      19)
+        switch_git_mirror
+        ;;
+      20)
+        git_hooks_deploy
+        ;;
+      0)
+        clear
+        return
+        ;;
+      *)
+        echo -e "${rw_hong}无效的输入！${rw_lv}"
         sleep 1
         ;;
-      0) break ;;
     esac
   done
 }
-
-
-
 # ================================================================
 # Docker 全管理（重构版）
 # 设计原则: 主菜单清晰分层 → 子菜单聚焦操作 → 辅助函数复用
