@@ -25348,72 +25348,19 @@ github_manager() {
             echo ""
             read -e -p " 是否推送到远程？(Y/n): " _push < /dev/tty
             if [[ ! "$_push" =~ ^[Nn]$ ]]; then
-                # ── 后台执行 git push + 进度条动画 ──
-                local _push_log="/tmp/riwi_push_$$.log"
-                (
-                    git -c core.askpass= push "$_remote_chk" "$_br" > "$_push_log" 2>&1
-                    echo "EXIT_CODE=$?" >> "$_push_log"
-                ) &
-                local _push_pid=$!
-
-                # 进度条动画（与拉取同样的样式）
-                local _bar_width=30
-                local _spin_idx=0
-                local _spin_chars="|/-\\"
-                local _elapsed=0
-                local _max_wait=120
-                while kill -0 "$_push_pid" 2>/dev/null; do
-                    local _progress=$(( _elapsed * _bar_width / _max_wait ))
-                    [ "$_progress" -gt "$_bar_width" ] && _progress=$_bar_width
-                    local _filled=""
-                    local _i=0
-                    while [ "$_i" -lt "$_progress" ]; do _filled+="█"; _i=$((_i+1)); done
-                    local _empty=""
-                    _i=0
-                    while [ "$_i" -lt $((_bar_width - _progress)) ]; do _empty+="░"; _i=$((_i+1)); done
-                    local _pct=$(( _elapsed * 100 / _max_wait ))
-                    [ "$_pct" -gt 99 ] && _pct=99
-                    local _spin_char="${_spin_chars:$_spin_idx:1}"
-                    _spin_idx=$(( (_spin_idx + 1) % 4 ))
-                    printf "\r ${rw_huang}[%s%s]${rw_lv} %3d%% %s 推送中..." "$_filled" "$_empty" "$_pct" "$_spin_char"
-                    sleep 0.2
-                    _elapsed=$((_elapsed + 1))
-                    if [ "$_elapsed" -ge "$_max_wait" ]; then
-                        echo ""
-                        echo -e " ${rw_hong}✗ 推送超时（${_max_wait}秒）${rw_lv}"
-                        kill "$_push_pid" 2>/dev/null
-                        wait "$_push_pid" 2>/dev/null
-                        rm -f "$_push_log"
-                        echo -e " ${rw_huang}可能网络问题 → 选 13 切换镜像源${rw_lv}"
-                        break_end; continue
-                    fi
-                done
-                wait "$_push_pid" 2>/dev/null
-
-                # 完成进度条
-                _filled=""
-                _i=0
-                while [ "$_i" -lt "$_bar_width" ]; do _filled+="█"; _i=$((_i+1)); done
-                printf "\r ${rw_lv}[%s]${rw_lv} 100%% ✓${rw_lv}\n" "$_filled"
-
-                # 解析推送结果
+                # 关闭进度输出避免污染判断，捕获完整输出
                 local _push_out _push_rc
-                _push_rc=$(grep "^EXIT_CODE=" "$_push_log" | cut -d= -f2)
-                _push_rc=${_push_rc:-1}
-                _push_out=$(grep -v "^EXIT_CODE=" "$_push_log")
-                rm -f "$_push_log"
-
-                if [ "$_push_rc" = "0" ]; then
+                _push_out=$(git -c core.askpass= push "$_remote_chk" "$_br" 2>&1)
+                _push_rc=$?
+                if [ $_push_rc -eq 0 ]; then
                     # 二次校验：远程 SHA 是否已更新为本地 SHA
                     local _remote_sha_after
                     _remote_sha_after=$(git ls-remote "$_remote_chk" "$_br" 2>/dev/null | awk '{print $1}')
                     if [ "$_remote_sha_after" = "$_local_sha" ]; then
-                        echo ""
                         echo -e " ${rw_lv}✓ 推送成功${rw_lv}"
                         echo -e " ${rw_huang}${_remote_chk}/${_br}${rw_lv}"
                         echo -e " 远程已更新: ${rw_lv}${_remote_sha_after:0:8}${rw_lv}"
                     else
-                        echo ""
                         echo -e " ${rw_huang}⚠ push 返回成功，但远程未更新${rw_lv}"
                         echo -e "   推送前: ${_remote_sha_before:0:8}"
                         echo -e "   推送后: ${_remote_sha_after:0:8}"
@@ -25421,7 +25368,6 @@ github_manager() {
                         echo -e " ${rw_huang}可能推送到了其他分支或被服务端拒绝${rw_lv}"
                     fi
                 else
-                    echo ""
                     echo -e " ${rw_hong}✗ 推送失败 (退出码: $_push_rc)${rw_lv}"
                     echo -e " ${rw_cheng}── 完整错误输出 ──${rw_lv}"
                     echo "$_push_out" | head -15
@@ -25433,86 +25379,10 @@ github_manager() {
                     echo ""
                     read -e -p " 是否先拉取再推送？(y/N): " _retry < /dev/tty
                     if [[ "$_retry" =~ ^[Yy]$ ]]; then
-                        # 拉取（带进度条）
-                        local _pull_retry_log="/tmp/riwi_pull_retry_$$.log"
-                        (
-                            git pull --rebase "$_remote_chk" "$_br" > "$_pull_retry_log" 2>&1
-                            echo "EXIT_CODE=$?" >> "$_pull_retry_log"
-                        ) &
-                        local _pull_retry_pid=$!
-                        _elapsed=0
-                        local _max_wait2=60
-                        while kill -0 "$_pull_retry_pid" 2>/dev/null; do
-                            local _progress2=$(( _elapsed * _bar_width / _max_wait2 ))
-                            [ "$_progress2" -gt "$_bar_width" ] && _progress2=$_bar_width
-                            local _filled2=""
-                            _i=0
-                            while [ "$_i" -lt "$_progress2" ]; do _filled2+="█"; _i=$((_i+1)); done
-                            local _empty2=""
-                            _i=0
-                            while [ "$_i" -lt $((_bar_width - _progress2)) ]; do _empty2+="░"; _i=$((_i+1)); done
-                            local _pct2=$(( _elapsed * 100 / _max_wait2 ))
-                            [ "$_pct2" -gt 99 ] && _pct2=99
-                            local _spin_char2="${_spin_chars:$_spin_idx:1}"
-                            _spin_idx=$(( (_spin_idx + 1) % 4 ))
-                            printf "\r ${rw_huang}[%s%s]${rw_lv} %3d%% %s 拉取中..." "$_filled2" "$_empty2" "$_pct2" "$_spin_char2"
-                            sleep 0.2
-                            _elapsed=$((_elapsed + 1))
-                            if [ "$_elapsed" -ge "$_max_wait2" ]; then
-                                kill "$_pull_retry_pid" 2>/dev/null
-                                break
-                            fi
-                        done
-                        wait "$_pull_retry_pid" 2>/dev/null
-                        _filled=""
-                        _i=0
-                        while [ "$_i" -lt "$_bar_width" ]; do _filled+="█"; _i=$((_i+1)); done
-                        printf "\r ${rw_lv}[%s]${rw_lv} 100%% ✓${rw_lv}\n" "$_filled"
-                        grep -v "^EXIT_CODE=" "$_pull_retry_log" | head -10 | sed 's/^/ /'
-                        rm -f "$_pull_retry_log"
-
-                        # 重新推送（带进度条）
-                        local _push_retry_log="/tmp/riwi_push_retry_$$.log"
-                        (
-                            git push "$_remote_chk" "$_br" > "$_push_retry_log" 2>&1
-                            echo "EXIT_CODE=$?" >> "$_push_retry_log"
-                        ) &
-                        local _push_retry_pid=$!
-                        _elapsed=0
-                        while kill -0 "$_push_retry_pid" 2>/dev/null; do
-                            local _progress3=$(( _elapsed * _bar_width / _max_wait2 ))
-                            [ "$_progress3" -gt "$_bar_width" ] && _progress3=$_bar_width
-                            local _filled3=""
-                            _i=0
-                            while [ "$_i" -lt "$_progress3" ]; do _filled3+="█"; _i=$((_i+1)); done
-                            local _empty3=""
-                            _i=0
-                            while [ "$_i" -lt $((_bar_width - _progress3)) ]; do _empty3+="░"; _i=$((_i+1)); done
-                            local _pct3=$(( _elapsed * 100 / _max_wait2 ))
-                            [ "$_pct3" -gt 99 ] && _pct3=99
-                            local _spin_char3="${_spin_chars:$_spin_idx:1}"
-                            _spin_idx=$(( (_spin_idx + 1) % 4 ))
-                            printf "\r ${rw_huang}[%s%s]${rw_lv} %3d%% %s 重新推送..." "$_filled3" "$_empty3" "$_pct3" "$_spin_char3"
-                            sleep 0.2
-                            _elapsed=$((_elapsed + 1))
-                            if [ "$_elapsed" -ge "$_max_wait2" ]; then
-                                kill "$_push_retry_pid" 2>/dev/null
-                                break
-                            fi
-                        done
-                        wait "$_push_retry_pid" 2>/dev/null
-                        _filled=""
-                        _i=0
-                        while [ "$_i" -lt "$_bar_width" ]; do _filled+="█"; _i=$((_i+1)); done
-                        printf "\r ${rw_lv}[%s]${rw_lv} 100%% ✓${rw_lv}\n" "$_filled"
-
-                        local _push_rc2
-                        _push_rc2=$(grep "^EXIT_CODE=" "$_push_retry_log" | cut -d= -f2)
-                        _push_rc2=${_push_rc2:-1}
-                        local _push_out2
-                        _push_out2=$(grep -v "^EXIT_CODE=" "$_push_retry_log")
-                        rm -f "$_push_retry_log"
-                        if [ "$_push_rc2" = "0" ]; then
+                        git pull --rebase "$_remote_chk" "$_br" 2>&1 | head -10
+                        _push_out=$(git push "$_remote_chk" "$_br" 2>&1)
+                        _push_rc=$?
+                        if [ $_push_rc -eq 0 ]; then
                             local _remote_sha_after2
                             _remote_sha_after2=$(git ls-remote "$_remote_chk" "$_br" 2>/dev/null | awk '{print $1}')
                             if [ "$_remote_sha_after2" = "$(git rev-parse HEAD)" ]; then
@@ -25522,7 +25392,7 @@ github_manager() {
                             fi
                         else
                             echo -e " ${rw_hong}✗ 仍有冲突，请手动处理${rw_lv}"
-                            echo "$_push_out2" | head -10
+                            echo "$_push_out" | head -10
                             echo -e " ${rw_huang}手动步骤: git pull → 解决冲突 → git add → git commit → git push${rw_lv}"
                         fi
                     fi
