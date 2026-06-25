@@ -25733,9 +25733,9 @@ GIEOF
         echo -e "${rw_cheng}━━━━━━━━━━━━  克隆仓库  ━━━━━━━━━━━━${rw_lv}"
         echo ""
         echo -e " ${rw_huang}URL 示例:${rw_lv}"
-        echo -e "   https://github.com/user/repo.git"
-        echo -e "   git@github.com:user/repo.git"
-        echo -e " ${rw_huang}回车默认克隆工具箱仓库${rw_lv}"
+        echo -e "   ${rw_lv}https://github.com/riwi002/mybox.git${rw_lv}"
+        echo -e "   git@github.com:riwi002/mybox.git"
+        echo -e " ${rw_huang}回车=克隆 riwi002/mybox 到当前目录${rw_lv}"
         echo ""
         read -e -p " 仓库URL（0返回上一级）: " _url < /dev/tty
         [ "$_url" = "0" ] && continue
