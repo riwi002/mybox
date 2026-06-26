@@ -25879,7 +25879,7 @@ github_manager() {
         fi
         echo -e " ${rw_cheng}── 最近 20 条提交 ──${rw_lv}"
         echo ""
-        git log --oneline --graph --decorate -20 2>/dev/null || echo -e " ${rw_huang}无提交记录${rw_lv}"
+        git log --oneline --graph --decorate -20 2>/dev/null | sed 's/HEAD/当前位置/g' || echo -e " ${rw_huang}无提交记录${rw_lv}"
         echo ""
         break_end
         ;;
