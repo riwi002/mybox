@@ -24197,7 +24197,7 @@ translate_git_status() {
     if ($0 ~ /^On branch /) {
       print "位于分支 " substr($0, 11);
     } else if ($0 ~ /^Your branch is up to date with /) {
-      print "您的分支与 " substr($0, 28) " 是最新的。";
+      print "您的分支与远端 " substr($0, 33) " 是最新的。";
     } else if ($0 ~ /^Changes to be committed:$/) {
       print "要提交的更改：";
     } else if ($0 ~ /^Changes not staged for commit:$/) {
