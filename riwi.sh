@@ -18709,10 +18709,97 @@ _maint_security_menu() {
       5)
         root_use
         send_stats "修复SSH高危漏洞"
+        clear
+        echo -e "${rw_cheng}━━━━━━━━━━━━  修复OpenSSH高危漏洞  ━━━━━━━━━━━━${rw_lv}"
+        echo ""
+        # 检测当前OpenSSH版本
+        local _ssh_ver _ssh_ver_num
+        _ssh_ver=$(ssh -V 2>&1 | head -1)
+        _ssh_ver_num=$(echo "$_ssh_ver" | grep -oE '[0-9]+\.[0-9]+p[0-9]+' | head -1)
+        echo -e " ${rw_cheng}当前 OpenSSH 版本:${rw_lv} ${rw_huang}${_ssh_ver}${rw_lv}"
+        echo ""
+
+        # 检测系统类型
+        local _os_type _pkg_mgr
+        if [ -f /etc/debian_version ]; then
+            _os_type="Debian/Ubuntu"
+            _pkg_mgr="apt"
+        elif [ -f /etc/redhat-release ]; then
+            _os_type="RHEL/CentOS"
+            _pkg_mgr="yum/dnf"
+        elif [ -f /etc/alpine-release ]; then
+            _os_type="Alpine"
+            _pkg_mgr="apk"
+        else
+            _os_type="未知"
+            _pkg_mgr="未知"
+        fi
+        echo -e " ${rw_cheng}系统类型:${rw_lv} ${rw_huang}${_os_type}${rw_lv}"
+        echo -e " ${rw_cheng}包管理器:${rw_lv} ${rw_huang}${_pkg_mgr}${rw_lv}"
+        echo ""
+
+        # 检查是否已安装编译依赖
+        echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+        echo -e " ${rw_huang}此操作将:${rw_lv}"
+        echo -e "  1. 下载并编译安装 OpenSSH 9.8p1（修复CVE-2024-6387等高危漏洞）"
+        echo -e "  2. 安装编译依赖（gcc, make, zlib, openssl-dev等）"
+        echo -e "  3. ${rw_hong}重启SSH服务${rw_lv}（连接会短暂中断）"
+        echo ""
+        echo -e " ${rw_hong}⚠ 警告:${rw_lv}"
+        echo -e "  - 升级期间SSH连接可能中断，建议保留其他会话"
+        echo -e "  - 请确保已配置其他访问方式（如控制台）"
+        echo -e "  - 升级后需验证SSH配置和端口"
+        echo ""
+        echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+        echo -e " ${rw_huang}1${rw_lv} 确认升级    ${rw_huang}0${rw_lv} 取消"
+        read -e -p " 请选择: " _ssh_upgrade_choice < /dev/tty
+        [ "$_ssh_upgrade_choice" != "1" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_end && continue
+
+        # 二次确认
+        echo ""
+        read -e -p "$(echo -e "${rw_hong}再次确认升级OpenSSH？(输入 YES): ${rw_lv}")" _ssh_confirm < /dev/tty
+        [ "$_ssh_confirm" != "YES" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_end && continue
+
+        echo ""
+        echo -e " ${rw_cheng}开始下载升级脚本...${rw_lv}"
         cd ~
-        curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/upgrade_openssh9.8p1.sh
+        # 下载升级脚本，添加错误处理
+        if ! curl -sS -O ${gh_proxy}raw.githubusercontent.com/riwi/sh/main/upgrade_openssh9.8p1.sh 2>&1; then
+            echo -e " ${rw_hong}✗ 下载升级脚本失败${rw_lv}"
+            echo -e " ${rw_huang}请检查网络连接或稍后重试${rw_lv}"
+            rm -f ~/upgrade_openssh9.8p1.sh
+            break_end
+            continue
+        fi
+
+        # 验证脚本是否下载成功
+        if [ ! -f ~/upgrade_openssh9.8p1.sh ] || [ ! -s ~/upgrade_openssh9.8p1.sh ]; then
+            echo -e " ${rw_hong}✗ 升级脚本下载不完整${rw_lv}"
+            rm -f ~/upgrade_openssh9.8p1.sh
+            break_end
+            continue
+        fi
+
         chmod +x ~/upgrade_openssh9.8p1.sh
-        ~/upgrade_openssh9.8p1.sh
+        echo -e " ${rw_lv}✓ 升级脚本下载完成${rw_lv}"
+        echo -e " ${rw_cheng}开始执行升级（过程可能较长，请耐心等待）...${rw_lv}"
+        echo ""
+
+        # 执行升级脚本
+        if ~/upgrade_openssh9.8p1.sh; then
+            echo ""
+            local _new_ssh_ver
+            _new_ssh_ver=$(ssh -V 2>&1 | head -1)
+            echo -e " ${rw_lv}✓ 升级完成${rw_lv}"
+            echo -e " ${rw_cheng}升级前版本:${rw_lv} ${rw_huang}${_ssh_ver}${rw_lv}"
+            echo -e " ${rw_cheng}升级后版本:${rw_lv} ${rw_lv}${_new_ssh_ver}${rw_lv}"
+        else
+            echo ""
+            echo -e " ${rw_hong}✗ 升级过程出现错误${rw_lv}"
+            echo -e " ${rw_huang}请检查错误信息，SSH服务可能需要手动恢复${rw_lv}"
+        fi
+
+        # 清理临时文件
         rm -f ~/upgrade_openssh9.8p1.sh
         ;;
       6) ssh_key_permission_check ;;
