@@ -8490,6 +8490,356 @@ linux_info() {
 
 
 
+# ================================================================
+# 跑分测评模块
+# 功能: 服务器硬件信息展示 + CPU/内存/磁盘/网络性能测试
+# ================================================================
+
+# 硬件信息展示
+_benchmark_hardware_info() {
+    clear
+    echo -e "${rw_cheng}━━━━━━━━━━━━  硬件信息  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+
+    # CPU 信息
+    local _cpu_model _cpu_cores _cpu_freq _cpu_cache
+    _cpu_model=$(lscpu 2>/dev/null | awk -F': +' '/Model name:/ {print $2; exit}')
+    _cpu_model=${_cpu_model:-未知}
+    _cpu_cores=$(nproc 2>/dev/null || echo "未知")
+    _cpu_freq=$(lscpu 2>/dev/null | awk -F': +' '/CPU max MHz:/ {printf "%.2f GHz", $2/1000; exit}')
+    _cpu_freq=${_cpu_freq:-未知}
+    _cpu_cache=$(lscpu 2>/dev/null | awk -F': +' '/L3 cache:/ {print $2; exit}')
+    _cpu_cache=${_cpu_cache:-未知}
+
+    echo -e " ${rw_cheng}── CPU ──${rw_lv}"
+    echo -e "  型号:     ${rw_huang}${_cpu_model}${rw_lv}"
+    echo -e "  核心数:   ${rw_huang}${_cpu_cores}${rw_lv}"
+    echo -e "  频率:     ${rw_huang}${_cpu_freq}${rw_lv}"
+    echo -e "  L3缓存:   ${rw_huang}${_cpu_cache}${rw_lv}"
+    echo ""
+
+    # 内存信息
+    local _mem_total _mem_used _mem_free _mem_usage
+    _mem_total=$(free -h 2>/dev/null | awk 'NR==2{print $2}')
+    _mem_used=$(free -h 2>/dev/null | awk 'NR==2{print $3}')
+    _mem_free=$(free -h 2>/dev/null | awk 'NR==2{print $4}')
+    _mem_usage=$(free 2>/dev/null | awk 'NR==2{printf "%.1f", $3*100/$2}')
+
+    echo -e " ${rw_cheng}── 内存 ──${rw_lv}"
+    echo -e "  总量:     ${rw_huang}${_mem_total}${rw_lv}"
+    echo -e "  已用:     ${rw_huang}${_mem_used}${rw_lv} (${_mem_usage}%)"
+    echo -e "  可用:     ${rw_huang}${_mem_free}${rw_lv}"
+    echo ""
+
+    # Swap 信息
+    local _swap_total _swap_used
+    _swap_total=$(free -h 2>/dev/null | awk 'NR==3{print $2}')
+    _swap_used=$(free -h 2>/dev/null | awk 'NR==3{print $3}')
+    if [ "$_swap_total" != "0B" ] && [ -n "$_swap_total" ]; then
+        echo -e "  Swap:     ${rw_huang}${_swap_used}${rw_lv} / ${rw_huang}${_swap_total}${rw_lv}"
+        echo ""
+    fi
+
+    # 磁盘信息
+    echo -e " ${rw_cheng}── 磁盘 ──${rw_lv}"
+    df -h 2>/dev/null | awk 'NR==1 || /^\/dev\// {printf "  %-20s %8s %8s %8s  %s\n", $1, $2, $3, $5, $6}'
+    echo ""
+
+    # 磁盘IO测试信息（读取）
+    local _disk_read_speed
+    _disk_read_speed=$(dd if=/dev/zero of=/tmp/_bench_test bs=1M count=512 oflag=direct 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    rm -f /tmp/_bench_test
+    echo -e "  磁盘写入: ${rw_huang}${_disk_read_speed:-测试失败}${rw_lv}"
+    echo ""
+
+    # 网络信息
+    echo -e " ${rw_cheng}── 网络 ──${rw_lv}"
+    local _ipv4 _ipv6
+    _ipv4=$(curl -s4 --max-time 3 ifconfig.me 2>/dev/null)
+    _ipv6=$(curl -s6 --max-time 3 ifconfig.me 2>/dev/null)
+    [ -n "$_ipv4" ] && echo -e "  IPv4:     ${rw_huang}${_ipv4}${rw_lv}"
+    [ -n "$_ipv6" ] && echo -e "  IPv6:     ${rw_huang}${_ipv6}${rw_lv}"
+
+    # 网络带宽测试（下载）
+    local _net_speed
+    _net_speed=$(curl -s --max-time 10 -o /dev/null -w "%{speed_download}" http://cachefly.cachefly.net/10mb.test 2>/dev/null)
+    if [ -n "$_net_speed" ]; then
+        local _speed_mb
+        _speed_mb=$(awk "BEGIN{printf \"%.2f\", ${_net_speed}/1024/1024}")
+        echo -e "  下载速度: ${rw_huang}${_speed_mb} MB/s${rw_lv}"
+    fi
+    echo ""
+
+    # 系统信息
+    echo -e " ${rw_cheng}── 系统 ──${rw_lv}"
+    local _os_info _kernel _uptime _arch
+    _os_info=$(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d'=' -f2 | tr -d '"' || echo "未知")
+    _kernel=$(uname -r 2>/dev/null || echo "未知")
+    _arch=$(uname -m 2>/dev/null || echo "未知")
+    _uptime=$(uptime -p 2>/dev/null | sed 's/up //' || echo "未知")
+    echo -e "  系统:     ${rw_huang}${_os_info}${rw_lv}"
+    echo -e "  内核:     ${rw_huang}${_kernel}${rw_lv}"
+    echo -e "  架构:     ${rw_huang}${_arch}${rw_lv}"
+    echo -e "  运行:     ${rw_huang}${_uptime}${rw_lv}"
+    echo ""
+}
+
+# CPU 跑分测试
+_benchmark_cpu() {
+    echo -e "${rw_cheng}━━━━━━━━━━━━  CPU 性能测试  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+    echo -e " ${rw_huang}测试中，请耐心等待...${rw_lv}"
+    echo ""
+
+    # 单核性能测试 - 计算圆周率
+    local _pi_start _pi_end _pi_time
+    _pi_start=$(date +%s.%N)
+    echo "scale=3000; 4*a(1)" | bc -l >/dev/null 2>&1
+    _pi_end=$(date +%s.%N)
+    _pi_time=$(awk "BEGIN{printf \"%.2f\", ${_pi_end} - ${_pi_start}}")
+
+    echo -e " ${rw_cheng}── 单核性能 ──${rw_lv}"
+    echo -e "  圆周率计算(3000位): ${rw_huang}${_pi_time}${rw_lv} 秒"
+    echo ""
+
+    # 多核性能测试 - 并行计算
+    local _cores _multi_start _multi_end _multi_time
+    _cores=$(nproc)
+    _multi_start=$(date +%s.%N)
+    for i in $(seq 1 "$_cores"); do
+        echo "scale=2000; 4*a(1)" | bc -l >/dev/null 2>&1 &
+    done
+    wait
+    _multi_end=$(date +%s.%N)
+    _multi_time=$(awk "BEGIN{printf \"%.2f\", ${_multi_end} - ${_multi_start}}")
+
+    echo -e " ${rw_cheng}── 多核性能(${_cores}核) ──${rw_lv}"
+    echo -e "  并行圆周率(2000位): ${rw_huang}${_multi_time}${rw_lv} 秒"
+    echo ""
+
+    # OpenSSL 性能测试
+    if command -v openssl &>/dev/null; then
+        echo -e " ${rw_cheng}── OpenSSL 加密性能 ──${rw_lv}"
+        openssl speed -evp aes-256-cbc 2>/dev/null | tail -2 | awk '{printf "  %s: %s bytes/s\n", $1, $NF}'
+        echo ""
+    fi
+
+    # 评分
+    local _score
+    _score=$(awk "BEGIN{printf \"%d\", 10000 / ${_pi_time}}")
+    echo -e " ${rw_cheng}── CPU 综合评分 ──${rw_lv}"
+    echo -e "  ${rw_huang}${_score}${rw_lv} 分 (越高越好)"
+    echo ""
+}
+
+# 内存跑分测试
+_benchmark_memory() {
+    echo -e "${rw_cheng}━━━━━━━━━━━━  内存性能测试  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+    echo -e " ${rw_huang}测试中，请耐心等待...${rw_lv}"
+    echo ""
+
+    # 内存写入测试
+    local _mem_write
+    _mem_write=$(dd if=/dev/zero of=/dev/null bs=1M count=4096 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    echo -e " ${rw_cheng}── 内存吞吐 ──${rw_lv}"
+    echo -e "  写入速度: ${rw_huang}${_mem_write:-测试失败}${rw_lv}"
+    echo ""
+
+    # 内存复制测试
+    local _mem_copy
+    _mem_copy=$(dd if=/dev/zero of=/tmp/_mem_test bs=1M count=2048 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    rm -f /tmp/_mem_test
+    echo -e "  读写速度: ${rw_huang}${_mem_copy:-测试失败}${rw_lv}"
+    echo ""
+
+    # 评分
+    local _speed_num _score
+    _speed_num=$(echo "$_mem_write" | grep -oE '[0-9.]+')
+    if [ -n "$_speed_num" ]; then
+        local _unit
+        _unit=$(echo "$_mem_write" | grep -oE '[GMK]B/s')
+        case "$_unit" in
+            GB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num} * 100}") ;;
+            MB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num}") ;;
+            KB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num} / 1024}") ;;
+            *) _score=0 ;;
+        esac
+    else
+        _score=0
+    fi
+
+    echo -e " ${rw_cheng}── 内存综合评分 ──${rw_lv}"
+    echo -e "  ${rw_huang}${_score}${rw_lv} 分 (越高越好)"
+    echo ""
+}
+
+# 磁盘跑分测试
+_benchmark_disk() {
+    echo -e "${rw_cheng}━━━━━━━━━━━━  磁盘性能测试  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+    echo -e " ${rw_huang}测试中，请耐心等待...${rw_lv}"
+    echo ""
+
+    echo -e " ${rw_cheng}── 写入测试(4K块) ──${rw_lv}"
+    local _write_4k
+    _write_4k=$(dd if=/dev/zero of=/tmp/_disk_4k bs=4k count=10000 oflag=direct 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    rm -f /tmp/_disk_4k
+    echo -e "  4K写入: ${rw_huang}${_write_4k:-测试失败}${rw_lv}"
+    echo ""
+
+    echo -e " ${rw_cheng}── 写入测试(1M块) ──${rw_lv}"
+    local _write_1m
+    _write_1m=$(dd if=/dev/zero of=/tmp/_disk_1m bs=1M count=1024 oflag=direct 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    rm -f /tmp/_disk_1m
+    echo -e "  1M写入: ${rw_huang}${_write_1m:-测试失败}${rw_lv}"
+    echo ""
+
+    echo -e " ${rw_cheng}── 读取测试(1M块) ──${rw_lv}"
+    # 先创建测试文件
+    dd if=/dev/zero of=/tmp/_disk_read bs=1M count=1024 oflag=direct 2>/dev/null
+    local _read_1m
+    _read_1m=$(dd if=/tmp/_disk_read of=/dev/null bs=1M count=1024 iflag=direct 2>&1 | awk -F'[ ,]+' '/copied/ {print $8 " " $9}')
+    rm -f /tmp/_disk_read
+    echo -e "  1M读取: ${rw_huang}${_read_1m:-测试失败}${rw_lv}"
+    echo ""
+
+    # 评分
+    local _speed_num _score _unit
+    _speed_num=$(echo "$_write_1m" | grep -oE '[0-9.]+')
+    _unit=$(echo "$_write_1m" | grep -oE '[GMK]B/s')
+    if [ -n "$_speed_num" ]; then
+        case "$_unit" in
+            GB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num} * 100}") ;;
+            MB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num}") ;;
+            KB/s) _score=$(awk "BEGIN{printf \"%d\", ${_speed_num} / 1024}") ;;
+            *) _score=0 ;;
+        esac
+    else
+        _score=0
+    fi
+
+    echo -e " ${rw_cheng}── 磁盘综合评分 ──${rw_lv}"
+    echo -e "  ${rw_huang}${_score}${rw_lv} 分 (越高越好)"
+    echo ""
+}
+
+# 网络跑分测试
+_benchmark_network() {
+    echo -e "${rw_cheng}━━━━━━━━━━━━  网络性能测试  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+    echo -e " ${rw_huang}测试中，请耐心等待...${rw_lv}"
+    echo ""
+
+    # 延迟测试
+    echo -e " ${rw_cheng}── 延迟测试 ──${rw_lv}"
+    local _ping_cn _ping_us _ping_jp
+    _ping_cn=$(ping -c 5 -W 2 baidu.com 2>/dev/null | awk -F'/' '/rtt|round-trip/ {printf "%.1f ms", $5}')
+    _ping_us=$(ping -c 5 -W 2 google.com 2>/dev/null | awk -F'/' '/rtt|round-trip/ {printf "%.1f ms", $5}')
+    _ping_jp=$(ping -c 5 -W 2 yahoo.co.jp 2>/dev/null | awk -F'/' '/rtt|round-trip/ {printf "%.1f ms", $5}')
+
+    echo -e "  国内(baidu):  ${rw_huang}${_ping_cn:-超时}${rw_lv}"
+    echo -e "  美国(google): ${rw_huang}${_ping_us:-超时}${rw_lv}"
+    echo -e "  日本(yahoo):  ${rw_huang}${_ping_jp:-超时}${rw_lv}"
+    echo ""
+
+    # 下载速度测试
+    echo -e " ${rw_cheng}── 下载速度 ──${rw_lv}"
+    local _dl_speed _dl_speed_mb
+    _dl_speed=$(curl -s --max-time 15 -o /dev/null -w "%{speed_download}" http://cachefly.cachefly.net/100mb.test 2>/dev/null)
+    if [ -n "$_dl_speed" ] && [ "$_dl_speed" != "0.000" ]; then
+        _dl_speed_mb=$(awk "BEGIN{printf \"%.2f\", ${_dl_speed}/1024/1024}")
+        echo -e "  国际下载: ${rw_huang}${_dl_speed_mb} MB/s${rw_lv}"
+    else
+        echo -e "  国际下载: ${rw_huang}测试失败${rw_lv}"
+    fi
+
+    # 本地下载测试
+    local _local_speed _local_speed_mb
+    _local_speed=$(curl -s --max-time 10 -o /dev/null -w "%{speed_download}" http://speedtest.tele2.net/10MB.zip 2>/dev/null)
+    if [ -n "$_local_speed" ] && [ "$_local_speed" != "0.000" ]; then
+        _local_speed_mb=$(awk "BEGIN{printf \"%.2f\", ${_local_speed}/1024/1024}")
+        echo -e "  备用下载: ${rw_huang}${_local_speed_mb} MB/s${rw_lv}"
+    fi
+    echo ""
+
+    # 评分
+    local _score=0
+    if [ -n "$_dl_speed_mb" ]; then
+        _score=$(awk "BEGIN{printf \"%d\", ${_dl_speed_mb} * 10}")
+    fi
+    echo -e " ${rw_cheng}── 网络综合评分 ──${rw_lv}"
+    echo -e "  ${rw_huang}${_score}${rw_lv} 分 (越高越好)"
+    echo ""
+}
+
+# 完整跑分报告
+_benchmark_full() {
+    clear
+    echo -e "${rw_cheng}━━━━━━━━━━━━  完整跑分报告  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+
+    # 硬件信息
+    _benchmark_hardware_info
+    echo -e " ${rw_cheng}========================================${rw_lv}"
+    echo ""
+
+    # CPU 测试
+    _benchmark_cpu
+    echo -e " ${rw_cheng}========================================${rw_lv}"
+    echo ""
+
+    # 内存测试
+    _benchmark_memory
+    echo -e " ${rw_cheng}========================================${rw_lv}"
+    echo ""
+
+    # 磁盘测试
+    _benchmark_disk
+    echo -e " ${rw_cheng}========================================${rw_lv}"
+    echo ""
+
+    # 网络测试
+    _benchmark_network
+
+    echo -e " ${rw_cheng}━━━━━━━━━━━━  跑分完成  ━━━━━━━━━━━━${rw_lv}"
+    echo ""
+}
+
+# 跑分测评主菜单
+benchmark_menu() {
+    while true; do
+        clear
+        send_stats "跑分测评"
+        echo -e "${rw_cheng}━━━━━━━━━━━━  跑分测评  ━━━━━━━━━━━━${rw_lv}"
+        echo ""
+        echo -e " ${rw_huang}1${rw_lv}  硬件信息查看"
+        echo -e " ${rw_huang}2${rw_lv}  CPU性能测试"
+        echo -e " ${rw_huang}3${rw_lv}  内存性能测试"
+        echo -e " ${rw_huang}4${rw_lv}  磁盘性能测试"
+        echo -e " ${rw_huang}5${rw_lv}  网络性能测试"
+        echo -e " ${rw_huang}6${rw_lv}  完整跑分报告"
+        echo ""
+        echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+        echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
+        echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
+        read -e -p " 请选择: " _bench_choice < /dev/tty
+        case $_bench_choice in
+            1) _benchmark_hardware_info; break_end ;;
+            2) _benchmark_cpu; break_end ;;
+            3) _benchmark_memory; break_end ;;
+            4) _benchmark_disk; break_end ;;
+            5) _benchmark_network; break_end ;;
+            6) _benchmark_full; break_end ;;
+            0) return ;;
+            *) echo -e " ${rw_hong}无效选项${rw_lv}"; break_end ;;
+        esac
+    done
+}
+
+
+
+
 linux_tools() {
 
   while true; do
@@ -19878,6 +20228,7 @@ echo -e "${rw_huang}9.   ${rw_lv}${rw_lv}容器管理${rw_lv}"
 echo -e "${rw_huang}10.  ${rw_lv}${rw_lv}建站部署${rw_lv}"
 echo -e "${rw_huang}11.  ${rw_lv}${rw_lv}集群控制${rw_lv}"
 echo -e "${rw_huang}12.  ${rw_lv}${rw_lv}密钥管理${rw_lv}"
+echo -e "${rw_huang}13.  ${rw_lv}${rw_lv}跑分测评${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
 echo -e "${rw_huang}0.   ${rw_lv}${rw_lv}退出脚本${rw_lv}"
 echo -e "${rw_cheng}------------------------${rw_lv}"
@@ -19896,6 +20247,7 @@ case $choice in
   10) ldnmp_builder_menu ;;
   11) linux_cluster ;;
   12) user_manager ;;
+  13) benchmark_menu ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
