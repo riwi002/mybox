@@ -26511,131 +26511,29 @@ github_manager() {
             break_end; continue
         fi
 
-        # 检查是否有远程仓库
-        _has_remote=false
-        if git remote | grep -q . 2>/dev/null; then
-            _has_remote=true
-        fi
-
         echo -e " ${rw_cheng}最近 20 条提交:${rw_lv}"
         echo ""
         git log --oneline -20 2>/dev/null | nl | sed 's/^/   /'
-        echo ""
-        echo -e " ${rw_huang}提示：左侧序号仅用于显示，请输入右侧的提交ID（哈希值）。${rw_lv}"
-        echo -e " ${rw_huang}      提交ID就是每行空格后那串字母数字组合（如 a1b2c3d）。${rw_lv}"
         echo ""
         read -e -p " 输入要回退的提交ID（前6位即可，0返回上一级）: " _commit_id < /dev/tty
         [ "$_commit_id" = "0" ] && continue
         [ -z "$_commit_id" ] && continue
 
-        # 验证提交ID是否有效
-        if ! git rev-parse --verify "${_commit_id}^{commit}" &>/dev/null; then
-            echo ""
-            echo -e " ${rw_hong}✗ 提交ID「$_commit_id」不存在，请检查后重试${rw_lv}"
-            break_end; continue
-        fi
-
-        # 显示该提交的详细信息
-        _commit_msg=$(git log -1 --format="%s" "$_commit_id" 2>/dev/null)
-        _commit_date=$(git log -1 --format="%cd" --date=format:"%Y-%m-%d %H:%M" "$_commit_id" 2>/dev/null)
-        _commit_author=$(git log -1 --format="%an" "$_commit_id" 2>/dev/null)
         echo ""
-        echo -e " ${rw_lv}┌──────────────────────────────────────────┐${rw_lv}"
-        echo -e " ${rw_lv}│ 目标提交信息：${rw_lv}"
-        echo -e " ${rw_lv}│   ID:     ${_commit_id}${rw_lv}"
-        echo -e " ${rw_lv}│   说明:   ${_commit_msg}${rw_lv}"
-        echo -e " ${rw_lv}│   时间:   ${_commit_date}${rw_lv}"
-        echo -e " ${rw_lv}│   作者:   ${_commit_author}${rw_lv}"
-        echo -e " ${rw_lv}└──────────────────────────────────────────┘${rw_lv}"
-        echo ""
-
-        echo -e " ${rw_cheng}回退方式:${rw_lv}"
-        echo ""
-        echo -e "   ${rw_huang}1${rw_lv} 软回退（soft reset）"
-        echo -e "      ${rw_lv}HEAD 移到目标提交，但代码文件不变，差异保留在暂存区${rw_lv}"
-        echo -e "      ${rw_huang}适用：想重新整理提交历史，但不想丢失代码改动${rw_lv}"
-        echo ""
-        echo -e "   ${rw_huang}2${rw_lv} 硬回退（hard reset）${rw_hong} ⚠️ 危险！${rw_lv}"
-        echo -e "      ${rw_hong}HEAD 移到目标提交，代码文件也一起回到那个版本${rw_lv}"
-        echo -e "      ${rw_hong}目标提交之后的所有改动将被永久丢弃！${rw_lv}"
-        echo -e "      ${rw_huang}适用：确定要完全回到历史版本，不要之后的任何改动${rw_lv}"
-        echo ""
+        echo -e " ${rw_huang}回退方式:${rw_lv}"
+        echo -e "   ${rw_huang}1${rw_lv} 软回退（保留更改在暂存区）"
+        echo -e "   ${rw_huang}2${rw_lv} 硬回退（${rw_hong}丢弃所有更改！${rw_lv}）"
         echo -e "   ${rw_huang}0${rw_lv} 取消"
-        echo ""
         read -e -p " 请选择: " _reset_choice < /dev/tty
-        _reset_done=false
         case $_reset_choice in
-            1)
-                git reset --soft "$_commit_id" 2>&1
-                if [ $? -eq 0 ]; then
-                    echo -e " ${rw_lv}✓ 已软回退到 ${_commit_id}${rw_lv}"
-                    echo -e " ${rw_huang}提示：代码文件未变，差异已保留在暂存区，可重新提交${rw_lv}"
-                    _reset_done=true
-                else
-                    echo -e " ${rw_hong}✗ 软回退失败${rw_lv}"
-                fi
-                ;;
+            1) git reset --soft "$_commit_id" 2>&1 && echo -e " ${rw_lv}✓ 已软回退到 $_commit_id${rw_lv}" ;;
             2)
-                echo ""
-                echo -e " ${rw_hong}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-                echo -e " ${rw_hong}⚠️  硬回退将永久丢弃以下改动：${rw_lv}"
-                git log --oneline "${_commit_id}..HEAD" 2>/dev/null | head -20 | sed 's/^/   /'
-                _lost_count=$(git rev-list --count "${_commit_id}..HEAD" 2>/dev/null)
-                echo -e " ${rw_hong}   共 ${_lost_count} 个提交将被丢弃！${rw_lv}"
-                echo -e " ${rw_hong}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-                echo ""
-                read -e -p " $(echo -e "${rw_hong}确认硬回退？输入 YES 确认 / 其他取消: ${rw_lv}")" _confirm < /dev/tty
-                if [ "$_confirm" = "YES" ]; then
-                    git reset --hard "$_commit_id" 2>&1
-                    if [ $? -eq 0 ]; then
-                        echo -e " ${rw_lv}✓ 已硬回退到 ${_commit_id}${rw_lv}"
-                        echo -e " ${rw_huang}代码文件已回到该版本，之后的改动已丢弃${rw_lv}"
-                        _reset_done=true
-                    else
-                        echo -e " ${rw_hong}✗ 硬回退失败${rw_lv}"
-                    fi
-                else
-                    echo -e " ${rw_huang}已取消，未做任何更改${rw_lv}"
-                fi
+                read -e -p " $(echo -e "${rw_hong}确认硬回退？(输入 YES): ${rw_lv}")" _confirm < /dev/tty
+                [ "$_confirm" = "YES" ] && git reset --hard "$_commit_id" 2>&1 && \
+                    echo -e " ${rw_lv}✓ 已硬回退到 $_commit_id${rw_lv}" || echo -e " ${rw_huang}已取消${rw_lv}"
                 ;;
             0) continue ;;
         esac
-
-        # 如果回退成功且有远程仓库，提示是否强制推送
-        if [ "$_reset_done" = "true" ] && [ "$_has_remote" = "true" ]; then
-            echo ""
-            echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-            echo -e " ${rw_cheng}当前已回退本地仓库，但远程仓库还是旧的！${rw_lv}"
-            echo -e " ${rw_cheng}需要强制推送才能让远程也回退到同一版本。${rw_lv}"
-            echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-            echo ""
-            echo -e "   ${rw_huang}1${rw_lv} 强制推送到远程（覆盖远程历史）${rw_hong} ⚠️${rw_lv}"
-            echo -e "   ${rw_huang}2${rw_lv} 仅本地回退，不推送（稍后手动推送）"
-            echo -e "   ${rw_huang}0${rw_lv} 跳过"
-            echo ""
-            read -e -p " 请选择: " _push_choice < /dev/tty
-            case $_push_choice in
-                1)
-                    _cur_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-                    echo -e " ${rw_lv}正在强制推送到远程分支 ${_cur_branch} ...${rw_lv}"
-                    git push --force-with-lease origin "$_cur_branch" 2>&1
-                    if [ $? -eq 0 ]; then
-                        echo -e " ${rw_lv}✓ 强制推送成功，远程已同步回退${rw_lv}"
-                    else
-                        echo -e " ${rw_hong}✗ 推送失败，可能是远程有新提交${rw_lv}"
-                        echo -e " ${rw_huang}如需强制覆盖，可手动执行 git push --force${rw_lv}"
-                    fi
-                    ;;
-                2)
-                    echo -e " ${rw_huang}已跳过推送。本地已回退，远程未变。${rw_lv}"
-                    echo -e " ${rw_huang}稍后可用 git push --force 手动推送${rw_lv}"
-                    ;;
-                0) ;;
-            esac
-        elif [ "$_reset_done" = "true" ] && [ "$_has_remote" = "false" ]; then
-            echo ""
-            echo -e " ${rw_huang}提示：当前仓库没有远程，仅本地回退已完成。${rw_lv}"
-        fi
         echo ""
         break_end
         ;;
