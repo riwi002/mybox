@@ -26616,33 +26616,14 @@ github_manager() {
             read -e -p " 请选择: " _push_choice < /dev/tty
             case $_push_choice in
                 1)
-                    # 获取当前分支名；detached HEAD 时 --abbrev-ref 返回 "HEAD"
                     _cur_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-                    if [ "$_cur_branch" = "HEAD" ] || [ -z "$_cur_branch" ]; then
-                        # detached HEAD 状态，尝试从远程跟踪分支推断
-                        _cur_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null | sed 's|.*/||')
-                        if [ -z "$_cur_branch" ]; then
-                            # 还是拿不到，列出本地分支让用户选
-                            echo -e " ${rw_huang}当前处于 detached HEAD 状态，无法自动判断分支。${rw_lv}"
-                            echo -e " ${rw_cheng}本地分支列表:${rw_lv}"
-                            git branch 2>/dev/null | sed 's/^/   /'
-                            echo ""
-                            read -e -p " 请输入要推送的分支名: " _cur_branch < /dev/tty
-                            [ -z "$_cur_branch" ] && _cur_branch="main"
-                        else
-                            echo -e " ${rw_huang}检测到远程跟踪分支: ${_cur_branch}${rw_lv}"
-                        fi
-                    fi
                     echo -e " ${rw_lv}正在强制推送到远程分支 ${_cur_branch} ...${rw_lv}"
                     git push --force-with-lease origin "$_cur_branch" 2>&1
-                    _push_rc=$?
-                    if [ $_push_rc -eq 0 ]; then
+                    if [ $? -eq 0 ]; then
                         echo -e " ${rw_lv}✓ 强制推送成功，远程已同步回退${rw_lv}"
                     else
-                        echo -e " ${rw_hong}✗ 推送失败（exit code: $_push_rc）${rw_lv}"
-                        echo -e " ${rw_huang}可能是远程有新提交或分支名不匹配${rw_lv}"
-                        echo -e " ${rw_huang}如需强制覆盖，可手动执行:${rw_lv}"
-                        echo -e "   ${rw_lv}git push --force origin ${_cur_branch}${rw_lv}"
+                        echo -e " ${rw_hong}✗ 推送失败，可能是远程有新提交${rw_lv}"
+                        echo -e " ${rw_huang}如需强制覆盖，可手动执行 git push --force${rw_lv}"
                     fi
                     ;;
                 2)
