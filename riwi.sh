@@ -26298,7 +26298,7 @@ github_manager() {
     echo -e "  ${rw_huang}11${rw_lv} 克隆仓库             ${rw_huang}12${rw_lv} 分支管理"
     echo ""
     echo -e " ${rw_cheng}──── 高级 ────${rw_lv}"
-    echo -e "  ${rw_huang}13${rw_lv} 一键换源 LinuxMirrors ${rw_huang}14${rw_lv} GitHooks 部署"
+    echo -e "  ${rw_huang}13${rw_lv} 一键换源 ${rw_huang}14${rw_lv} GitHooks 部署"
     echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
     echo -e "  ${rw_huang}0${rw_lv}  返回主菜单"
     echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
