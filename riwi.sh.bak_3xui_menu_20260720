@@ -17033,48 +17033,6 @@ install_3xui() {
 	echo -e " ${rw_lv}文档: ${rw_huang}https://docs.sanaei.dev${rw_lv}"
 	echo ""
 
-	# ═══════════════════════════════════════
-	# 基础呼出子菜单（x-ui 常用命令）
-	# ═══════════════════════════════════════
-	while true; do
-		echo -e "${rw_cheng}━━━━━━ 基础呼出 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}查看服务状态 (x-ui status)${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}启动 3X-UI 服务 (x-ui start)${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}停止 3X-UI 服务 (x-ui stop)${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}重启 3X-UI 服务 (x-ui restart)${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看面板设置 (x-ui settings)${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}打开管理菜单 (x-ui)${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}升级到最新版 (x-ui update)${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}卸载 3X-UI (x-ui uninstall)${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}继续安装 / 返回${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择: " _quick_choice < /dev/tty
-
-		case "$_quick_choice" in
-			1) clear; x-ui status; break_end ;;
-			2) clear; x-ui start; break_end ;;
-			3) clear; x-ui stop; break_end ;;
-			4) clear; x-ui restart; break_end ;;
-			5) clear; x-ui settings; break_end ;;
-			6) clear; x-ui; break_end ;;
-			7) clear; x-ui update; break_end ;;
-			8)
-				clear
-				read -e -p " 确认卸载 3X-UI？(y/N): " _uninstall_confirm < /dev/tty
-				if [[ "$_uninstall_confirm" =~ ^[Yy]$ ]]; then
-					x-ui uninstall
-				else
-					yellow "已取消"
-				fi
-				break_end
-				;;
-			0) break ;;
-			*) red "输入有误，请选择 0-8"; sleep 1; continue ;;
-		esac
-	done
-
 	# ── 确认是否开始安装 ──
 	read -e -p " 确认开始安装 3X-UI？(y/N): " _confirm < /dev/tty
 	if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
