@@ -8497,7 +8497,6 @@ linux_info() {
 	echo -e "${rw_lv}-------------"
 	echo -e "${rw_huang}${rw_huang}运行时长${rw_huang}:       ${rw_lv}$runtime"
 	echo
-	break_end
 
 
 
@@ -8820,99 +8819,6 @@ _benchmark_full() {
     echo -e " ${rw_cheng}━━━━━━━━━━━━  跑分完成  ━━━━━━━━━━━━${rw_lv}"
     echo ""
 }
-
-# ════════════════════════════════════════════════════════════════
-# 函数: run_zbench
-# 功能: ZBench 中文跑分脚本一键下载并执行
-# 官方仓库: https://github.com/FunctionClub/ZBench
-# 依赖: wget、bash
-# ════════════════════════════════════════════════════════════════
-run_zbench() {
-
-	while true; do
-		clear
-		send_stats "ZBench跑分测评"
-		echo -e "${rw_cheng}━━━━━━━━━━━━  ZBench 跑分测评  ━━━━━━━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_lv}ZBench 是 FunctionClub 开发的中文服务器跑分脚本${rw_lv}"
-		echo -e " ${rw_lv}集成 CPU/内存/磁盘性能测试 + 全国节点测速${rw_lv}"
-		echo -e " ${rw_lv}仓库: ${rw_huang}https://github.com/FunctionClub/ZBench${rw_lv}"
-		echo ""
-		echo -e " ${rw_hong}⚠ 注意:${rw_lv}"
-		echo -e "   ${rw_huang}•${rw_lv} 跑分过程耗时较长（5-15 分钟），请耐心等待"
-		echo -e "   ${rw_huang}•${rw_lv} 需要服务器能访问 GitHub 和国内测速节点"
-		echo -e "   ${rw_huang}•${rw_lv} 仅用于个人学习与合法用途${rw_lv}"
-		echo ""
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}1${rw_lv}  开始一键跑分测评"
-		echo -e " ${rw_huang}0${rw_lv}  返回主菜单"
-		echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择: " _zbench_choice < /dev/tty
-
-		case "$_zbench_choice" in
-			1)
-				# ── 确保wget可用 ──
-				if ! command -v wget &>/dev/null; then
-					yellow "未检测到 wget，正在安装..."
-					install wget
-				fi
-
-				# ── 下载并执行 ZBench 中文版 ──
-				echo ""
-				echo -e " ${rw_huang}正在下载并执行 ZBench 中文跑分脚本...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-
-				# 切到 /tmp 避免在用户目录留文件
-				cd /tmp
-
-				# 下载脚本（-N 覆盖已有文件，--no-check-certificate 跳过证书检查）
-				if wget -N --no-check-certificate \
-					https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh 2>/dev/null; then
-					# 下载成功，执行跑分
-					bash ZBench-CN.sh
-					local _rc=$?
-					# 清理临时文件
-					rm -f ZBench-CN.sh 2>/dev/null
-					cd ~
-
-					echo ""
-					echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-					if [ $_rc -eq 0 ]; then
-						green "ZBench 跑分测评完成"
-					else
-						yellow "ZBench 跑分测评结束（退出码: $_rc）"
-					fi
-				else
-					cd ~
-					red "下载 ZBench 脚本失败"
-					echo -e " ${rw_huang}可能原因:${rw_lv}"
-					echo -e "   - 网络不通或 raw.githubusercontent.com 不可达"
-					echo -e "   - DNS 解析失败"
-					echo -e " ${rw_huang}手动执行:${rw_lv}"
-					echo -e "   ${rw_lv}wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && bash ZBench-CN.sh${rw_lv}"
-				fi
-
-				# ── 跑分结束后等待用户按回车返回 ──
-				echo ""
-				read -e -p " 按回车键返回菜单..." _dummy < /dev/tty
-				break_cancel
-				;;
-			0)
-				# ── 返回主菜单 ──
-				break_cancel
-				return 0
-				;;
-			*)
-				# ── 输入错误处理 ──
-				red "输入有误，请选择 0 或 1"
-				sleep 1
-				continue
-				;;
-		esac
-	done
-}
-
 
 # 跑分测评主菜单
 benchmark_menu() {
@@ -21116,7 +21022,7 @@ case $choice in
   10) ldnmp_builder_menu ;;
   11) linux_cluster ;;
   12) user_manager ;;
-  13) run_zbench ;;
+  13) benchmark_menu ;;
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
