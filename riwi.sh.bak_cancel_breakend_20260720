@@ -853,25 +853,11 @@ enable() {
 
 
 
-# 全局标记：子菜单选 0 返回时置 1，主菜单据此跳过"操作完成"提示
-_menu_returning=0
-
 break_end() {
-	  # 如果是子菜单返回主菜单，不显示"操作完成"和"按任意键"
-	  if [ "$_menu_returning" = "1" ]; then
-		  _menu_returning=0
-		  clear
-		  return
-	  fi
 	  echo -e "${rw_lv}操作完成${rw_lv}"
 	  echo "按任意键继续..."
 	  read -n 1 -s -r -p ""
 	  echo ""
-	  clear
-}
-
-# 取消/返回时使用：不显示"操作完成"和"按任意键继续"，直接清屏返回菜单
-break_cancel() {
 	  clear
 }
 
@@ -9349,7 +9335,7 @@ linux_tools() {
 		  *)
 			  echo "无效的输入!" ;;
 	  esac
-	  break_cancel
+	  break_end
   done
 }
 
@@ -9833,7 +9819,7 @@ ldnmp_builder_menu() {
       0) break ;;
       *) echo -e "${rw_hong}无效的输入!${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10046,7 +10032,7 @@ ldnmp_site_manager() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10085,7 +10071,7 @@ ldnmp_proxy_manager() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10213,7 +10199,7 @@ ldnmp_ssl_manager() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10244,7 +10230,7 @@ ldnmp_components_manager() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10300,7 +10286,7 @@ ldnmp_optimize_protect() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -10748,7 +10734,7 @@ while true; do
 			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -10962,7 +10948,7 @@ while true; do
 			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -11082,7 +11068,7 @@ ldnmp_scheduled_backup() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -11427,7 +11413,7 @@ ldnmp_nginx_manage() {
       0) break ;;
       *) echo -e "${rw_hong}无效选择${rw_lv}" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -13715,7 +13701,7 @@ PYTHON_EOF
 				read -e -p "二次确认：删除仅影响用户目录 ~/.openclaw/workspace/skills，确认继续？(y/N): " confirm_del
 				if [[ ! "$confirm_del" =~ ^[Yy]$ ]]; then
 					echo "已取消删除。"
-					break_cancel
+					break_end
 					continue
 				fi
 			fi
@@ -14348,7 +14334,7 @@ if os.path.isdir(agents_root):
 		read -e -p "请输入确认词【我已知晓高风险并继续还原】后继续: " confirm_text
 		if [ "$confirm_text" != "我已知晓高风险并继续还原" ]; then
 			echo "❌ 确认词不匹配，已取消还原"
-			break_cancel
+			break_end
 			return 1
 		fi
 
@@ -14510,7 +14496,7 @@ if os.path.isdir(agents_root):
 		read -e -p "请输入要删除的文件名或完整路径（0 取消）: " user_input
 		if [ "$user_input" = "0" ]; then
 			echo "已取消删除。"
-			break_cancel
+			break_end
 			return 0
 		fi
 		if [ -z "$user_input" ]; then
@@ -14554,13 +14540,13 @@ if os.path.isdir(agents_root):
 		read -e -p "第一次确认：输入 yes 确认继续: " confirm_step1
 		if [ "$confirm_step1" != "yes" ]; then
 			echo "已取消删除。"
-			break_cancel
+			break_end
 			return 0
 		fi
 		read -e -p "二次确认：输入 DELETE 执行删除: " confirm_step2
 		if [ "$confirm_step2" != "DELETE" ]; then
 			echo "已取消删除。"
-			break_cancel
+			break_end
 			return 0
 		fi
 
@@ -15434,11 +15420,11 @@ EOF
 			read -e -p "确认执行？(Y/n): " confirm_fix
 			if [[ ! "$confirm_fix" =~ ^[Nn]$ ]]; then
 				openclaw_memory_rebuild_index_all
-				break_end
 			else
 				echo "已取消。"
 			fi
 		fi
+		break_end
 	}
 
 	openclaw_memory_scheme_menu() {
@@ -15652,7 +15638,7 @@ EOF
 					read -e -p "第一次确认：输入 yes 继续: " confirm_step1
 					if [ "$confirm_step1" != "yes" ]; then
 						echo "已取消。"
-						break_cancel
+						break_end
 						continue
 					fi
 				openclaw_memory_prepare_workspace_all
@@ -16185,25 +16171,25 @@ except Exception as e:
 					echo "准备应用：标准安全模式"
 					read -e -p "输入 yes 确认: " confirm
 					if [ "$confirm" = "yes" ]; then openclaw_permission_apply_standard; else echo "已取消"; fi
-					break_cancel
+					break_end
 					;;
 				2)
 					echo "准备应用：开发增强模式"
 					read -e -p "输入 yes 确认: " confirm
 					if [ "$confirm" = "yes" ]; then openclaw_permission_apply_developer; else echo "已取消"; fi
-					break_cancel
+					break_end
 					;;
 				3)
 					echo -e "${rw_hong}⚠️ 完全开放模式会彻底瓦解 exec 审批并自动放行高危代码。${rw_lv}"
 					read -e -p "输入 FULL 确认继续: " confirm
 					if [ "$confirm" = "FULL" ]; then openclaw_permission_apply_full; else echo "已取消"; fi
-					break_cancel
+					break_end
 					;;
 				4)
 					echo "将清除所有定制覆盖，恢复 OpenClaw 刚安装时的严格沙盒状态。"
 					read -e -p "输入 yes 确认: " confirm
 					if [ "$confirm" = "yes" ]; then openclaw_permission_restore_official_defaults; else echo "已取消"; fi
-					break_cancel
+					break_end
 					;;
 				5)
 					openclaw_permission_run_audit
@@ -17287,7 +17273,7 @@ while true; do
 		read -e -p " 确认开始安装 1Panel？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			sub_choice=""
 			continue
 		fi
@@ -17317,7 +17303,7 @@ while true; do
 			read -e -p " 是否重新安装/升级？(y/N): " _reinstall < /dev/tty
 			if [[ ! "$_reinstall" =~ ^[Yy]$ ]]; then
 				yellow "已取消"
-				break_cancel
+				break_end
 				sub_choice=""
 				continue
 			fi
@@ -17430,7 +17416,7 @@ while true; do
 		read -e -p " 确认开始安装 Quickemu？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			sub_choice=""
 			continue
 		fi
@@ -17460,7 +17446,7 @@ while true; do
 			read -e -p " 是否重新安装/升级？(y/N): " _reinstall < /dev/tty
 			if [[ ! "$_reinstall" =~ ^[Yy]$ ]]; then
 				yellow "已取消"
-				break_cancel
+				break_end
 				sub_choice=""
 				continue
 			fi
@@ -17602,7 +17588,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 	sub_choice=""
 
 done
@@ -17747,7 +17733,7 @@ while true; do
 			else
 				yellow "已取消"
 			fi
-			break_cancel
+			break_end
 			;;
 		6)
 			# 开启 SSH 常驻
@@ -17784,7 +17770,7 @@ BASHEOF
 			sleep 1
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -19878,12 +19864,12 @@ _maint_security_menu() {
         echo -e " ${rw_cheng}────────────────────────────────────────${rw_lv}"
         echo -e " ${rw_huang}1${rw_lv} 确认升级    ${rw_huang}0${rw_lv} 取消"
         read -e -p " 请选择: " _ssh_upgrade_choice < /dev/tty
-        [ "$_ssh_upgrade_choice" != "1" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_cancel && continue
+        [ "$_ssh_upgrade_choice" != "1" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_end && continue
 
         # 二次确认
         echo ""
         read -e -p "$(echo -e "${rw_hong}再次确认升级OpenSSH？(输入 YES): ${rw_lv}")" _ssh_confirm < /dev/tty
-        [ "$_ssh_confirm" != "YES" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_cancel && continue
+        [ "$_ssh_confirm" != "YES" ] && echo -e " ${rw_huang}已取消${rw_lv}" && break_end && continue
 
         echo ""
         echo -e " ${rw_cheng}开始下载升级脚本...${rw_lv}"
@@ -19974,7 +19960,7 @@ _maint_security_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20180,7 +20166,7 @@ _maint_perf_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20330,7 +20316,7 @@ _maint_network_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20483,7 +20469,7 @@ _maint_config_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20593,7 +20579,7 @@ _maint_user_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20638,7 +20624,7 @@ _maint_advanced_menu() {
       0) break ;;
       *) echo "无效的输入!" ;;
     esac
-    break_cancel
+    break_end
   done
 }
 
@@ -20732,7 +20718,7 @@ while true; do
           0) break ;;
           *) echo "无效的输入!" ;;
         esac
-        break_cancel
+        break_end
       done
       ;;
     9) _maint_user_menu ;;
@@ -20806,7 +20792,7 @@ while true; do
     0) break ;;
     *) echo "无效的输入!" ;;
   esac
-  break_cancel
+  break_end
 done
 }
 
@@ -21026,7 +21012,7 @@ case $choice in
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
-	break_cancel
+	break_end
 done
 }
 
@@ -21321,7 +21307,7 @@ while true; do
 			2) _new_shell="/bin/sh" ;;
 			3) _new_shell="/usr/sbin/nologin" ;;
 			4) _new_shell="/bin/zsh" ;;
-			*) yellow "已取消"; break_cancel; continue ;;
+			*) yellow "已取消"; break_end; continue ;;
 		esac
 		usermod -s "$_new_shell" "$_target" && green "✓ $_target 的 shell 已改为 $_new_shell" || red "修改失败"
 		;;
@@ -21370,7 +21356,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -21513,11 +21499,11 @@ while true; do
 				echo ""
 				echo -e " ${rw_huang}请先到「密钥管理 → 公钥配置」为这些用户部署公钥${rw_lv}"
 				read -e -p " 仍要禁用密码？(yes确认): " _confirm < /dev/tty
-				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_cancel; continue; }
+				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
 			elif [ $_AUDIT_USERS -eq 0 ]; then
 				echo -e " ${rw_hong}⚠ 未发现可登录用户，禁用密码有锁死风险${rw_lv}"
 				read -e -p " 仍要禁用密码？(yes确认): " _confirm < /dev/tty
-				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_cancel; continue; }
+				[ "$_confirm" != "yes" ] && { yellow "已取消"; break_end; continue; }
 			else
 				green "✓ 所有可登录用户均已配置公钥"
 			fi
@@ -21720,7 +21706,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 user_manager() {
@@ -21838,7 +21824,7 @@ while true; do
 		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -21920,7 +21906,7 @@ while true; do
 		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 		_ssh_backup_configs
@@ -22144,7 +22130,7 @@ while true; do
 		read -e -p " 确认回滚？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -22191,7 +22177,7 @@ while true; do
 		else
 			yellow "已取消"
 		fi
-		break_cancel
+		break_end
 		;;
 
 	  0)
@@ -22409,7 +22395,7 @@ while true; do
 		if [ -f "$_key_path" ]; then
 			yellow "密钥文件 ${_key_name} 已存在"
 			read -e -p " 是否覆盖？(y/N): " _ow < /dev/tty
-			[[ ! "$_ow" =~ ^[Yy]$ ]] && { yellow "已取消"; break_cancel; continue; }
+			[[ ! "$_ow" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 		fi
 
 		echo -e " 密钥类型:"
@@ -22467,7 +22453,7 @@ while true; do
 		if [ -f "$_key_path" ]; then
 			yellow "密钥文件 ${_key_name} 已存在"
 			read -e -p " 是否覆盖？(y/N): " _ow < /dev/tty
-			[[ ! "$_ow" =~ ^[Yy]$ ]] && { yellow "已取消"; break_cancel; continue; }
+			[[ ! "$_ow" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 		fi
 
 		echo -e " 密钥类型:"
@@ -22656,7 +22642,7 @@ while true; do
 		read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 		local _fixed=0
@@ -22750,7 +22736,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -22924,7 +22910,7 @@ EOF
 		read -e -p " 确认启用？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -22993,13 +22979,13 @@ EOF
 		read -e -p " 确认启用严格模式？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 		read -e -p " 再次确认（输入 yes）: " _confirm2 < /dev/tty
 		if [ "$_confirm2" != "yes" ]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -23048,7 +23034,7 @@ EOF
 		read -e -p " 确认禁用？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 		_ssh_backup_configs
@@ -23100,7 +23086,7 @@ EOF
 		read -e -p " 确认卸载？(yes确认): " _confirm < /dev/tty
 		if [ "$_confirm" != "yes" ]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 		_ssh_backup_configs
@@ -23117,7 +23103,7 @@ EOF
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -23820,7 +23806,7 @@ while true; do
 			read -e -p " 仍要强制启用双证？(输入 yes 继续): " _force < /dev/tty
 			if [ "$_force" != "yes" ]; then
 				yellow "已取消"
-				break_cancel
+				break_end
 				continue
 			fi
 		else
@@ -23845,7 +23831,7 @@ while true; do
 		read -e -p " 确认启用双证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -23901,7 +23887,7 @@ while true; do
 		read -e -p " 确认禁用双证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -23993,7 +23979,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -24170,7 +24156,7 @@ while true; do
 			read -e -p " 仍要强制启用三证？(输入 yes 继续): " _force < /dev/tty
 			if [ "$_force" != "yes" ]; then
 				yellow "已取消"
-				break_cancel
+				break_end
 				continue
 			fi
 		else
@@ -24195,7 +24181,7 @@ while true; do
 		read -e -p " 确认启用三证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -24247,7 +24233,7 @@ while true; do
 		read -e -p " 确认禁用三证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -24339,7 +24325,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -24530,7 +24516,7 @@ while true; do
 		read -e -p " 确认启用硬证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -24564,7 +24550,7 @@ while true; do
 		read -e -p " 确认禁用硬证登录？(y/N): " _confirm < /dev/tty
 		if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
 			yellow "已取消"
-			break_cancel
+			break_end
 			continue
 		fi
 
@@ -24606,7 +24592,7 @@ while true; do
 		if [ -f "$_key_path" ]; then
 			yellow "密钥文件 ${_key_name} 已存在"
 			read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
-			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_cancel; continue; }
+			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 		fi
 
 		echo ""
@@ -24666,7 +24652,7 @@ while true; do
 		if [ -f "$_key_path" ]; then
 			yellow "密钥文件 ${_key_name} 已存在"
 			read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
-			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_cancel; continue; }
+			[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 		fi
 
 		echo ""
@@ -24898,7 +24884,7 @@ while true; do
 			if [ -f "$_bk_path" ]; then
 				yellow "密钥文件已存在"
 				read -e -p " 是否覆盖？(y/N): " _overwrite < /dev/tty
-				[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_cancel; continue; }
+				[[ ! "$_overwrite" =~ ^[Yy]$ ]] && { yellow "已取消"; break_end; continue; }
 			fi
 
 			echo ""
@@ -25189,7 +25175,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -27786,11 +27772,11 @@ while true; do
 			read -e -p " 确认删除 $_DK_PICK？(y/N): " _confirm < /dev/tty
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				docker rm -f "$_DK_PICK" && green "✓ 已删除 $_DK_PICK" || red "删除失败"
-				break_end
 			else
 				yellow "已取消"
 			fi
 		fi
+		break_end
 		;;
 	  5)
 		echo ""
@@ -27864,7 +27850,7 @@ except Exception as e:
 		else
 			yellow "已取消"
 		fi
-		break_cancel
+		break_end
 		;;
 	  9)
 		echo ""
@@ -27886,7 +27872,7 @@ except Exception as e:
 				;;
 			*) yellow "已取消" ;;
 		esac
-		break_cancel
+		break_end
 		;;
 	  0) return ;;
 	  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
@@ -27960,7 +27946,7 @@ docker_quick_run() {
 	else
 		yellow "已取消"
 	fi
-	break_cancel
+	break_end
 }
 
 # ================================================================
@@ -28013,11 +27999,11 @@ while true; do
 			read -e -p " 确认删除 $_DK_PICK？(y/N): " _confirm < /dev/tty
 			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
 				docker rmi -f "$_DK_PICK" && green "✓ 已删除" || red "删除失败"
-				break_end
 			else
 				yellow "已取消"
 			fi
 		fi
+		break_end
 		;;
 	  4)
 		echo ""
@@ -28026,7 +28012,7 @@ while true; do
 		[ "$_cnt" -eq 0 ] && { yellow "没有悬空镜像"; break_end; continue; }
 		read -e -p " 清理 $_cnt 个悬空镜像？(y/N): " _confirm < /dev/tty
 		[[ "$_confirm" =~ ^[Yy]$ ]] && docker image prune -f && green "✓ 已清理" || yellow "已取消"
-		break_cancel
+		break_end
 		;;
 	  5)
 		echo ""
@@ -28034,7 +28020,7 @@ while true; do
 		_cnt=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
 		read -e -p " 清理所有未被使用的镜像（$_cnt 个）？(y/N): " _confirm < /dev/tty
 		[[ "$_confirm" =~ ^[Yy]$ ]] && docker image prune -a -f && green "✓ 已清理" || yellow "已取消"
-		break_cancel
+		break_end
 		;;
 	  6)
 		echo ""
@@ -28252,7 +28238,7 @@ PEOF
 			else
 				yellow "已取消"
 			fi
-			break_cancel
+			break_end
 			;;
 		  5)
 			echo ""
@@ -28357,15 +28343,14 @@ docker_install_upgrade() {
 				systemctl start docker 2>/dev/null
 				green "✓ Docker 安装成功并已启动"
 				echo -e " ${rw_huang}版本: ${rw_lv}$(docker --version)${rw_lv}"
-				break_end
 			else
 				red "安装失败，请检查网络或手动安装"
-				break_end
 			fi
 		else
 			yellow "已取消"
 		fi
 	fi
+	break_end
 }
 
 # ================================================================

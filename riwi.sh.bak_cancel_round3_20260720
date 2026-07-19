@@ -853,16 +853,7 @@ enable() {
 
 
 
-# 全局标记：子菜单选 0 返回时置 1，主菜单据此跳过"操作完成"提示
-_menu_returning=0
-
 break_end() {
-	  # 如果是子菜单返回主菜单，不显示"操作完成"和"按任意键"
-	  if [ "$_menu_returning" = "1" ]; then
-		  _menu_returning=0
-		  clear
-		  return
-	  fi
 	  echo -e "${rw_lv}操作完成${rw_lv}"
 	  echo "按任意键继续..."
 	  read -n 1 -s -r -p ""
@@ -10748,7 +10739,7 @@ while true; do
 			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -10962,7 +10953,7 @@ while true; do
 			echo -e "${rw_hong}无效的输入!${rw_lv}"
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -17602,7 +17593,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 	sub_choice=""
 
 done
@@ -17784,7 +17775,7 @@ BASHEOF
 			sleep 1
 			;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -21026,7 +21017,7 @@ case $choice in
   0) clear ; exit ;;
   *) echo "无效的输入!" ;;
 esac
-	break_cancel
+	break_end
 done
 }
 
@@ -21370,7 +21361,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -21720,7 +21711,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 user_manager() {
@@ -22750,7 +22741,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -23117,7 +23108,7 @@ EOF
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -23993,7 +23984,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -24339,7 +24330,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
@@ -25189,7 +25180,7 @@ while true; do
 		red "无效的输入!"
 		;;
 	esac
-	break_cancel
+	break_end
 done
 }
 
