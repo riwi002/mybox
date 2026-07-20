@@ -17395,14 +17395,23 @@ install_3xui() {
 		install curl
 	fi
 
-	# ── 官方脚本 URL ──
-	local _official_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
-
-	# ── 下载官方脚本并做中文翻译（不改官方源码，仅 sed 文本替换） ──
+	# ── 官方脚本 URL（使用 gh_proxy 代理，支持回退） ──
+	local _raw_path="raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
 	local _run_script="/tmp/3xui_install_translated_$$.sh"
-	curl -fsSL "$_official_url" -o "$_run_script" 2>/dev/null
+
+	# 下载：代理 → 直连 → 备用代理，三层回退
+	curl -fsSL "${gh_proxy}${_raw_path}" -o "$_run_script" 2>/dev/null
+	if [ ! -s "$_run_script" ]; then
+		yellow "代理下载失败，尝试直连..."
+		curl -fsSL "https://${_raw_path}" -o "$_run_script" 2>/dev/null
+	fi
+	if [ ! -s "$_run_script" ]; then
+		yellow "直连失败，尝试备用代理..."
+		curl -fsSL "https://ghproxy.net/${_raw_path}" -o "$_run_script" 2>/dev/null
+	fi
 	if [ ! -s "$_run_script" ]; then
 		red "下载官方安装脚本失败，请检查网络连接"
+		echo -e " ${rw_huang}可手动下载: https://${_raw_path}${rw_lv}"
 		rm -f "$_run_script"
 		return 1
 	fi
