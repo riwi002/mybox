@@ -17124,25 +17124,272 @@ install_3xui() {
 		install curl
 	fi
 
-	# ── 汉化版安装脚本获取（三层回退） ──
-	# 1. 本地 tools/ 目录
-	# 2. GitHub raw 拉取到 /tmp
-	# 3. 官方英文版（最终回退）
-	local _cn_script="$(dirname "$0")/tools/3xui_install_cn.sh"
-	local _cn_url="https://raw.githubusercontent.com/riwi002/mybox/main/tools/3xui_install_cn.sh"
+	# ── 官方脚本 URL ──
 	local _official_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
-	local _use_cn=false
-	local _script_path=""
 
-	if [ -f "$_cn_script" ]; then
-		# 本地有汉化版
-		_use_cn=true
-		_script_path="$_cn_script"
-	elif curl -fsSL --connect-timeout 10 "$_cn_url" -o /tmp/3xui_install_cn.sh 2>/dev/null && [ -s /tmp/3xui_install_cn.sh ]; then
-		# 从 GitHub raw 拉取汉化版
-		_use_cn=true
-		_script_path="/tmp/3xui_install_cn.sh"
+	# ── 下载官方脚本并做中文翻译（不改官方源码，仅 sed 文本替换） ──
+	local _run_script="/tmp/3xui_install_translated_$$.sh"
+	yellow "正在获取官方安装脚本并翻译为中文..."
+	curl -fsSL "$_official_url" -o "$_run_script" 2>/dev/null
+	if [ ! -s "$_run_script" ]; then
+		red "下载官方安装脚本失败，请检查网络连接"
+		rm -f "$_run_script"
+		return 1
 	fi
+
+	# ═══════════════════════════════════════
+	# sed 翻译规则（按行匹配英文 → 替换中文）
+	# ═══════════════════════════════════════
+	sed -i \
+		-e 's/Fatal error: \(.*\) Please run this script with root privilege/致命错误：\1 请使用 root 权限运行此脚本/' \
+		-e 's/Failed to check the system OS, please contact the author!/无法检测操作系统，请联系作者！/' \
+		-e 's/The OS release is: /操作系统标识: /' \
+		-e 's/Unsupported CPU architecture!/不支持的 CPU 架构！/' \
+		-e 's/^echo "Arch: /echo "系统架构: /' \
+		-e 's/Warning: failed to write /警告：写入失败 /' \
+		-e 's/Install result written to /安装结果已写入 /' \
+		-e "s/allow password logins for the panel database/允许面板数据库的密码登录/" \
+		-e 's/Unsupported distro for automatic PostgreSQL install/不支持自动安装 PostgreSQL 的发行版/' \
+		-e "s/Warning: could not update pg_hba.conf; PostgreSQL may reject the panel's TCP login (ident auth)./警告：无法更新 pg_hba.conf；PostgreSQL 可能拒绝面板的 TCP 登录（ident 认证）。/" \
+		-e 's/Failed to write PostgreSQL credentials to/写入 PostgreSQL 凭证失败:/' \
+		-e 's/Installing PostgreSQL client tools (pg_dump\/pg_restore) for in-panel backup/正在安装 PostgreSQL 客户端工具（pg_dump\/pg_restore）用于面板内备份/' \
+		-e 's/Installing acme.sh for SSL certificate management/正在安装 acme.sh 用于 SSL 证书管理/' \
+		-e 's/Failed to install acme\.sh/安装 acme.sh 失败/g' \
+		-e 's/acme\.sh installed successfully/acme.sh 安装成功/g' \
+		-e 's/acme\.sh could not be found. Installing now/未找到 acme.sh，正在安装/' \
+		-e 's/Setting up SSL certificate/正在配置 SSL 证书/' \
+		-e 's/Failed to install acme.sh, skipping SSL setup/安装 acme.sh 失败，跳过 SSL 配置/' \
+		-e 's/Issuing SSL certificate for/正在签发 SSL 证书:/' \
+		-e 's/Note: Port 80 must be open and accessible from the internet/注意：80 端口必须开放且可从互联网访问/' \
+		-e 's/Failed to issue certificate for/签发证书失败:/' \
+		-e 's/Please ensure port 80 is open and try again later with: x-ui/请确保 80 端口已开放，稍后通过 x-ui 重试/' \
+		-e 's/Failed to install certificate/安装证书失败/' \
+		-e 's/SSL certificate installed and configured successfully/SSL 证书安装并配置成功/' \
+		-e 's/Certificate files not found/未找到证书文件/g' \
+		-e "s/Setting up Let's Encrypt IP certificate (shortlived profile)/正在配置 Let's Encrypt IP 证书（短期证书）/" \
+		-e "s/Note: IP certificates are valid for ~6 days and will auto-renew./注意：IP 证书有效期约 6 天，将自动续期。/" \
+		-e "s/Default listener is port 80. If you choose another port, ensure external port 80 forwards to it./默认监听端口为 80。如选择其他端口，请确保外部 80 端口转发到该端口。/" \
+		-e 's/IPv4 address is required/必须提供 IPv4 地址/' \
+		-e 's/Invalid IPv4 address/无效的 IPv4 地址/' \
+		-e 's/Including IPv6 address/包含 IPv6 地址/' \
+		-e 's/Invalid port provided. Falling back to 80./提供的端口无效，回退到 80。/' \
+		-e 's/Using port/使用端口/' \
+		-e 's/for standalone validation/进行独立验证/' \
+		-e "s/Reminder: Let's Encrypt still connects on port 80; forward external port 80 to/提醒：Let's Encrypt 仍通过 80 端口连接；请将外部 80 端口转发到/" \
+		-e 's/is in use/已被占用/' \
+		-e 's/is busy; cannot proceed in non-interactive mode/被占用；非交互模式下无法继续/' \
+		-e 's/Enter another port for acme.sh standalone listener (leave empty to abort)/输入 acme.sh 独立监听器的其他端口（留空则中止）/' \
+		-e 's/is busy; cannot proceed/被占用；无法继续/' \
+		-e 's/Invalid port provided/提供的端口无效/' \
+		-e 's/is free and ready for standalone validation/空闲，可用于独立验证/' \
+		-e 's/Issuing IP certificate for/正在签发 IP 证书:/' \
+		-e 's/Failed to issue IP certificate/签发 IP 证书失败/' \
+		-e 's/Please ensure port/请确保端口/' \
+		-e 's/is reachable (or forwarded from external port 80)/可达（或从外部 80 端口转发）/' \
+		-e 's/Certificate issued successfully, installing/证书签发成功，正在安装/' \
+		-e 's/Certificate files not found after installation/安装后未找到证书文件/' \
+		-e 's/Certificate files installed successfully/证书文件安装成功/' \
+		-e 's/Setting certificate paths for the panel/正在设置面板的证书路径/' \
+		-e 's/Warning: Could not set certificate paths automatically/警告：无法自动设置证书路径/' \
+		-e 's/Certificate files are at/证书文件位于:/' \
+		-e 's/Certificate paths configured successfully/证书路径配置成功/' \
+		-e 's/IP certificate installed and configured successfully/IP 证书安装并配置成功/' \
+		-e 's/Certificate valid for ~6 days, auto-renews via acme.sh cron job/证书有效期约 6 天，通过 acme.sh 定时任务自动续期/' \
+		-e 's/acme.sh will automatically renew and reload x-ui before expiry/acme.sh 将在到期前自动续期并重载 x-ui/' \
+		-e 's/Port to use for ACME HTTP-01 listener (default 80)/ACME HTTP-01 监听端口（默认 80）/' \
+		-e 's/Please enter your domain name/请输入您的域名/' \
+		-e 's/Domain name cannot be empty. Please try again/域名不能为空，请重试/' \
+		-e 's/Invalid domain format/域名格式无效/' \
+		-e 's/Please enter a valid domain name/请输入有效的域名/' \
+		-e 's/Your domain is/您的域名是/' \
+		-e 's/checking it/正在检查/' \
+		-e 's/Existing certificate found for/找到现有证书:/' \
+		-e 's/will reuse it/将复用/' \
+		-e 's/Found incomplete acme.sh state for/发现不完整的 acme.sh 状态:/' \
+		-e 's/no valid certificate files); cleaning it up and re-issuing/无有效证书文件）；正在清理并重新签发/' \
+		-e 's/Your domain is ready for issuing certificates now/您的域名已准备好签发证书/' \
+		-e 's/Please choose which port to use (default is 80)/请选择使用的端口（默认 80）/' \
+		-e 's/Your input/您的输入/' \
+		-e 's/is invalid, will use default port 80/无效，将使用默认端口 80/' \
+		-e 's/Will use port/将使用端口/' \
+		-e 's/to issue certificates. Please make sure this port is open/签发证书。请确保该端口已开放/' \
+		-e 's/Stopping panel temporarily/正在临时停止面板/' \
+		-e 's/Issuing certificate failed, please check logs/签发证书失败，请检查日志/' \
+		-e 's/Issuing certificate succeeded, installing certificates/签发证书成功，正在安装证书/' \
+		-e 's/Using existing certificate, installing certificates/使用现有证书，正在安装证书/' \
+		-e 's/Default --reloadcmd for ACME is/ACME 默认 --reloadcmd 为/' \
+		-e 's/This command will run on every certificate issue and renew/此命令将在每次签发和续期证书时执行/' \
+		-e 's/Would you like to modify --reloadcmd for ACME? (y\/n)/是否要修改 ACME 的 --reloadcmd？(y\/n)/' \
+		-e 's/Preset: systemctl reload nginx ; systemctl restart x-ui/预设: systemctl reload nginx ; systemctl restart x-ui/' \
+		-e 's/Input your own command/输入自定义命令/' \
+		-e 's/Keep default reloadcmd/保持默认 reloadcmd/' \
+		-e 's/Choose an option/请选择/' \
+		-e 's/It.s recommended to put x-ui restart at the end/建议将 x-ui restart 放在末尾/' \
+		-e 's/Please enter your custom reloadcmd/请输入自定义 reloadcmd/' \
+		-e 's/Keeping default reloadcmd/保持默认 reloadcmd/' \
+		-e 's/Installing certificate succeeded, enabling auto renew/证书安装成功，正在启用自动续期/' \
+		-e 's/Installing certificate failed, exiting/证书安装失败，退出/' \
+		-e 's/Auto renew setup had issues, certificate details/自动续期设置有问题，证书详情/' \
+		-e 's/Auto renew succeeded, certificate details/自动续期成功，证书详情/' \
+		-e 's/Would you like to set this certificate for the panel? (y\/n)/是否将此证书设置给面板？(y\/n)/' \
+		-e 's/Certificate paths set for the panel/面板证书路径已设置/' \
+		-e 's/Certificate File/证书文件/' \
+		-e 's/Private Key File/私钥文件/' \
+		-e 's/Panel will restart to apply SSL certificate/面板将重启以应用 SSL 证书/' \
+		-e 's/Error: Certificate or private key file not found for domain/错误：未找到域名的证书或私钥文件/' \
+		-e 's/Skipping panel path setting/跳过面板路径设置/' \
+		-e 's/Choose SSL certificate setup method/选择 SSL 证书配置方式/' \
+		-e "s/Let's Encrypt for Domain (90-day validity, auto-renews)/Let's Encrypt 域名证书（90 天有效期，自动续期）/" \
+		-e "s/Let's Encrypt for IP Address (6-day validity, auto-renews)/Let's Encrypt IP 证书（6 天有效期，自动续期）/" \
+		-e 's/Custom SSL Certificate (Path to existing files)/自定义 SSL 证书（现有文件路径）/' \
+		-e 's/Skip SSL (advanced . behind reverse proxy \/ SSH tunnel only)/跳过 SSL（高级 — 仅在反向代理\/SSH 隧道后使用）/' \
+		-e 's/Options 1 & 2 require port 80 open. Option 3 requires manual paths/选项 1 和 2 需要开放 80 端口。选项 3 需要手动指定路径/' \
+		-e 's/Option 4 serves the panel over plain HTTP . only safe behind nginx\/Caddy or an SSH tunnel/选项 4 以纯 HTTP 提供面板服务 — 仅在 nginx\/Caddy 或 SSH 隧道后才安全/' \
+		-e "s/Unknown XUI_SSL_MODE/未知的 XUI_SSL_MODE/" \
+		-e "s/defaulting to none (HTTP)/默认跳过（HTTP）/" \
+		-e 's/Choose an option (default 2 for IP)/请选择（默认 2 为 IP 证书）/' \
+		-e "s/Using Let's Encrypt for domain certificate/使用 Let's Encrypt 域名证书/" \
+		-e "s/SSL certificate configured successfully with domain/SSL 证书已成功配置，域名/" \
+		-e 's/SSL setup may have completed, but domain extraction failed/SSL 配置可能已完成，但域名提取失败/' \
+		-e 's/SSL certificate setup failed for domain mode/域名模式 SSL 证书配置失败/' \
+		-e "s/Using Let's Encrypt for IP certificate (shortlived profile)/使用 Let's Encrypt IP 证书（短期证书）/" \
+		-e 's/the correct incoming public IPv4 address for this server/是此服务器的正确公网 IPv4 地址吗/' \
+		-e "s/Please enter your server's public IPv4 address/请输入服务器的公网 IPv4 地址/" \
+		-e 's/Invalid IPv4 address. Please try again/无效的 IPv4 地址，请重试/' \
+		-e 's/Do you have an IPv6 address to include? (leave empty to skip)/是否有要包含的 IPv6 地址？（留空跳过）/' \
+		-e "s/Let's Encrypt IP certificate configured successfully/Let's Encrypt IP 证书配置成功/" \
+		-e 's/IP certificate setup failed. Please check port 80 is open/IP 证书配置失败，请检查 80 端口是否开放/' \
+		-e 's/Using custom existing certificate/使用自定义现有证书/' \
+		-e 's/Please enter domain name certificate issued for/请输入证书签发时使用的域名/' \
+		-e 's/Input certificate path (keywords: .crt \/ fullchain)/输入证书路径（关键词: .crt \/ fullchain）/' \
+		-e 's/Error: File does not exist! Try again/错误：文件不存在！请重试/' \
+		-e 's/Error: File exists but is not readable (check permissions)/错误：文件存在但不可读（检查权限）/' \
+		-e 's/Error: File is empty/错误：文件为空/' \
+		-e 's/Input private key path (keywords: .key \/ privatekey)/输入私钥路径（关键词: .key \/ privatekey）/' \
+		-e 's/Custom certificate paths applied/自定义证书路径已应用/' \
+		-e 's/Note: You are responsible for renewing these files externally/注意：您需要自行负责这些文件的外部续期/' \
+		-e 's/Panel will be installed WITHOUT SSL\/TLS/面板将在没有 SSL\/TLS 的情况下安装/' \
+		-e 's/Login credentials and cookies will travel as plain HTTP/登录凭据和 Cookie 将以纯 HTTP 传输/' \
+		-e 's/Only safe when/仅以下情况安全/' \
+		-e 's/A reverse proxy (nginx, Caddy, Traefik) terminates TLS for you, or/由反向代理（nginx、Caddy、Traefik）终止 TLS，或/' \
+		-e 's/You access the panel exclusively via SSH tunnel/仅通过 SSH 隧道访问面板/' \
+		-e 's/Bind the panel to 127.0.0.1 only? (recommended . forces SSH tunnel \/ reverse-proxy access)/仅将面板绑定到 127.0.0.1？（推荐 — 强制通过 SSH 隧道\/反向代理访问）/' \
+		-e 's/Panel bound to 127.0.0.1 only. It is now unreachable from the public internet/面板已仅绑定到 127.0.0.1，现在无法从公网访问/' \
+		-e 's/SSH Port Forwarding . open the panel from your local machine via/SSH 端口转发 — 从本地机器打开面板:/' \
+		-e 's/Standard SSH command/标准 SSH 命令/' \
+		-e 's/If using an SSH key/如果使用 SSH 密钥/' \
+		-e 's/Then open in your browser/然后在浏览器中打开/' \
+		-e 's/Alternative: point a reverse proxy (nginx\/Caddy) at 127.0.0.1/替代方案：将反向代理（nginx\/Caddy）指向 127.0.0.1/' \
+		-e 's/and let it terminate TLS/并由其终止 TLS/' \
+		-e 's/Panel will listen on all interfaces over plain HTTP. Make sure something else is terminating TLS in front of it/面板将通过纯 HTTP 监听所有网络接口。请确保有其他服务在前方终止 TLS/' \
+		-e 's/SSL setup skipped/已跳过 SSL 配置/' \
+		-e 's/Invalid option. Skipping SSL setup/无效选项，跳过 SSL 配置/' \
+		-e 's/Could not auto-detect server IP from any provider/无法从任何服务商自动检测服务器 IP/' \
+		-e 's/Database Selection/数据库选择/' \
+		-e 's/SQLite     (default . recommended for < 500 clients)/SQLite     （默认 — 推荐 < 500 客户端）/' \
+		-e 's/PostgreSQL (recommended for high client counts \/ many nodes)/PostgreSQL （推荐大量客户端\/多节点场景）/' \
+		-e 's/Choose \[1\]/请选择 [1]/g' \
+		-e 's/Installing PostgreSQL locally (non-interactive)/正在本地安装 PostgreSQL（非交互模式）/' \
+		-e 's/PostgreSQL installation failed in non-interactive mode; aborting/非交互模式下 PostgreSQL 安装失败，正在中止/' \
+		-e 's/Set XUI_DB_DSN to use an existing server, or XUI_DB_TYPE=sqlite/设置 XUI_DB_DSN 使用现有服务器，或 XUI_DB_TYPE=sqlite/' \
+		-e 's/Install PostgreSQL locally and create a dedicated user\/db (recommended)/本地安装 PostgreSQL 并创建专用用户\/数据库（推荐）/' \
+		-e 's/Use an existing PostgreSQL server (enter DSN)/使用现有 PostgreSQL 服务器（输入 DSN）/' \
+		-e 's/Enter PostgreSQL DSN/输入 PostgreSQL DSN/' \
+		-e 's/Installing PostgreSQL . this may take a moment/正在安装 PostgreSQL — 请稍候/' \
+		-e 's/Failed to create temporary credentials file/创建临时凭证文件失败/' \
+		-e 's/PostgreSQL installation failed/PostgreSQL 安装失败/' \
+		-e 's/Retry local install/重试本地安装/' \
+		-e 's/Enter an external DSN instead/改为输入外部 DSN/' \
+		-e 's/Abort install/中止安装/' \
+		-e 's/Fall back to SQLite/回退到 SQLite/' \
+		-e 's/Install aborted/安装已中止/' \
+		-e 's/Could not install pg_dump\/pg_restore. In-panel database backup\/restore will be unavailable until you install the postgresql-client package/无法安装 pg_dump\/pg_restore。在安装 postgresql-client 包之前，面板内数据库备份\/恢复将不可用/' \
+		-e 's/Your Panel Port is/面板端口为/' \
+		-e 's/Generated random port/已生成随机端口/' \
+		-e 's/Would you like to customize the Panel Port settings? (If not, a random port will be applied)/是否自定义面板端口？（否则将使用随机端口）/' \
+		-e 's/Please set up the panel port/请设置面板端口/' \
+		-e 's/SSL Certificate Setup (RECOMMENDED)/SSL 证书配置（推荐）/' \
+		-e 's/SSL is strongly recommended. Skip only if a reverse proxy/强烈建议启用 SSL。仅在有反向代理/' \
+		-e 's/or SSH tunnel handles TLS for you/或 SSH 隧道处理 TLS 时才跳过/' \
+		-e "s/Let's Encrypt now supports both domains and IP addresses/Let's Encrypt 现已支持域名和 IP 地址/" \
+		-e 's/Panel Installation Complete/面板安装完成/' \
+		-e 's/Username:/用户名:/g' \
+		-e 's/Password:/密码:/g' \
+		-e 's/^Port:        /端口:        /' \
+		-e 's/WebBasePath: /访问路径:    /g' \
+		-e 's/Database:    /数据库:      /g' \
+		-e 's/Access URL:  /访问地址:    /g' \
+		-e 's/API Token:   /API 令牌:    /g' \
+		-e 's/IMPORTANT: Save these credentials securely/重要：请妥善保存这些凭据/' \
+		-e 's/SSL Certificate: Enabled and configured/SSL 证书: 已启用并配置/' \
+		-e 's/SSL Certificate: Skipped . panel is HTTP-only. Use a reverse proxy or SSH tunnel/SSL 证书: 已跳过 — 面板仅 HTTP。请使用反向代理或 SSH 隧道/' \
+		-e 's/PostgreSQL backup & restore is built into the panel/面板内置了 PostgreSQL 备份和恢复功能/' \
+		-e 's/Back Up downloads a pg_dump .dump file; Restore reloads it via pg_restore/备份会下载 pg_dump .dump 文件；恢复通过 pg_restore 重新加载/' \
+		-e 's/PostgreSQL Credentials/PostgreSQL 凭证/' \
+		-e 's/DB Name:/数据库名:/g' \
+		-e 's/^Host:       /主机:        /' \
+		-e 's/DSN:        /DSN:         /g' \
+		-e 's/Env file:   /环境文件:    /g' \
+		-e 's/Connect from this server/从本服务器连接/' \
+		-e 's/as the postgres superuser/以 postgres 超级用户身份/' \
+		-e 's/The panel reads these credentials from/面板从以下位置读取这些凭据:/' \
+		-e 's/Save the password . it is not stored anywhere else in plain text/请保存密码 — 密码不会以明文存储在其他任何地方/' \
+		-e 's/WebBasePath is missing or too short. Generating a new one/WebBasePath 缺失或过短，正在生成新的/' \
+		-e 's/New WebBasePath/新的 WebBasePath/' \
+		-e 's/SSL certificate already configured. No action needed/SSL 证书已配置，无需操作/' \
+		-e 's/Default credentials detected. Security update required/检测到默认凭据，需要安全更新/' \
+		-e 's/Generated new random login credentials/已生成新的随机登录凭据/' \
+		-e 's/Username, Password, and WebBasePath are properly set/用户名、密码和 WebBasePath 已正确设置/' \
+		-e 's/XUI_ENABLE_FAIL2BAN=\(.*\), skipping Fail2ban auto-setup/XUI_ENABLE_FAIL2BAN=\1，跳过 Fail2ban 自动配置/' \
+		-e 's/x-ui CLI not found; skipping Fail2ban auto-setup/未找到 x-ui CLI，跳过 Fail2ban 自动配置/' \
+		-e 's/Setting up Fail2ban for the IP Limit feature/正在为 IP 限制功能配置 Fail2ban/' \
+		-e 's/Fail2ban setup complete/Fail2ban 配置完成/' \
+		-e "s/Fail2ban setup did not finish; IP Limit stays disabled until you run 'x-ui' and open the IP Limit menu. Continuing/Fail2ban 配置未完成；在运行 'x-ui' 并打开 IP 限制菜单之前，IP 限制保持禁用。继续/" \
+		-e 's/Failed to fetch x-ui version, it may be due to GitHub API restrictions, please try it later/获取 x-ui 版本失败，可能是 GitHub API 限制，请稍后重试/' \
+		-e 's/Got x-ui latest version/获取到 x-ui 最新版本/' \
+		-e 's/beginning the installation/开始安装/' \
+		-e 's/Downloading x-ui failed, please be sure that your server can access GitHub/下载 x-ui 失败，请确保服务器可以访问 GitHub/' \
+		-e 's/Downloaded x-ui release archive is empty/下载的 x-ui 发布包为空/' \
+		-e 's/Installing the rolling dev build (tag: dev-latest). This is a per-commit pre-release, not a stable version/正在安装滚动开发版（标签: dev-latest）。这是按提交的预发布版本，不是稳定版/' \
+		-e 's/Please use a newer version (at least v2.3.5). Exiting installation/请使用更新的版本（至少 v2.3.5）。退出安装/' \
+		-e 's/Beginning to install x-ui/开始安装 x-ui/' \
+		-e 's/failed, please check if the version exists/失败，请检查该版本是否存在/' \
+		-e 's/Failed to download x-ui\.sh/下载 x-ui.sh 失败/g' \
+		-e 's/Downloaded x-ui\.sh is empty/下载的 x-ui.sh 为空/g' \
+		-e 's/Failed to install x-ui\.sh/安装 x-ui.sh 失败/g' \
+		-e 's/Failed to extract the x-ui release archive/解压 x-ui 发布包失败/' \
+		-e 's/the previous installation has already been removed, so the panel will not start until this is fixed; try running the installer again/之前的安装已被删除，在修复前面板无法启动；请重新运行安装程序/' \
+		-e 's/Extracted x-ui archive is missing the x-ui binary/解压的 x-ui 包缺少 x-ui 二进制文件/' \
+		-e 's/Added x-ui.db to \/etc\/.gitignore for etckeeper/已将 x-ui.db 添加到 \/etc\/.gitignore（etckeeper）/' \
+		-e 's/Created \/etc\/.gitignore and added x-ui.db for etckeeper/已创建 \/etc\/.gitignore 并添加 x-ui.db（etckeeper）/' \
+		-e 's/Failed to download x-ui\.rc/下载 x-ui.rc 失败/g' \
+		-e 's/Downloaded x-ui\.rc is empty/下载的 x-ui.rc 为空/g' \
+		-e 's/Failed to install x-ui\.rc/安装 x-ui.rc 失败/g' \
+		-e 's/Found x-ui\.service in extracted files, installing/在解压文件中找到 x-ui.service，正在安装/g' \
+		-e 's/Found x-ui\.service\.\(debian\|arch\|rhel\) in extracted files, installing/在解压文件中找到 x-ui.service.\1，正在安装/g' \
+		-e 's/Service files not found in tar.gz, downloading from GitHub/在 tar.gz 中未找到服务文件，从 GitHub 下载/' \
+		-e 's/Failed to install x-ui\.service from GitHub/从 GitHub 安装 x-ui.service 失败/' \
+		-e 's/Setting up systemd unit/正在配置 systemd 服务单元/' \
+		-e 's/Failed to install x-ui\.service file/安装 x-ui.service 文件失败/g' \
+		-e 's/installation finished, it is running now/安装完成，正在运行/' \
+		-e 's/x-ui control menu usages (subcommands)/x-ui 管理菜单用法（子命令）/' \
+		-e 's/Admin Management Script/管理脚本/' \
+		-e 's/- Start/- 启动/' \
+		-e 's/- Stop/- 停止/' \
+		-e 's/- Restart/- 重启/' \
+		-e 's/- Current Status/- 当前状态/' \
+		-e 's/- Current Settings/- 当前设置/' \
+		-e 's/- Enable Autostart on OS Startup/- 开机自启/' \
+		-e 's/- Disable Autostart on OS Startup/- 关闭开机自启/' \
+		-e 's/- Check logs/- 查看日志/' \
+		-e 's/- Check Fail2ban ban logs/- 查看 Fail2ban 封禁日志/' \
+		-e 's/- Update/- 更新/' \
+		-e 's/- Legacy version/- 旧版/' \
+		-e 's/- Install/- 安装/' \
+		-e 's/- Uninstall/- 卸载/' \
+		-e 's/^echo -e "${green}Running\.\.\.${plain}"/echo -e "${green}正在运行...${plain}"/' \
+		-e 's/^echo "Arch: /echo "系统架构: /' \
+		"$_run_script"
 
 	# ═══════════════════════════════════════
 	# 安装方式子菜单
@@ -17152,11 +17399,7 @@ install_3xui() {
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 选择安装方式 ━━━━━━${rw_lv}"
 		echo ""
-		if [ "$_use_cn" = true ]; then
-			echo -e " ${rw_lv}（使用汉化版安装脚本）${rw_lv}"
-		else
-			echo -e " ${rw_huang}（使用官方英文版安装脚本）${rw_lv}"
-		fi
+		echo -e " ${rw_lv}（官方脚本 + 中文翻译层）${rw_lv}"
 		echo ""
 		echo -e " ${rw_huang}1.   ${rw_lv}官方安装（最新稳定版）${rw_lv}"
 		echo -e " ${rw_huang}2.   ${rw_lv}安装特定版本${rw_lv}"
@@ -17171,30 +17414,21 @@ install_3xui() {
 				# ── 选项1: 官方安装（无参数） ──
 				echo ""
 				echo -e " ${rw_huang}正在执行官方安装（最新稳定版）...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_script_path}${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url})${rw_lv}"
-				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_script_path"
-				else
-					bash <(curl -Ls "$_official_url")
-				fi
+				bash "$_run_script"
+				local _rc=$?
+				rm -f "$_run_script"
 				break
 				;;
 			2)
 				# ── 选项2: 安装特定版本 ──
-				# 空输入默认 v3.4.0
 				local _version
 				echo ""
 				read -e -p " 请输入版本号（如 3.4.0，直接回车默认 v3.4.0）: " _version < /dev/tty
 				if [ -z "$_version" ]; then
 					_version="v3.4.0"
 				else
-					# 如果用户输入没带 v 前缀，自动补上
 					case "$_version" in
 						v*) ;;
 						*) _version="v${_version}" ;;
@@ -17202,36 +17436,22 @@ install_3xui() {
 				fi
 				echo ""
 				echo -e " ${rw_huang}正在安装 3X-UI 版本 ${_version} ...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_script_path} ${_version}${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url}) ${_version}${rw_lv}"
-				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_script_path" "$_version"
-				else
-					bash <(curl -Ls "$_official_url") "$_version"
-				fi
+				bash "$_run_script" "$_version"
+				local _rc=$?
+				rm -f "$_run_script"
 				break
 				;;
 			3)
 				# ── 选项3: 滚动更新（dev-latest） ──
 				echo ""
 				echo -e " ${rw_huang}正在执行滚动更新（开发版 dev-latest）...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_script_path} dev-latest${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url}) dev-latest${rw_lv}"
-				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_script_path" dev-latest
-				else
-					bash <(curl -Ls "$_official_url") dev-latest
-				fi
+				bash "$_run_script" dev-latest
+				local _rc=$?
+				rm -f "$_run_script"
 				break
 				;;
 			0)
@@ -17248,7 +17468,7 @@ install_3xui() {
 	done
 
 	# ── 捕获安装退出码 ──
-	local _install_rc=$?
+	_install_rc=${_rc:-$?}
 
 	# ── 安装结果提示 ──
 	echo ""
