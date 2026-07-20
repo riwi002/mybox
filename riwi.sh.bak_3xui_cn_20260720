@@ -17124,14 +17124,7 @@ install_3xui() {
 		install curl
 	fi
 
-	# ── 汉化版安装脚本路径（优先使用） ──
-	local _cn_script="$(dirname "$0")/tools/3xui_install_cn.sh"
-	local _use_cn=false
-	if [ -f "$_cn_script" ]; then
-		_use_cn=true
-	fi
-
-	# ── 官方脚本基础 URL（回退用） ──
+	# ── 官方脚本基础 URL ──
 	local _script_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
 
 	# ═══════════════════════════════════════
@@ -17141,12 +17134,6 @@ install_3xui() {
 	while true; do
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 选择安装方式 ━━━━━━${rw_lv}"
-		echo ""
-		if [ "$_use_cn" = true ]; then
-			echo -e " ${rw_lv}（使用本地汉化版安装脚本）${rw_lv}"
-		else
-			echo -e " ${rw_huang}（使用官方英文版安装脚本）${rw_lv}"
-		fi
 		echo ""
 		echo -e " ${rw_huang}1.   ${rw_lv}官方安装（最新稳定版）${rw_lv}"
 		echo -e " ${rw_huang}2.   ${rw_lv}安装特定版本${rw_lv}"
@@ -17161,18 +17148,10 @@ install_3xui() {
 				# ── 选项1: 官方安装（无参数） ──
 				echo ""
 				echo -e " ${rw_huang}正在执行官方安装（最新稳定版）...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script}${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url})${rw_lv}"
-				fi
+				echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url})${rw_lv}"
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script"
-				else
-					bash <(curl -Ls "$_script_url")
-				fi
+				bash <(curl -Ls "$_script_url")
 				break
 				;;
 			2)
@@ -17192,36 +17171,20 @@ install_3xui() {
 				fi
 				echo ""
 				echo -e " ${rw_huang}正在安装 3X-UI 版本 ${_version} ...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script} ${_version}${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) ${_version}${rw_lv}"
-				fi
+				echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) ${_version}${rw_lv}"
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script" "$_version"
-				else
-					bash <(curl -Ls "$_script_url") "$_version"
-				fi
+				bash <(curl -Ls "$_script_url") "$_version"
 				break
 				;;
 			3)
 				# ── 选项3: 滚动更新（dev-latest） ──
 				echo ""
 				echo -e " ${rw_huang}正在执行滚动更新（开发版 dev-latest）...${rw_lv}"
-				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script} dev-latest${rw_lv}"
-				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) dev-latest${rw_lv}"
-				fi
+				echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) dev-latest${rw_lv}"
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
-				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script" dev-latest
-				else
-					bash <(curl -Ls "$_script_url") dev-latest
-				fi
+				bash <(curl -Ls "$_script_url") dev-latest
 				break
 				;;
 			0)
