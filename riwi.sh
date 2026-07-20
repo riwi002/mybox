@@ -17019,6 +17019,7 @@ openclaw_backup_restore_menu() {
 # 函数: install_3xui
 # 功能: 3X-UI 多协议代理面板安装向导（交互式选择稳定版/指定版本/开发版）
 #       直接调用官方脚本，使用 bash <(curl -Ls URL) 方式执行
+#       每个操作完成后暂停，让用户查看输出再返回
 # 官方脚本: https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh
 # 依赖: curl、bash
 # ═══════════════════════════════════════════════════════════════
@@ -17040,12 +17041,14 @@ install_3xui() {
 	echo -e " ${rw_lv}文档: ${rw_huang}https://docs.sanaei.dev${rw_lv}"
 	echo ""
 
-	# ── 检查 curl 是否可用 ──
+	# ── 检查 curl 是否可用，不可用则尝试安装 ──
 	if ! command -v curl &>/dev/null; then
 		yellow "未检测到 curl，正在安装..."
 		install curl
 		if ! command -v curl &>/dev/null; then
 			red "curl 安装失败，请手动安装后重试"
+			echo -e " ${rw_huang}CentOS/RHEL: ${rw_lv}yum install -y curl"
+			echo -e " ${rw_huang}Ubuntu/Debian: ${rw_lv}apt install -y curl"
 			return 1
 		fi
 	fi
@@ -17077,6 +17080,13 @@ install_3xui() {
 				bash <(curl -Ls "$_3xui_url_direct") || \
 				bash <(curl -Ls "$_3xui_url_backup")
 				local _rc=$?
+				# 网络错误友好提示
+				if [ $_rc -ne 0 ]; then
+					echo ""
+					red "安装脚本执行失败，可能是网络连接问题"
+					echo -e " ${rw_huang}请检查服务器是否能访问 GitHub${rw_lv}"
+					echo -e " ${rw_huang}或稍后重试${rw_lv}"
+				fi
 				break
 				;;
 			2)
@@ -17084,7 +17094,7 @@ install_3xui() {
 				local _version
 				echo ""
 				read -e -p " 请输入版本号（例如 3.4.0）: " _version < /dev/tty
-				# 空输入处理：提示并重新要求输入或取消
+				# 空输入处理：提示并允许重新输入或取消
 				if [ -z "$_version" ]; then
 					yellow "版本号不能为空"
 					read -e -p " 重新输入版本号（或输入 q 取消）: " _version < /dev/tty
@@ -17108,6 +17118,13 @@ install_3xui() {
 				bash <(curl -Ls "$_3xui_url_direct") "$_version" || \
 				bash <(curl -Ls "$_3xui_url_backup") "$_version"
 				local _rc=$?
+				# 网络错误友好提示
+				if [ $_rc -ne 0 ]; then
+					echo ""
+					red "安装脚本执行失败，可能是网络连接问题"
+					echo -e " ${rw_huang}请检查服务器是否能访问 GitHub${rw_lv}"
+					echo -e " ${rw_huang}或确认版本号 ${_version} 是否存在${rw_lv}"
+				fi
 				break
 				;;
 			3)
@@ -17122,6 +17139,13 @@ install_3xui() {
 				bash <(curl -Ls "$_3xui_url_direct") dev-latest || \
 				bash <(curl -Ls "$_3xui_url_backup") dev-latest
 				local _rc=$?
+				# 网络错误友好提示
+				if [ $_rc -ne 0 ]; then
+					echo ""
+					red "安装脚本执行失败，可能是网络连接问题"
+					echo -e " ${rw_huang}请检查服务器是否能访问 GitHub${rw_lv}"
+					echo -e " ${rw_huang}或稍后重试${rw_lv}"
+				fi
 				break
 				;;
 			0)
@@ -17138,29 +17162,34 @@ install_3xui() {
 		esac
 	done
 
-	# ── 安装结果反馈 ──
+	# ═══════════════════════════════════════
+	# 安装结果反馈 + 常用管理命令
+	# ═══════════════════════════════════════
 	echo ""
 	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 	if [ "${_rc:-0}" -eq 0 ]; then
 		green "安装流程已结束，请查看上方输出以确认状态"
-		echo ""
-		echo -e " ${rw_huang}常用管理命令:${rw_lv}"
-		echo -e "   ${rw_lv}x-ui${rw_lv}                — 打开管理菜单（交互式）"
-		echo -e "   ${rw_lv}x-ui status${rw_lv}         — 查看服务状态"
-		echo -e "   ${rw_lv}x-ui start${rw_lv}          — 启动 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui stop${rw_lv}           — 停止 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui restart${rw_lv}        — 重启 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看面板设置（端口/路径/账号）"
-		echo -e "   ${rw_lv}x-ui update${rw_lv}         — 升级到最新版"
-		echo -e "   ${rw_lv}x-ui uninstall${rw_lv}      — 卸载 3X-UI"
-		echo ""
-		echo -e " ${rw_huang}官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
-		echo -e " ${rw_huang}如忘记登录信息，执行: ${rw_lv}x-ui settings${rw_lv}"
 	else
-		red "安装过程返回非零状态码 (退出码: ${_rc:-未知})"
-		echo -e " ${rw_huang}请查看上方输出以确认状态${rw_lv}"
-		echo -e " ${rw_huang}或参考官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
+		yellow "安装过程遇到问题，请查看上方输出确认状态"
 	fi
+	echo ""
+	echo -e " ${rw_huang}常用管理命令:${rw_lv}"
+	echo -e "   ${rw_lv}x-ui${rw_lv}                — 打开管理菜单（交互式）"
+	echo -e "   ${rw_lv}x-ui status${rw_lv}         — 查看服务状态"
+	echo -e "   ${rw_lv}x-ui start${rw_lv}          — 启动 3X-UI 服务"
+	echo -e "   ${rw_lv}x-ui stop${rw_lv}           — 停止 3X-UI 服务"
+	echo -e "   ${rw_lv}x-ui restart${rw_lv}        — 重启 3X-UI 服务"
+	echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看面板设置（端口/路径/账号）"
+	echo -e "   ${rw_lv}x-ui update${rw_lv}         — 升级到最新版"
+	echo -e "   ${rw_lv}x-ui uninstall${rw_lv}      — 卸载 3X-UI"
+	echo ""
+	echo -e " ${rw_huang}官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
+	echo -e " ${rw_huang}如忘记登录信息，执行: ${rw_lv}x-ui settings${rw_lv}"
+
+	# ── 暂停等待用户查看结果 ──
+	echo ""
+	read -n 1 -s -r -p "按任意键继续..." < /dev/tty
+	echo ""
 }
 
 
