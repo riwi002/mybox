@@ -17124,15 +17124,25 @@ install_3xui() {
 		install curl
 	fi
 
-	# ── 汉化版安装脚本路径（优先使用） ──
+	# ── 汉化版安装脚本获取（三层回退） ──
+	# 1. 本地 tools/ 目录
+	# 2. GitHub raw 拉取到 /tmp
+	# 3. 官方英文版（最终回退）
 	local _cn_script="$(dirname "$0")/tools/3xui_install_cn.sh"
+	local _cn_url="https://raw.githubusercontent.com/riwi002/mybox/main/tools/3xui_install_cn.sh"
+	local _official_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
 	local _use_cn=false
-	if [ -f "$_cn_script" ]; then
-		_use_cn=true
-	fi
+	local _script_path=""
 
-	# ── 官方脚本基础 URL（回退用） ──
-	local _script_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
+	if [ -f "$_cn_script" ]; then
+		# 本地有汉化版
+		_use_cn=true
+		_script_path="$_cn_script"
+	elif curl -fsSL --connect-timeout 10 "$_cn_url" -o /tmp/3xui_install_cn.sh 2>/dev/null && [ -s /tmp/3xui_install_cn.sh ]; then
+		# 从 GitHub raw 拉取汉化版
+		_use_cn=true
+		_script_path="/tmp/3xui_install_cn.sh"
+	fi
 
 	# ═══════════════════════════════════════
 	# 安装方式子菜单
@@ -17143,7 +17153,7 @@ install_3xui() {
 		echo -e "${rw_cheng}━━━━━━ 选择安装方式 ━━━━━━${rw_lv}"
 		echo ""
 		if [ "$_use_cn" = true ]; then
-			echo -e " ${rw_lv}（使用本地汉化版安装脚本）${rw_lv}"
+			echo -e " ${rw_lv}（使用汉化版安装脚本）${rw_lv}"
 		else
 			echo -e " ${rw_huang}（使用官方英文版安装脚本）${rw_lv}"
 		fi
@@ -17162,16 +17172,16 @@ install_3xui() {
 				echo ""
 				echo -e " ${rw_huang}正在执行官方安装（最新稳定版）...${rw_lv}"
 				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script}${rw_lv}"
+					echo -e " ${rw_lv}命令: bash ${_script_path}${rw_lv}"
 				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url})${rw_lv}"
+					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url})${rw_lv}"
 				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
 				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script"
+					bash "$_script_path"
 				else
-					bash <(curl -Ls "$_script_url")
+					bash <(curl -Ls "$_official_url")
 				fi
 				break
 				;;
@@ -17193,16 +17203,16 @@ install_3xui() {
 				echo ""
 				echo -e " ${rw_huang}正在安装 3X-UI 版本 ${_version} ...${rw_lv}"
 				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script} ${_version}${rw_lv}"
+					echo -e " ${rw_lv}命令: bash ${_script_path} ${_version}${rw_lv}"
 				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) ${_version}${rw_lv}"
+					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url}) ${_version}${rw_lv}"
 				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
 				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script" "$_version"
+					bash "$_script_path" "$_version"
 				else
-					bash <(curl -Ls "$_script_url") "$_version"
+					bash <(curl -Ls "$_official_url") "$_version"
 				fi
 				break
 				;;
@@ -17211,16 +17221,16 @@ install_3xui() {
 				echo ""
 				echo -e " ${rw_huang}正在执行滚动更新（开发版 dev-latest）...${rw_lv}"
 				if [ "$_use_cn" = true ]; then
-					echo -e " ${rw_lv}命令: bash ${_cn_script} dev-latest${rw_lv}"
+					echo -e " ${rw_lv}命令: bash ${_script_path} dev-latest${rw_lv}"
 				else
-					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url}) dev-latest${rw_lv}"
+					echo -e " ${rw_lv}命令: bash <(curl -Ls ${_official_url}) dev-latest${rw_lv}"
 				fi
 				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
 				echo ""
 				if [ "$_use_cn" = true ]; then
-					bash "$_cn_script" dev-latest
+					bash "$_script_path" dev-latest
 				else
-					bash <(curl -Ls "$_script_url") dev-latest
+					bash <(curl -Ls "$_official_url") dev-latest
 				fi
 				break
 				;;
