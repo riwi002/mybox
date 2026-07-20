@@ -17013,305 +17013,6 @@ openclaw_backup_restore_menu() {
 
 
 
-# ═══════════════════════════════════════════════════════════════
-# 函数: check_zh_locale
-# 功能: 检测系统中文环境，必要时交互式安装中文语言包
-#       确保后续 3X-UI 官方脚本能以简体中文输出
-# ═══════════════════════════════════════════════════════════════
-check_zh_locale() {
-	local _cur_lang="${LANG:-${LC_ALL:-}}"
-	local _has_zh=false
-
-	# ── 检查环境变量是否包含 zh_CN 或 UTF-8 ──
-	if echo "$_cur_lang" | grep -qiE "zh_CN|zh\.UTF-8|UTF-8"; then
-		_has_zh=true
-	fi
-
-	# ── 检查系统是否已安装中文 locale ──
-	if ! $_has_zh; then
-		if locale -a 2>/dev/null | grep -qiE "zh_CN\.UTF-8|zh_CN\.utf8"; then
-			_has_zh=true
-		fi
-	fi
-
-	# ── 如果已有中文环境，直接返回 ──
-	if $_has_zh; then
-		return 0
-	fi
-
-	# ── 提示用户并交互式安装中文语言包 ──
-	yellow "当前系统未配置中文环境，3X-UI 安装过程将以英文显示"
-	echo -e " ${rw_huang}建议安装中文语言包以获得更好的安装体验${rw_lv}"
-	echo ""
-
-	read -e -p " 是否自动安装中文语言包？(y/N): " _zh_confirm < /dev/tty
-	if [[ ! "$_zh_confirm" =~ ^[Yy]$ ]]; then
-		yellow "跳过安装，将以英文环境继续"
-		return 0
-	fi
-
-	# ── 根据包管理器安装对应的中文语言包 ──
-	if command -v apt &>/dev/null; then
-		# Debian/Ubuntu 系列
-		yellow "正在安装 language-pack-zh-hans ..."
-		apt update -y >/dev/null 2>&1
-		apt install -y language-pack-zh-hans >/dev/null 2>&1
-		# 设置环境变量
-		sed -i '/^# *zh_CN\.UTF-8/s/^# *//' /etc/locale.gen 2>/dev/null
-		locale-gen zh_CN.UTF-8 >/dev/null 2>&1
-	elif command -v dnf &>/dev/null; then
-		# CentOS/RHEL/Rocky/AlmaLinux (dnf)
-		yellow "正在安装 glibc-langpack-zh ..."
-		dnf install -y glibc-langpack-zh >/dev/null 2>&1
-	elif command -v yum &>/dev/null; then
-		# CentOS 7 (yum)
-		yellow "正在安装 kde-l10n-Chinese ..."
-		yum install -y kde-l10n-Chinese >/dev/null 2>&1
-		sed -i '/^# *zh_CN\.UTF-8/s/^# *//' /etc/locale.gen 2>/dev/null
-		locale-gen zh_CN.UTF-8 >/dev/null 2>&1
-	else
-		red "未识别的包管理器，请手动安装中文语言包"
-		return 1
-	fi
-
-	# ── 验证安装结果 ──
-	if locale -a 2>/dev/null | grep -qiE "zh_CN\.UTF-8|zh_CN\.utf8"; then
-		green "中文语言包安装成功"
-	else
-		yellow "中文语言包可能未完全安装，将继续以当前环境执行"
-	fi
-}
-
-
-# ═══════════════════════════════════════════════════════════════
-# 函数: install_3xui
-# 功能: 3X-UI 多协议代理面板安装（官方脚本 + 中文环境检测）
-#       通过设置 LANG=zh_CN.UTF-8 让官方脚本原生输出中文
-# 依赖: curl、systemd、bash
-# ═══════════════════════════════════════════════════════════════
-install_3xui() {
-
-	# ── 面板信息展示 ──
-	echo ""
-	echo -e "${rw_cheng}━━━━━━ 3X-UI 多协议代理面板 ━━━━━━${rw_lv}"
-	echo ""
-	echo -e " ${rw_lv}3X-UI 是基于 Xray Core 的开源多协议代理 Web 面板${rw_lv}"
-	echo -e " ${rw_lv}特性: VMess / VLESS / Trojan / Shadowsocks / WireGuard 多协议支持${rw_lv}"
-	echo -e " ${rw_lv}       多用户管理 / 流量限制 / 到期时间 / IP 数量限制 / Reality 支持${rw_lv}"
-	echo -e " ${rw_lv}       多语言界面 / SSL 证书管理 / 流量统计 / 订阅管理${rw_lv}"
-	echo -e " ${rw_lv}依赖: 系统服务（systemd），无需 Docker${rw_lv}"
-	echo -e " ${rw_lv}官方: ${rw_huang}https://github.com/MHSanaei/3x-ui${rw_lv}"
-	echo -e " ${rw_lv}文档: ${rw_huang}https://docs.sanaei.dev${rw_lv}"
-	echo ""
-
-	# ═══════════════════════════════════════
-	# 基础呼出子菜单（x-ui 常用命令 + 安装入口）
-	# ═══════════════════════════════════════
-	while true; do
-		echo -e "${rw_cheng}━━━━━━ 基础呼出 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}查看服务状态${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}启动 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}停止 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}重启 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看面板设置${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}打开管理菜单${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}升级到最新版${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}卸载 3X-UI${rw_lv}"
-		echo -e " ${rw_huang}9.   ${rw_lv}安装 3X-UI${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回上级${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择: " _quick_choice < /dev/tty
-
-		case "$_quick_choice" in
-			1) clear; x-ui status; break_end ;;
-			2) clear; x-ui start; break_end ;;
-			3) clear; x-ui stop; break_end ;;
-			4) clear; x-ui restart; break_end ;;
-			5) clear; x-ui settings; break_end ;;
-			6) clear; x-ui; break_end ;;
-			7) clear; x-ui update; break_end ;;
-			8)
-				clear
-				read -e -p " 确认卸载 3X-UI？(y/N): " _uninstall_confirm < /dev/tty
-				if [[ "$_uninstall_confirm" =~ ^[Yy]$ ]]; then
-					x-ui uninstall
-				else
-					yellow "已取消"
-				fi
-				break_end
-				;;
-			9) break ;;
-			0) yellow "已返回"; return 0 ;;
-			*) red "输入有误，请选择 0-9"; sleep 1; continue ;;
-		esac
-	done
-
-	# ── 确认是否开始安装 ──
-	read -e -p " 确认开始安装 3X-UI？(y/N): " _confirm < /dev/tty
-	if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
-		yellow "已取消"
-		return 0
-	fi
-
-	# ═══════════════════════════════════════
-	# 中文环境检测（核心前置逻辑）
-	# 确保官方脚本能以简体中文输出
-	# ═══════════════════════════════════════
-	check_zh_locale
-
-	# ── 系统架构检查（3X-UI 支持丰富的架构） ──
-	local _arch
-	_arch=$(uname -m 2>/dev/null || echo "")
-	local _arch_ok=false
-	case "$_arch" in
-		x86_64|amd64|x64) _arch_ok=true ;;
-		aarch64|arm64|armv8*) _arch_ok=true ;;
-		armv7*) _arch_ok=true ;;
-		armv6*) _arch_ok=true ;;
-		armv5*) _arch_ok=true ;;
-		i*86|x86) _arch_ok=true ;;
-		s390x) _arch_ok=true ;;
-		*)
-			red "不支持的系统架构: ${_arch:-未知}"
-			echo -e " ${rw_huang}3X-UI 支持 amd64 / 386 / arm64 / armv7 / armv6 / armv5 / s390x 架构${rw_lv}"
-			return 1
-			;;
-	esac
-
-	# ── 检查是否已安装 ──
-	if command -v x-ui &>/dev/null || systemctl is-active --quiet x-ui 2>/dev/null; then
-		green "检测到 3X-UI 已安装"
-		echo -e " ${rw_huang}管理命令: x-ui${rw_lv}"
-		echo -e " ${rw_huang}查看状态: x-ui status${rw_lv}"
-		echo -e " ${rw_huang}查看设置: x-ui settings${rw_lv}"
-		echo -e " ${rw_huang}启动面板: x-ui start${rw_lv}"
-		echo ""
-		read -e -p " 是否重新安装/升级到最新版？(y/N): " _reinstall < /dev/tty
-		if [[ ! "$_reinstall" =~ ^[Yy]$ ]]; then
-			yellow "已取消"
-			return 0
-		fi
-	fi
-
-	# ── 确保 curl 可用（官方脚本依赖） ──
-	if ! command -v curl &>/dev/null; then
-		yellow "未检测到 curl，正在安装..."
-		install curl
-	fi
-
-	# ═══════════════════════════════════════
-	# 设置中文环境变量（让 3X-UI 官方脚本原生输出中文）
-	# ═══════════════════════════════════════
-	export LANG=zh_CN.UTF-8
-	export LC_ALL=zh_CN.UTF-8
-
-	# ═══════════════════════════════════════
-	# 安装方式子菜单
-	# ═══════════════════════════════════════
-	local _install_choice
-	while true; do
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 选择安装方式 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}安装稳定版本（最新稳定版）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}安装特定版本${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}安装开发版本（dev-latest）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回上级${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择安装方式: " _install_choice < /dev/tty
-
-		case "$_install_choice" in
-			1)
-				# ── 选项1: 安装稳定版本（无参数） ──
-				echo ""
-				echo -e " ${rw_huang}正在调用官方脚本安装 3X-UI 面板...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash <(curl -Ls "${gh_proxy}raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") || \
-				bash <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") || \
-				bash <(curl -Ls "https://ghproxy.net/raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh")
-				local _rc=$?
-				break
-				;;
-			2)
-				# ── 选项2: 安装特定版本 ──
-				local _version
-				echo ""
-				read -e -p " 请输入版本号（如 3.4.0，直接回车默认 v3.4.0）: " _version < /dev/tty
-				if [ -z "$_version" ]; then
-					_version="v3.4.0"
-				else
-					case "$_version" in
-						v*) ;;
-						*) _version="v${_version}" ;;
-					esac
-				fi
-				echo ""
-				echo -e " ${rw_huang}正在调用官方脚本安装 3X-UI 版本 ${_version} ...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash <(curl -Ls "${gh_proxy}raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") "$_version" || \
-				bash <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") "$_version" || \
-				bash <(curl -Ls "https://ghproxy.net/raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") "$_version"
-				local _rc=$?
-				break
-				;;
-			3)
-				# ── 选项3: 安装开发版本（dev-latest） ──
-				echo ""
-				echo -e " ${rw_huang}正在调用官方脚本安装 3X-UI 开发版本...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash <(curl -Ls "${gh_proxy}raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") dev-latest || \
-				bash <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") dev-latest || \
-				bash <(curl -Ls "https://ghproxy.net/raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh") dev-latest
-				local _rc=$?
-				break
-				;;
-			0)
-				# ── 返回上级 ──
-				yellow "已返回"
-				return 0
-				;;
-			*)
-				# ── 输入错误处理 ──
-				red "输入有误，请选择 0-3 之间的数字"
-				continue
-				;;
-		esac
-	done
-
-	# ── 捕获安装退出码 ──
-	_install_rc=${_rc:-$?}
-
-	# ── 安装结果提示 ──
-	echo ""
-	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-	if [ $_install_rc -eq 0 ]; then
-		green "3X-UI 安装已结束"
-		echo ""
-		echo -e " ${rw_huang}常用管理命令:${rw_lv}"
-		echo -e "   ${rw_lv}x-ui${rw_lv}                — 打开管理菜单（交互式）"
-		echo -e "   ${rw_lv}x-ui status${rw_lv}         — 查看服务状态"
-		echo -e "   ${rw_lv}x-ui start${rw_lv}          — 启动 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui stop${rw_lv}           — 停止 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui restart${rw_lv}        — 重启 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看当前面板设置（端口/路径/账号）"
-		echo -e "   ${rw_lv}x-ui update${rw_lv}         — 升级到最新版"
-		echo -e "   ${rw_lv}x-ui uninstall${rw_lv}      — 卸载 3X-UI"
-		echo ""
-		echo -e " ${rw_huang}官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
-		echo -e " ${rw_huang}如忘记登录信息，执行: ${rw_lv}x-ui settings${rw_lv}"
-	else
-		red "3X-UI 安装过程返回非零状态码 (退出码: $_install_rc)"
-		echo -e " ${rw_huang}请检查上方安装日志中的错误信息${rw_lv}"
-		echo -e " ${rw_huang}或参考官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
-	fi
-}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -17342,10 +17043,10 @@ install_xray_lite() {
 	echo -e "   ${rw_huang}②${rw_lv} Cloudflare Global API Key（注意：不是 API Token）"
 	echo -e "   ${rw_huang}③${rw_lv} 如果是 NAT 小鸡，需知道端口映射关系（外部端口 → 内部端口）"
 	echo ""
-	echo -e " ${rw_hong}⚠ 与 3X-UI 的区别:${rw_lv}"
+	echo -e " ${rw_hong}⚠ 特点:${rw_lv}"
 	echo -e "   - ${rw_lv}没有 Web 管理界面 / 流量统计 / 多用户管理${rw_lv}"
 	echo -e "   - ${rw_lv}优势: 内存占用从几百 MB 降到 14MB${rw_lv}"
-	echo -e "   - ${rw_lv}如需面板功能请选 2. 3X-UI，只要能跑节点选本项${rw_lv}"
+	echo -e "   - ${rw_lv}轻量极简，只要能跑节点选本项${rw_lv}"
 	echo ""
 	echo -e " ${rw_hong}⚠ 合规提醒:${rw_lv}"
 	echo -e "   - 仅用于个人学习与合法用途，请遵守当地法律法规"
@@ -17475,9 +17176,8 @@ while true; do
 	  echo -e "${rw_cheng}━━━━━━━━━━━━  应用市场  ━━━━━━━━━━━━${rw_lv}"
 	  echo ""
 	  echo -e " ${rw_huang}1.   ${rw_lv}1Panel 新一代管理面板${rw_lv}"
-	  echo -e " ${rw_huang}2.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
-	  echo -e " ${rw_huang}3.   ${rw_lv}xray 迷你版${rw_lv}"
-	  echo -e " ${rw_huang}4.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
+	  echo -e " ${rw_huang}2.   ${rw_lv}xray 迷你版${rw_lv}"
+	  echo -e " ${rw_huang}3.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	  echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -17618,20 +17318,13 @@ while true; do
 		fi
 		;;
 	  2)
-		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
-		install_3xui
-		break_end
-		sub_choice=""
-		continue
-		;;
-	  3)
 		# ── 3XUI迷你版 xray-cf-lite（调用 install_xray_lite 函数） ──
 		install_xray_lite
 		break_end
 		sub_choice=""
 		continue
 		;;
-	  4)
+	  3)
 		# ── 虚拟机 Quickemu ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 虚拟机 Quickemu ━━━━━━${rw_lv}"
