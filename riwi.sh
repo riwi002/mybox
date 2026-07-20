@@ -17016,6 +17016,155 @@ openclaw_backup_restore_menu() {
 
 
 # ═══════════════════════════════════════════════════════════════
+# 函数: install_3xui
+# 功能: 3X-UI 多协议代理面板安装向导（交互式选择稳定版/指定版本/开发版）
+#       直接调用官方脚本，使用 bash <(curl -Ls URL) 方式执行
+# 官方脚本: https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh
+# 依赖: curl、bash
+# ═══════════════════════════════════════════════════════════════
+install_3xui() {
+
+	# ── 官方脚本 URL（使用变量定义，方便维护） ──
+	local _3xui_url="${gh_proxy}raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
+	local _3xui_url_direct="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
+	local _3xui_url_backup="https://ghproxy.net/raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
+
+	# ── 面板信息展示 ──
+	echo ""
+	echo -e "${rw_cheng}━━━━━━ 3X-UI 多协议代理面板 ━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_lv}3X-UI 是基于 Xray Core 的开源多协议代理 Web 面板${rw_lv}"
+	echo -e " ${rw_lv}特性: VMess / VLESS / Trojan / Shadowsocks / WireGuard 多协议支持${rw_lv}"
+	echo -e " ${rw_lv}       多用户管理 / 流量限制 / 到期时间 / IP 数量限制 / Reality 支持${rw_lv}"
+	echo -e " ${rw_lv}官方: ${rw_huang}https://github.com/MHSanaei/3x-ui${rw_lv}"
+	echo -e " ${rw_lv}文档: ${rw_huang}https://docs.sanaei.dev${rw_lv}"
+	echo ""
+
+	# ── 检查 curl 是否可用 ──
+	if ! command -v curl &>/dev/null; then
+		yellow "未检测到 curl，正在安装..."
+		install curl
+		if ! command -v curl &>/dev/null; then
+			red "curl 安装失败，请手动安装后重试"
+			return 1
+		fi
+	fi
+
+	# ═══════════════════════════════════════
+	# 安装向导菜单
+	# ═══════════════════════════════════════
+	local _choice
+	while true; do
+		echo -e "${rw_cheng}━━━━━━ 3X-UI 面板安装向导 ━━━━━━${rw_lv}"
+		echo ""
+		echo -e " ${rw_huang}1.   ${rw_lv}安装稳定版 (Stable)${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}安装指定版本 (Specific Version)${rw_lv}"
+		echo -e " ${rw_huang}3.   ${rw_lv}安装开发版 (Dev Latest)${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+		echo -e " ${rw_huang}0.   ${rw_lv}返回上级菜单${rw_lv}"
+		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+		read -e -p " 请选择: " _choice < /dev/tty
+
+		case "$_choice" in
+			1)
+				# ── 选项1: 安装稳定版（无参数） ──
+				echo ""
+				echo -e " ${rw_huang}正在连接官方源下载安装脚本...${rw_lv}"
+				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+				echo ""
+				# 三层回退：gh_proxy 代理 → 直连 → 备用代理
+				bash <(curl -Ls "$_3xui_url") || \
+				bash <(curl -Ls "$_3xui_url_direct") || \
+				bash <(curl -Ls "$_3xui_url_backup")
+				local _rc=$?
+				break
+				;;
+			2)
+				# ── 选项2: 安装指定版本 ──
+				local _version
+				echo ""
+				read -e -p " 请输入版本号（例如 3.4.0）: " _version < /dev/tty
+				# 空输入处理：提示并重新要求输入或取消
+				if [ -z "$_version" ]; then
+					yellow "版本号不能为空"
+					read -e -p " 重新输入版本号（或输入 q 取消）: " _version < /dev/tty
+					if [ -z "$_version" ] || [[ "$_version" =~ ^[qQ]$ ]]; then
+						yellow "已取消安装"
+						continue
+					fi
+				fi
+				# 拼接 v 前缀（用户输入 3.4.0 → v3.4.0）
+				case "$_version" in
+					v*) ;;  # 已有 v 前缀，不重复添加
+					*) _version="v${_version}" ;;
+				esac
+				echo ""
+				echo -e " ${rw_huang}正在连接官方源下载安装脚本...${rw_lv}"
+				echo -e " ${rw_huang}正在安装版本 ${_version} ...${rw_lv}"
+				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+				echo ""
+				# 三层回退执行
+				bash <(curl -Ls "$_3xui_url") "$_version" || \
+				bash <(curl -Ls "$_3xui_url_direct") "$_version" || \
+				bash <(curl -Ls "$_3xui_url_backup") "$_version"
+				local _rc=$?
+				break
+				;;
+			3)
+				# ── 选项3: 安装开发版（dev-latest） ──
+				echo ""
+				echo -e " ${rw_huang}正在连接官方源下载安装脚本...${rw_lv}"
+				echo -e " ${rw_huang}正在安装开发版 dev-latest ...${rw_lv}"
+				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+				echo ""
+				# 三层回退执行
+				bash <(curl -Ls "$_3xui_url") dev-latest || \
+				bash <(curl -Ls "$_3xui_url_direct") dev-latest || \
+				bash <(curl -Ls "$_3xui_url_backup") dev-latest
+				local _rc=$?
+				break
+				;;
+			0)
+				# ── 返回上级菜单 ──
+				yellow "已返回"
+				return 0
+				;;
+			*)
+				# ── 输入错误处理 ──
+				red "输入有误，请选择 0-3 之间的数字"
+				sleep 1
+				continue
+				;;
+		esac
+	done
+
+	# ── 安装结果反馈 ──
+	echo ""
+	echo -e "${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	if [ "${_rc:-0}" -eq 0 ]; then
+		green "安装流程已结束，请查看上方输出以确认状态"
+		echo ""
+		echo -e " ${rw_huang}常用管理命令:${rw_lv}"
+		echo -e "   ${rw_lv}x-ui${rw_lv}                — 打开管理菜单（交互式）"
+		echo -e "   ${rw_lv}x-ui status${rw_lv}         — 查看服务状态"
+		echo -e "   ${rw_lv}x-ui start${rw_lv}          — 启动 3X-UI 服务"
+		echo -e "   ${rw_lv}x-ui stop${rw_lv}           — 停止 3X-UI 服务"
+		echo -e "   ${rw_lv}x-ui restart${rw_lv}        — 重启 3X-UI 服务"
+		echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看面板设置（端口/路径/账号）"
+		echo -e "   ${rw_lv}x-ui update${rw_lv}         — 升级到最新版"
+		echo -e "   ${rw_lv}x-ui uninstall${rw_lv}      — 卸载 3X-UI"
+		echo ""
+		echo -e " ${rw_huang}官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
+		echo -e " ${rw_huang}如忘记登录信息，执行: ${rw_lv}x-ui settings${rw_lv}"
+	else
+		red "安装过程返回非零状态码 (退出码: ${_rc:-未知})"
+		echo -e " ${rw_huang}请查看上方输出以确认状态${rw_lv}"
+		echo -e " ${rw_huang}或参考官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
+	fi
+}
+
+
+# ═══════════════════════════════════════════════════════════════
 # 函数: install_xray_lite
 # 功能: xray 迷你版（xray-cf-lite）一键安装
 #       直接调用作者官方脚本，不重新发明轮子
@@ -17178,6 +17327,7 @@ while true; do
 	  echo -e " ${rw_huang}1.   ${rw_lv}1Panel 新一代管理面板${rw_lv}"
 	  echo -e " ${rw_huang}2.   ${rw_lv}xray 迷你版${rw_lv}"
 	  echo -e " ${rw_huang}3.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
+	  echo -e " ${rw_huang}4.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	  echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -17510,6 +17660,13 @@ while true; do
 			echo -e "   - 网络不通导致下载失败"
 			echo -e "   - macOS 宿主需用 brew 安装"
 		fi
+		;;
+	  4)
+		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
+		install_3xui
+		break_end
+		sub_choice=""
+		continue
 		;;
 	  0)
 		break
