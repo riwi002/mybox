@@ -17289,8 +17289,8 @@ while true; do
 	  echo ""
 	  echo -e " ${rw_huang}1.   ${rw_lv}1Panel 新一代管理面板${rw_lv}"
 	  echo -e " ${rw_huang}2.   ${rw_lv}xray 迷你版${rw_lv}"
-	  echo -e " ${rw_huang}3.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
-	  echo -e " ${rw_huang}4.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
+	  echo -e " ${rw_huang}3.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
+	  echo -e " ${rw_huang}4.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	  echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -17438,6 +17438,13 @@ while true; do
 		continue
 		;;
 	  3)
+		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
+		install_3xui
+		break_end
+		sub_choice=""
+		continue
+		;;
+	  4)
 		# ── 虚拟机 Quickemu ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 虚拟机 Quickemu ━━━━━━${rw_lv}"
@@ -17623,13 +17630,6 @@ while true; do
 			echo -e "   - 网络不通导致下载失败"
 			echo -e "   - macOS 宿主需用 brew 安装"
 		fi
-		;;
-	  4)
-		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
-		install_3xui
-		break_end
-		sub_choice=""
-		continue
 		;;
 	  0)
 		break
