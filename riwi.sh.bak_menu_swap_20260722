@@ -17013,293 +17013,14 @@ openclaw_backup_restore_menu() {
 
 
 
-# ═══════════════════════════════════════════════════════════════
-# 函数: translate_3xui_script
-# 功能: 对 3X-UI 官方 install.sh 做 sed 文本翻译（英文→中文）
-#       不修改官方源码，仅对下载到本地的临时文件做文本替换
-# 参数: $1 = 要翻译的脚本路径
-# ═══════════════════════════════════════════════════════════════
-translate_3xui_script() {
-	local _target="$1"
-	[ -z "$_target" ] && return 1
-	[ ! -f "$_target" ] && return 1
-
-	local _tmpfile="/tmp/3xui_translated_$$.sh"
-	awk '{
-		# === 捕获组规则 (match + substr + sub) ===
-		if (match($0, /Fatal error: .* Please run this script with root privilege/)) {
-			_p = "Fatal error: "; _s = " Please run this script with root privilege"
-			_m = substr($0, RSTART + length(_p), RLENGTH - length(_p) - length(_s))
-			sub(/Fatal error: .* Please run this script with root privilege/, "致命错误：" _m " 请使用 root 权限运行此脚本")
-		}
-		if (match($0, /XUI_ENABLE_FAIL2BAN=.*, skipping Fail2ban auto-setup/)) {
-			_p = "XUI_ENABLE_FAIL2BAN="; _s = ", skipping Fail2ban auto-setup"
-			_m = substr($0, RSTART + length(_p), RLENGTH - length(_p) - length(_s))
-			sub(/XUI_ENABLE_FAIL2BAN=.*, skipping Fail2ban auto-setup/, "XUI_ENABLE_FAIL2BAN=" _m "，跳过 Fail2ban 自动配置")
-		}
-		if (match($0, /Found x-ui\.service\.(debian|arch|rhel) in extracted files, installing/)) {
-			_p = "Found x-ui.service."; _s = " in extracted files, installing"
-			_m = substr($0, RSTART + length(_p), RLENGTH - length(_p) - length(_s))
-			gsub(/Found x-ui\.service\.(debian|arch|rhel) in extracted files, installing/, "在解压文件中找到 x-ui.service." _m "，正在安装")
-		}
-
-		# === 特定规则 (必须在通用规则之前) ===
-		sub(/Failed to install acme\.sh, skipping SSL setup/, "安装 acme.sh 失败，跳过 SSL 配置")
-		sub(/Certificate files not found after installation/, "安装后未找到证书文件")
-		sub(/Invalid IPv4 address\. Please try again/, "无效的 IPv4 地址，请重试")
-		sub(/Invalid port provided\. Falling back to 80\./, "提供的端口无效，回退到 80。")
-		sub(/is busy; cannot proceed in non-interactive mode/, "被占用；非交互模式下无法继续")
-		sub(/Please ensure port 80 is open and try again later with: x-ui/, "请确保 80 端口已开放，稍后通过 x-ui 重试")
-		sub(/PostgreSQL installation failed in non-interactive mode; aborting/, "非交互模式下 PostgreSQL 安装失败，正在中止")
-		sub(/Choose an option \(default 2 for IP\)/, "请选择（默认 2 为 IP 证书）")
-		sub(/IP certificate setup failed\. Please check port 80 is open/, "IP 证书配置失败，请检查 80 端口是否开放")
-
-		# === 通用规则 (顺序执行，与 sed 行为一致) ===
-		sub(/Failed to check the system OS, please contact the author!/, "无法检测操作系统，请联系作者！")
-		sub(/The OS release is: /, "操作系统标识: ")
-		sub(/Unsupported CPU architecture!/, "不支持的 CPU 架构！")
-		sub(/^echo "Arch: /, "echo \"系统架构: ")
-		sub(/Warning: failed to write /, "警告：写入失败 ")
-		sub(/Install result written to /, "安装结果已写入 ")
-		sub(/allow password logins for the panel database/, "允许面板数据库的密码登录")
-		sub(/Unsupported distro for automatic PostgreSQL install/, "不支持自动安装 PostgreSQL 的发行版")
-		sub(/Warning: could not update pg_hba\.conf; PostgreSQL may reject the panel.s TCP login \(ident auth\)\./, "警告：无法更新 pg_hba.conf；PostgreSQL 可能拒绝面板的 TCP 登录（ident 认证）。")
-		sub(/Failed to write PostgreSQL credentials to/, "写入 PostgreSQL 凭证失败:")
-		sub(/Installing PostgreSQL client tools \(pg_dump\/pg_restore\) for in-panel backup/, "正在安装 PostgreSQL 客户端工具（pg_dump/pg_restore）用于面板内备份")
-		sub(/Installing acme\.sh for SSL certificate management/, "正在安装 acme.sh 用于 SSL 证书管理")
-		gsub(/Failed to install acme\.sh/, "安装 acme.sh 失败")
-		gsub(/acme\.sh installed successfully/, "acme.sh 安装成功")
-		sub(/acme\.sh could not be found\. Installing now/, "未找到 acme.sh，正在安装")
-		sub(/Setting up SSL certificate/, "正在配置 SSL 证书")
-		sub(/Issuing SSL certificate for/, "正在签发 SSL 证书:")
-		sub(/Note: Port 80 must be open and accessible from the internet/, "注意：80 端口必须开放且可从互联网访问")
-		sub(/Failed to issue certificate for/, "签发证书失败:")
-		sub(/Failed to install certificate/, "安装证书失败")
-		sub(/SSL certificate installed and configured successfully/, "SSL 证书安装并配置成功")
-		gsub(/Certificate files not found/, "未找到证书文件")
-		sub(/Setting up Let.s Encrypt IP certificate \(shortlived profile\)/, "正在配置 Let\047s Encrypt IP 证书（短期证书）")
-		sub(/Note: IP certificates are valid for ~6 days and will auto-renew\./, "注意：IP 证书有效期约 6 天，将自动续期。")
-		sub(/Default listener is port 80\. If you choose another port, ensure external port 80 forwards to it\./, "默认监听端口为 80。如选择其他端口，请确保外部 80 端口转发到该端口。")
-		sub(/IPv4 address is required/, "必须提供 IPv4 地址")
-		sub(/Invalid IPv4 address/, "无效的 IPv4 地址")
-		sub(/Including IPv6 address/, "包含 IPv6 地址")
-		sub(/Using port/, "使用端口")
-		sub(/is free and ready for standalone validation/, "空闲，可用于独立验证")
-		sub(/for standalone validation/, "进行独立验证")
-		sub(/Reminder: Let.s Encrypt still connects on port 80; forward external port 80 to/, "提醒：Let\047s Encrypt 仍通过 80 端口连接；请将外部 80 端口转发到")
-		sub(/is in use/, "已被占用")
-		sub(/is busy; cannot proceed/, "被占用；无法继续")
-		sub(/Enter another port for acme\.sh standalone listener \(leave empty to abort\)/, "输入 acme.sh 独立监听器的其他端口（留空则中止）")
-		sub(/Invalid port provided/, "提供的端口无效")
-		sub(/Issuing IP certificate for/, "正在签发 IP 证书:")
-		sub(/Failed to issue IP certificate/, "签发 IP 证书失败")
-		sub(/Please ensure port/, "请确保端口")
-		sub(/is reachable \(or forwarded from external port 80\)/, "可达（或从外部 80 端口转发）")
-		sub(/Certificate issued successfully, installing/, "证书签发成功，正在安装")
-		sub(/Certificate files installed successfully/, "证书文件安装成功")
-		sub(/Setting certificate paths for the panel/, "正在设置面板的证书路径")
-		sub(/Warning: Could not set certificate paths automatically/, "警告：无法自动设置证书路径")
-		sub(/Certificate files are at/, "证书文件位于:")
-		sub(/Certificate paths configured successfully/, "证书路径配置成功")
-		sub(/IP certificate installed and configured successfully/, "IP 证书安装并配置成功")
-		sub(/Certificate valid for ~6 days, auto-renews via acme\.sh cron job/, "证书有效期约 6 天，通过 acme.sh 定时任务自动续期")
-		sub(/acme\.sh will automatically renew and reload x-ui before expiry/, "acme.sh 将在到期前自动续期并重载 x-ui")
-		sub(/Port to use for ACME HTTP-01 listener \(default 80\)/, "ACME HTTP-01 监听端口（默认 80）")
-		sub(/Please enter your domain name/, "请输入您的域名")
-		sub(/Domain name cannot be empty\. Please try again/, "域名不能为空，请重试")
-		sub(/Invalid domain format/, "域名格式无效")
-		sub(/Please enter a valid domain name/, "请输入有效的域名")
-		sub(/Your domain is/, "您的域名是")
-		sub(/checking it/, "正在检查")
-		sub(/Existing certificate found for/, "找到现有证书:")
-		sub(/will reuse it/, "将复用")
-		sub(/Found incomplete acme\.sh state for/, "发现不完整的 acme.sh 状态:")
-		sub(/no valid certificate files\); cleaning it up and re-issuing/, "无有效证书文件）；正在清理并重新签发")
-		sub(/Your domain is ready for issuing certificates now/, "您的域名已准备好签发证书")
-		sub(/Please choose which port to use \(default is 80\)/, "请选择使用的端口（默认 80）")
-		sub(/Your input/, "您的输入")
-		sub(/is invalid, will use default port 80/, "无效，将使用默认端口 80")
-		sub(/Will use port/, "将使用端口")
-		sub(/to issue certificates\. Please make sure this port is open/, "签发证书。请确保该端口已开放")
-		sub(/Stopping panel temporarily/, "正在临时停止面板")
-		sub(/Issuing certificate failed, please check logs/, "签发证书失败，请检查日志")
-		sub(/Issuing certificate succeeded, installing certificates/, "签发证书成功，正在安装证书")
-		sub(/Using existing certificate, installing certificates/, "使用现有证书，正在安装证书")
-		sub(/Default --reloadcmd for ACME is/, "ACME 默认 --reloadcmd 为")
-		sub(/This command will run on every certificate issue and renew/, "此命令将在每次签发和续期证书时执行")
-		sub(/Would you like to modify --reloadcmd for ACME\? \(y\/n\)/, "是否要修改 ACME 的 --reloadcmd？(y/n)")
-		sub(/Preset: systemctl reload nginx ; systemctl restart x-ui/, "预设: systemctl reload nginx ; systemctl restart x-ui")
-		sub(/Input your own command/, "输入自定义命令")
-		sub(/Keep default reloadcmd/, "保持默认 reloadcmd")
-		sub(/Choose an option/, "请选择")
-		sub(/It.s recommended to put x-ui restart at the end/, "建议将 x-ui restart 放在末尾")
-		sub(/Please enter your custom reloadcmd/, "请输入自定义 reloadcmd")
-		sub(/Keeping default reloadcmd/, "保持默认 reloadcmd")
-		sub(/Installing certificate succeeded, enabling auto renew/, "证书安装成功，正在启用自动续期")
-		sub(/Installing certificate failed, exiting/, "证书安装失败，退出")
-		sub(/Auto renew setup had issues, certificate details/, "自动续期设置有问题，证书详情")
-		sub(/Auto renew succeeded, certificate details/, "自动续期成功，证书详情")
-		sub(/Would you like to set this certificate for the panel\? \(y\/n\)/, "是否将此证书设置给面板？(y/n)")
-		sub(/Certificate paths set for the panel/, "面板证书路径已设置")
-		sub(/Certificate File/, "证书文件")
-		sub(/Private Key File/, "私钥文件")
-		sub(/Panel will restart to apply SSL certificate/, "面板将重启以应用 SSL 证书")
-		sub(/Error: Certificate or private key file not found for domain/, "错误：未找到域名的证书或私钥文件")
-		sub(/Skipping panel path setting/, "跳过面板路径设置")
-		sub(/Choose SSL certificate setup method/, "选择 SSL 证书配置方式")
-		sub(/Let.s Encrypt for Domain \(90-day validity, auto-renews\)/, "Let\047s Encrypt 域名证书（90 天有效期，自动续期）")
-		sub(/Let.s Encrypt for IP Address \(6-day validity, auto-renews\)/, "Let\047s Encrypt IP 证书（6 天有效期，自动续期）")
-		sub(/Custom SSL Certificate \(Path to existing files\)/, "自定义 SSL 证书（现有文件路径）")
-		sub(/Skip SSL \(advanced . behind reverse proxy \/ SSH tunnel only\)/, "跳过 SSL（高级 — 仅在反向代理/SSH 隧道后使用）")
-		sub(/Note: Options 1 & 2 require port 80 open\. Option 3 requires manual paths/, "注意：选项 1 和 2 需要开放 80 端口。选项 3 需要手动指定路径")
-		sub(/Note: Option 4 serves the panel over plain HTTP . only safe behind nginx\/Caddy or an SSH tunnel/, "注意：选项 4 以纯 HTTP 提供面板服务 — 仅在 nginx/Caddy 或 SSH 隧道后才安全")
-		sub(/Unknown XUI_SSL_MODE/, "未知的 XUI_SSL_MODE")
-		sub(/defaulting to none \(HTTP\)/, "默认跳过（HTTP）")
-		sub(/Using Let.s Encrypt for domain certificate/, "使用 Let\047s Encrypt 域名证书")
-		sub(/SSL certificate configured successfully with domain/, "SSL 证书已成功配置，域名")
-		sub(/SSL setup may have completed, but domain extraction failed/, "SSL 配置可能已完成，但域名提取失败")
-		sub(/SSL certificate setup failed for domain mode/, "域名模式 SSL 证书配置失败")
-		sub(/Using Let.s Encrypt for IP certificate \(shortlived profile\)/, "使用 Let\047s Encrypt IP 证书（短期证书）")
-		sub(/the correct incoming public IPv4 address for this server/, "是此服务器的正确公网 IPv4 地址吗")
-		sub(/Please enter your server.s public IPv4 address/, "请输入服务器的公网 IPv4 地址")
-		sub(/Do you have an IPv6 address to include\? \(leave empty to skip\)/, "是否有要包含的 IPv6 地址？（留空跳过）")
-		sub(/Let.s Encrypt IP certificate configured successfully/, "Let\047s Encrypt IP 证书配置成功")
-		sub(/Using custom existing certificate/, "使用自定义现有证书")
-		sub(/Please enter domain name certificate issued for/, "请输入证书签发时使用的域名")
-		sub(/Input certificate path \(keywords: .crt \/ fullchain\)/, "输入证书路径（关键词: .crt / fullchain）")
-		sub(/Error: File does not exist! Try again/, "错误：文件不存在！请重试")
-		sub(/Error: File exists but is not readable \(check permissions\)/, "错误：文件存在但不可读（检查权限）")
-		sub(/Error: File is empty/, "错误：文件为空")
-		sub(/Input private key path \(keywords: .key \/ privatekey\)/, "输入私钥路径（关键词: .key / privatekey）")
-		sub(/Custom certificate paths applied/, "自定义证书路径已应用")
-		sub(/Note: You are responsible for renewing these files externally/, "注意：您需要自行负责这些文件的外部续期")
-		sub(/Panel will be installed WITHOUT SSL\/TLS/, "面板将在没有 SSL/TLS 的情况下安装")
-		sub(/Login credentials and cookies will travel as plain HTTP/, "登录凭据和 Cookie 将以纯 HTTP 传输")
-		sub(/Only safe when/, "仅以下情况安全")
-		sub(/A reverse proxy \(nginx, Caddy, Traefik\) terminates TLS for you, or/, "由反向代理（nginx、Caddy、Traefik）终止 TLS，或")
-		sub(/You access the panel exclusively via SSH tunnel/, "仅通过 SSH 隧道访问面板")
-		sub(/Bind the panel to 127\.0\.0\.1 only\? \(recommended . forces SSH tunnel \/ reverse-proxy access\)/, "仅将面板绑定到 127.0.0.1？（推荐 — 强制通过 SSH 隧道/反向代理访问）")
-		sub(/Panel bound to 127\.0\.0\.1 only\. It is now unreachable from the public internet/, "面板已仅绑定到 127.0.0.1，现在无法从公网访问")
-		sub(/SSH Port Forwarding . open the panel from your local machine via/, "SSH 端口转发 — 从本地机器打开面板:")
-		sub(/Standard SSH command/, "标准 SSH 命令")
-		sub(/If using an SSH key/, "如果使用 SSH 密钥")
-		sub(/Then open in your browser/, "然后在浏览器中打开")
-		sub(/Alternative: point a reverse proxy \(nginx\/Caddy\) at 127\.0\.0\.1/, "替代方案：将反向代理（nginx/Caddy）指向 127.0.0.1")
-		sub(/and let it terminate TLS/, "并由其终止 TLS")
-		sub(/Panel will listen on all interfaces over plain HTTP\. Make sure something else is terminating TLS in front of it/, "面板将通过纯 HTTP 监听所有网络接口。请确保有其他服务在前方终止 TLS")
-		sub(/SSL setup skipped/, "已跳过 SSL 配置")
-		sub(/Invalid option\. Skipping SSL setup/, "无效选项，跳过 SSL 配置")
-		sub(/Could not auto-detect server IP from any provider/, "无法从任何服务商自动检测服务器 IP")
-		sub(/Database Selection/, "数据库选择")
-		sub(/SQLite     \(default . recommended for < 500 clients\)/, "SQLite     （默认 — 推荐 < 500 客户端）")
-		sub(/PostgreSQL \(recommended for high client counts \/ many nodes\)/, "PostgreSQL （推荐大量客户端/多节点场景）")
-		gsub(/Choose \[1\]/, "请选择 [1]")
-		sub(/Installing PostgreSQL locally \(non-interactive\)/, "正在本地安装 PostgreSQL（非交互模式）")
-		sub(/Set XUI_DB_DSN to use an existing server, or XUI_DB_TYPE=sqlite/, "设置 XUI_DB_DSN 使用现有服务器，或 XUI_DB_TYPE=sqlite")
-		sub(/Install PostgreSQL locally and create a dedicated user\/db \(recommended\)/, "本地安装 PostgreSQL 并创建专用用户/数据库（推荐）")
-		sub(/Use an existing PostgreSQL server \(enter DSN\)/, "使用现有 PostgreSQL 服务器（输入 DSN）")
-		sub(/Enter PostgreSQL DSN/, "输入 PostgreSQL DSN")
-		sub(/Installing PostgreSQL . this may take a moment/, "正在安装 PostgreSQL — 请稍候")
-		sub(/Failed to create temporary credentials file/, "创建临时凭证文件失败")
-		sub(/PostgreSQL installation failed/, "PostgreSQL 安装失败")
-		sub(/Retry local install/, "重试本地安装")
-		sub(/Enter an external DSN instead/, "改为输入外部 DSN")
-		sub(/Abort install/, "中止安装")
-		sub(/Fall back to SQLite/, "回退到 SQLite")
-		sub(/Install aborted/, "安装已中止")
-		sub(/Could not install pg_dump\/pg_restore\. In-panel database backup\/restore will be unavailable until you install the postgresql-client package/, "无法安装 pg_dump/pg_restore。在安装 postgresql-client 包之前，面板内数据库备份/恢复将不可用")
-		sub(/Your Panel Port is/, "面板端口为")
-		sub(/Generated random port/, "已生成随机端口")
-		sub(/Would you like to customize the Panel Port settings\? \(If not, a random port will be applied\)/, "是否自定义面板端口？（否则将使用随机端口）")
-		sub(/Please set up the panel port/, "请设置面板端口")
-		sub(/SSL Certificate Setup \(RECOMMENDED\)/, "SSL 证书配置（推荐）")
-		sub(/SSL is strongly recommended\. Skip only if a reverse proxy/, "强烈建议启用 SSL。仅在有反向代理/")
-		sub(/or SSH tunnel handles TLS for you/, "或 SSH 隧道处理 TLS 时才跳过")
-		sub(/Let.s Encrypt now supports both domains and IP addresses/, "Let\047s Encrypt 现已支持域名和 IP 地址")
-		sub(/Panel Installation Complete/, "面板安装完成")
-		gsub(/Username:/, "用户名:")
-		gsub(/Password:/, "密码:")
-		sub(/^Port:        /, "端口:        ")
-		gsub(/WebBasePath: /, "访问路径:    ")
-		gsub(/Database:    /, "数据库:      ")
-		gsub(/Access URL:  /, "访问地址:    ")
-		gsub(/API Token:   /, "API 令牌:    ")
-		sub(/IMPORTANT: Save these credentials securely/, "重要：请妥善保存这些凭据")
-		sub(/SSL Certificate: Enabled and configured/, "SSL 证书: 已启用并配置")
-		sub(/SSL Certificate: Skipped . panel is HTTP-only\. Use a reverse proxy or SSH tunnel/, "SSL 证书: 已跳过 — 面板仅 HTTP。请使用反向代理或 SSH 隧道")
-		sub(/PostgreSQL backup & restore is built into the panel/, "面板内置了 PostgreSQL 备份和恢复功能")
-		sub(/Back Up downloads a pg_dump .dump file; Restore reloads it via pg_restore/, "备份会下载 pg_dump .dump 文件；恢复通过 pg_restore 重新加载")
-		sub(/PostgreSQL Credentials/, "PostgreSQL 凭证")
-		gsub(/DB Name:/, "数据库名:")
-		sub(/^Host:       /, "主机:        ")
-		gsub(/DSN:        /, "DSN:         ")
-		gsub(/Env file:   /, "环境文件:    ")
-		sub(/Connect from this server/, "从本服务器连接")
-		sub(/as the postgres superuser/, "以 postgres 超级用户身份")
-		sub(/The panel reads these credentials from/, "面板从以下位置读取这些凭据:")
-		sub(/Save the password . it is not stored anywhere else in plain text/, "请保存密码 — 密码不会以明文存储在其他任何地方")
-		sub(/WebBasePath is missing or too short\. Generating a new one/, "WebBasePath 缺失或过短，正在生成新的")
-		sub(/New WebBasePath/, "新的 WebBasePath")
-		sub(/SSL certificate already configured\. No action needed/, "SSL 证书已配置，无需操作")
-		sub(/Default credentials detected\. Security update required/, "检测到默认凭据，需要安全更新")
-		sub(/Generated new random login credentials/, "已生成新的随机登录凭据")
-		sub(/Username, Password, and WebBasePath are properly set/, "用户名、密码和 WebBasePath 已正确设置")
-		sub(/x-ui CLI not found; skipping Fail2ban auto-setup/, "未找到 x-ui CLI，跳过 Fail2ban 自动配置")
-		sub(/Setting up Fail2ban for the IP Limit feature/, "正在为 IP 限制功能配置 Fail2ban")
-		sub(/Fail2ban setup complete/, "Fail2ban 配置完成")
-		sub(/Fail2ban setup did not finish; IP Limit stays disabled until you run .x-ui. and open the IP Limit menu\. Continuing/, "Fail2ban 配置未完成；在运行 \047x-ui\047 并打开 IP 限制菜单之前，IP 限制保持禁用。继续")
-		sub(/Failed to fetch x-ui version, it may be due to GitHub API restrictions, please try it later/, "获取 x-ui 版本失败，可能是 GitHub API 限制，请稍后重试")
-		sub(/Got x-ui latest version/, "获取到 x-ui 最新版本")
-		sub(/beginning the installation/, "开始安装")
-		sub(/Downloading x-ui failed, please be sure that your server can access GitHub/, "下载 x-ui 失败，请确保服务器可以访问 GitHub")
-		sub(/Downloaded x-ui release archive is empty/, "下载的 x-ui 发布包为空")
-		sub(/Installing the rolling dev build \(tag: dev-latest\)\. This is a per-commit pre-release, not a stable version/, "正在安装滚动开发版（标签: dev-latest）。这是按提交的预发布版本，不是稳定版")
-		sub(/Please use a newer version \(at least v2\.3\.5\)\. Exiting installation/, "请使用更新的版本（至少 v2.3.5）。退出安装")
-		sub(/Beginning to install x-ui/, "开始安装 x-ui")
-		sub(/failed, please check if the version exists/, "失败，请检查该版本是否存在")
-		gsub(/Failed to download x-ui\.sh/, "下载 x-ui.sh 失败")
-		gsub(/Downloaded x-ui\.sh is empty/, "下载的 x-ui.sh 为空")
-		gsub(/Failed to install x-ui\.sh/, "安装 x-ui.sh 失败")
-		sub(/Failed to extract the x-ui release archive/, "解压 x-ui 发布包失败")
-		sub(/the previous installation has already been removed, so the panel will not start until this is fixed; try running the installer again/, "之前的安装已被删除，在修复前面板无法启动；请重新运行安装程序")
-		sub(/Extracted x-ui archive is missing the x-ui binary/, "解压的 x-ui 包缺少 x-ui 二进制文件")
-		sub(/Added x-ui\.db to \/etc\/\.gitignore for etckeeper/, "已将 x-ui.db 添加到 /etc/.gitignore（etckeeper）")
-		sub(/Created \/etc\/\.gitignore and added x-ui\.db for etckeeper/, "已创建 /etc/.gitignore 并添加 x-ui.db（etckeeper）")
-		gsub(/Failed to download x-ui\.rc/, "下载 x-ui.rc 失败")
-		gsub(/Downloaded x-ui\.rc is empty/, "下载的 x-ui.rc 为空")
-		gsub(/Failed to install x-ui\.rc/, "安装 x-ui.rc 失败")
-		gsub(/Found x-ui\.service in extracted files, installing/, "在解压文件中找到 x-ui.service，正在安装")
-		sub(/Service files not found in tar\.gz, downloading from GitHub/, "在 tar.gz 中未找到服务文件，从 GitHub 下载")
-		sub(/Failed to install x-ui\.service from GitHub/, "从 GitHub 安装 x-ui.service 失败")
-		sub(/Setting up systemd unit/, "正在配置 systemd 服务单元")
-		gsub(/Failed to install x-ui\.service file/, "安装 x-ui.service 文件失败")
-		sub(/installation finished, it is running now/, "安装完成，正在运行")
-		sub(/x-ui control menu usages \(subcommands\)/, "x-ui 管理菜单用法（子命令）")
-		sub(/Admin Management Script/, "管理脚本")
-		sub(/- Start/, "- 启动")
-		sub(/- Stop/, "- 停止")
-		sub(/- Restart/, "- 重启")
-		sub(/- Current Status/, "- 当前状态")
-		sub(/- Current Settings/, "- 当前设置")
-		sub(/- Enable Autostart on OS Startup/, "- 开机自启")
-		sub(/- Disable Autostart on OS Startup/, "- 关闭开机自启")
-		sub(/- Check logs/, "- 查看日志")
-		sub(/- Check Fail2ban ban logs/, "- 查看 Fail2ban 封禁日志")
-		sub(/- Update/, "- 更新")
-		sub(/- Legacy version/, "- 旧版")
-		sub(/- Install/, "- 安装")
-		sub(/- Uninstall/, "- 卸载")
-		sub(/^echo -e "\$\{green\}Running\.\.\.\$\{plain\}"/, "echo -e \"${green}正在运行...${plain}\"")
-
-		print
-	}' "$_target" > "$_tmpfile" && mv "$_tmpfile" "$_target"
-}
 
 
 # ═══════════════════════════════════════════════════════════════
 # 函数: install_3xui
-# 功能: 3X-UI 多协议代理面板安装（子菜单：官方安装/指定版本/滚动更新）
-# 依赖: curl、systemd
+# 功能: 3X-UI 多协议代理面板一键安装
+#       直接调用官方脚本，不重新发明轮子
+# 官方脚本: https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh
+# 依赖: curl、bash、systemd
 # ═══════════════════════════════════════════════════════════════
 install_3xui() {
 
@@ -17316,51 +17037,6 @@ install_3xui() {
 	echo -e " ${rw_lv}文档: ${rw_huang}https://docs.sanaei.dev${rw_lv}"
 	echo ""
 
-	# ═══════════════════════════════════════
-	# 基础呼出子菜单（x-ui 常用命令 + 安装入口）
-	# ═══════════════════════════════════════
-	while true; do
-		echo -e "${rw_cheng}━━━━━━ 基础呼出 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}查看服务状态${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}启动 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}停止 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}重启 3X-UI ${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看面板设置${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}打开管理菜单${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}升级到最新版${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}卸载 3X-UI${rw_lv}"
-		echo -e " ${rw_huang}9.   ${rw_lv}安装 3X-UI${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回上级${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择: " _quick_choice < /dev/tty
-
-		case "$_quick_choice" in
-			1) clear; x-ui status; break_end ;;
-			2) clear; x-ui start; break_end ;;
-			3) clear; x-ui stop; break_end ;;
-			4) clear; x-ui restart; break_end ;;
-			5) clear; x-ui settings; break_end ;;
-			6) clear; x-ui; break_end ;;
-			7) clear; x-ui update; break_end ;;
-			8)
-				clear
-				read -e -p " 确认卸载 3X-UI？(y/N): " _uninstall_confirm < /dev/tty
-				if [[ "$_uninstall_confirm" =~ ^[Yy]$ ]]; then
-					x-ui uninstall
-				else
-					yellow "已取消"
-				fi
-				break_end
-				;;
-			9) break ;;
-			0) yellow "已返回"; return 0 ;;
-			*) red "输入有误，请选择 0-9"; sleep 1; continue ;;
-		esac
-	done
-
 	# ── 确认是否开始安装 ──
 	read -e -p " 确认开始安装 3X-UI？(y/N): " _confirm < /dev/tty
 	if [[ ! "$_confirm" =~ ^[Yy]$ ]]; then
@@ -17368,7 +17044,7 @@ install_3xui() {
 		return 0
 	fi
 
-	# ── 系统架构检查（3X-UI 支持丰富的架构） ──
+	# ── 系统架构检查 ──
 	local _arch
 	_arch=$(uname -m 2>/dev/null || echo "")
 	local _arch_ok=false
@@ -17387,7 +17063,7 @@ install_3xui() {
 			;;
 	esac
 
-	# ── 检查是否已安装 ──
+	# ── 检查是否已安装（x-ui 命令或 systemd 服务） ──
 	if command -v x-ui &>/dev/null || systemctl is-active --quiet x-ui 2>/dev/null; then
 		green "检测到 3X-UI 已安装"
 		echo -e " ${rw_huang}管理命令: x-ui${rw_lv}"
@@ -17402,103 +17078,24 @@ install_3xui() {
 		fi
 	fi
 
-	# ── 确保 curl 可用（官方脚本依赖） ──
+	# ── 确保依赖可用（curl） ──
 	if ! command -v curl &>/dev/null; then
 		yellow "未检测到 curl，正在安装..."
 		install curl
 	fi
 
-	# ── 官方脚本 URL ──
-	local _official_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
+	# ── 官方脚本地址 ──
+	local _script_url="https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh"
 
-	# ── 下载官方脚本并做中文翻译（不改官方源码，仅 sed 文本替换） ──
-	local _run_script="/tmp/3xui_install_translated_$$.sh"
-	curl -fsSL "$_official_url" -o "$_run_script" 2>/dev/null
-	if [ ! -s "$_run_script" ]; then
-		red "下载官方安装脚本失败，请检查网络连接"
-		rm -f "$_run_script"
-		return 1
-	fi
+	# ── 执行官方安装脚本（联网拉取最新版，交互式） ──
+	echo ""
+	echo -e " ${rw_huang}正在调用官方脚本安装 3X-UI...${rw_lv}"
+	echo -e " ${rw_lv}命令: bash <(curl -Ls ${_script_url})${rw_lv}"
+	echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
+	echo ""
 
-	# ── 调用翻译函数（sed 英文→中文，静默执行） ──
-	translate_3xui_script "$_run_script" 2>/dev/null
-
-	# ═══════════════════════════════════════
-	# 安装方式子菜单
-	# ═══════════════════════════════════════
-	local _install_choice
-	while true; do
-		echo ""
-		echo -e "${rw_cheng}━━━━━━ 选择安装方式 ━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}官方安装（最新稳定版）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}安装特定版本${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}滚动更新（开发版 dev-latest）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回上级${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		read -e -p " 请选择安装方式: " _install_choice < /dev/tty
-
-		case "$_install_choice" in
-			1)
-				# ── 选项1: 官方安装（无参数） ──
-				echo ""
-				echo -e " ${rw_huang}正在执行官方安装（最新稳定版）...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash "$_run_script"
-				local _rc=$?
-				rm -f "$_run_script"
-				break
-				;;
-			2)
-				# ── 选项2: 安装特定版本 ──
-				local _version
-				echo ""
-				read -e -p " 请输入版本号（如 3.4.0，直接回车默认 v3.4.0）: " _version < /dev/tty
-				if [ -z "$_version" ]; then
-					_version="v3.4.0"
-				else
-					case "$_version" in
-						v*) ;;
-						*) _version="v${_version}" ;;
-					esac
-				fi
-				echo ""
-				echo -e " ${rw_huang}正在安装 3X-UI 版本 ${_version} ...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash "$_run_script" "$_version"
-				local _rc=$?
-				rm -f "$_run_script"
-				break
-				;;
-			3)
-				# ── 选项3: 滚动更新（dev-latest） ──
-				echo ""
-				echo -e " ${rw_huang}正在执行滚动更新（开发版 dev-latest）...${rw_lv}"
-				echo -e " ${rw_cheng}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${rw_lv}"
-				echo ""
-				bash "$_run_script" dev-latest
-				local _rc=$?
-				rm -f "$_run_script"
-				break
-				;;
-			0)
-				# ── 返回上级 ──
-				yellow "已返回"
-				return 0
-				;;
-			*)
-				# ── 输入错误处理 ──
-				red "输入有误，请选择 0-3 之间的数字"
-				continue
-				;;
-		esac
-	done
-
-	# ── 捕获安装退出码 ──
-	_install_rc=${_rc:-$?}
+	bash <(curl -Ls "$_script_url")
+	local _install_rc=$?
 
 	# ── 安装结果提示 ──
 	echo ""
@@ -17512,7 +17109,7 @@ install_3xui() {
 		echo -e "   ${rw_lv}x-ui start${rw_lv}          — 启动 3X-UI 服务"
 		echo -e "   ${rw_lv}x-ui stop${rw_lv}           — 停止 3X-UI 服务"
 		echo -e "   ${rw_lv}x-ui restart${rw_lv}        — 重启 3X-UI 服务"
-		echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看当前面板设置（端口/路径/账号）"
+		echo -e "   ${rw_lv}x-ui settings${rw_lv}       — 查看面板设置（端口/路径/账号）"
 		echo -e "   ${rw_lv}x-ui update${rw_lv}         — 升级到最新版"
 		echo -e "   ${rw_lv}x-ui uninstall${rw_lv}      — 卸载 3X-UI"
 		echo ""
@@ -17520,8 +17117,12 @@ install_3xui() {
 		echo -e " ${rw_huang}如忘记登录信息，执行: ${rw_lv}x-ui settings${rw_lv}"
 	else
 		red "3X-UI 安装过程返回非零状态码 (退出码: $_install_rc)"
-		echo -e " ${rw_huang}请检查上方安装日志中的错误信息${rw_lv}"
-		echo -e " ${rw_huang}或参考官方文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
+		echo -e " ${rw_huang}请检查上方日志中的错误信息${rw_lv}"
+		echo -e " ${rw_huang}常见原因:${rw_lv}"
+		echo -e "   - 网络不通或 raw.githubusercontent.com 不可达（国内服务器常见）"
+		echo -e "   - 系统架构不匹配或 systemd 不可用"
+		echo -e "   - 端口被占用或防火墙拦截"
+		echo -e " ${rw_huang}参考文档: ${rw_lv}https://docs.sanaei.dev${rw_lv}"
 	fi
 }
 
@@ -17554,10 +17155,10 @@ install_xray_lite() {
 	echo -e "   ${rw_huang}②${rw_lv} Cloudflare Global API Key（注意：不是 API Token）"
 	echo -e "   ${rw_huang}③${rw_lv} 如果是 NAT 小鸡，需知道端口映射关系（外部端口 → 内部端口）"
 	echo ""
-	echo -e " ${rw_hong}⚠ 与 3X-UI 的区别:${rw_lv}"
+	echo -e " ${rw_hong}⚠ 特点:${rw_lv}"
 	echo -e "   - ${rw_lv}没有 Web 管理界面 / 流量统计 / 多用户管理${rw_lv}"
 	echo -e "   - ${rw_lv}优势: 内存占用从几百 MB 降到 14MB${rw_lv}"
-	echo -e "   - ${rw_lv}如需面板功能请选 2. 3X-UI，只要能跑节点选本项${rw_lv}"
+	echo -e "   - ${rw_lv}轻量极简，只要能跑节点选本项${rw_lv}"
 	echo ""
 	echo -e " ${rw_hong}⚠ 合规提醒:${rw_lv}"
 	echo -e "   - 仅用于个人学习与合法用途，请遵守当地法律法规"
@@ -17687,9 +17288,9 @@ while true; do
 	  echo -e "${rw_cheng}━━━━━━━━━━━━  应用市场  ━━━━━━━━━━━━${rw_lv}"
 	  echo ""
 	  echo -e " ${rw_huang}1.   ${rw_lv}1Panel 新一代管理面板${rw_lv}"
-	  echo -e " ${rw_huang}2.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
-	  echo -e " ${rw_huang}3.   ${rw_lv}xray 迷你版${rw_lv}"
-	  echo -e " ${rw_huang}4.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
+	  echo -e " ${rw_huang}2.   ${rw_lv}xray 迷你版${rw_lv}"
+	  echo -e " ${rw_huang}3.   ${rw_lv}虚拟机 Quickemu${rw_lv}"
+	  echo -e " ${rw_huang}4.   ${rw_lv}3X-UI 多协议代理面板${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
 	  echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
 	  echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
@@ -17830,20 +17431,13 @@ while true; do
 		fi
 		;;
 	  2)
-		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
-		install_3xui
-		break_end
-		sub_choice=""
-		continue
-		;;
-	  3)
 		# ── 3XUI迷你版 xray-cf-lite（调用 install_xray_lite 函数） ──
 		install_xray_lite
 		break_end
 		sub_choice=""
 		continue
 		;;
-	  4)
+	  3)
 		# ── 虚拟机 Quickemu ──
 		echo ""
 		echo -e "${rw_cheng}━━━━━━ 虚拟机 Quickemu ━━━━━━${rw_lv}"
@@ -18029,6 +17623,13 @@ while true; do
 			echo -e "   - 网络不通导致下载失败"
 			echo -e "   - macOS 宿主需用 brew 安装"
 		fi
+		;;
+	  4)
+		# ── 3X-UI 多协议代理面板（调用 install_3xui 函数） ──
+		install_3xui
+		break_end
+		sub_choice=""
+		continue
 		;;
 	  0)
 		break
