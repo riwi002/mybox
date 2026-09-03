@@ -27285,64 +27285,128 @@ _dkm_truncate() {
 	return 0
 }
 
-# ================================================================
-# 键值对卡片渲染引擎（v2.4: 彻底废弃网格表格）
-# 所有列表/详情统一为卡片式键值对展示，与 Colima 面板完全一致:
-#   ═ 顶线（蓝色偏暗）→ 标题（亮黄，带序号）→ 键值对 → ═ 底线 → 空行
-# 键列固定 20 显示列，所有冒号 : 严格垂直对齐。
-# ================================================================
-
-# ── 卡片顶部/底部横线（蓝色，较暗，仅视觉分割不抢眼）──
-_dkm_card_rule() {
-	printf ' %b\n' "${rw_lan}══════════════════════════════════════════${rw_bai}"
+# ── 表格横线（┌┬┐ / ├┼┤ / └┴┘）──
+# 依赖 _dkm_table 设置的全局 _ncols 与 _cw 数组
+_dkm_table_rule() {
+	local _kind="$1" _i _j _seg _left _mid _right _out
+	case "$_kind" in
+		top)    _left="┌"; _mid="┬"; _right="┐" ;;
+		mid)    _left="├"; _mid="┼"; _right="┤" ;;
+		bottom) _left="└"; _mid="┴"; _right="┘" ;;
+		*) return 0 ;;
+	esac
+	_out="${rw_cheng}${_left}"
+	for (( _i = 0; _i < _ncols; _i++ )); do
+		_seg=""
+		for (( _j = 0; _j < ${_cw[$_i]} + 2; _j++ )); do
+			_seg="${_seg}─"
+		done
+		_out="${_out}${_seg}"
+		if (( _i < _ncols - 1 )); then
+			_out="${_out}${_mid}"
+		fi
+	done
+	_out="${_out}${_right}${rw_bai}"
+	printf ' %b\n' "$_out"
 	return 0
 }
 
-# ── 卡片标题行（亮黄高亮，如 "1. nginx-web"）──
-_dkm_card_title() {
-	printf ' %b\n' "${rw_huang}${1}${rw_bai}"
+# ── 表格数据行（单元格按显示宽度补位，竖线严格对齐）──
+# 用法: _dkm_table_row <header|data> 字段1 字段2 ...
+# 单元格可能自带颜色代码: 宽度计算与补位均按剥离颜色后的可见宽度，
+# 显示仍保留原颜色。
+_dkm_table_row() {
+	local _kind="$1"; shift
+	local -a _f=("$@")
+	local _i _cell _pad _color _out
+	if [[ "$_kind" == "header" ]]; then
+		_color="$rw_huang"
+	else
+		_color="$rw_lv"
+	fi
+	_out="${_color}│${rw_bai}"
+	for (( _i = 0; _i < _ncols; _i++ )); do
+		_cell="${_f[$_i]:-}"
+		_dkm_visible_width "$_cell"
+		if (( _DKM_W > ${_cw[$_i]} )); then
+			_cell=$(_dkm_truncate "$_cell" "${_cw[$_i]}")
+			_dkm_visible_width "$_cell"
+		fi
+		_pad=$(( ${_cw[$_i]} - _DKM_W ))
+		_out="${_out} ${_cell}"
+		local _p
+		for (( _p = 0; _p < _pad; _p++ )); do
+			_out="${_out} "
+		done
+		_out="${_out} ${rw_cheng}│${rw_bai}"
+	done
+	printf ' %b\n' "$_out"
 	return 0
 }
 
-# ── 键值对行: 键名亮黄，键列固定 20 显示列，冒号严格对齐 ──
-# 值默认不加颜色（终端默认色）；需要强调的状态值可内嵌颜色码，
-# 故值用 %b 输出以解析内嵌颜色（docker 输出的名称/镜像/端口等
-# 字符集不含反斜杠，%b 解析安全）。
-# 用法: _dkm_kv "键名" "值"
-_dkm_kv() {
-	local _key="$1" _val="${2:--}" _pad
-	_dkm_str_width "$_key"
-	_pad=$(( 20 - _DKM_W ))
-	if (( _pad < 1 )); then _pad=1; fi
-	printf ' %b%*s%b: %b%b\n' "${rw_huang}${_key}" "$_pad" "" "${rw_bai}" "$_val" "${rw_bai}"
-	return 0
-}
-
-# ── 键值对续行（值换行时与上一行的值对齐）──
-# 值起始列 = 1 前导空格 + 20 键列 + 2（": "）= 23 列
-_dkm_kv_cont() {
-	printf '%23s%b%b\n' "" "${1:-}" "${rw_bai}"
-	return 0
-}
-
-# ── 卡片收尾: 底线 + 空行（条目间呼吸感）──
-_dkm_card_end() {
-	_dkm_card_rule
-	printf '\n'
+# ── 通用表格渲染器（列宽自适应，中英文混合对齐）──
+# 用法: _dkm_table "表头1<TAB>表头2..." "数据行（多行，字段 TAB 分隔）"
+# 结构: 顶部制表线 → 表头 → 分隔线 → 数据行 → 底部制表线
+_dkm_table() {
+	local _header="$1" _data="${2:-}"
+	local -a _lines=() _hf=() _f=()
+	local _i _l
+	# 解析表头，确定列数
+	IFS=$'\t' read -ra _hf <<< "$_header"
+	_ncols=${#_hf[@]}
+	_cw=()
+	for (( _i = 0; _i < _ncols; _i++ )); do
+		_dkm_visible_width "${_hf[$_i]}"
+		_cw[$_i]=$_DKM_W
+	done
+	# 扫描数据行，计算每列最大可见显示宽度
+	if [[ -n "$_data" ]]; then
+		while IFS= read -r _l; do
+			[[ -z "$_l" ]] && continue
+			_lines+=("$_l")
+			_f=()
+			IFS=$'\t' read -ra _f <<< "$_l"
+			for (( _i = 0; _i < _ncols; _i++ )); do
+				_dkm_visible_width "${_f[$_i]:-}"
+				if (( _DKM_W > ${_cw[$_i]:-0} )); then
+					_cw[$_i]=$_DKM_W
+				fi
+			done
+		done <<< "$_data"
+	fi
+	# 列宽约束: 上限防异常值撑爆排版，下限保证最小可读
+	for (( _i = 0; _i < _ncols; _i++ )); do
+		if (( ${_cw[$_i]:-4} > _DKM_TABLE_MAXW )); then _cw[$_i]=$_DKM_TABLE_MAXW; fi
+		if (( ${_cw[$_i]:-4} < 4 )); then _cw[$_i]=4; fi
+	done
+	# 绘制
+	_dkm_table_rule top
+	_dkm_table_row header "${_hf[@]}"
+	_dkm_table_rule mid
+	if [[ ${#_lines[@]} -eq 0 ]]; then
+		printf ' %b\n' "${rw_lv}│${rw_bai} ${rw_huang}（暂无数据）${rw_lv} ${rw_cheng}│${rw_bai}"
+	else
+		for _l in "${_lines[@]}"; do
+			_f=()
+			IFS=$'\t' read -ra _f <<< "$_l"
+			_dkm_table_row data "${_f[@]}"
+		done
+	fi
+	_dkm_table_rule bottom
 	return 0
 }
 
 # ================================================================
 # 统一键值对（Key-Value）详情面板模板
-# 所有"查看详情"类展示统一使用此模板，与卡片引擎共用一套样式:
-# 键名亮黄、值终端默认色、分隔线蓝色偏暗，冒号 : 严格垂直对齐。
+# 所有"查看详情"类展示统一使用此模板，冒号 : 严格垂直对齐。
 # ================================================================
 
 # ── 面板顶部横线（可选标题）──
 _dkm_panel_open() {
-	_dkm_card_rule
-	if [[ -n "${1:-}" ]]; then
-		printf ' %b\n' "${rw_huang}${1}${rw_bai}"
+	local _title="${1:-}"
+	printf ' %b\n' "${rw_cheng}══════════════════════════════════════════${rw_bai}"
+	if [[ -n "$_title" ]]; then
+		printf ' %b\n' "${rw_huang}${_title}${rw_lv}"
 	fi
 	return 0
 }
@@ -27350,19 +27414,25 @@ _dkm_panel_open() {
 # ── 键值对行: 键列固定 20 显示列，冒号严格对齐 ──
 # 用法: _dkm_panel_kv "键名" "值"
 _dkm_panel_kv() {
-	_dkm_kv "$@"
+	local _key="$1" _val="${2:--}" _pad
+	_dkm_str_width "$_key"
+	_pad=$(( 20 - _DKM_W ))
+	if (( _pad < 1 )); then _pad=1; fi
+	printf ' %b%*s%b: %s%b\n' "${rw_huang}${_key}" "$_pad" "" "${rw_lv}" "$_val" "${rw_bai}"
 	return 0
 }
 
 # ── 键值对续行（值换行时与上一行的值对齐）──
+# 值起始列 = 1 前导空格 + 20 键列 + 2（": "）= 23 列已占用，
+# 故续行补 23 个空格，值从第 24 列开始，与上一行严格对齐
 _dkm_panel_kv_cont() {
-	_dkm_kv_cont "$@"
+	printf '%23s%s\n' "" "${1:-}"
 	return 0
 }
 
 # ── 面板底部横线 ──
 _dkm_panel_close() {
-	_dkm_card_rule
+	printf ' %b\n' "${rw_cheng}══════════════════════════════════════════${rw_bai}"
 	return 0
 }
 
@@ -27549,15 +27619,14 @@ _dkm_ilist_refresh() {
 # 列表行构建（从缓存生成 TAB 分隔的表格数据行）
 # ================================================================
 
-# ── 容器列表渲染（键值对卡片风格，彻底废弃网格表格）──
-# 用法: _dkm_clist_cards <all|running|stopped> <0|1>
-# 第二参为 1 时每个容器渲染为带序号的卡片，并把名称按序写入
-# _DKM_NAMES 供选择器解析；为 0 时不带序号（纯展示）。
-# 结果: _DKM_SHOWN（是否渲染了至少一个容器）
-# 状态值按运行状态着色（绿=运行中 / 黄=已停止），其余值默认色。
-_dkm_clist_cards() {
+# ── 构建容器表格行 ──
+# 用法: _dkm_clist_rows <all|running|stopped> <0|1>
+# 第二参为 1 时行首带序号列，并把名称按序写入 _DKM_NAMES 供选择解析
+# 结果: _DKM_ROWS（多行字符串）与 _DKM_SHOWN（是否有数据）
+_dkm_clist_rows() {
 	local _filter="${1:-all}" _num="${2:-0}"
-	local _id _name _img _stat _state _ports _i=1 _st_color
+	local _id _name _img _stat _state _ports _i=1
+	_DKM_ROWS=""
 	_DKM_SHOWN=0
 	if [[ "$_num" == "1" ]]; then
 		_DKM_NAMES=()
@@ -27572,36 +27641,24 @@ _dkm_clist_cards() {
 				if [[ "$_state" == "running" || "$_state" == "paused" || "$_state" == "restarting" ]]; then continue; fi
 				;;
 		esac
-		# 状态着色: 运行中绿色，其他（已停止/暂停等）黄色
-		if [[ "$_state" == "running" ]]; then
-			_st_color="${rw_lv}运行中${rw_bai}"
-		else
-			_st_color="${rw_huang}${_stat}${rw_bai}"
-		fi
-		_dkm_card_rule
 		if [[ "$_num" == "1" ]]; then
-			_dkm_card_title "${_i}. ${_name}"
+			_DKM_ROWS="${_DKM_ROWS}${_i}"$'\t'"${_name}"$'\t'"${_img}"$'\t'"${_stat}"$'\t'"${_ports}"$'\n'
 			_DKM_NAMES+=("$_name")
 		else
-			_dkm_card_title "${_name}"
+			_DKM_ROWS="${_DKM_ROWS}${_name}"$'\t'"${_img}"$'\t'"${_stat}"$'\t'"${_ports}"$'\n'
 		fi
-		_dkm_kv "容器名称 (Name)" "$_name"
-		_dkm_kv "容器状态 (Status)" "$_st_color"
-		_dkm_kv "使用镜像 (Image)" "$_img"
-		_dkm_kv "端口映射 (Ports)" "${_ports:-无}"
-		_dkm_kv "容器 ID (ID)" "$_id"
-		_dkm_card_end
 		_i=$((_i + 1))
 		_DKM_SHOWN=1
 	done <<< "$_DKM_CLIST"
 	return 0
 }
 
-# ── 镜像列表渲染（键值对卡片风格）──
-# 用法: _dkm_ilist_cards <0|1>   （1 = 卡片标题带序号，供选择解析）
-_dkm_ilist_cards() {
+# ── 构建镜像表格行 ──
+# 用法: _dkm_ilist_rows <0|1>   （1 = 行首带序号列，供选择解析）
+_dkm_ilist_rows() {
 	local _num="${1:-0}"
 	local _name _id _size _created _i=1
+	_DKM_ROWS=""
 	_DKM_SHOWN=0
 	if [[ "$_num" == "1" ]]; then
 		_DKM_IMG_NAMES=()
@@ -27609,18 +27666,12 @@ _dkm_ilist_cards() {
 	while IFS='|' read -r _name _id _size _created; do
 		# 过滤无标签镜像（<none>）
 		if [[ -z "${_name:-}" || "$_name" == "<none>"* ]]; then continue; fi
-		_dkm_card_rule
 		if [[ "$_num" == "1" ]]; then
-			_dkm_card_title "${_i}. ${_name}"
+			_DKM_ROWS="${_DKM_ROWS}${_i}"$'\t'"${_name}"$'\t'"${_id}"$'\t'"${_size}"$'\t'"${_created}"$'\n'
 			_DKM_IMG_NAMES+=("$_name")
 		else
-			_dkm_card_title "${_name}"
+			_DKM_ROWS="${_DKM_ROWS}${_name}"$'\t'"${_id}"$'\t'"${_size}"$'\t'"${_created}"$'\n'
 		fi
-		_dkm_kv "镜像名称 (Repo)" "$_name"
-		_dkm_kv "镜像 ID (ID)" "$_id"
-		_dkm_kv "大小 (Size)" "$_size"
-		_dkm_kv "创建时间 (Created)" "$_created"
-		_dkm_card_end
 		_i=$((_i + 1))
 		_DKM_SHOWN=1
 	done <<< "$_DKM_ILIST"
@@ -27640,11 +27691,12 @@ _dkm_pick_container() {
 		return 1
 	fi
 	echo -e " ${rw_cheng}── 选择容器（可输 编号/名称/ID）──${rw_lv}"
-	_dkm_clist_cards "$_filter" 1
+	_dkm_clist_rows "$_filter" 1
 	if [[ "$_DKM_SHOWN" -eq 0 ]]; then
 		_dkm_log_warn "没有符合条件的容器"
 		return 1
 	fi
+	_dkm_table "#"$'\t'"容器名称"$'\t'"镜像"$'\t'"状态"$'\t'"端口" "$_DKM_ROWS"
 	echo -e "  ${rw_huang} 0.${rw_lv} 取消"
 	_dkm_hint "例: 输 1 选第一个，或直接输容器名"
 	echo ""
@@ -27679,11 +27731,12 @@ _dkm_pick_image() {
 		return 1
 	fi
 	echo -e " ${rw_cheng}── 选择镜像 ──${rw_lv}"
-	_dkm_ilist_cards 1
+	_dkm_ilist_rows 1
 	if [[ "$_DKM_SHOWN" -eq 0 ]]; then
 		_dkm_log_warn "没有镜像"
 		return 1
 	fi
+	_dkm_table "#"$'\t'"镜像名称"$'\t'"ID"$'\t'"大小"$'\t'"创建时间" "$_DKM_ROWS"
 	echo -e "  ${rw_huang} 0.${rw_lv} 取消"
 	echo ""
 	read -e -p " 请选择编号 [默认 0]: " _input < /dev/tty || _input=""
@@ -27714,12 +27767,10 @@ _dkm_container_menu() {
 		_dkm_clist_refresh
 		echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━${rw_lv}"
 		echo ""
-		# 容器列表（键值对卡片风格: 每容器一张卡片，条目间空行呼吸）
-		_dkm_clist_cards all 0
-		if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-			_dkm_log_warn "暂无容器"
-			echo ""
-		fi
+		# 容器列表（表格化: 制表线 + 表头 + 底部分隔线）
+		_dkm_clist_rows all 0
+		_dkm_table "容器名称"$'\t'"镜像"$'\t'"状态"$'\t'"端口" "$_DKM_ROWS"
+		echo ""
 		echo -e " ${rw_cheng}──── 生命周期 ────${rw_lv}"
 		echo -e " ${rw_huang}1.   ${rw_lv}启动容器${rw_lv}"
 		echo -e " ${rw_huang}2.   ${rw_lv}停止容器${rw_lv}"
@@ -27846,23 +27897,11 @@ _dkm_container_menu() {
 			if [ "$_sm" = "2" ]; then
 				_dkm_run_interactive docker stats
 			else
-				# 快照模式: 键值对卡片展示（每容器一张卡片）
+				# 快照模式: 表格化展示（TAB 分隔，列宽自适应）
 				local _stats_raw
-				_stats_raw=$(docker stats --no-stream --format "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.NetIO}}|{{.BlockIO}}" 2>/dev/null || true)
+				_stats_raw=$(docker stats --no-stream --format "{{.Name}}"$'\t'"{{.CPUPerc}}"$'\t'"{{.MemUsage}}"$'\t'"{{.MemPerc}}"$'\t'"{{.NetIO}}"$'\t'"{{.BlockIO}}" 2>/dev/null || true)
 				if [[ -n "$_stats_raw" ]]; then
-					local _sn _scpu _smem _smemp _snet _sblk
-					while IFS='|' read -r _sn _scpu _smem _smemp _snet _sblk; do
-						[[ -z "${_sn:-}" ]] && continue
-						_dkm_card_rule
-						_dkm_card_title "$_sn"
-						_dkm_kv "容器名称 (Name)" "$_sn"
-						_dkm_kv "CPU 使用率" "$_scpu"
-						_dkm_kv "内存用量 (Mem)" "$_smem"
-						_dkm_kv "内存占比 (Mem%)" "$_smemp"
-						_dkm_kv "网络 IO (Net)" "$_snet"
-						_dkm_kv "磁盘 IO (Block)" "$_sblk"
-						_dkm_card_end
-					done <<< "$_stats_raw"
+					_dkm_table "容器名称"$'\t'"CPU"$'\t'"内存用量"$'\t'"内存%"$'\t'"网络IO"$'\t'"磁盘IO" "$_stats_raw"
 				else
 					_dkm_log_warn "没有运行中的容器"
 				fi
@@ -28054,12 +28093,10 @@ _dkm_image_menu() {
 		_dkm_ilist_refresh
 		echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━${rw_lv}"
 		echo ""
-		# 镜像列表（键值对卡片风格: 每镜像一张卡片）
-		_dkm_ilist_cards 0
-		if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-			_dkm_log_warn "暂无镜像"
-			echo ""
-		fi
+		# 镜像列表（表格化: 制表线 + 表头 + 底部分隔线）
+		_dkm_ilist_rows 0
+		_dkm_table "镜像名称"$'\t'"ID"$'\t'"大小"$'\t'"创建时间" "$_DKM_ROWS"
+		echo ""
 		echo -e " ${rw_huang}1.   ${rw_lv}拉取镜像${rw_lv}"
 		echo -e " ${rw_huang}2.   ${rw_lv}搜索镜像${rw_lv}"
 		echo -e " ${rw_huang}3.   ${rw_lv}删除镜像${rw_lv}"
@@ -28195,24 +28232,11 @@ _dkm_image_menu() {
 			echo ""
 			if _dkm_pick_image; then
 				echo ""
-				# 镜像层（键值对卡片: 每层一行，续行展示层说明）
-				local _hist_raw _h_created _h_size _h_comment _h_n=1 _h_cnt=0
-				_hist_raw=$(docker history "$_DKM_PICK" --format "{{.CreatedSince}}|{{.Size}}|{{.Comment}}" 2>/dev/null || true)
+				# 镜像层（表格化: 创建时间/大小/说明）
+				local _hist_raw
+				_hist_raw=$(docker history "$_DKM_PICK" --format "{{.CreatedSince}}"$'\t'"{{.Size}}"$'\t'"{{.Comment}}" 2>/dev/null || true)
 				if [[ -n "$_hist_raw" ]]; then
-					_dkm_card_rule
-					_dkm_card_title "镜像层: ${_DKM_PICK}"
-					_dkm_kv "镜像名称 (Image)" "$_DKM_PICK"
-					while IFS='|' read -r _h_created _h_size _h_comment; do
-						[[ -z "${_h_created:-}" ]] && continue
-						_h_cnt=$((_h_cnt + 1))
-						_dkm_kv "第 ${_h_n} 层" "${_h_created} · ${_h_size}"
-						if [[ -n "$_h_comment" ]]; then
-							_dkm_kv_cont "$(_dkm_truncate "$_h_comment" 40)"
-						fi
-						_h_n=$((_h_n + 1))
-					done <<< "$_hist_raw"
-					_dkm_kv "层数 (Layers)" "$_h_cnt"
-					_dkm_card_end
+					_dkm_table "创建时间"$'\t'"大小"$'\t'"说明" "$_hist_raw"
 				else
 					_dkm_log_err "查看失败"
 				fi
@@ -28378,12 +28402,12 @@ DKMEOF
 	done
 }
 
-# ── Compose 项目列表（键值对卡片展示 + 交互式选择）──
+# ── Compose 项目列表（表格化展示 + 交互式选择）──
 # 扫描范围: ~/compose 项目库 + 当前目录
 # 展示: 序号 / 项目名 / Compose 文件 / 容器数 / 状态
 _dkm_compose_projects() {
 	local _compose_cmd="$1"
-	local _names=() _files=() _i=1 _d _f _pn
+	local _names=() _files=() _rows="" _i=1 _d _f _pn
 	clear
 	echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 项目列表  ━━━━━━━━━━━━${rw_lv}"
 	echo ""
@@ -28410,8 +28434,7 @@ _dkm_compose_projects() {
 		break_end || true
 		return 0
 	fi
-	# 构建键值对卡片: 逐项目统计容器数与状态（基于 compose 项目标签）
-	# 循环内直接渲染卡片，不再累积表格行
+	# 构建表格行: 逐项目统计容器数与状态（基于 compose 项目标签）
 	local _cnt _all_cnt _st
 	for (( _i = 0; _i < ${#_names[@]}; _i++ )); do
 		_pn="${_names[$_i]}"
@@ -28421,20 +28444,16 @@ _dkm_compose_projects() {
 			_all_cnt=$(docker ps -aq --filter "label=com.docker.compose.project=$_pn" 2>/dev/null | wc -l | tr -d ' ') || _all_cnt=0
 		fi
 		if [[ "$_cnt" -gt 0 ]]; then
-			_st="${rw_lv}${_cnt} 运行中${rw_bai}"
+			_st="${rw_lv}${_cnt} 运行中${rw_lv}"
 		elif [[ "$_all_cnt" -gt 0 ]]; then
-			_st="${rw_huang}${_all_cnt} 已停止${rw_bai}"
+			_st="${rw_huang}${_all_cnt} 已停止${rw_lv}"
 		else
 			_st="未启动"
 		fi
-		_dkm_card_rule
-		_dkm_card_title "$((_i + 1)). ${_names[$_i]}"
-		_dkm_kv "项目名 (Project)" "$_pn"
-		_dkm_kv "Compose 文件" "$(_dkm_truncate "${_files[$_i]}" 40)"
-		_dkm_kv "容器数 (Containers)" "$_all_cnt"
-		_dkm_kv "运行状态 (Status)" "$_st"
-		_dkm_card_end
+		_rows="${_rows}$((_i + 1))"$'\t'"${_names[$_i]}"$'\t'"${_files[$_i]}"$'\t'"${_all_cnt}"$'\t'"${_st}"$'\n'
 	done
+	_dkm_table "#"$'\t'"项目名"$'\t'"Compose 文件"$'\t'"容器数"$'\t'"状态" "$_rows"
+	echo ""
 	echo -e " ${rw_huang}输入编号${rw_lv} 进入该项目的管理菜单"
 	_dkm_return_hint
 	local _idx=""
@@ -28817,9 +28836,9 @@ _dkm_disk_clean() {
 	return 0
 }
 
-# ── 磁盘占用（键值对面板: 每类资源一张卡片，可回收率着色）──
+# ── 磁盘占用表（汉化表头 + 汉化类型名，统一表格渲染）──
 _dkm_df_print() {
-	local _raw _type _total _active _size _recl
+	local _raw _type _total _active _size _recl _rows=""
 	_raw=$(docker system df --format "{{.Type}}|{{.Total}}|{{.Active}}|{{.Size}}|{{.Reclaimable}}" 2>/dev/null || true)
 	if [[ -z "$_raw" ]]; then
 		_dkm_log_warn "无法获取磁盘占用"
@@ -28834,15 +28853,9 @@ _dkm_df_print() {
 			"Local Volumes") _type="数据卷" ;;
 			"Build Cache")   _type="构建缓存" ;;
 		esac
-		_dkm_card_rule
-		_dkm_card_title "$_type"
-		_dkm_kv "类型 (Type)" "$_type"
-		_dkm_kv "总数 (Total)" "$_total"
-		_dkm_kv "活跃 (Active)" "$_active"
-		_dkm_kv "大小 (Size)" "$_size"
-		_dkm_kv "可回收 (Reclaim)" "$_recl"
-		_dkm_card_end
+		_rows="${_rows}${_type}"$'\t'"${_total}"$'\t'"${_active}"$'\t'"${_size}"$'\t'"${_recl}"$'\n'
 	done <<< "$_raw"
+	_dkm_table "类型"$'\t'"总数"$'\t'"活跃"$'\t'"大小"$'\t'"可回收" "$_rows"
 	return 0
 }
 
@@ -29000,10 +29013,8 @@ _dkm_colima_menu() {
 		case "$_c" in
 		1)
 			echo ""
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_do_start; then
-				_dkm_cache_invalidate
-			fi
+			_dkm_colima_do_start
+			_dkm_cache_invalidate
 			break_end || true
 			;;
 		2)
@@ -29058,10 +29069,8 @@ _dkm_colima_menu() {
 1. 启动虚拟机 (colima start)
 2. 自动等待 Docker 就绪（最长 90 秒）
 3. 就绪后提示恢复完成，可正常使用"
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_recovery; then
-				_dkm_cache_invalidate
-			fi
+			_dkm_colima_recovery
+			_dkm_cache_invalidate
 			break_end || true
 			;;
 		0) return 0 ;;
@@ -29082,66 +29091,6 @@ _dkm_colima_menu() {
 _dkm_colima_quiet() {
 	colima "$@" >/dev/null 2>>"${HOME}/.riwi_colima_last.log"
 	return $?
-}
-
-# ================================================================
-# 渐变进度条等待函数（与后台进程联动，样式与 git 模块一致）
-# ================================================================
-# 用法: _dkm_progress_wait <后台进程PID> <状态文字> <预计耗时秒数>
-# 原理:
-#   colima 等耗时命令放后台异步执行，主线程不阻塞；
-#   进度条按已用时间模拟推进（0.2 秒/帧，█ 填充 + 旋转符 + 百分比），
-#   颜色过渡平滑（黄色进度框 → 完成转绿色）；
-#   进程一旦结束（kill -0 探测失效），进度条补满 100% 并停止，
-#   随后用 wait 收集进程退出码返回给调用方。
-# 返回: 后台进程退出码（0=成功，非 0=失败）
-# 超时: 超过预计耗时 5 倍仍未结束则终止进程并返回失败，避免无限等待。
-_dkm_progress_wait() {
-	local _pid="$1" _text="${2:-处理中}" _max_wait="${3:-60}"
-	local _bar_width=30
-	local _spin_idx=0
-	local _spin_chars="|/-\\"
-	local _elapsed=0                 # 帧计数（0.2 秒/帧）
-	local _max_ticks=$(( _max_wait * 5 ))   # 预计耗时换算成帧数（1 秒 5 帧）
-	local _progress _filled _empty _pct _spin_char _i
-
-	while kill -0 "$_pid" 2>/dev/null; do
-		# 按已用时间模拟进度，封顶 99%（100% 留给真实完成）
-		_progress=$(( _elapsed * _bar_width / _max_ticks ))
-		[[ "$_progress" -gt "$_bar_width" ]] && _progress=$_bar_width
-		_pct=$(( _elapsed * 100 / _max_ticks ))
-		[[ "$_pct" -gt 99 ]] && _pct=99
-		# 拼已填充段（█）与留白段（░）
-		_filled=""
-		_i=0
-		while [[ "$_i" -lt "$_progress" ]]; do _filled+="█"; _i=$((_i+1)); done
-		_empty=""
-		_i=0
-		while [[ "$_i" -lt $((_bar_width - _progress)) ]]; do _empty+="░"; _i=$((_i+1)); done
-		# 旋转符（|/-\ 循环）
-		_spin_char="${_spin_chars:$_spin_idx:1}"
-		_spin_idx=$(( (_spin_idx + 1) % 4 ))
-		# \r 回行首覆盖 → 动态刷新，不产生多余行、不阻塞主线程
-		printf '\r %b[%b%b]%b %3d%% %s %s...' "${rw_huang}" "$_filled" "$_empty" "${rw_lv}" "$_pct" "$_spin_char" "$_text"
-		sleep 0.2
-		_elapsed=$((_elapsed + 1))
-		# 硬超时: 超过预计 5 倍仍不结束 → 终止进程，避免脚本卡死
-		if [[ "$_elapsed" -ge $((_max_ticks * 5)) ]]; then
-			kill "$_pid" 2>/dev/null
-			break
-		fi
-	done
-
-	# 进程结束: 进度条补满 100%（转绿），换行衔接后续状态输出
-	_filled=""
-	_i=0
-	while [[ "$_i" -lt "$_bar_width" ]]; do _filled+="█"; _i=$((_i+1)); done
-	printf '\r %b[%b]%b 100%%  完成%b\n' "${rw_lv}" "$_filled" "${rw_lv}" "${rw_bai}"
-
-	# 收集后台进程退出码（|| 捕获，set -e 下安全）
-	local _rc=0
-	wait "$_pid" 2>/dev/null || _rc=$?
-	return "$_rc"
 }
 
 # ── 状态解析: 提取 colima status 关键字段（全静默）──
@@ -29239,15 +29188,9 @@ _dkm_colima_show_panel() {
 
 # ── 启动执行: 静默 + 进度提示 + 失败时给出最近日志 ──
 _dkm_colima_do_start() {
+	_dkm_log_info "正在启动虚拟机（约需 10~60 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行（主线程不阻塞），输出写入日志供失败排查
-	colima start >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 预计 10~60 秒，传 60
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在启动 Colima 虚拟机" 60 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet start; then
 		_dkm_colima_show_info
 		return 0
 	else
@@ -29260,10 +29203,9 @@ _dkm_colima_do_start() {
 	fi
 }
 
-# ── 停止执行: 后台执行 + 进度条（或静默模式）──
+# ── 停止执行: 静默 + 失败提示 ──
 # 用法: _dkm_colima_do_stop [--force] [quiet]
-#   --force: 强制停止; 第二参为 quiet 时不显示进度条
-#   （供应急断联叠加使用，避免进度条嵌套）
+#   --force: 强制停止; 第二参为 quiet 时不打印自身进度行（供应急断联叠加使用）
 _dkm_colima_do_stop() {
 	local _force="" _quiet="" _arg
 	for _arg in "$@"; do
@@ -29274,19 +29216,9 @@ _dkm_colima_do_stop() {
 	done
 	local _desc="停止虚拟机"
 	[[ -n "$_force" ]] && _desc="强制停止虚拟机"
+	[[ -z "$_quiet" ]] && _dkm_log_info "${_desc}（约需 5~30 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	local _rc=0
-	if [[ -n "$_quiet" ]]; then
-		# 静默模式（应急断联内部叠加调用）: 直接执行，不显示进度条
-		_dkm_colima_quiet stop $_force || _rc=$?
-	else
-		# 普通模式: 后台异步执行 + 渐变进度条联动（预计 5~30 秒）
-		colima stop $_force >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-		local _pid=$!
-		# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-		_dkm_progress_wait "$_pid" "正在${_desc}" 30 || _rc=$?
-	fi
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet stop $_force; then
 		_dkm_log_ok "虚拟机已停止"
 		return 0
 	else
@@ -29299,17 +29231,11 @@ _dkm_colima_do_stop() {
 	fi
 }
 
-# ── 重启执行: 后台执行 + 进度条联动 ──
+# ── 重启执行: 静默 + 表格化 ──
 _dkm_colima_do_restart() {
+	_dkm_log_info "正在重启虚拟机（约需 15~90 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行，主线程不阻塞
-	colima restart >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 重启耗时最长（15~90 秒），传 90
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在重启 Colima 虚拟机" 90 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet restart; then
 		_dkm_colima_show_info
 		return 0
 	else
@@ -29574,7 +29500,7 @@ _dkm_main_menu_loop() {
 # 应急断联:      菜单内随时按 Ctrl+C，或主菜单选 E/99
 # 应急恢复:      Colima 虚拟机管理 → 选项 6（应急恢复）
 # 自建 Compose:  Compose 项目管理 → 选项 4（自定义文件名）
-# 项目列表:      Compose 项目管理 → 选项 5（键值对卡片展示所有项目）
+# 项目列表:      Compose 项目管理 → 选项 5（表格展示所有项目）
 # ================================================================
 k_info() {
 send_stats "r命令参考用例"

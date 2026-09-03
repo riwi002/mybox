@@ -29000,10 +29000,8 @@ _dkm_colima_menu() {
 		case "$_c" in
 		1)
 			echo ""
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_do_start; then
-				_dkm_cache_invalidate
-			fi
+			_dkm_colima_do_start
+			_dkm_cache_invalidate
 			break_end || true
 			;;
 		2)
@@ -29058,10 +29056,8 @@ _dkm_colima_menu() {
 1. 启动虚拟机 (colima start)
 2. 自动等待 Docker 就绪（最长 90 秒）
 3. 就绪后提示恢复完成，可正常使用"
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_recovery; then
-				_dkm_cache_invalidate
-			fi
+			_dkm_colima_recovery
+			_dkm_cache_invalidate
 			break_end || true
 			;;
 		0) return 0 ;;
@@ -29082,66 +29078,6 @@ _dkm_colima_menu() {
 _dkm_colima_quiet() {
 	colima "$@" >/dev/null 2>>"${HOME}/.riwi_colima_last.log"
 	return $?
-}
-
-# ================================================================
-# 渐变进度条等待函数（与后台进程联动，样式与 git 模块一致）
-# ================================================================
-# 用法: _dkm_progress_wait <后台进程PID> <状态文字> <预计耗时秒数>
-# 原理:
-#   colima 等耗时命令放后台异步执行，主线程不阻塞；
-#   进度条按已用时间模拟推进（0.2 秒/帧，█ 填充 + 旋转符 + 百分比），
-#   颜色过渡平滑（黄色进度框 → 完成转绿色）；
-#   进程一旦结束（kill -0 探测失效），进度条补满 100% 并停止，
-#   随后用 wait 收集进程退出码返回给调用方。
-# 返回: 后台进程退出码（0=成功，非 0=失败）
-# 超时: 超过预计耗时 5 倍仍未结束则终止进程并返回失败，避免无限等待。
-_dkm_progress_wait() {
-	local _pid="$1" _text="${2:-处理中}" _max_wait="${3:-60}"
-	local _bar_width=30
-	local _spin_idx=0
-	local _spin_chars="|/-\\"
-	local _elapsed=0                 # 帧计数（0.2 秒/帧）
-	local _max_ticks=$(( _max_wait * 5 ))   # 预计耗时换算成帧数（1 秒 5 帧）
-	local _progress _filled _empty _pct _spin_char _i
-
-	while kill -0 "$_pid" 2>/dev/null; do
-		# 按已用时间模拟进度，封顶 99%（100% 留给真实完成）
-		_progress=$(( _elapsed * _bar_width / _max_ticks ))
-		[[ "$_progress" -gt "$_bar_width" ]] && _progress=$_bar_width
-		_pct=$(( _elapsed * 100 / _max_ticks ))
-		[[ "$_pct" -gt 99 ]] && _pct=99
-		# 拼已填充段（█）与留白段（░）
-		_filled=""
-		_i=0
-		while [[ "$_i" -lt "$_progress" ]]; do _filled+="█"; _i=$((_i+1)); done
-		_empty=""
-		_i=0
-		while [[ "$_i" -lt $((_bar_width - _progress)) ]]; do _empty+="░"; _i=$((_i+1)); done
-		# 旋转符（|/-\ 循环）
-		_spin_char="${_spin_chars:$_spin_idx:1}"
-		_spin_idx=$(( (_spin_idx + 1) % 4 ))
-		# \r 回行首覆盖 → 动态刷新，不产生多余行、不阻塞主线程
-		printf '\r %b[%b%b]%b %3d%% %s %s...' "${rw_huang}" "$_filled" "$_empty" "${rw_lv}" "$_pct" "$_spin_char" "$_text"
-		sleep 0.2
-		_elapsed=$((_elapsed + 1))
-		# 硬超时: 超过预计 5 倍仍不结束 → 终止进程，避免脚本卡死
-		if [[ "$_elapsed" -ge $((_max_ticks * 5)) ]]; then
-			kill "$_pid" 2>/dev/null
-			break
-		fi
-	done
-
-	# 进程结束: 进度条补满 100%（转绿），换行衔接后续状态输出
-	_filled=""
-	_i=0
-	while [[ "$_i" -lt "$_bar_width" ]]; do _filled+="█"; _i=$((_i+1)); done
-	printf '\r %b[%b]%b 100%%  完成%b\n' "${rw_lv}" "$_filled" "${rw_lv}" "${rw_bai}"
-
-	# 收集后台进程退出码（|| 捕获，set -e 下安全）
-	local _rc=0
-	wait "$_pid" 2>/dev/null || _rc=$?
-	return "$_rc"
 }
 
 # ── 状态解析: 提取 colima status 关键字段（全静默）──
@@ -29239,15 +29175,9 @@ _dkm_colima_show_panel() {
 
 # ── 启动执行: 静默 + 进度提示 + 失败时给出最近日志 ──
 _dkm_colima_do_start() {
+	_dkm_log_info "正在启动虚拟机（约需 10~60 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行（主线程不阻塞），输出写入日志供失败排查
-	colima start >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 预计 10~60 秒，传 60
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在启动 Colima 虚拟机" 60 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet start; then
 		_dkm_colima_show_info
 		return 0
 	else
@@ -29260,10 +29190,9 @@ _dkm_colima_do_start() {
 	fi
 }
 
-# ── 停止执行: 后台执行 + 进度条（或静默模式）──
+# ── 停止执行: 静默 + 失败提示 ──
 # 用法: _dkm_colima_do_stop [--force] [quiet]
-#   --force: 强制停止; 第二参为 quiet 时不显示进度条
-#   （供应急断联叠加使用，避免进度条嵌套）
+#   --force: 强制停止; 第二参为 quiet 时不打印自身进度行（供应急断联叠加使用）
 _dkm_colima_do_stop() {
 	local _force="" _quiet="" _arg
 	for _arg in "$@"; do
@@ -29274,19 +29203,9 @@ _dkm_colima_do_stop() {
 	done
 	local _desc="停止虚拟机"
 	[[ -n "$_force" ]] && _desc="强制停止虚拟机"
+	[[ -z "$_quiet" ]] && _dkm_log_info "${_desc}（约需 5~30 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	local _rc=0
-	if [[ -n "$_quiet" ]]; then
-		# 静默模式（应急断联内部叠加调用）: 直接执行，不显示进度条
-		_dkm_colima_quiet stop $_force || _rc=$?
-	else
-		# 普通模式: 后台异步执行 + 渐变进度条联动（预计 5~30 秒）
-		colima stop $_force >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-		local _pid=$!
-		# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-		_dkm_progress_wait "$_pid" "正在${_desc}" 30 || _rc=$?
-	fi
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet stop $_force; then
 		_dkm_log_ok "虚拟机已停止"
 		return 0
 	else
@@ -29299,17 +29218,11 @@ _dkm_colima_do_stop() {
 	fi
 }
 
-# ── 重启执行: 后台执行 + 进度条联动 ──
+# ── 重启执行: 静默 + 表格化 ──
 _dkm_colima_do_restart() {
+	_dkm_log_info "正在重启虚拟机（约需 15~90 秒，请稍候）..."
 	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行，主线程不阻塞
-	colima restart >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 重启耗时最长（15~90 秒），传 90
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在重启 Colima 虚拟机" 90 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
+	if _dkm_colima_quiet restart; then
 		_dkm_colima_show_info
 		return 0
 	else

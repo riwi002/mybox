@@ -864,7 +864,7 @@ break_end() {
 		  return
 	  fi
 	  echo -e "${rw_lv}操作完成${rw_lv}"
-	  echo "按回车键返回菜单..."
+	  echo "按任意键继续..."
 	  read -n 1 -s -r -p ""
 	  echo ""
 	  clear
@@ -27164,2418 +27164,912 @@ _git_branch_manager() {
 
 
 # ================================================================
-# Docker 全管理 v2.4（企业级重构版 · 键值对统一视觉）
-# ================================================================
-# 重构日期: 2026-09-03
-# 设计规范（严格执行）:
-#   [1] 防御性编程: 模块入口启用 set -euo pipefail，
-#       退出时精确还原原有 shell 选项，避免污染外层脚本。
-#   [2] 危险操作防护: 所有删除/停止/清理操作均带二次确认
-#       （y/N + 关键操作复读名称确认）与变量非空校验，
-#       全模块无 unprotected rm -rf。
-#   [3] 日志规范: [信息] [成功] [警告] [错误] 四级彩色状态输出（全中文）。
-#   [4] 交互规范: 所有菜单默认选项为 0（直接回车 = 返回上一级/退出），
-#       所有子菜单/列表/详情界面底部统一提示:
-#       [提示] 按 0 或 回车键 返回上一级菜单
-#   [5] 应急断联: 任意时刻 Ctrl+C 或主菜单 E/99 触发
-#       Colima 应急停止（colima stop → --force → 残留进程清理）。
-#   [6] 新手友好: 复杂功能执行前展示【操作示例】，
-#       示例用青色辅助色呈现（已移除低对比度灰色）。
-#   [7] 性能设计: 所有外部命令结果带 3 秒 TTL 缓存（基于 bash
-#       内置变量 SECONDS 计时，零子进程开销）。按 0/回车返回时
-#       命中缓存，只清屏重绘菜单，不做任何系统探测 → 秒开。
-#   [8] 视觉规范（本版: 全面键值对化）:
-#       - 彻底废弃网格表格（严禁 | + - 画线），容器/镜像/
-#         Compose/监控/磁盘等所有列表与详情统一为键值对
-#         （Key-Value）面板风格，与 Colima 虚拟机状态完全一致。
-#       - 键名亮黄色高亮，键列固定 20 显示列，所有冒号 :
-#         在同一垂直线上严格对齐（中文按 2 列计补偿）。
-#       - 值为终端默认色；状态类值允许内嵌颜色强调。
-#       - 分隔线 ════ 使用较暗的蓝色（非灰色），视觉分割不抢眼。
-#       - 多个条目逐个成卡展示，条目之间保留空行（呼吸感）。
-#       - 中文显示宽度计算: LC_ALL=C 字节数与 UTF-8 字符数
-#         双计数推导（宽字符数 = (字节数-字符数)/2），
-#         纯 bash 内置操作，兼容 bash 3.2，零子进程。
+# Docker 全管理（重构版）
+# 设计原则: 主菜单清晰分层 → 子菜单聚焦操作 → 辅助函数复用
+# 上手友好: 每个操作前列出可选项，输入编号即可，无需手敲容器名
 # ================================================================
 
-_DKM_VERSION="2.4.0"
-_DKM_TTL=3            # 缓存有效期（秒）
-
-# ── 颜色定义 ──
-# 青色: 辅助说明/示例/底部提示（替代原灰色，对比度更高）
-rw_qing='\033[36m\033[01m'
-
-# ── 全局缓存变量（模块入口初始化，避免 set -u 报错）──
-_DKM_S_TS=-10; _DKM_S_STAT=""; _DKM_S_RUN=0; _DKM_S_ALL=0; _DKM_S_IMGS=0
-_DKM_S_COMPOSE=""; _DKM_S_COLIMA=""
-_DKM_CL_TS=-10; _DKM_CLIST=""      # 容器列表缓存: ID|名称|镜像|状态|State|端口
-_DKM_IL_TS=-10; _DKM_ILIST=""      # 镜像列表缓存: 仓库:标签|ID|大小|创建时间
-_DKM_COMPOSE_CMD=""; _DKM_COMPOSE_CHK=0
-_DKM_NAMES=(); _DKM_IMG_NAMES=(); _DKM_PICK=""; _DKM_SHOWN=0
-_DKM_W=0                            # _dkm_str_width 计算结果
-
-# ── 模块级日志函数（中文状态前缀，一秒定位问题）──
-_dkm_log_info() { printf '%b\n' " ${rw_huang}[信息]${rw_lv} $1"; }
-_dkm_log_ok()   { printf '%b\n' " ${rw_lv}[成功]${rw_lv} $1"; }
-_dkm_log_warn() { printf '%b\n' " ${rw_huang}[警告]${rw_lv} $1"; }
-_dkm_log_err()  { printf '%b\n' " ${rw_hong}[错误]${rw_lv} $1"; }
-
-# ================================================================
-# 视觉渲染引擎（表格 + 键值对面板 + 底部提示）
-# ================================================================
-
-# ── 字符串显示宽度计算（中英文混合自适应）──
-# 原理: 临时切到 LC_ALL=C 数得字节数，再切回原 locale 数得字符数，
-# 每个宽字符（中文）占 3 字节 1 字符、2 显示列，
-# 故 显示宽度 = 字符数 + (字节数 - 字符数) / 2。
-# 纯 bash 内置操作，兼容 bash 3.2，结果写入全局 _DKM_W。
-_dkm_str_width() {
-	local _s="$1" _saved="${LC_ALL-}" _had=${LC_ALL+x} _bytes _chars
-	LC_ALL=C
-	_bytes=${#_s}
-	if [[ -n "${_had:-}" ]]; then LC_ALL="$_saved"; else unset LC_ALL; fi
-	_chars=${#_s}
-	_DKM_W=$(( _chars + (_bytes - _chars) / 2 ))
-	return 0
-}
-
-# ── 剥离颜色代码 ──
-# 重要前提: 本脚本的颜色变量存储的是字面文本 '\033[32m'（单引号定义），
-# 经 printf '%b' 输出时才转义渲染。因此剥离必须匹配字面反斜杠序列，
-# 而非真实 ESC 字节。引号包裹模式保证 [ 等字符按字面匹配。
-# 用法: _dkm_strip_colors "文本"   结果打印到 stdout
-_dkm_strip_colors() {
-	local _s="$1" _c
-	for _c in '\033[0m' '\033[01m' '\033[31m' '\033[32m' '\033[33m' '\033[34m' '\033[36m' '\033[38;5;208m' '\033[38;5;245m'; do
-		_s="${_s//"${_c}"/}"
-	done
-	printf '%s' "$_s"
-	return 0
-}
-
-# ── 剥离颜色代码后计算显示宽度 ──
-# 用途: 单元格内容可能自带颜色代码，直接 ${#} 会把转义字符也算进去
-# 导致列宽错误。先剥颜色再算宽度，显示仍用原文本（颜色保留）。
-# 结果: _DKM_W = 纯显示宽度
-_dkm_visible_width() {
-	local _stripped
-	_stripped=$(_dkm_strip_colors "$1")
-	_dkm_str_width "$_stripped"
-	return 0
-}
-
-# ── 截断字符串到指定显示宽度（末位留 …）──
-# 用法: _dkm_truncate "文本" 最大宽度   结果打印到 stdout
-# 注意: local 同一行内 ${#_s} 取的是赋值前的值，必须先赋值再取长度；
-# 若文本含颜色代码，先剥离再截断，避免截断点在转义序列中间
-_dkm_truncate() {
-	local _s="$1" _max="$2" _i _sub
-	local _stripped
-	_stripped=$(_dkm_strip_colors "$_s")
-	local _n=${#_stripped}
-	for (( _i = _n; _i > 0; _i-- )); do
-		_sub="${_stripped:0:_i}"
-		_dkm_str_width "$_sub"
-		if (( _DKM_W <= _max - 1 )); then
-			printf '%s…' "$_sub"
-			return 0
-		fi
-	done
-	printf '…'
-	return 0
-}
-
-# ================================================================
-# 键值对卡片渲染引擎（v2.4: 彻底废弃网格表格）
-# 所有列表/详情统一为卡片式键值对展示，与 Colima 面板完全一致:
-#   ═ 顶线（蓝色偏暗）→ 标题（亮黄，带序号）→ 键值对 → ═ 底线 → 空行
-# 键列固定 20 显示列，所有冒号 : 严格垂直对齐。
-# ================================================================
-
-# ── 卡片顶部/底部横线（蓝色，较暗，仅视觉分割不抢眼）──
-_dkm_card_rule() {
-	printf ' %b\n' "${rw_lan}══════════════════════════════════════════${rw_bai}"
-	return 0
-}
-
-# ── 卡片标题行（亮黄高亮，如 "1. nginx-web"）──
-_dkm_card_title() {
-	printf ' %b\n' "${rw_huang}${1}${rw_bai}"
-	return 0
-}
-
-# ── 键值对行: 键名亮黄，键列固定 20 显示列，冒号严格对齐 ──
-# 值默认不加颜色（终端默认色）；需要强调的状态值可内嵌颜色码，
-# 故值用 %b 输出以解析内嵌颜色（docker 输出的名称/镜像/端口等
-# 字符集不含反斜杠，%b 解析安全）。
-# 用法: _dkm_kv "键名" "值"
-_dkm_kv() {
-	local _key="$1" _val="${2:--}" _pad
-	_dkm_str_width "$_key"
-	_pad=$(( 20 - _DKM_W ))
-	if (( _pad < 1 )); then _pad=1; fi
-	printf ' %b%*s%b: %b%b\n' "${rw_huang}${_key}" "$_pad" "" "${rw_bai}" "$_val" "${rw_bai}"
-	return 0
-}
-
-# ── 键值对续行（值换行时与上一行的值对齐）──
-# 值起始列 = 1 前导空格 + 20 键列 + 2（": "）= 23 列
-_dkm_kv_cont() {
-	printf '%23s%b%b\n' "" "${1:-}" "${rw_bai}"
-	return 0
-}
-
-# ── 卡片收尾: 底线 + 空行（条目间呼吸感）──
-_dkm_card_end() {
-	_dkm_card_rule
-	printf '\n'
-	return 0
-}
-
-# ================================================================
-# 统一键值对（Key-Value）详情面板模板
-# 所有"查看详情"类展示统一使用此模板，与卡片引擎共用一套样式:
-# 键名亮黄、值终端默认色、分隔线蓝色偏暗，冒号 : 严格垂直对齐。
-# ================================================================
-
-# ── 面板顶部横线（可选标题）──
-_dkm_panel_open() {
-	_dkm_card_rule
-	if [[ -n "${1:-}" ]]; then
-		printf ' %b\n' "${rw_huang}${1}${rw_bai}"
-	fi
-	return 0
-}
-
-# ── 键值对行: 键列固定 20 显示列，冒号严格对齐 ──
-# 用法: _dkm_panel_kv "键名" "值"
-_dkm_panel_kv() {
-	_dkm_kv "$@"
-	return 0
-}
-
-# ── 键值对续行（值换行时与上一行的值对齐）──
-_dkm_panel_kv_cont() {
-	_dkm_kv_cont "$@"
-	return 0
-}
-
-# ── 面板底部横线 ──
-_dkm_panel_close() {
-	_dkm_card_rule
-	return 0
-}
-
-# ── 全局底部返回提示（所有子菜单/列表/详情界面统一）──
-_dkm_return_hint() {
-	printf ' %b\n' "${rw_qing}[提示]${rw_lv} 按 ${rw_huang}0${rw_lv} 或 ${rw_huang}回车键${rw_lv} 返回上一级菜单${rw_bai}"
-	return 0
-}
-
-# ── 辅助: 示例文字（青色 + 缩进，与正文区分）──
-# 用法: _dkm_example "多行示例内容（每行一个步骤）"
-_dkm_example() {
-	printf '\n'
-	printf '%b\n' "   ${rw_qing}【操作示例】${rw_bai}"
-	local _l
-	while IFS= read -r _l; do
-		printf '   %b\n' "${rw_qing}${_l}${rw_bai}"
-	done <<< "$1"
-	printf '\n'
-	return 0
-}
-
-# ── 辅助: 单行提示（青色小字）──
-_dkm_hint() { printf '   %b\n' "${rw_qing}$1${rw_bai}"; }
-
-# ── 辅助: 二次确认（返回 0=确认 / 1=取消），必须在 if 条件中调用 ──
-_dkm_confirm() {
-	local _prompt="${1:-确认执行?}" _ans=""
-	read -e -p " ${_prompt} (y/N): " _ans < /dev/tty || _ans=""
-	if [[ "${_ans:-n}" =~ ^[Yy]$ ]]; then
-		return 0
-	fi
-	return 1
-}
-
-# ── 辅助: 危险操作双保险确认（y 确认 + 复读目标名称）──
-# 用法: _dkm_confirm_strict "提示语" "需要复读的目标名称"
-_dkm_confirm_strict() {
-	local _prompt="$1" _target="$2" _verify=""
-	# 第一道: 目标名称非空校验，空目标直接拒绝（防变量未定义导致的误删）
-	if [[ -z "${_target:-}" ]]; then
-		_dkm_log_err "目标为空，已拒绝危险操作"
+# ── 辅助: 检查 Docker 是否可用 ──
+_dk_check() {
+	if ! command -v docker &>/dev/null; then
+		echo -e " ${rw_hong}Docker 未安装，请先执行「安装/升级 Docker」${rw_lv}"
 		return 1
 	fi
-	if ! _dkm_confirm "$_prompt"; then
+	if ! docker info &>/dev/null; then
+		echo -e " ${rw_hong}Docker 未运行，请先启动 Docker 服务${rw_lv}"
+		echo -e " ${rw_huang}启动命令: systemctl start docker${rw_lv}"
 		return 1
-	fi
-	# 第二道: 复读确认，防止手滑
-	read -e -p " 再输入一次 [${_target}] 最终确认: " _verify < /dev/tty || _verify=""
-	if [[ "${_verify:-}" == "$_target" ]]; then
-		return 0
-	fi
-	_dkm_log_warn "输入不一致，已取消"
-	return 1
-}
-
-# ── 辅助: 检测 colima / docker 可用性（bash 内置，零开销）──
-_dkm_has_colima() { command -v colima >/dev/null 2>&1; }
-_dkm_has_docker() { command -v docker >/dev/null 2>&1; }
-_dkm_docker_running() { _dkm_has_docker && docker info >/dev/null 2>&1; }
-
-# ── 缓存失效: 任何改变 Docker 状态的操作后调用 ──
-_dkm_cache_invalidate() {
-	_DKM_S_TS=-10
-	_DKM_CL_TS=-10
-	_DKM_IL_TS=-10
-}
-
-# ── compose 命令缓存（全局只探测一次，引擎变更后可失效重查）──
-_dkm_compose_cache() {
-	if [[ "$_DKM_COMPOSE_CHK" -eq 1 ]]; then
-		return 0
-	fi
-	_DKM_COMPOSE_CHK=1
-	if docker compose version >/dev/null 2>&1; then
-		_DKM_COMPOSE_CMD="docker compose"
-	elif command -v docker-compose >/dev/null 2>&1; then
-		_DKM_COMPOSE_CMD="docker-compose"
-	else
-		_DKM_COMPOSE_CMD=""
-	fi
-	return 0
-}
-_dkm_compose_invalidate() {
-	_DKM_COMPOSE_CHK=0
-	_DKM_COMPOSE_CMD=""
-}
-
-# ── 在目录中查找 compose 文件，找到则打印路径 ──
-_dkm_find_compose_file() {
-	local _dir="${1:-.}" _f
-	for _f in docker-compose.yml docker-compose.yaml compose.yml compose.yaml; do
-		if [[ -f "${_dir}/${_f}" ]]; then
-			echo "${_dir}/${_f}"
-			return 0
-		fi
-	done
-	return 1
-}
-
-# ── 临时解除 INT 陷阱执行交互式命令 ──
-# 原理: docker logs -f / stats / exec -it 等交互式命令中，
-# 用户按 Ctrl+C 只是为了退出该命令，不应触发应急断联。
-# 因此进入前解除 trap，退出后恢复。
-_dkm_run_interactive() {
-	trap - INT
-	"$@" || true
-	trap '_dkm_emergency_interrupt' INT
-	return 0
-}
-
-# ================================================================
-# 缓存刷新函数（3 秒 TTL，返回时命中缓存零探测 → 菜单秒开）
-# 计时用 bash 内置变量 SECONDS，不产生任何子进程。
-# 传参 "force" 可强制立即刷新。
-# ================================================================
-
-# ── 主菜单状态栏缓存: 一次 docker ps 同时算出运行数与总数 ──
-_dkm_status_refresh() {
-	if [[ -z "${1:-}" ]] && (( SECONDS - _DKM_S_TS < _DKM_TTL )); then
-		return 0
-	fi
-	_DKM_S_TS=$SECONDS
-	_DKM_S_STAT="${rw_hong}未安装${rw_lv}"
-	_DKM_S_RUN=0; _DKM_S_ALL=0; _DKM_S_IMGS=0
-	if _dkm_has_docker; then
-		if docker info >/dev/null 2>&1; then
-			_DKM_S_STAT="${rw_lv}运行中${rw_lv}"
-			# 一次调用取全部容器状态，bash 循环计数（替代 2 次管道调用）
-			local _states _s
-			_states=$(docker ps -a --format "{{.State}}" 2>/dev/null || true)
-			if [[ -n "$_states" ]]; then
-				while IFS= read -r _s; do
-					[[ -z "$_s" ]] && continue
-					_DKM_S_ALL=$((_DKM_S_ALL + 1))
-					if [[ "$_s" == "running" ]]; then
-						_DKM_S_RUN=$((_DKM_S_RUN + 1))
-					fi
-				done <<< "$_states"
-			fi
-			_DKM_S_IMGS=$(docker images -q 2>/dev/null | wc -l | tr -d ' ') || _DKM_S_IMGS=0
-		else
-			_DKM_S_STAT="${rw_huang}已安装，未运行${rw_lv}"
-		fi
-	fi
-	_dkm_compose_cache
-	if [[ -n "$_DKM_COMPOSE_CMD" ]]; then
-		_DKM_S_COMPOSE="${rw_lv}已安装${rw_lv}"
-	else
-		_DKM_S_COMPOSE="${rw_hong}未安装${rw_lv}"
-	fi
-	_DKM_S_COLIMA="${rw_huang}未安装${rw_lv}"
-	if _dkm_has_colima; then
-		if colima status >/dev/null 2>&1; then
-			_DKM_S_COLIMA="${rw_lv}运行中${rw_lv}"
-		else
-			_DKM_S_COLIMA="${rw_hong}已停止${rw_lv}"
-		fi
 	fi
 	return 0
 }
 
-# ── 容器列表缓存（展示与选择共用，每轮刷新只调用一次 docker）──
-_dkm_clist_refresh() {
-	if [[ -z "${1:-}" ]] && (( SECONDS - _DKM_CL_TS < _DKM_TTL )); then
-		return 0
-	fi
-	_DKM_CL_TS=$SECONDS
-	_DKM_CLIST=$(docker ps -a --format "{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.State}}|{{.Ports}}" 2>/dev/null || true)
-	return 0
-}
-
-# ── 镜像列表缓存（含创建时间列）──
-_dkm_ilist_refresh() {
-	if [[ -z "${1:-}" ]] && (( SECONDS - _DKM_IL_TS < _DKM_TTL )); then
-		return 0
-	fi
-	_DKM_IL_TS=$SECONDS
-	_DKM_ILIST=$(docker images --format "{{.Repository}}:{{.Tag}}|{{.ID}}|{{.Size}}|{{.CreatedSince}}" 2>/dev/null || true)
-	return 0
-}
-
-# ================================================================
-# 列表行构建（从缓存生成 TAB 分隔的表格数据行）
-# ================================================================
-
-# ── 容器列表渲染（键值对卡片风格，彻底废弃网格表格）──
-# 用法: _dkm_clist_cards <all|running|stopped> <0|1>
-# 第二参为 1 时每个容器渲染为带序号的卡片，并把名称按序写入
-# _DKM_NAMES 供选择器解析；为 0 时不带序号（纯展示）。
-# 结果: _DKM_SHOWN（是否渲染了至少一个容器）
-# 状态值按运行状态着色（绿=运行中 / 黄=已停止），其余值默认色。
-_dkm_clist_cards() {
-	local _filter="${1:-all}" _num="${2:-0}"
-	local _id _name _img _stat _state _ports _i=1 _st_color
-	_DKM_SHOWN=0
-	if [[ "$_num" == "1" ]]; then
-		_DKM_NAMES=()
-	fi
-	while IFS='|' read -r _id _name _img _stat _state _ports; do
-		[[ -z "${_name:-}" ]] && continue
-		case "$_filter" in
-			running)
-				if [[ "$_state" != "running" ]]; then continue; fi
-				;;
-			stopped)
-				if [[ "$_state" == "running" || "$_state" == "paused" || "$_state" == "restarting" ]]; then continue; fi
-				;;
-		esac
-		# 状态着色: 运行中绿色，其他（已停止/暂停等）黄色
-		if [[ "$_state" == "running" ]]; then
-			_st_color="${rw_lv}运行中${rw_bai}"
-		else
-			_st_color="${rw_huang}${_stat}${rw_bai}"
-		fi
-		_dkm_card_rule
-		if [[ "$_num" == "1" ]]; then
-			_dkm_card_title "${_i}. ${_name}"
-			_DKM_NAMES+=("$_name")
-		else
-			_dkm_card_title "${_name}"
-		fi
-		_dkm_kv "容器名称 (Name)" "$_name"
-		_dkm_kv "容器状态 (Status)" "$_st_color"
-		_dkm_kv "使用镜像 (Image)" "$_img"
-		_dkm_kv "端口映射 (Ports)" "${_ports:-无}"
-		_dkm_kv "容器 ID (ID)" "$_id"
-		_dkm_card_end
-		_i=$((_i + 1))
-		_DKM_SHOWN=1
-	done <<< "$_DKM_CLIST"
-	return 0
-}
-
-# ── 镜像列表渲染（键值对卡片风格）──
-# 用法: _dkm_ilist_cards <0|1>   （1 = 卡片标题带序号，供选择解析）
-_dkm_ilist_cards() {
-	local _num="${1:-0}"
-	local _name _id _size _created _i=1
-	_DKM_SHOWN=0
-	if [[ "$_num" == "1" ]]; then
-		_DKM_IMG_NAMES=()
-	fi
-	while IFS='|' read -r _name _id _size _created; do
-		# 过滤无标签镜像（<none>）
-		if [[ -z "${_name:-}" || "$_name" == "<none>"* ]]; then continue; fi
-		_dkm_card_rule
-		if [[ "$_num" == "1" ]]; then
-			_dkm_card_title "${_i}. ${_name}"
-			_DKM_IMG_NAMES+=("$_name")
-		else
-			_dkm_card_title "${_name}"
-		fi
-		_dkm_kv "镜像名称 (Repo)" "$_name"
-		_dkm_kv "镜像 ID (ID)" "$_id"
-		_dkm_kv "大小 (Size)" "$_size"
-		_dkm_kv "创建时间 (Created)" "$_created"
-		_dkm_card_end
-		_i=$((_i + 1))
-		_DKM_SHOWN=1
-	done <<< "$_DKM_ILIST"
-	return 0
-}
-
-# ================================================================
-# 选择器（编号 / 名称 / ID 三种方式，全部基于缓存解析）
-# ================================================================
-
-# ── 容器选择器，结果写入 _DKM_PICK ──
-_dkm_pick_container() {
-	local _filter="${1:-all}" _input=""
-	_dkm_clist_refresh
-	if [[ -z "$_DKM_CLIST" ]]; then
-		_dkm_log_warn "没有容器"
-		return 1
-	fi
-	echo -e " ${rw_cheng}── 选择容器（可输 编号/名称/ID）──${rw_lv}"
-	_dkm_clist_cards "$_filter" 1
-	if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-		_dkm_log_warn "没有符合条件的容器"
-		return 1
-	fi
-	echo -e "  ${rw_huang} 0.${rw_lv} 取消"
-	_dkm_hint "例: 输 1 选第一个，或直接输容器名"
-	echo ""
-	read -e -p " 请选择: " _input < /dev/tty || _input=""
-	_input="${_input:-0}"
-	if [[ "$_input" == "0" || -z "$_input" ]]; then
-		return 1
-	fi
-	# 纯数字 → 按编号解析（纯 bash 数组取值）
-	if [[ "$_input" =~ ^[0-9]+$ ]] && [[ "$_input" -le "${#_DKM_NAMES[@]}" ]]; then
-		_DKM_PICK="${_DKM_NAMES[$((_input - 1))]}"
-		return 0
-	fi
-	# 名称精确匹配 / ID 前缀匹配 → 读缓存，不启动子进程
-	local _id _name _img _stat _state _ports
-	while IFS='|' read -r _id _name _img _stat _state _ports; do
-		if [[ "$_name" == "$_input" || "$_id" == "$_input"* ]]; then
-			_DKM_PICK="$_name"
-			return 0
-		fi
-	done <<< "$_DKM_CLIST"
-	_dkm_log_err "找不到容器: $_input"
-	return 1
-}
-
-# ── 镜像选择器（编号选择，结果写入 _DKM_PICK）──
-_dkm_pick_image() {
-	local _input=""
-	_dkm_ilist_refresh
-	if [[ -z "$_DKM_ILIST" ]]; then
-		_dkm_log_warn "没有镜像"
-		return 1
-	fi
-	echo -e " ${rw_cheng}── 选择镜像 ──${rw_lv}"
-	_dkm_ilist_cards 1
-	if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-		_dkm_log_warn "没有镜像"
-		return 1
-	fi
-	echo -e "  ${rw_huang} 0.${rw_lv} 取消"
-	echo ""
-	read -e -p " 请选择编号 [默认 0]: " _input < /dev/tty || _input=""
-	_input="${_input:-0}"
-	if [[ "$_input" == "0" || -z "$_input" ]]; then
-		return 1
-	fi
-	if ! [[ "$_input" =~ ^[0-9]+$ ]] || [[ "$_input" -lt 1 ]] || [[ "$_input" -gt "${#_DKM_IMG_NAMES[@]}" ]]; then
-		_dkm_log_err "无效选择"
-		return 1
-	fi
-	_DKM_PICK="${_DKM_IMG_NAMES[$((_input - 1))]}"
-	return 0
-}
-
-# ================================================================
-# 【模块 1】容器管理 —— 全生命周期 + 日志 + 资源监控
-# ================================================================
-_dkm_container_menu() {
-	while true; do
-		clear
-		if ! _dkm_docker_running; then
-			_dkm_log_err "Docker 未运行（先启动 Docker 或 Colima）"
-			break_end || true
-			return 0
-		fi
-		# 刷新容器列表缓存（3 秒内返回菜单直接命中，秒开）
-		_dkm_clist_refresh
-		echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━${rw_lv}"
-		echo ""
-		# 容器列表（键值对卡片风格: 每容器一张卡片，条目间空行呼吸）
-		_dkm_clist_cards all 0
-		if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-			_dkm_log_warn "暂无容器"
-			echo ""
-		fi
-		echo -e " ${rw_cheng}──── 生命周期 ────${rw_lv}"
-		echo -e " ${rw_huang}1.   ${rw_lv}启动容器${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}停止容器${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}重启容器${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}删除容器${rw_lv}"
-		echo -e " ${rw_cheng}──── 监控诊断 ────${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看日志${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}资源监控${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}进入容器${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}容器详情${rw_lv}"
-		echo -e " ${rw_cheng}──── 批量 ────${rw_lv}"
-		echo -e " ${rw_huang}9.   ${rw_lv}批量启动/停止/清理${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _c=""
-		read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-		_c="${_c:-0}"
-
-		case "$_c" in
-		1)
-			# 启动: 仅列出已停止容器
-			echo ""
-			if _dkm_pick_container stopped; then
-				if docker start "$_DKM_PICK" >/dev/null 2>&1; then
-					_dkm_log_ok "已启动: $_DKM_PICK"
-					_dkm_cache_invalidate
-				else
-					_dkm_log_err "启动失败: $_DKM_PICK（可用 docker logs $_DKM_PICK 排查）"
-				fi
-			fi
-			break_end || true
-			;;
-		2)
-			# 停止: 仅列出运行中容器，带确认
-			echo ""
-			if _dkm_pick_container running; then
-				if _dkm_confirm "停止容器 [$_DKM_PICK]?"; then
-					if docker stop "$_DKM_PICK" >/dev/null 2>&1; then
-						_dkm_log_ok "已停止: $_DKM_PICK"
-						_dkm_cache_invalidate
-					else
-						_dkm_log_err "停止失败: $_DKM_PICK"
-					fi
-				else
-					_dkm_log_warn "已取消"
-				fi
-			fi
-			break_end || true
-			;;
-		3)
-			echo ""
-			if _dkm_pick_container all; then
-				if docker restart "$_DKM_PICK" >/dev/null 2>&1; then
-					_dkm_log_ok "已重启: $_DKM_PICK"
-					_dkm_cache_invalidate
-				else
-					_dkm_log_err "重启失败: $_DKM_PICK"
-				fi
-			fi
-			break_end || true
-			;;
-		4)
-			# 删除: 双重确认（y 确认 + 复读容器名），防止误删生产容器
-			echo ""
-			if _dkm_pick_container all; then
-				local _force_flag=""
-				if _dkm_confirm_strict "删除容器 [$_DKM_PICK]? 不可恢复" "$_DKM_PICK"; then
-					if _dkm_confirm "容器仍在运行时将强制删除（-f），继续?"; then
-						_force_flag="-f"
-					fi
-					if docker rm $_force_flag "$_DKM_PICK" >/dev/null 2>&1; then
-						_dkm_log_ok "已删除: $_DKM_PICK"
-						_dkm_cache_invalidate
-					else
-						_dkm_log_err "删除失败: $_DKM_PICK"
-					fi
-				else
-					_dkm_log_warn "已取消"
-				fi
-			fi
-			break_end || true
-			;;
-		5)
-			# 日志: 支持实时跟踪（-f）与最近 N 行
-			echo ""
-			if _dkm_pick_container all; then
-				echo ""
-				echo -e "  ${rw_huang}1.${rw_lv} 实时跟踪（新日志持续滚动，Ctrl+C 退出）"
-				echo -e "  ${rw_huang}2.${rw_lv} 看最近 N 行"
-				_dkm_hint "例: 选 2 再输 100 → 看最近 100 行日志"
-				local _lm=""
-				read -e -p " 选择 [默认 1]: " _lm < /dev/tty || _lm=""
-				_lm="${_lm:-1}"
-				# 日志信息面板（统一 KV 模板）
-				_dkm_panel_open "日志查看"
-				_dkm_panel_kv "容器" "$_DKM_PICK"
-				if [ "$_lm" = "2" ]; then
-					local _lines=""
-					read -e -p " 行数 [默认 100]: " _lines < /dev/tty || _lines=""
-					_lines="${_lines:-100}"
-					_dkm_panel_kv "模式" "最近 ${_lines} 行"
-					_dkm_panel_close
-					docker logs --tail "$_lines" "$_DKM_PICK" 2>&1 || _dkm_log_err "读取日志失败"
-				else
-					_dkm_panel_kv "模式" "实时跟踪（先显示最近 50 行）"
-					_dkm_panel_close
-					# 交互式命令: 临时解除应急陷阱，Ctrl+C 仅退出日志
-					_dkm_run_interactive docker logs -f --tail 50 "$_DKM_PICK"
-				fi
-			fi
-			break_end || true
-			;;
-		6)
-			# 资源监控: 快照（表格化）/ 实时两种模式
-			echo ""
-			echo -e "  ${rw_huang}1.${rw_lv} 看一次快照   ${rw_huang}2.${rw_lv} 实时监控（Ctrl+C 退出）"
-			_dkm_hint "快照适合快速看一眼，实时监控持续刷新 CPU/内存"
-			local _sm=""
-			read -e -p " 选择 [默认 1]: " _sm < /dev/tty || _sm=""
-			_sm="${_sm:-1}"
-			echo ""
-			if [ "$_sm" = "2" ]; then
-				_dkm_run_interactive docker stats
-			else
-				# 快照模式: 键值对卡片展示（每容器一张卡片）
-				local _stats_raw
-				_stats_raw=$(docker stats --no-stream --format "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}|{{.NetIO}}|{{.BlockIO}}" 2>/dev/null || true)
-				if [[ -n "$_stats_raw" ]]; then
-					local _sn _scpu _smem _smemp _snet _sblk
-					while IFS='|' read -r _sn _scpu _smem _smemp _snet _sblk; do
-						[[ -z "${_sn:-}" ]] && continue
-						_dkm_card_rule
-						_dkm_card_title "$_sn"
-						_dkm_kv "容器名称 (Name)" "$_sn"
-						_dkm_kv "CPU 使用率" "$_scpu"
-						_dkm_kv "内存用量 (Mem)" "$_smem"
-						_dkm_kv "内存占比 (Mem%)" "$_smemp"
-						_dkm_kv "网络 IO (Net)" "$_snet"
-						_dkm_kv "磁盘 IO (Block)" "$_sblk"
-						_dkm_card_end
-					done <<< "$_stats_raw"
-				else
-					_dkm_log_warn "没有运行中的容器"
-				fi
-			fi
-			break_end || true
-			;;
-		7)
-			# 进入容器 Shell
-			echo ""
-			if _dkm_pick_container running; then
-				echo ""
-				echo -e "  ${rw_huang}1.${rw_lv} sh   ${rw_huang}2.${rw_lv} bash   ${rw_huang}3.${rw_lv} 执行一条命令"
-				_dkm_hint "不确定选什么就用 2（bash），脚本会自动检查容器里有没有"
-				local _sh=""
-				read -e -p " 选择 [默认 2]: " _sh < /dev/tty || _sh=""
-				_sh="${_sh:-2}"
-				case "$_sh" in
-					1) _dkm_run_interactive docker exec -it "$_DKM_PICK" sh ;;
-					2)
-						# 先探测容器内是否有 bash，无则回退 sh
-						if docker exec "$_DKM_PICK" command -v bash >/dev/null 2>&1; then
-							_dkm_run_interactive docker exec -it "$_DKM_PICK" bash
-						else
-							_dkm_log_info "容器里没有 bash，改用 sh"
-							_dkm_run_interactive docker exec -it "$_DKM_PICK" sh
-						fi
-						;;
-					3)
-						local _cmd=""
-						read -e -p " 输入命令: " _cmd < /dev/tty || _cmd=""
-						if [ -n "$_cmd" ]; then
-							_dkm_run_interactive docker exec -it "$_DKM_PICK" $_cmd
-						fi
-						;;
-				esac
-			fi
-			break_end || true
-			;;
-		8)
-			# 容器详情: 统一 KV 面板（docker inspect 模板，无 python 依赖）
-			echo ""
-			if _dkm_pick_container all; then
-				_dkm_container_detail "$_DKM_PICK"
-			fi
-			break_end || true
-			;;
-		9)
-			# 批量操作: 全部带确认与非空校验
-			echo ""
-			echo -e "  ${rw_huang}1.${rw_lv} 一键启动全部已停止容器"
-			echo -e "  ${rw_huang}2.${rw_lv} 一键停止全部运行中容器"
-			echo -e "  ${rw_huang}3.${rw_lv} 清掉全部已停止容器（危险）"
-			echo -e "  ${rw_huang}0.${rw_lv} 取消"
-			local _b=""
-			read -e -p " 选择 [默认 0]: " _b < /dev/tty || _b=""
-			_b="${_b:-0}"
-			case "$_b" in
-			1)
-				local _ids
-				_ids=$(docker ps -a --filter "status=exited" -q 2>/dev/null || true)
-				if [ -z "$_ids" ]; then
-					_dkm_log_warn "没有已停止的容器"
-				else
-					echo "$_ids" | xargs docker start >/dev/null 2>&1 && _dkm_log_ok "批量启动完成" || _dkm_log_err "部分容器启动失败"
-					_dkm_cache_invalidate
-				fi
-				;;
-			2)
-				local _ids
-				_ids=$(docker ps -q 2>/dev/null || true)
-				if [ -z "$_ids" ]; then
-					_dkm_log_warn "没有运行中的容器"
-				elif _dkm_confirm "停止所有运行中容器?"; then
-					echo "$_ids" | xargs docker stop >/dev/null 2>&1 && _dkm_log_ok "批量停止完成" || _dkm_log_err "部分容器停止失败"
-					_dkm_cache_invalidate
-				else
-					_dkm_log_warn "已取消"
-				fi
-				;;
-			3)
-				local _cnt
-				_cnt=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ') || _cnt=0
-				if [ "${_cnt:-0}" -eq 0 ]; then
-					_dkm_log_warn "没有已停止的容器"
-				elif _dkm_confirm "清理 ${_cnt} 个已停止容器?"; then
-					docker container prune -f >/dev/null 2>&1 && _dkm_log_ok "已清理 ${_cnt} 个容器" || _dkm_log_err "清理失败"
-					_dkm_cache_invalidate
-				else
-					_dkm_log_warn "已取消"
-				fi
-				;;
-			*) _dkm_log_warn "已取消" ;;
-			esac
-			break_cancel || true
-			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项: $_c"; sleep 1 ;;
-		esac
-	done
-}
-
-# ── 容器详情（统一 KV 面板，冒号严格对齐）──
-# 用 docker inspect 模板一次取全字段（| 分隔），替代 python 解析
-_dkm_container_detail() {
-	local _name="$1" _raw _f=()
-	_raw=$(docker inspect "$_name" --format '{{.Name}}|{{.State.Status}}|{{.Config.Image}}|{{.Created}}|{{.NetworkSettings.IPAddress}}|{{.HostConfig.RestartPolicy.Name}}|{{range $p, $conf := .NetworkSettings.Ports}}{{if $conf}}{{$p}}=>{{(index $conf 0).HostPort}};{{end}}{{end}}|{{range .Mounts}}{{.Source}}=>{{.Destination}};{{end}}' 2>/dev/null || true)
-	if [[ -z "$_raw" ]]; then
-		_dkm_log_err "读取容器信息失败"
-		return 0
-	fi
-	IFS='|' read -ra _f <<< "$_raw"
-	local _cname="${_f[0]#/}" _state="${_f[1]:--}" _image="${_f[2]:--}"
-	local _created="${_f[3]:--}" _ip="${_f[4]:--}" _restart="${_f[5]:--}"
-	local _ports="${_f[6]:-}" _mounts="${_f[7]:-}"
-	# 创建时间格式化: 去掉毫秒与时区，T 换成空格
-	_created="${_created%%.*}"
-	_created="${_created/T/ }"
-	# 端口格式化: 80/tcp=>8080; → 8080->80/tcp
-	local _plist="" _seg
-	if [[ -n "$_ports" ]]; then
-		while IFS=';' read -ra _pa <<< "$_ports"; do
-			for _seg in "${_pa[@]}"; do
-				[[ -z "$_seg" ]] && continue
-				local _cp="${_seg%%=>*}" _hp="${_seg##*=>}"
-				if [[ -n "$_plist" ]]; then
-					_plist="${_plist}, ${_hp}->${_cp}"
-				else
-					_plist="${_hp}->${_cp}"
-				fi
-			done
-		done
-	fi
-	[[ -z "$_plist" ]] && _plist="无"
-	# 重启策略汉化
-	case "$_restart" in
-		no) _restart="无" ;;
-		always|unless-stopped) ;; # 保持英文策略名，业界通用
-		on-failure) _restart="失败时重启" ;;
-		"") _restart="无" ;;
+# ── 辅助: 列出容器并让用户选择，返回容器名到 $_DK_PICK ──
+# 用法: _dk_pick_container <filter>  filter: all/running/stopped
+_dk_pick_container() {
+	local _filter="$1"
+	local _list
+	case "$_filter" in
+		running) _list=$(docker ps --format "{{.Names}}|{{.Image}}|{{.Status}}" 2>/dev/null) ;;
+		stopped) _list=$(docker ps -a --filter "status=exited" --format "{{.Names}}|{{.Image}}|{{.Status}}" 2>/dev/null) ;;
+		*)       _list=$(docker ps -a --format "{{.Names}}|{{.Image}}|{{.Status}}" 2>/dev/null) ;;
 	esac
-	_dkm_panel_open "容器详情"
-	_dkm_panel_kv "名称 (Name)" "$_cname"
-	_dkm_panel_kv "状态 (Status)" "$_state"
-	_dkm_panel_kv "镜像 (Image)" "$_image"
-	_dkm_panel_kv "创建时间 (Created)" "$_created"
-	_dkm_panel_kv "IP 地址" "${_ip:-无}"
-	_dkm_panel_kv "端口 (Ports)" "$_plist"
-	_dkm_panel_kv "重启策略 (Restart)" "$_restart"
-	# 挂载渲染: 先把 "源=>目标" 收集成数组，首个进键值行，其余走续行
-	if [[ -n "$_mounts" ]]; then
-		local -a _mount_list=() _split_mounts=()
-		local _m _old_ifs _k
-		# 按 ; 拆分并过滤空项
-		_old_ifs="$IFS"
-		IFS=';'
-		read -ra _split_mounts <<< "$_mounts"
-		IFS="$_old_ifs"
-		for _m in "${_split_mounts[@]}"; do
-			[[ -z "$_m" ]] && continue
-			_mount_list+=("${_m%%=>*} → ${_m##*=>}")
-		done
-		if [[ ${#_mount_list[@]} -gt 0 ]]; then
-			_dkm_panel_kv "挂载 (Mounts)" "${_mount_list[0]}"
-			for (( _k = 1; _k < ${#_mount_list[@]}; _k++ )); do
-				_dkm_panel_kv_cont "${_mount_list[$_k]}"
-			done
-		else
-			_dkm_panel_kv "挂载 (Mounts)" "无"
-		fi
-	else
-		_dkm_panel_kv "挂载 (Mounts)" "无"
-	fi
-	_dkm_panel_close
-	_dkm_return_hint
-	return 0
-}
-
-# ================================================================
-# 【模块 2】镜像管理 —— 拉取 / 删除 / 导出导入 / 清理
-# ================================================================
-_dkm_image_menu() {
-	while true; do
-		clear
-		if ! _dkm_docker_running; then
-			_dkm_log_err "Docker 未运行"
-			break_end || true
-			return 0
-		fi
-		_dkm_ilist_refresh
-		echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━${rw_lv}"
-		echo ""
-		# 镜像列表（键值对卡片风格: 每镜像一张卡片）
-		_dkm_ilist_cards 0
-		if [[ "$_DKM_SHOWN" -eq 0 ]]; then
-			_dkm_log_warn "暂无镜像"
-			echo ""
-		fi
-		echo -e " ${rw_huang}1.   ${rw_lv}拉取镜像${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}搜索镜像${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}删除镜像${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}导出镜像（存成 tar 文件）${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}导入镜像（从 tar 恢复）${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}清理悬空镜像${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}清理全部未用镜像（危险）${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}查看镜像层${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _c=""
-		read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-		_c="${_c:-0}"
-
-		case "$_c" in
-		1)
-			echo ""
-			local _img=""
-			read -e -p " 镜像名（如 nginx:latest）: " _img < /dev/tty || _img=""
-			if [ -z "$_img" ]; then
-				_dkm_log_err "镜像名不能为空"
-			else
-				_dkm_log_info "正在拉取: $_img"
-				if docker pull "$_img"; then
-					_dkm_log_ok "拉取成功: $_img"
-					_dkm_cache_invalidate
-				else
-					_dkm_log_err "拉取失败，检查网络或镜像名"
-				fi
-			fi
-			break_end || true
-			;;
-		2)
-			echo ""
-			local _kw="" _limit=""
-			read -e -p " 搜索关键词: " _kw < /dev/tty || _kw=""
-			if [ -z "$_kw" ]; then
-				_dkm_log_err "关键词不能为空"
-			else
-				read -e -p " 显示条数 [默认 10, 最多 25]: " _limit < /dev/tty || _limit=""
-				_limit="${_limit:-10}"
-				if ! [[ "$_limit" =~ ^[0-9]+$ ]]; then _limit=10; fi
-				if [ "$_limit" -gt 25 ]; then _limit=25; fi
-				docker search --limit "$_limit" "$_kw" --format "table {{.Name}}\t{{.StarCount}}\t{{.IsOfficial}}" 2>/dev/null \
-					|| _dkm_log_err "搜索失败，检查网络"
-			fi
-			break_end || true
-			;;
-		3)
-			echo ""
-			if _dkm_pick_image; then
-				if _dkm_confirm "删除镜像 [$_DKM_PICK]?"; then
-					if docker rmi "$_DKM_PICK" >/dev/null 2>&1; then
-						_dkm_log_ok "已删除: $_DKM_PICK"
-						_dkm_cache_invalidate
-					else
-						_dkm_log_err "删除失败（可能有容器还在用它）"
-					fi
-				else
-					_dkm_log_warn "已取消"
-				fi
-			fi
-			break_end || true
-			;;
-		4)
-			# 导出前展示操作示例，帮助新手理解产出物
-			_dkm_example "1. 选择要导出的镜像（输编号即可）
-2. 自动生成 tar 文件，如 nginx_latest_20260903.tar
-3. 把 tar 拷到别的机器，用「导入镜像」恢复"
-			if _dkm_pick_image; then
-				local _safe _out
-				_safe=$(echo "$_DKM_PICK" | tr '/:' '__')
-				_out="${_safe}_$(date +%Y%m%d_%H%M%S).tar"
-				_dkm_log_info "正在导出到: $(pwd)/$_out"
-				if docker save -o "$_out" "$_DKM_PICK"; then
-					_dkm_log_ok "导出成功: $_out ($(du -h "$_out" | cut -f1))"
-				else
-					_dkm_log_err "导出失败"
-				fi
-			fi
-			break_end || true
-			;;
-		5)
-			echo ""
-			ls -lh ./*.tar 2>/dev/null || _dkm_log_info "当前目录没有 tar 文件"
-			_dkm_hint "输入 tar 文件的完整路径，或先 cd 到 tar 所在目录再输文件名"
-			local _tar=""
-			read -e -p " tar 文件路径: " _tar < /dev/tty || _tar=""
-			if [ -z "$_tar" ]; then
-				_dkm_log_err "路径不能为空"
-			elif [ ! -f "$_tar" ]; then
-				_dkm_log_err "文件不存在: $_tar"
-			elif docker load -i "$_tar"; then
-				_dkm_log_ok "导入成功"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_err "导入失败"
-			fi
-			break_end || true
-			;;
-		6)
-			echo ""
-			_dkm_hint "悬空镜像 = 被覆盖的旧版本，没有名字，删掉很安全"
-			local _cnt
-			_cnt=$(docker images -f "dangling=true" -q 2>/dev/null | wc -l | tr -d ' ') || _cnt=0
-			if [ "${_cnt:-0}" -eq 0 ]; then
-				_dkm_log_warn "没有悬空镜像"
-			elif _dkm_confirm "清理 ${_cnt} 个悬空镜像?"; then
-				docker image prune -f >/dev/null 2>&1 && _dkm_log_ok "悬空镜像已清理" || _dkm_log_err "清理失败"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_cancel || true
-			;;
-		7)
-			echo ""
-			local _cnt
-			_cnt=$(docker images -q 2>/dev/null | wc -l | tr -d ' ') || _cnt=0
-			_dkm_log_warn "会删掉所有没被容器使用的镜像（当前共 ${_cnt} 个）"
-			_dkm_hint "下次运行容器时需要重新拉取镜像，请确认无误再执行"
-			if _dkm_confirm_strict "清理全部未用镜像?" "prune-all"; then
-				docker image prune -a -f >/dev/null 2>&1 && _dkm_log_ok "清理完成" || _dkm_log_err "清理失败"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_cancel || true
-			;;
-		8)
-			echo ""
-			if _dkm_pick_image; then
-				echo ""
-				# 镜像层（键值对卡片: 每层一行，续行展示层说明）
-				local _hist_raw _h_created _h_size _h_comment _h_n=1 _h_cnt=0
-				_hist_raw=$(docker history "$_DKM_PICK" --format "{{.CreatedSince}}|{{.Size}}|{{.Comment}}" 2>/dev/null || true)
-				if [[ -n "$_hist_raw" ]]; then
-					_dkm_card_rule
-					_dkm_card_title "镜像层: ${_DKM_PICK}"
-					_dkm_kv "镜像名称 (Image)" "$_DKM_PICK"
-					while IFS='|' read -r _h_created _h_size _h_comment; do
-						[[ -z "${_h_created:-}" ]] && continue
-						_h_cnt=$((_h_cnt + 1))
-						_dkm_kv "第 ${_h_n} 层" "${_h_created} · ${_h_size}"
-						if [[ -n "$_h_comment" ]]; then
-							_dkm_kv_cont "$(_dkm_truncate "$_h_comment" 40)"
-						fi
-						_h_n=$((_h_n + 1))
-					done <<< "$_hist_raw"
-					_dkm_kv "层数 (Layers)" "$_h_cnt"
-					_dkm_card_end
-				else
-					_dkm_log_err "查看失败"
-				fi
-			fi
-			break_end || true
-			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项: $_c"; sleep 1 ;;
-		esac
-	done
-}
-
-# ================================================================
-# 【模块 3】Compose 项目管理
-# 支持: 当前目录自动探测 / 指定路径 / ~/compose 项目库 / 自建文件 / 项目列表
-# ================================================================
-_dkm_compose_menu() {
-	_dkm_compose_cache
-	if [[ -z "$_DKM_COMPOSE_CMD" ]]; then
-		_dkm_log_err "Docker Compose 未安装，请先在「系统维护」中安装"
-		break_end || true
-		return 0
-	fi
-	local _compose_cmd="$_DKM_COMPOSE_CMD"
-
-	local _yml=""
-	while true; do
-		clear
-		echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 项目管理  ━━━━━━━━━━━━${rw_lv}"
-		echo -e " 命令: ${rw_lv}${_compose_cmd}${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}用当前目录的 compose 文件${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}指定路径${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}从 ~/compose 项目库选择${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}自建 compose 文件（自定义文件名）${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看项目列表（表格）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _c=""
-		read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-		_c="${_c:-0}"
-
-		case "$_c" in
-		1)
-			if _yml=$(_dkm_find_compose_file "."); then
-				_dkm_log_ok "找到: $_yml"
-			else
-				_dkm_log_err "当前目录没有 compose 文件"
-				break_end || true
-				continue
-			fi
-			;;
-		2)
-			local _p=""
-			read -e -p " 输入目录或 yml 文件路径: " _p < /dev/tty || _p=""
-			if [ -z "$_p" ]; then
-				_dkm_log_warn "已取消"
-				continue
-			fi
-			# 展开 ~ 为家目录
-			_p="${_p/#\~/$HOME}"
-			if [ -d "$_p" ]; then
-				if _yml=$(_dkm_find_compose_file "$_p"); then
-					_dkm_log_ok "找到: $_yml"
-				else
-					_dkm_log_err "该目录没有 compose 文件: $_p"
-					break_end || true
-					continue
-				fi
-			elif [ -f "$_p" ]; then
-				_yml="$_p"
-			else
-				_dkm_log_err "路径不存在: $_p"
-				break_end || true
-				continue
-			fi
-			;;
-		3)
-			local _lib="$HOME/compose"
-			if [ ! -d "$_lib" ]; then
-				_dkm_log_warn "项目库不存在: $_lib"
-				break_end || true
-				continue
-			fi
-			local _projs=() _i=1 _d
-			for _d in "$_lib"/*/; do
-				if [ -d "$_d" ]; then
-					echo -e "  ${rw_huang}${_i}.${rw_lv} $(basename "$_d")"
-					_projs+=("$_d")
-					_i=$((_i + 1))
-				fi
-			done
-			if [ "${#_projs[@]}" -eq 0 ]; then
-				_dkm_log_warn "项目库为空"
-				break_end || true
-				continue
-			fi
-			echo -e "  ${rw_huang}0.${rw_lv} 取消"
-			local _idx=""
-			read -e -p " 请选择 [默认 0]: " _idx < /dev/tty || _idx=""
-			_idx="${_idx:-0}"
-			if [ "$_idx" = "0" ]; then
-				continue
-			fi
-			if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt "${#_projs[@]}" ]; then
-				_dkm_log_err "无效选择"
-				continue
-			fi
-			local _sel="${_projs[$((_idx - 1))]}"
-			if _yml=$(_dkm_find_compose_file "$_sel"); then
-				_dkm_log_ok "找到: $_yml"
-			else
-				_dkm_log_err "该项目没有 compose 文件"
-				break_end || true
-				continue
-			fi
-			;;
-		4)
-			# 自建 compose 文件: 自定义文件名，不存在则生成模板
-			echo ""
-			_dkm_example "1. 输入自定义文件名（如 docker-compose.dev.yml）
-   也可以输完整路径（如 ~/projects/app/dev.yml）
-2. 文件不存在时，自动生成一份可修改的模板
-3. 之后和普通项目一样管理: 启动/停止/日志等"
-			local _cf=""
-			read -e -p " 文件名或路径 [默认 docker-compose.dev.yml]: " _cf < /dev/tty || _cf=""
-			_cf="${_cf:-docker-compose.dev.yml}"
-			_cf="${_cf/#\~/$HOME}"
-			if [[ ! -f "$_cf" ]]; then
-				if _dkm_confirm "文件不存在，创建模板 [$_cf]?"; then
-					cat > "$_cf" <<'DKMEOF'
-# 自动生成的 compose 模板 —— 按需修改后再启动
-services:
-  app:
-    image: nginx:alpine
-    container_name: my-dev-app
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-DKMEOF
-					_dkm_log_ok "已创建: $_cf"
-					_dkm_hint "可先编辑该文件，再回来选「启动项目」"
-				else
-					_dkm_log_warn "已取消"
-					continue
-				fi
-			fi
-			_yml="$_cf"
-			;;
-		5)
-			# 项目列表: 表格展示 + 选择后进入管理
-			_dkm_compose_projects "$_compose_cmd"
-			continue
-			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项"; sleep 1; continue ;;
-		esac
-
-		# ── 进入项目操作子菜单 ──
-		_dkm_compose_actions "$_compose_cmd" "$_yml"
-	done
-}
-
-# ── Compose 项目列表（键值对卡片展示 + 交互式选择）──
-# 扫描范围: ~/compose 项目库 + 当前目录
-# 展示: 序号 / 项目名 / Compose 文件 / 容器数 / 状态
-_dkm_compose_projects() {
-	local _compose_cmd="$1"
-	local _names=() _files=() _i=1 _d _f _pn
-	clear
-	echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 项目列表  ━━━━━━━━━━━━${rw_lv}"
-	echo ""
-	# 扫描 ~/compose 项目库
-	local _lib="$HOME/compose"
-	if [[ -d "$_lib" ]]; then
-		for _d in "$_lib"/*/; do
-			[[ -d "$_d" ]] || continue
-			if _f=$(_dkm_find_compose_file "$_d"); then
-				_names+=("$(basename "$_d")")
-				_files+=("$_f")
-			fi
-		done
-	fi
-	# 扫描当前目录
-	if _f=$(_dkm_find_compose_file "."); then
-		_names+=("(当前目录)")
-		_files+=("$_f")
-	fi
-	if [[ ${#_names[@]} -eq 0 ]]; then
-		_dkm_log_warn "没有发现 Compose 项目"
-		_dkm_hint "项目库: ~/compose/xxx/docker-compose.yml，或当前目录"
-		_dkm_return_hint
-		break_end || true
-		return 0
-	fi
-	# 构建键值对卡片: 逐项目统计容器数与状态（基于 compose 项目标签）
-	# 循环内直接渲染卡片，不再累积表格行
-	local _cnt _all_cnt _st
-	for (( _i = 0; _i < ${#_names[@]}; _i++ )); do
-		_pn="${_names[$_i]}"
-		_cnt=0; _all_cnt=0
-		if _dkm_docker_running && [[ "$_pn" != "(当前目录)" ]]; then
-			_cnt=$(docker ps -q --filter "label=com.docker.compose.project=$_pn" 2>/dev/null | wc -l | tr -d ' ') || _cnt=0
-			_all_cnt=$(docker ps -aq --filter "label=com.docker.compose.project=$_pn" 2>/dev/null | wc -l | tr -d ' ') || _all_cnt=0
-		fi
-		if [[ "$_cnt" -gt 0 ]]; then
-			_st="${rw_lv}${_cnt} 运行中${rw_bai}"
-		elif [[ "$_all_cnt" -gt 0 ]]; then
-			_st="${rw_huang}${_all_cnt} 已停止${rw_bai}"
-		else
-			_st="未启动"
-		fi
-		_dkm_card_rule
-		_dkm_card_title "$((_i + 1)). ${_names[$_i]}"
-		_dkm_kv "项目名 (Project)" "$_pn"
-		_dkm_kv "Compose 文件" "$(_dkm_truncate "${_files[$_i]}" 40)"
-		_dkm_kv "容器数 (Containers)" "$_all_cnt"
-		_dkm_kv "运行状态 (Status)" "$_st"
-		_dkm_card_end
-	done
-	echo -e " ${rw_huang}输入编号${rw_lv} 进入该项目的管理菜单"
-	_dkm_return_hint
-	local _idx=""
-	read -e -p " 请选择 [默认 0]: " _idx < /dev/tty || _idx=""
-	_idx="${_idx:-0}"
-	if [[ "$_idx" == "0" || -z "$_idx" ]]; then
-		return 0
-	fi
-	if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [[ "$_idx" -lt 1 ]] || [[ "$_idx" -gt ${#_names[@]} ]]; then
-		_dkm_log_err "无效选择"
-		break_end || true
-		return 0
-	fi
-	_dkm_compose_actions "$_compose_cmd" "${_files[$((_idx - 1))]}"
-	return 0
-}
-
-# ── Compose 项目详情（统一 KV 面板）──
-_dkm_compose_detail() {
-	local _cmd="$1" _yml="$2"
-	local _pn _services="" _cnt=0 _all_cnt=0 _st="未启动"
-	_pn=$(basename "$(dirname "$_yml")")
-	# 服务列表（compose config 解析，可能稍慢）
-	_services=$($_cmd -f "$_yml" config --services 2>/dev/null | tr '\n' ' ' || true)
-	[[ -z "$_services" ]] && _services="（解析失败，请检查 yml 语法）"
-	if _dkm_docker_running; then
-		_cnt=$(docker ps -q --filter "label=com.docker.compose.project=$_pn" 2>/dev/null | wc -l | tr -d ' ') || _cnt=0
-		_all_cnt=$(docker ps -aq --filter "label=com.docker.compose.project=$_pn" 2>/dev/null | wc -l | tr -d ' ') || _all_cnt=0
-		if [[ "$_cnt" -gt 0 ]]; then
-			_st="${_cnt} 运行中 / 共 ${_all_cnt} 个"
-		elif [[ "$_all_cnt" -gt 0 ]]; then
-			_st="全部已停止（${_all_cnt} 个）"
-		fi
-	fi
-	_dkm_panel_open "Compose 项目详情"
-	_dkm_panel_kv "项目名 (Project)" "$_pn"
-	_dkm_panel_kv "文件 (File)" "$_yml"
-	_dkm_panel_kv "服务 (Services)" "$_services"
-	_dkm_panel_kv "容器 (Containers)" "$_st"
-	_dkm_panel_close
-	_dkm_return_hint
-	return 0
-}
-
-# ── Compose 操作子菜单: 针对单个 yml 文件的全部操作 ──
-_dkm_compose_actions() {
-	local _cmd="$1" _yml="$2"
-	while true; do
-		clear
-		echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 操作  ━━━━━━━━━━━━${rw_lv}"
-		echo -e " 项目: ${rw_huang}${_yml}${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}启动项目${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}停止项目${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}重启项目${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}重新构建并启动${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}查看日志${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}项目状态${rw_lv}"
-		echo -e " ${rw_huang}7.   ${rw_lv}停止并删除数据卷（危险）${rw_lv}"
-		echo -e " ${rw_huang}8.   ${rw_lv}项目详情${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _a=""
-		read -e -p " 请选择 [默认 0]: " _a < /dev/tty || _a=""
-		_a="${_a:-0}"
-
-		case "$_a" in
-		1)
-			echo ""
-			$_cmd -f "$_yml" up -d && _dkm_log_ok "项目已启动" || _dkm_log_err "启动失败"
-			_dkm_cache_invalidate
-			break_end || true
-			;;
-		2)
-			echo ""
-			if _dkm_confirm "停止项目?"; then
-				$_cmd -f "$_yml" down && _dkm_log_ok "项目已停止" || _dkm_log_err "停止失败"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		3)
-			echo ""
-			$_cmd -f "$_yml" restart && _dkm_log_ok "项目已重启" || _dkm_log_err "重启失败"
-			_dkm_cache_invalidate
-			break_end || true
-			;;
-		4)
-			# 重建: 新手容易误解，先解释清楚再执行
-			echo ""
-			_dkm_example "什么时候需要重建？
-1. 改了 Dockerfile 或 yml 里的构建配置
-2. 想让代码/配置改动生效（普通重启不会重新打镜像）
-执行过程: 拉取基础镜像 → 重新构建 → 替换旧容器启动"
-			if _dkm_confirm "重新构建镜像并启动?（耗时较长）"; then
-				$_cmd -f "$_yml" up -d --build && _dkm_log_ok "构建并启动完成" || _dkm_log_err "构建失败"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		5)
-			echo ""
-			echo -e "  ${rw_huang}1.${rw_lv} 看最近 N 行   ${rw_huang}2.${rw_lv} 实时跟踪（Ctrl+C 退出）"
-			local _lm=""
-			read -e -p " 选择 [默认 1]: " _lm < /dev/tty || _lm=""
-			_lm="${_lm:-1}"
-			if [ "$_lm" = "2" ]; then
-				_dkm_run_interactive $_cmd -f "$_yml" logs -f --tail 50
-			else
-				local _lines=""
-				read -e -p " 行数 [默认 100]: " _lines < /dev/tty || _lines=""
-				$_cmd -f "$_yml" logs --tail "${_lines:-100}" || true
-			fi
-			break_end || true
-			;;
-		6)
-			echo ""
-			$_cmd -f "$_yml" ps || _dkm_log_err "获取状态失败"
-			break_end || true
-			;;
-		7)
-			# 危险操作: 删除容器 + 数据卷，双重确认
-			echo ""
-			_dkm_example "down -v 会删除什么？
-1. 项目里的所有容器（可重建恢复）
-2. 所有数据卷（数据库数据等，删了就没了）
-只建议在项目彻底不用了、数据已备份时执行"
-			if _dkm_confirm_strict "停止并删除数据卷? 数据不可恢复" "down-v"; then
-				$_cmd -f "$_yml" down -v && _dkm_log_ok "已停止并删除数据卷" || _dkm_log_err "执行失败"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		8)
-			echo ""
-			_dkm_compose_detail "$_cmd" "$_yml"
-			break_end || true
-			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项"; sleep 1 ;;
-		esac
-	done
-}
-
-# ================================================================
-# 【模块 4】系统维护与诊断
-# ================================================================
-_dkm_system_menu() {
-	while true; do
-		clear
-		echo -e "${rw_cheng}━━━━━━━━━━━━  系统维护与诊断  ━━━━━━━━━━━━${rw_lv}"
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}Docker 引擎管理（安装/升级/回退/卸载）${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}磁盘清理${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}健康诊断${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}版本信息${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _c=""
-		read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-		_c="${_c:-0}"
-
-		case "$_c" in
-		1) _dkm_engine_manage; break_end || true ;;
-		2) _dkm_disk_clean; break_cancel || true ;;
-		3) _dkm_health_check; break_end || true ;;
-		4) _dkm_version_show; break_end || true ;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项"; sleep 1 ;;
-		esac
-	done
-}
-
-# ── 4.1 Docker 引擎管理 ──
-# macOS/Colima 环境下 Docker 引擎由 Colima 虚拟机承载，
-# 不适用 apt/yum 安装，自动识别并引导至 Colima 管理。
-_dkm_engine_manage() {
-	echo -e "${rw_cheng}━━━━━━ Docker 引擎管理 ━━━━━━${rw_lv}"
-	echo ""
-
-	# Colima 环境识别（macOS 典型形态）
-	if _dkm_has_colima; then
-		_dkm_log_info "检测到 Colima 环境: Docker 引擎由 Colima 虚拟机承载"
-		_dkm_log_info "引擎的安装/升级/回退方式:"
-		echo -e "   ${rw_huang}·${rw_lv} 升级客户端:  brew upgrade docker docker-compose colima"
-		echo -e "   ${rw_huang}·${rw_lv} 引擎版本:    colima stop && colima start --runtime docker"
-		echo -e "   ${rw_huang}·${rw_lv} 虚拟机管理:  返回上一级进入 [Colima 虚拟机管理]"
-		return 0
-	fi
-
-	if _dkm_has_docker; then
-		_dkm_log_info "当前版本: $(docker version --format '{{.Server.Version}}' 2>/dev/null || docker --version)"
-		echo ""
-		echo -e "  ${rw_huang}1.${rw_lv} 升级到最新版"
-		echo -e "  ${rw_huang}2.${rw_lv} 安装指定版本（回退旧版也用这个）"
-		echo -e "  ${rw_huang}3.${rw_lv} 卸载 Docker（危险）"
-		echo -e "  ${rw_huang}0.${rw_lv} 返回"
-		local _a=""
-		read -e -p " 选择 [默认 0]: " _a < /dev/tty || _a=""
-		_a="${_a:-0}"
-		case "$_a" in
-		1)
-			if ! _dkm_confirm "升级 Docker 到最新版?"; then
-				_dkm_log_warn "已取消"
-				return 0
-			fi
-			_dkm_log_info "正在升级..."
-			if command -v apt-get >/dev/null 2>&1; then
-				apt-get update -y && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
-					&& _dkm_log_ok "升级完成" || _dkm_log_err "升级失败"
-			elif command -v dnf >/dev/null 2>&1; then
-				dnf update -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
-					&& _dkm_log_ok "升级完成" || _dkm_log_err "升级失败"
-			elif command -v yum >/dev/null 2>&1; then
-				yum update -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
-					&& _dkm_log_ok "升级完成" || _dkm_log_err "升级失败"
-			else
-				_dkm_log_err "无法识别包管理器"
-			fi
-			_dkm_compose_invalidate
-			_dkm_cache_invalidate
-			;;
-		2)
-			_dkm_install_specific_version
-			;;
-		3)
-			_dkm_log_warn "将卸载 Docker 引擎及全部组件"
-			_dkm_hint "容器和镜像数据仍在磁盘上，但卸载后无法使用"
-			if _dkm_confirm_strict "卸载 Docker?" "uninstall"; then
-				systemctl stop docker 2>/dev/null || true
-				if command -v apt-get >/dev/null 2>&1; then
-					apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras 2>/dev/null || true
-					apt-get autoremove -y || true
-				elif command -v dnf >/dev/null 2>&1; then
-					dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null || true
-				elif command -v yum >/dev/null 2>&1; then
-					yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null || true
-				fi
-				_dkm_log_ok "卸载完成"
-				_dkm_compose_invalidate
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			;;
-		*) return 0 ;;
-		esac
-	else
-		_dkm_log_info "Docker 未安装，将用官方脚本安装 (get.docker.com)"
-		if _dkm_confirm "安装 Docker?"; then
-			_dkm_log_info "正在下载并执行官方安装脚本..."
-			if curl -fsSL https://get.docker.com | bash; then
-				systemctl enable docker 2>/dev/null || true
-				systemctl start docker 2>/dev/null || true
-				_dkm_log_ok "Docker 安装成功并已启动: $(docker --version 2>/dev/null)"
-				_dkm_compose_invalidate
-				_dkm_cache_invalidate
-			else
-				_dkm_log_err "安装失败，检查网络或手动安装"
-			fi
-		else
-			_dkm_log_warn "已取消"
-		fi
-	fi
-	return 0
-}
-
-# ── 安装指定版本（同时用于版本回退）──
-# 原理: 列出仓库中全部可用版本供选择，然后安装锁定版本。
-# 回退 = 选择一个比当前更旧的版本安装。
-_dkm_install_specific_version() {
-	echo ""
-	# 操作示例: 帮助新手理解"回退 = 装旧版本"
-	_dkm_example "如何回退版本？
-1. 下面会列出所有可安装的版本号（新→旧）
-2. 找到想回退到的旧版本，照着输入即可
-   例: 当前 27.1.0 有问题 → 输入 26.1.4 回退
-3. 确认后自动安装并重启 Docker"
-	_dkm_log_info "可用版本列表:"
-	local _versions=""
-	if command -v apt-get >/dev/null 2>&1; then
-		_versions=$(apt-cache madison docker-ce 2>/dev/null | awk '{print $3}' | head -20 || true)
-	elif command -v yum >/dev/null 2>&1; then
-		_versions=$(yum list docker-ce --showduplicates 2>/dev/null | awk 'NR>1{print $2}' | head -20 || true)
-	fi
-	if [ -z "$_versions" ]; then
-		_dkm_log_err "未能获取版本列表（请确认已配置 Docker 官方源）"
-		return 0
-	fi
-	echo "$_versions" | nl -w2 -s'. '
-	echo ""
-	local _ver=""
-	read -e -p " 输入要安装的版本号（回退就输旧版本）: " _ver < /dev/tty || _ver=""
-	if [ -z "$_ver" ]; then
-		_dkm_log_warn "已取消"
-		return 0
-	fi
-	if ! _dkm_confirm "安装 Docker 版本 [$_ver]?"; then
-		_dkm_log_warn "已取消"
-		return 0
-	fi
-	if command -v apt-get >/dev/null 2>&1; then
-		apt-get install -y "docker-ce=$_ver" "docker-ce-cli=$_ver" containerd.io \
-			&& _dkm_log_ok "已安装 $_ver" || _dkm_log_err "安装失败"
-	else
-		yum install -y "docker-ce-$_ver" \
-			&& _dkm_log_ok "已安装 $_ver" || _dkm_log_err "安装失败"
-	fi
-	systemctl restart docker 2>/dev/null || true
-	_dkm_cache_invalidate
-	return 0
-}
-
-# ── 4.2 磁盘清理 ──
-_dkm_disk_clean() {
-	if ! _dkm_docker_running; then
-		_dkm_log_err "Docker 未运行"
-		return 0
-	fi
-	clear
-	echo -e "${rw_cheng}━━━━━━ Docker 磁盘清理 ━━━━━━${rw_lv}"
-	echo ""
-	_dkm_log_info "当前 Docker 磁盘占用:"
-	_dkm_df_print
-	echo ""
-	echo -e " ${rw_huang}1.   ${rw_lv}清理悬空镜像（安全）${rw_lv}"
-	echo -e " ${rw_huang}2.   ${rw_lv}清理已停止容器（安全）${rw_lv}"
-	echo -e " ${rw_huang}3.   ${rw_lv}清理未使用网络（安全）${rw_lv}"
-	echo -e " ${rw_huang}4.   ${rw_lv}清理构建缓存${rw_lv}"
-	echo -e " ${rw_huang}5.   ${rw_lv}一键安全清理${rw_lv}"
-	echo -e " ${rw_huang}6.   ${rw_lv}深度清理（危险，含数据卷）${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-	_dkm_return_hint
-	local _c=""
-	read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-	_c="${_c:-0}"
-
-	case "$_c" in
-	1) docker image prune -f >/dev/null 2>&1 && _dkm_log_ok "悬空镜像已清理" || _dkm_log_err "清理失败"; _dkm_cache_invalidate ;;
-	2) docker container prune -f >/dev/null 2>&1 && _dkm_log_ok "已停止容器已清理" || _dkm_log_err "清理失败"; _dkm_cache_invalidate ;;
-	3) docker network prune -f >/dev/null 2>&1 && _dkm_log_ok "未使用网络已清理" || _dkm_log_err "清理失败" ;;
-	4) docker builder prune -f >/dev/null 2>&1 && _dkm_log_ok "构建缓存已清理" || _dkm_log_err "清理失败" ;;
-	5)
-		_dkm_hint "安全清理 = 停止的容器 + 悬空镜像 + 未用网络，不动数据卷"
-		if _dkm_confirm "执行一键安全清理?"; then
-			docker system prune -f >/dev/null 2>&1 && _dkm_log_ok "安全清理完成" || _dkm_log_err "清理失败"
-			_dkm_cache_invalidate
-		else
-			_dkm_log_warn "已取消"
-		fi
-		;;
-	6)
-		_dkm_example "深度清理会删掉什么？
-1. 所有未被容器使用的镜像
-2. 停止的容器 + 未用网络
-3. 所有未挂载的数据卷（数据库等数据，删了不可恢复）
-只建议在磁盘告急、且重要数据已备份时执行"
-		if _dkm_confirm_strict "执行深度清理? 数据卷删除不可恢复" "deep-prune"; then
-			docker system prune -a -f --volumes >/dev/null 2>&1 && _dkm_log_ok "深度清理完成" || _dkm_log_err "清理失败"
-			_dkm_cache_invalidate
-		else
-			_dkm_log_warn "已取消"
-		fi
-		;;
-	0) return 0 ;;
-	*) _dkm_log_err "无效选项" ;;
-	esac
-	return 0
-}
-
-# ── 磁盘占用（键值对面板: 每类资源一张卡片，可回收率着色）──
-_dkm_df_print() {
-	local _raw _type _total _active _size _recl
-	_raw=$(docker system df --format "{{.Type}}|{{.Total}}|{{.Active}}|{{.Size}}|{{.Reclaimable}}" 2>/dev/null || true)
-	if [[ -z "$_raw" ]]; then
-		_dkm_log_warn "无法获取磁盘占用"
-		return 0
-	fi
-	while IFS='|' read -r _type _total _active _size _recl; do
-		[[ -z "${_type:-}" ]] && continue
-		# 类型名汉化
-		case "$_type" in
-			Images)          _type="镜像" ;;
-			Containers)      _type="容器" ;;
-			"Local Volumes") _type="数据卷" ;;
-			"Build Cache")   _type="构建缓存" ;;
-		esac
-		_dkm_card_rule
-		_dkm_card_title "$_type"
-		_dkm_kv "类型 (Type)" "$_type"
-		_dkm_kv "总数 (Total)" "$_total"
-		_dkm_kv "活跃 (Active)" "$_active"
-		_dkm_kv "大小 (Size)" "$_size"
-		_dkm_kv "可回收 (Reclaim)" "$_recl"
-		_dkm_card_end
-	done <<< "$_raw"
-	return 0
-}
-
-# ── 4.3 健康诊断 ──
-# 检查项: 守护进程状态 / 网络连通性 / 存储驱动 / 不健康容器 / 磁盘
-_dkm_health_check() {
-	echo -e "${rw_cheng}━━━━━━ Docker 健康诊断 ━━━━━━${rw_lv}"
-	echo ""
-
-	# 1. 守护进程状态
-	echo -e " ${rw_cheng}── 1. 守护进程状态 ──${rw_lv}"
-	if _dkm_docker_running; then
-		_dkm_log_ok "Docker 守护进程: 运行中"
-		if command -v systemctl >/dev/null 2>&1; then
-			local _svc
-			_svc=$(systemctl is-active docker 2>/dev/null || true)
-			_dkm_log_info "systemd 服务状态: ${_svc:-未知}"
-		fi
-		if _dkm_has_colima; then
-			_dkm_colima_parse_status
-			if [[ "$_DKM_CL_OK" -eq 1 ]]; then
-				_dkm_log_info "Colima 状态: 运行中（运行时 ${_DKM_CL_RUNTIME:--}，架构 ${_DKM_CL_ARCH:--}）"
-			else
-				_dkm_log_info "Colima 状态: 已停止"
-			fi
-		fi
-	else
-		_dkm_log_err "Docker 守护进程: 未运行或无法连接"
-		if _dkm_has_colima; then
-			_dkm_log_warn "macOS 提示: 试试 colima start 恢复"
-		fi
-	fi
-	echo ""
-
-	# 2. 网络连通性（探测 Docker Hub 注册表）
-	echo -e " ${rw_cheng}── 2. 网络连通性 ──${rw_lv}"
-	if curl -m 5 -sI https://registry-1.docker.io/v2/ >/dev/null 2>&1; then
-		_dkm_log_ok "registry-1.docker.io 可达（能直接拉镜像）"
-	else
-		_dkm_log_warn "registry-1.docker.io 不可达（可能需要配镜像加速器）"
-		local _mirrors
-		_mirrors=$(docker info --format '{{range .RegistryConfig.Mirrors}}{{.}} {{end}}' 2>/dev/null || true)
-		if [ -n "${_mirrors:-}" ]; then
-			_dkm_log_info "已配置的镜像加速器: $_mirrors"
-		else
-			_dkm_log_info "未配置镜像加速器"
-		fi
-	fi
-	echo ""
-
-	# 3. 存储驱动健康度
-	echo -e " ${rw_cheng}── 3. 存储驱动 ──${rw_lv}"
-	if _dkm_docker_running; then
-		local _driver _backing
-		_driver=$(docker info --format '{{.Driver}}' 2>/dev/null || true)
-		_backing=$(docker info --format '{{index .DriverStatus 0}}' 2>/dev/null || true)
-		_dkm_log_info "存储驱动: ${_driver:-未知} ${_backing}"
-		case "${_driver:-}" in
-			overlay2) _dkm_log_ok "overlay2: 推荐驱动，状态正常" ;;
-			"")       _dkm_log_err "无法读取存储驱动信息" ;;
-			*)        _dkm_log_warn "非 overlay2 驱动，建议关注性能与兼容性" ;;
-		esac
-	fi
-	echo ""
-
-	# 4. 容器健康检查
-	echo -e " ${rw_cheng}── 4. 容器健康 ──${rw_lv}"
-	if _dkm_docker_running; then
-		local _unhealthy
-		_unhealthy=$(docker ps --filter "health=unhealthy" --format "{{.Names}}" 2>/dev/null || true)
-		if [ -n "$_unhealthy" ]; then
-			_dkm_log_err "发现不健康容器:"
-			echo "$_unhealthy" | while IFS= read -r _n; do echo "    - $_n"; done
-		else
-			_dkm_log_ok "所有运行中容器健康状态正常"
-		fi
-		local _restarting
-		_restarting=$(docker ps --filter "status=restarting" -q 2>/dev/null | wc -l | tr -d ' ') || _restarting=0
-		if [ "${_restarting:-0}" -gt 0 ]; then
-			_dkm_log_warn "有 ${_restarting} 个容器在反复重启"
-		fi
-	fi
-	echo ""
-
-	# 5. 磁盘空间
-	echo -e " ${rw_cheng}── 5. 磁盘空间 ──${rw_lv}"
-	df -h / /var/lib/docker 2>/dev/null | head -5 || df -h / 2>/dev/null | head -3 || true
-	echo ""
-	_dkm_log_ok "诊断完成"
-	return 0
-}
-
-# ── 4.4 版本信息（统一 KV 面板）──
-_dkm_version_show() {
-	local _docker_cli="-" _docker_srv="-" _compose_v="-" _colima_v="-"
-	if _dkm_has_docker; then
-		_docker_cli=$(docker version --format '{{.Client.Version}}' 2>/dev/null || true)
-		_docker_srv=$(docker version --format '{{.Server.Version}}' 2>/dev/null || true)
-	fi
-	_dkm_compose_cache
-	if [[ -n "$_DKM_COMPOSE_CMD" ]]; then
-		_compose_v=$($_DKM_COMPOSE_CMD version --short 2>/dev/null || $_DKM_COMPOSE_CMD version 2>/dev/null | head -1 || true)
-	fi
-	if _dkm_has_colima; then
-		_colima_v=$(colima version 2>/dev/null | head -1 || true)
-	fi
-	_dkm_panel_open "版本信息"
-	_dkm_panel_kv "工具箱版本" "v${sh_v:-unknown}"
-	_dkm_panel_kv "容器管理模块" "v${_DKM_VERSION}"
-	_dkm_panel_kv "Docker 客户端" "${_docker_cli:-未安装}"
-	_dkm_panel_kv "Docker 服务端" "${_docker_srv:-未运行}"
-	_dkm_panel_kv "Docker Compose" "${_compose_v:-未安装}"
-	_dkm_panel_kv "Colima" "${_colima_v:-未安装}"
-	_dkm_panel_close
-	_dkm_return_hint
-	return 0
-}
-
-# ================================================================
-# 【模块 5】Colima 虚拟机管理（macOS 应急断联核心）
-# ================================================================
-_dkm_colima_menu() {
-	if ! _dkm_has_colima; then
-		_dkm_log_err "未检测到 colima 命令（该模块适用于 macOS Colima 环境）"
-		break_end || true
-		return 0
-	fi
-	while true; do
-		clear
-		echo -e "${rw_cheng}━━━━━━━━━━━━  Colima 虚拟机管理  ━━━━━━━━━━━━${rw_lv}"
-		echo ""
-		# 状态面板（汉化，替代原始英文输出）
-		_dkm_colima_parse_status
-		if [[ "$_DKM_CL_OK" -eq 1 ]]; then
-			printf ' %b\n' "${rw_lv}● 虚拟机状态: 运行中${rw_lv}   运行时: ${_DKM_CL_RUNTIME:--}   架构: ${_DKM_CL_ARCH:--}"
-		else
-			printf ' %b\n' "${rw_hong}● 虚拟机状态: 已停止${rw_lv}"
-		fi
-		echo ""
-		echo -e " ${rw_huang}1.   ${rw_lv}启动虚拟机${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}停止虚拟机${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}重启虚拟机${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}查看状态${rw_lv}"
-		echo -e " ${rw_cheng}──── 应急操作 ────${rw_lv}"
-		echo -e " ${rw_hong}5.   ${rw_lv}应急断联（虚拟机卡死时用）${rw_lv}"
-		echo -e " ${rw_huang}6.   ${rw_lv}应急恢复（断联后用这个恢复）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
-		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _c=""
-		read -e -p " 请选择 [默认 0]: " _c < /dev/tty || _c=""
-		_c="${_c:-0}"
-
-		case "$_c" in
-		1)
-			echo ""
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_do_start; then
-				_dkm_cache_invalidate
-			fi
-			break_end || true
-			;;
-		2)
-			echo ""
-			if _dkm_confirm "停止 Colima?（所有容器会停止运行）"; then
-				if _dkm_colima_do_stop; then
-					_dkm_cache_invalidate
-				else
-					_dkm_log_warn "可尝试应急断联（选项 5）"
-				fi
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		3)
-			echo ""
-			if _dkm_confirm "重启 Colima?"; then
-				if _dkm_colima_do_restart; then
-					_dkm_colima_wait_docker
-					_dkm_cache_invalidate
-				fi
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		4)
-			echo ""
-			_dkm_colima_show_panel
-			break_end || true
-			;;
-		5)
-			echo ""
-			# 执行前先讲清楚应急断联会做什么
-			_dkm_example "应急断联会按顺序做三件事:
-1. 先尝试正常停止虚拟机 (colima stop)
-2. 正常停止失败 → 强制停止 (--force)
-3. 还有残留 → 列出残留进程，你确认后才清理
-什么时候用: 虚拟机卡死、docker 命令一直转圈没反应"
-			if _dkm_confirm "执行应急断联?"; then
-				_dkm_colima_emergency_stop
-				_dkm_cache_invalidate
-			else
-				_dkm_log_warn "已取消"
-			fi
-			break_end || true
-			;;
-		6)
-			echo ""
-			_dkm_example "应急恢复做什么?
-1. 启动虚拟机 (colima start)
-2. 自动等待 Docker 就绪（最长 90 秒）
-3. 就绪后提示恢复完成，可正常使用"
-			# if 包裹: set -e 下独立调用返回非 0 会终止脚本
-			if _dkm_colima_recovery; then
-				_dkm_cache_invalidate
-			fi
-			break_end || true
-			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项"; sleep 1 ;;
-		esac
-	done
-}
-
-# ================================================================
-# Colima 输出控制辅助
-# 目标: 屏蔽 colima 底层英文日志（time="..." level=info msg="..."），
-# 用中文状态行 + 统一 KV 面板替代原始输出。
-# ================================================================
-
-# ── 静默执行: 只记录日志到临时文件，屏幕保持干净 ──
-# 用法: _dkm_colima_quiet <参数...>
-# 说明: 输出重定向到日志文件（供失败时排查），退出码原样返回。
-_dkm_colima_quiet() {
-	colima "$@" >/dev/null 2>>"${HOME}/.riwi_colima_last.log"
-	return $?
-}
-
-# ================================================================
-# 渐变进度条等待函数（与后台进程联动，样式与 git 模块一致）
-# ================================================================
-# 用法: _dkm_progress_wait <后台进程PID> <状态文字> <预计耗时秒数>
-# 原理:
-#   colima 等耗时命令放后台异步执行，主线程不阻塞；
-#   进度条按已用时间模拟推进（0.2 秒/帧，█ 填充 + 旋转符 + 百分比），
-#   颜色过渡平滑（黄色进度框 → 完成转绿色）；
-#   进程一旦结束（kill -0 探测失效），进度条补满 100% 并停止，
-#   随后用 wait 收集进程退出码返回给调用方。
-# 返回: 后台进程退出码（0=成功，非 0=失败）
-# 超时: 超过预计耗时 5 倍仍未结束则终止进程并返回失败，避免无限等待。
-_dkm_progress_wait() {
-	local _pid="$1" _text="${2:-处理中}" _max_wait="${3:-60}"
-	local _bar_width=30
-	local _spin_idx=0
-	local _spin_chars="|/-\\"
-	local _elapsed=0                 # 帧计数（0.2 秒/帧）
-	local _max_ticks=$(( _max_wait * 5 ))   # 预计耗时换算成帧数（1 秒 5 帧）
-	local _progress _filled _empty _pct _spin_char _i
-
-	while kill -0 "$_pid" 2>/dev/null; do
-		# 按已用时间模拟进度，封顶 99%（100% 留给真实完成）
-		_progress=$(( _elapsed * _bar_width / _max_ticks ))
-		[[ "$_progress" -gt "$_bar_width" ]] && _progress=$_bar_width
-		_pct=$(( _elapsed * 100 / _max_ticks ))
-		[[ "$_pct" -gt 99 ]] && _pct=99
-		# 拼已填充段（█）与留白段（░）
-		_filled=""
-		_i=0
-		while [[ "$_i" -lt "$_progress" ]]; do _filled+="█"; _i=$((_i+1)); done
-		_empty=""
-		_i=0
-		while [[ "$_i" -lt $((_bar_width - _progress)) ]]; do _empty+="░"; _i=$((_i+1)); done
-		# 旋转符（|/-\ 循环）
-		_spin_char="${_spin_chars:$_spin_idx:1}"
-		_spin_idx=$(( (_spin_idx + 1) % 4 ))
-		# \r 回行首覆盖 → 动态刷新，不产生多余行、不阻塞主线程
-		printf '\r %b[%b%b]%b %3d%% %s %s...' "${rw_huang}" "$_filled" "$_empty" "${rw_lv}" "$_pct" "$_spin_char" "$_text"
-		sleep 0.2
-		_elapsed=$((_elapsed + 1))
-		# 硬超时: 超过预计 5 倍仍不结束 → 终止进程，避免脚本卡死
-		if [[ "$_elapsed" -ge $((_max_ticks * 5)) ]]; then
-			kill "$_pid" 2>/dev/null
-			break
-		fi
-	done
-
-	# 进程结束: 进度条补满 100%（转绿），换行衔接后续状态输出
-	_filled=""
-	_i=0
-	while [[ "$_i" -lt "$_bar_width" ]]; do _filled+="█"; _i=$((_i+1)); done
-	printf '\r %b[%b]%b 100%%  完成%b\n' "${rw_lv}" "$_filled" "${rw_lv}" "${rw_bai}"
-
-	# 收集后台进程退出码（|| 捕获，set -e 下安全）
-	local _rc=0
-	wait "$_pid" 2>/dev/null || _rc=$?
-	return "$_rc"
-}
-
-# ── 状态解析: 提取 colima status 关键字段（全静默）──
-# 结果写入全局变量 _DKM_CL_STATUS / _DKM_CL_ARCH / _DKM_CL_RUNTIME /
-# _DKM_CL_MOUNT / _DKM_CL_SOCKET，并设置 _DKM_CL_OK（1=运行中 0=未运行）
-# 实测输出格式（每行带 time= level= 前缀）:
-#   msg="colima is running using macOS Virtualization.Framework"
-#   msg="arch: aarch64"  msg="runtime: docker"  msg="mountType: virtiofs"
-#   msg="docker socket: unix://...docker.sock"
-_dkm_colima_parse_status() {
-	_DKM_CL_STATUS=""; _DKM_CL_ARCH=""; _DKM_CL_RUNTIME=""
-	_DKM_CL_MOUNT=""; _DKM_CL_SOCKET=""; _DKM_CL_OK=0
-	local _out
-	_out=$(colima status 2>&1 || true)
-	# 运行中: status 输出小写 "colima is running"；list 输出大写 "Running"，两者都兼容
-	if printf '%s' "$_out" | grep -qiE 'colima is running|Running'; then
-		_DKM_CL_OK=1
-		_DKM_CL_STATUS="运行中"
-		# 逐字段提取（均取第一个匹配，避免 containerd socket 等多行干扰）
-		_DKM_CL_ARCH=$(printf '%s\n' "$_out" | grep -o 'arch: [a-zA-Z0-9_]*' | head -1 | awk '{print $2}')
-		_DKM_CL_RUNTIME=$(printf '%s\n' "$_out" | grep -o 'runtime: [a-zA-Z0-9_-]*' | head -1 | awk '{print $2}')
-		_DKM_CL_MOUNT=$(printf '%s\n' "$_out" | grep -o 'mountType: [a-zA-Z0-9_]*' | head -1 | awk '{print $2}')
-		_DKM_CL_SOCKET=$(printf '%s\n' "$_out" | grep -o 'docker socket: [^ "]*' | head -1 | sed 's/^docker socket: *//')
-	else
-		_DKM_CL_STATUS="已停止"
-		_DKM_CL_ARCH="-"; _DKM_CL_RUNTIME="-"; _DKM_CL_MOUNT="-"; _DKM_CL_SOCKET="-"
-	fi
-	return 0
-}
-
-# ── Colima KV 行: 统一走全局 KV 面板模板（冒号对齐）──
-_dkm_colima_kv() {
-	_dkm_panel_kv "$@"
-}
-
-# ── 启动成功信息表格（统一 KV 面板）──
-_dkm_colima_show_info() {
-	_dkm_colima_parse_status
-	_dkm_log_ok "Colima 虚拟机已成功启动！"
-	_dkm_panel_open
-	_dkm_colima_kv "架构 (Arch)" "${_DKM_CL_ARCH:--}"
-	_dkm_colima_kv "运行时 (Runtime)" "${_DKM_CL_RUNTIME:--}"
-	_dkm_colima_kv "挂载类型 (Mount)" "${_DKM_CL_MOUNT:--}"
-	_dkm_colima_kv "Socket 路径" "${_DKM_CL_SOCKET:--}"
-	_dkm_panel_close
-	return 0
-}
-
-# ── 汉化状态面板: 替代 colima status/list 的英文原始输出 ──
-# 解析 status + list，以统一 KV 面板展示
-_dkm_colima_show_panel() {
-	_dkm_colima_parse_status
-	_dkm_panel_open "Colima 虚拟机状态"
-	if [[ "$_DKM_CL_OK" -eq 1 ]]; then
-		_dkm_colima_kv "虚拟机状态" "运行中"
-	else
-		_dkm_colima_kv "虚拟机状态" "已停止"
-	fi
-	_dkm_colima_kv "架构 (Arch)" "${_DKM_CL_ARCH:--}"
-	_dkm_colima_kv "运行时 (Runtime)" "${_DKM_CL_RUNTIME:--}"
-	_dkm_colima_kv "挂载类型 (Mount)" "${_DKM_CL_MOUNT:--}"
-	_dkm_colima_kv "Socket 路径" "${_DKM_CL_SOCKET:--}"
-
-	# 实例列表（colima list，静默解析）
-	# 实测格式: PROFILE STATUS ARCH CPUS MEMORY DISK RUNTIME [ADDRESS]
-	local _inst _cnt=0
-	_inst=$(colima list 2>/dev/null | tail -n +2 || true)
-	if [[ -n "$_inst" ]]; then
-		local _name _status _arch _cpus _mem _disk _runtime _st_cn
-		while IFS= read -r _line; do
-			[[ -z "$_line" ]] && continue
-			read -r _name _status _arch _cpus _mem _disk _runtime <<< "$_line" || true
-			# 实例状态汉化
-			_st_cn="${_status:--}"
-			case "$_status" in
-				Running) _st_cn="运行中" ;;
-				Stopped) _st_cn="已停止" ;;
-				Starting) _st_cn="启动中" ;;
-				Stopping) _st_cn="停止中" ;;
-			esac
-			_dkm_colima_kv "实例 ${_cnt}" "${_name:-default}"
-			_dkm_panel_kv_cont "状态: ${_st_cn}   架构: ${_arch:--}   运行时: ${_runtime:--}"
-			_dkm_panel_kv_cont "资源: ${_cpus:-?} 核 / ${_mem:-?} / ${_disk:-?}"
-			_cnt=$((_cnt + 1))
-		done <<< "$_inst"
-	else
-		_dkm_colima_kv "实例" "无"
-		_cnt=0
-	fi
-	_dkm_colima_kv "实例数量" "$_cnt"
-	_dkm_panel_close
-	_dkm_return_hint
-	return 0
-}
-
-# ── 启动执行: 静默 + 进度提示 + 失败时给出最近日志 ──
-_dkm_colima_do_start() {
-	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行（主线程不阻塞），输出写入日志供失败排查
-	colima start >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 预计 10~60 秒，传 60
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在启动 Colima 虚拟机" 60 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
-		_dkm_colima_show_info
-		return 0
-	else
-		_dkm_log_err "启动失败"
-		_dkm_hint "失败原因（最近日志）:"
-		tail -5 "${HOME}/.riwi_colima_last.log" 2>/dev/null | while IFS= read -r _l; do
-			printf '   %b\n' "${rw_qing}${_l}${rw_bai}"
-		done
+	if [ -z "$_list" ]; then
+		echo -e " ${rw_huang}没有符合条件的容器${rw_lv}"
 		return 1
 	fi
-}
-
-# ── 停止执行: 后台执行 + 进度条（或静默模式）──
-# 用法: _dkm_colima_do_stop [--force] [quiet]
-#   --force: 强制停止; 第二参为 quiet 时不显示进度条
-#   （供应急断联叠加使用，避免进度条嵌套）
-_dkm_colima_do_stop() {
-	local _force="" _quiet="" _arg
-	for _arg in "$@"; do
-		case "$_arg" in
-			--force) _force="--force" ;;
-			quiet)   _quiet="1" ;;
-		esac
-	done
-	local _desc="停止虚拟机"
-	[[ -n "$_force" ]] && _desc="强制停止虚拟机"
-	: > "${HOME}/.riwi_colima_last.log"
-	local _rc=0
-	if [[ -n "$_quiet" ]]; then
-		# 静默模式（应急断联内部叠加调用）: 直接执行，不显示进度条
-		_dkm_colima_quiet stop $_force || _rc=$?
-	else
-		# 普通模式: 后台异步执行 + 渐变进度条联动（预计 5~30 秒）
-		colima stop $_force >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-		local _pid=$!
-		# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-		_dkm_progress_wait "$_pid" "正在${_desc}" 30 || _rc=$?
-	fi
-	if [[ "$_rc" -eq 0 ]]; then
-		_dkm_log_ok "虚拟机已停止"
-		return 0
-	else
-		_dkm_log_err "${_desc}失败"
-		_dkm_hint "失败原因（最近日志）:"
-		tail -5 "${HOME}/.riwi_colima_last.log" 2>/dev/null | while IFS= read -r _l; do
-			printf '   %b\n' "${rw_qing}${_l}${rw_bai}"
-		done
-		return 1
-	fi
-}
-
-# ── 重启执行: 后台执行 + 进度条联动 ──
-_dkm_colima_do_restart() {
-	: > "${HOME}/.riwi_colima_last.log"
-	# 后台异步执行，主线程不阻塞
-	colima restart >>"${HOME}/.riwi_colima_last.log" 2>&1 &
-	local _pid=$!
-	# 渐变进度条联动: 重启耗时最长（15~90 秒），传 90
-	# （set -e 下必须用 || 捕获，不能让非 0 返回作为独立语句）
-	local _rc=0
-	_dkm_progress_wait "$_pid" "正在重启 Colima 虚拟机" 90 || _rc=$?
-	if [[ "$_rc" -eq 0 ]]; then
-		_dkm_colima_show_info
-		return 0
-	else
-		_dkm_log_err "重启失败"
-		_dkm_hint "失败原因（最近日志）:"
-		tail -5 "${HOME}/.riwi_colima_last.log" 2>/dev/null | while IFS= read -r _l; do
-			printf '   %b\n' "${rw_qing}${_l}${rw_bai}"
-		done
-		return 1
-	fi
-}
-
-# ================================================================
-# 【核心】应急断联逻辑
-# 原理: 三级递进式停止
-#   第 1 级: colima stop        优雅停止（发送 ACPI 关机，等待 VM 退出）
-#   第 2 级: colima stop --force 强制停止（优雅失败后兜底）
-#   第 3 级: 进程清理           清理残留的 colima/lima 守护进程
-# 全程无 unprotected rm，进程清理前逐个列出并二次确认。
-# ================================================================
-_dkm_colima_emergency_stop() {
-	if ! _dkm_has_colima; then
-		_dkm_log_err "未检测到 colima 命令，无法执行应急断联"
-		return 1
-	fi
-	echo ""
-	_dkm_log_warn "=== 应急断联开始 ==="
-
-	# 第 1 级: 优雅停止（静默执行，屏蔽英文日志）
-	_dkm_log_info "[1/3] 尝试正常停止..."
-	if _dkm_colima_do_stop quiet; then
-		: # 成功: do_stop 内已打印 [成功]
-	else
-		# 第 2 级: 强制停止
-		_dkm_log_warn "[2/3] 正常停止失败，尝试强制停止..."
-		if _dkm_colima_do_stop --force quiet; then
-			:
-		else
-			_dkm_log_err "强制停止也失败，进入进程清理兜底"
-		fi
-	fi
-
-	# 第 3 级: 残留进程清理（严格非空校验 + 列出进程 + 二次确认）
-	_dkm_log_info "[3/3] 检查残留进程..."
-	local _procs
-	_procs=$(pgrep -fl "colima|lima --" 2>/dev/null || true)
-	if [ -z "${_procs:-}" ]; then
-		_dkm_log_ok "无残留进程，环境已干净"
-		_dkm_log_ok "=== 应急断联完成 ==="
-		_dkm_log_info "恢复方法: 选 [应急恢复]，或手动执行 colima start"
-		return 0
-	fi
-	echo -e " ${rw_hong}发现残留进程:${rw_lv}"
-	echo "$_procs" | while IFS= read -r _p; do echo "    $_p"; done
-	if _dkm_confirm "清理以上残留进程?"; then
-		# 精确匹配 colima 相关进程，避免误杀无关进程
-		pkill -f "colima daemon" 2>/dev/null || true
-		pkill -f "colima _daemon" 2>/dev/null || true
-		pkill -f "lima --" 2>/dev/null || true
-		sleep 1
-		local _left
-		_left=$(pgrep -fl "colima|lima --" 2>/dev/null || true)
-		if [ -z "${_left:-}" ]; then
-			_dkm_log_ok "残留进程已全部清理"
-		else
-			_dkm_log_warn "仍有进程未退出，可稍后重试"
-		fi
-	fi
-	_dkm_log_ok "=== 应急断联完成 ==="
-	_dkm_log_info "恢复方法: 选 [应急恢复]，或手动执行 colima start"
-	return 0
-}
-
-# ── 应急恢复: 静默启动 + 表格化 + 轮询等待 Docker 引擎就绪（最长 90 秒）──
-_dkm_colima_recovery() {
-	if ! _dkm_has_colima; then
-		_dkm_log_err "未检测到 colima 命令"
-		return 1
-	fi
-	_dkm_log_info "正在恢复环境..."
-	if _dkm_colima_do_start; then
-		_dkm_colima_wait_docker
-		return 0
-	fi
-	return 1
-}
-
-# ── 等待 Docker 引擎就绪（供 start / recovery 复用）──
-_dkm_colima_wait_docker() {
+	echo -e " ${rw_cheng}── 可选容器 ──${rw_lv}"
 	local _i=1
-	_dkm_log_info "等待 Docker 就绪（最长 90 秒）..."
-	while [ "$_i" -le 30 ]; do
-		if docker info >/dev/null 2>&1; then
-			_dkm_log_ok "Docker 已就绪，环境恢复正常"
-			return 0
-		fi
-		sleep 3
-		_i=$((_i + 1))
-	done
-	_dkm_log_warn "Docker 90 秒内未就绪，请手动检查: docker info"
-	return 0
-}
-
-# ================================================================
-# 【核心】Ctrl+C 应急断联中断处理器
-# 原理: 菜单循环中所有 read 均容忍 130 返回值（|| 兜底），
-# INT 信号触发本处理器，用户可选择立即执行应急断联或取消。
-# 交互式命令（logs -f / stats / exec）执行期间陷阱被临时解除，
-# 因此那些场景下 Ctrl+C 只退出当前命令，不会误触发断联。
-# ================================================================
-_dkm_emergency_interrupt() {
+	_DK_CONTAINER_NAMES=()
+	while IFS='|' read -r _name _img _stat; do
+		echo -e " ${rw_huang}${_i}.${rw_lv} ${_name}  [${_img}]  ${_stat}"
+		_DK_CONTAINER_NAMES+=("$_name")
+		((_i++))
+	done <<< "$_list"
+	echo -e " ${rw_huang}0.${rw_lv} 取消"
 	echo ""
-	echo ""
-	_dkm_log_warn "检测到中断（Ctrl+C）——应急断联入口"
-	if ! _dkm_has_colima; then
-		_dkm_log_info "当前环境没有 Colima，无可执行的应急操作"
-		_dkm_log_info "按回车返回菜单..."
-		read -r -s < /dev/tty || true
-		return 0
+	read -e -p " 请选择编号: " _idx < /dev/tty
+	[ "$_idx" = "0" ] && return 1
+	[ -z "$_idx" ] && return 1
+	if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_DK_CONTAINER_NAMES[@]} ]; then
+		echo -e " ${rw_hong}无效选择${rw_lv}"
+		return 1
 	fi
-	_dkm_example "1 → 应急断联: 正常停止失败就强制停止，再清理残留进程
-2 → 断联并删除虚拟机: 连虚拟机一起删掉（数据全丢，慎用）
-0 → 什么都不做，回菜单"
-	echo -e "  ${rw_huang}1.${rw_lv} 立即应急断联${rw_lv}"
-	echo -e "  ${rw_hong}2.${rw_lv} 断联并删除虚拟机（危险）${rw_lv}"
-	echo -e "  ${rw_huang}0.${rw_lv} 取消，返回菜单（默认）${rw_lv}"
-	local _ec=""
-	read -e -p " 请选择 [默认 0]: " _ec < /dev/tty || _ec=""
-	_ec="${_ec:-0}"
-	case "$_ec" in
-	1)
-		_dkm_colima_emergency_stop || true
-		_dkm_cache_invalidate
-		;;
-	2)
-		# delete --force 会删除虚拟机及其中所有数据，需双保险确认
-		if _dkm_confirm_strict "删除虚拟机会丢失其中全部数据，确认?" "delete"; then
-			_dkm_log_info "正在删除虚拟机..."
-			if _dkm_colima_quiet delete --force; then
-				_dkm_log_ok "虚拟机已删除，之后可用 colima start 重建"
-				_dkm_cache_invalidate
-			else
-				_dkm_log_err "删除失败，可手动执行: colima delete --force"
-			fi
-		else
-			_dkm_log_warn "已取消"
-		fi
-		;;
-	*)
-		_dkm_log_info "已取消，返回菜单"
-		;;
-	esac
-	# 中断后暂停，让用户看清结果再回到菜单
-	echo ""
-	read -r -s -p " 按回车返回菜单..." < /dev/tty || true
+	_DK_PICK="${_DK_CONTAINER_NAMES[$((_idx - 1))]}"
 	return 0
 }
 
+# ── 辅助: 列出镜像并让用户选择，返回到 $_DK_PICK ──
+_dk_pick_image() {
+	local _list
+	_list=$(docker images --format "{{.Repository}}:{{.Tag}}|{{.ID}}|{{.Size}}" 2>/dev/null)
+	if [ -z "$_list" ]; then
+		echo -e " ${rw_huang}没有镜像${rw_lv}"
+		return 1
+	fi
+	echo -e " ${rw_cheng}── 可选镜像 ──${rw_lv}"
+	local _i=1
+	_DK_IMAGE_NAMES=()
+	while IFS='|' read -r _name _id _size; do
+		echo -e " ${rw_huang}${_i}.${rw_lv} ${_name}  [${_id}]  ${_size}"
+		_DK_IMAGE_NAMES+=("$_name")
+		((_i++))
+	done <<< "$_list"
+	echo -e " ${rw_huang}0.${rw_lv} 取消"
+	echo ""
+	read -e -p " 请选择编号: " _idx < /dev/tty
+	[ "$_idx" = "0" ] && return 1
+	[ -z "$_idx" ] && return 1
+	if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_DK_IMAGE_NAMES[@]} ]; then
+		echo -e " ${rw_hong}无效选择${rw_lv}"
+		return 1
+	fi
+	_DK_PICK="${_DK_IMAGE_NAMES[$((_idx - 1))]}"
+	return 0
+}
+
+# ── 辅助: 获取 Compose 命令 ──
+_dk_compose_cmd() {
+	if docker compose version &>/dev/null; then
+		echo "docker compose"
+	elif command -v docker-compose &>/dev/null; then
+		echo "docker-compose"
+	else
+		echo ""
+	fi
+}
+
 # ================================================================
-# Docker 管理主菜单（对外唯一入口，保持原函数名兼容）
-# ================================================================
-# 严格模式包装器:
-#   1. 记录进入前的 shell 选项（$-），启用 set -euo pipefail
-#   2. 注册 Ctrl+C 应急断联陷阱
-#   3. 菜单退出后精确还原原有选项与陷阱，不影响外层脚本
+# Docker 主菜单
 # ================================================================
 docker_manager_menu() {
-	local _prev_opts="$-" _had_e=0 _had_u=0
-	if [[ "$_prev_opts" == *e* ]]; then _had_e=1; fi
-	if [[ "$_prev_opts" == *u* ]]; then _had_u=1; fi
+while true; do
+	clear
+	send_stats "Docker"
 
-	# 防御性编程: 未定义变量报错 + 出错即退 + 管道错误不吞
-	set -euo pipefail
-	trap '_dkm_emergency_interrupt' INT
-
-	# 性能优化: 统计上报只在进入模块时执行一次，不在菜单循环内重复
-	if command -v send_stats >/dev/null 2>&1; then
-		send_stats "Docker" || true
+	# ── 状态探测 ──
+	local _dk_stat="${rw_hong}未安装${rw_lv}" _dr=0 _da=0 _di=0
+	if command -v docker &>/dev/null; then
+		if docker info &>/dev/null; then
+			_dk_stat="${rw_lv}运行中${rw_lv}"
+			_dr=$(docker ps -q 2>/dev/null | wc -l | tr -d ' ')
+			_da=$(docker ps -a -q 2>/dev/null | wc -l | tr -d ' ')
+			_di=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
+		else
+			_dk_stat="${rw_huang}已安装未运行${rw_lv}"
+		fi
 	fi
-	# 进入模块时重置缓存状态，确保首次渲染取最新数据
-	_dkm_cache_invalidate
-	_dkm_compose_invalidate
 
-	local _rc=0
-	_dkm_main_menu_loop || _rc=$?
+	# Compose 状态
+	local _compose_stat="${rw_hong}未安装${rw_lv}"
+	if [ -n "$(_dk_compose_cmd)" ]; then
+		_compose_stat="${rw_lv}已安装${rw_lv}"
+	fi
 
-	# 还原 shell 选项，避免污染外层脚本
-	trap - INT
-	if [ "$_had_e" -eq 0 ]; then set +e; fi
-	if [ "$_had_u" -eq 0 ]; then set +u; fi
-	set +o pipefail 2>/dev/null || true
-	return 0
+	echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 管理  ━━━━━━━━━━━━${rw_lv}"
+	echo -e " Docker: ${_dk_stat}   容器: ${rw_lv}${_dr}${rw_lv}运行/${rw_huang}$(( _da - _dr ))${rw_lv}停止   镜像: ${rw_lv}${_di}${rw_lv}"
+	echo -e " Compose: ${_compose_stat}"
+	echo ""
+	echo -e " ${rw_cheng}──── 容器 ────${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}容器管理（启动/停止/重启/删除/日志）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}进入容器 Shell${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}一键运行新容器（交互式引导）${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 镜像 ────${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}镜像管理（拉取/搜索/删除/导出导入）${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── Compose ────${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}Compose 项目管理${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}──── 系统维护 ────${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}安装 / 升级 Docker${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}磁盘清理（悬空镜像/停止容器/未用网络）${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}健康诊断${rw_lv}"
+	echo -e " ${rw_huang}9.   ${rw_lv}版本信息${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回主菜单${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请选择: " dk_choice
+
+	case $dk_choice in
+	  1) docker_container_manage ;;
+	  2) docker_shell_access ;;
+	  3) docker_quick_run ;;
+	  4) docker_image_manage ;;
+	  5) docker_compose_manage ;;
+	  6) docker_install_upgrade ;;
+	  7) docker_system_clean ;;
+	  8) docker_health_check ;;
+	  9) docker_version_show ;;
+	  0) return ;;
+	  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
+	esac
+done
 }
 
-# ── 主菜单循环 ──
-# 返回秒开原理: 状态栏数据全部来自带 TTL 的缓存，
-# 按 0/回车返回时 _dkm_status_refresh 命中缓存（零外部命令），
-# 只做 clear + 重绘，不做任何系统探测。
-_dkm_main_menu_loop() {
+# ================================================================
+# 容器管理
+# ================================================================
+docker_container_manage() {
+while true; do
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━━━━━━━  容器管理  ━━━━━━━━━━━━${rw_lv}"
+	echo ""
+	# 容器列表（表格形式）
+	docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null | head -30
+	echo ""
+	echo -e " ${rw_cheng}──── 操作 ────${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}启动容器${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}停止容器${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}重启容器${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}删除容器${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}查看日志${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}查看详情${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}重命名容器${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}清理所有已停止容器${rw_lv}"
+	echo -e " ${rw_huang}9.   ${rw_lv}批量启动/停止${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请选择: " choice
+
+	case $choice in
+	  1)
+		echo ""
+		if _dk_pick_container stopped; then
+			docker start "$_DK_PICK" && green "✓ 已启动 $_DK_PICK" || red "启动失败"
+		fi
+		break_end
+		;;
+	  2)
+		echo ""
+		if _dk_pick_container running; then
+			docker stop "$_DK_PICK" && green "✓ 已停止 $_DK_PICK" || red "停止失败"
+		fi
+		break_end
+		;;
+	  3)
+		echo ""
+		if _dk_pick_container all; then
+			docker restart "$_DK_PICK" && green "✓ 已重启 $_DK_PICK" || red "重启失败"
+		fi
+		break_end
+		;;
+	  4)
+		echo ""
+		if _dk_pick_container all; then
+			read -e -p " 确认删除 $_DK_PICK？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				docker rm -f "$_DK_PICK" && green "✓ 已删除 $_DK_PICK" || red "删除失败"
+				break_end
+			else
+				yellow "已取消"
+			fi
+		fi
+		;;
+	  5)
+		echo ""
+		if _dk_pick_container all; then
+			echo ""
+			echo -e " ${rw_huang}1.${rw_lv} 查看最近 N 行  ${rw_huang}2.${rw_lv} 实时跟踪 (Ctrl+C 退出)"
+			read -e -p " 选择（默认1）: " _log_mode < /dev/tty
+			_log_mode="${_log_mode:-1}"
+			if [ "$_log_mode" = "2" ]; then
+				docker logs -f "$_DK_PICK"
+			else
+				read -e -p " 行数（默认100）: " _lines < /dev/tty
+				_lines="${_lines:-100}"
+				docker logs --tail "$_lines" "$_DK_PICK"
+			fi
+		fi
+		break_end
+		;;
+	  6)
+		echo ""
+		if _dk_pick_container all; then
+			echo ""
+			docker inspect "$_DK_PICK" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)[0]
+    name = d['Name'].lstrip('/')
+    state = d['State']['Status']
+    image = d['Config']['Image']
+    created = d['Created'][:19].replace('T',' ')
+    ip = d.get('NetworkSettings',{}).get('IPAddress','N/A')
+    ports = []
+    for k,v in d.get('NetworkSettings',{}).get('Ports',{}).items():
+        if v: ports.append(f'{v[0][\"HostPort\"]} -> {k}')
+        else: ports.append(str(k))
+    mounts = [m['Source']+' -> '+m['Destination'] for m in d.get('Mounts',[])]
+    restart = d.get('HostConfig',{}).get('RestartPolicy',{}).get('Name','none')
+    print(f'  名称:     {name}')
+    print(f'  状态:     {state}')
+    print(f'  镜像:     {image}')
+    print(f'  创建时间: {created}')
+    print(f'  IP:       {ip}')
+    print(f'  端口:     {\", \".join(ports) if ports else \"无\"}')
+    print(f'  重启策略: {restart}')
+    print(f'  挂载:')
+    for m in mounts: print(f'    {m}')
+    if not mounts: print('    无')
+except Exception as e:
+    print(f'  解析失败: {e}')
+" 2>/dev/null || docker inspect "$_DK_PICK"
+		fi
+		break_end
+		;;
+	  7)
+		echo ""
+		if _dk_pick_container all; then
+			read -e -p " 新名称: " _new_name < /dev/tty
+			[ -z "$_new_name" ] && { red "名称不能为空"; break_end; continue; }
+			docker rename "$_DK_PICK" "$_new_name" && green "✓ 已重命名为 $_new_name" || red "重命名失败"
+		fi
+		break_end
+		;;
+	  8)
+		echo ""
+		local _stopped_cnt
+		_stopped_cnt=$(docker ps -a --filter "status=exited" -q 2>/dev/null | wc -l | tr -d ' ')
+		[ "$_stopped_cnt" -eq 0 ] && { yellow "没有已停止的容器"; break_end; continue; }
+		read -e -p " 确认清理 ${_stopped_cnt} 个已停止容器？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			docker container prune -f && green "✓ 已清理 ${_stopped_cnt} 个容器" || red "清理失败"
+		else
+			yellow "已取消"
+		fi
+		break_cancel
+		;;
+	  9)
+		echo ""
+		echo -e " ${rw_huang}1.${rw_lv} 批量启动所有已停止容器"
+		echo -e " ${rw_huang}2.${rw_lv} 批量停止所有运行中容器"
+		echo -e " ${rw_huang}0.${rw_lv} 取消"
+		read -e -p " 选择: " _batch < /dev/tty
+		case $_batch in
+			1)
+				docker start $(docker ps -a --filter "status=exited" -q) 2>/dev/null
+				green "✓ 批量启动完成"
+				;;
+			2)
+				read -e -p " 确认停止所有运行中容器？(y/N): " _confirm < /dev/tty
+				if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+					docker stop $(docker ps -q) 2>/dev/null
+					green "✓ 批量停止完成"
+				fi
+				;;
+			*) yellow "已取消" ;;
+		esac
+		break_cancel
+		;;
+	  0) return ;;
+	  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
+	esac
+done
+}
+
+# ================================================================
+# 进入容器 Shell
+# ================================================================
+docker_shell_access() {
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━ 进入容器 Shell ━━━━━━${rw_lv}"
+	echo ""
+	if _dk_pick_container running; then
+		echo ""
+		echo -e " ${rw_huang}1.${rw_lv} sh   ${rw_huang}2.${rw_lv} bash   ${rw_huang}3.${rw_lv} 自定义命令"
+		read -e -p " 选择（默认2）: " _sh < /dev/tty
+		_sh="${_sh:-2}"
+		case $_sh in
+			1) docker exec -it "$_DK_PICK" sh ;;
+			2) docker exec -it "$_DK_PICK" bash 2>/dev/null || docker exec -it "$_DK_PICK" sh ;;
+			3)
+				read -e -p " 命令: " _cmd < /dev/tty
+				[ -n "$_cmd" ] && docker exec -it "$_DK_PICK" $_cmd
+				;;
+		esac
+	fi
+	break_end
+}
+
+# ================================================================
+# 一键运行新容器（交互式引导）
+# ================================================================
+docker_quick_run() {
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━ 一键运行新容器 ━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_lv}按提示输入参数，直接生成 docker run 命令并执行${rw_lv}"
+	echo ""
+
+	read -e -p " 镜像名（如 nginx:latest）: " _img < /dev/tty
+	[ -z "$_img" ] && { red "镜像不能为空"; break_end; return; }
+
+	read -e -p " 容器名（可选，留空自动生成）: " _name < /dev/tty
+	read -e -p " 端口映射（如 8080:80，多个用逗号，留空跳过）: " _ports < /dev/tty
+	read -e -p " 数据卷挂载（如 /opt/data:/data，多个用逗号，留空跳过）: " _vols < /dev/tty
+	read -e -p " 环境变量（如 KEY=val，多个用逗号，留空跳过）: " _envs < /dev/tty
+	read -e -p " 重启策略 [always/on-failure/no]（默认 no）: " _restart < /dev/tty
+	_restart="${_restart:-no}"
+	read -e -p " 后台运行？(Y/n): " _detach < /dev/tty
+	local _d_flag="-d"
+	[[ "$_detach" =~ ^[Nn]$ ]] && _d_flag=""
+
+	# 拼装命令
+	local _cmd="docker run $_d_flag --name ${_name:-auto_$$} --restart $_restart"
+	[ -n "$_ports" ] && IFS=',' read -ra _pa <<< "$_ports" && for p in "${_pa[@]}"; do _cmd="$_cmd -p $p"; done
+	[ -n "$_vols" ] && IFS=',' read -ra _va <<< "$_vols" && for v in "${_va[@]}"; do _cmd="$_cmd -v $v"; done
+	[ -n "$_envs" ] && IFS=',' read -ra _ea <<< "$_envs" && for e in "${_ea[@]}"; do _cmd="$_cmd -e $e"; done
+	_cmd="$_cmd $_img"
+
+	echo ""
+	echo -e " ${rw_huang}即将执行:${rw_lv}"
+	echo -e "   ${rw_lv}$_cmd${rw_lv}"
+	echo ""
+	read -e -p " 确认执行？(y/N): " _confirm < /dev/tty
+	if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+		eval "$_cmd" && green "✓ 容器已启动" || red "启动失败"
+	else
+		yellow "已取消"
+	fi
+	break_cancel
+}
+
+# ================================================================
+# 镜像管理
+# ================================================================
+docker_image_manage() {
+while true; do
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━━━━━━━  镜像管理  ━━━━━━━━━━━━${rw_lv}"
+	echo ""
+	docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}" 2>/dev/null | head -30
+	echo ""
+	echo -e " ${rw_cheng}──── 操作 ────${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}拉取镜像${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}搜索镜像${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}删除镜像${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}清理悬空镜像${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}清理所有未使用镜像${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}导出镜像为 tar${rw_lv}"
+	echo -e " ${rw_huang}7.   ${rw_lv}从 tar 导入镜像${rw_lv}"
+	echo -e " ${rw_huang}8.   ${rw_lv}查看镜像层信息${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请选择: " choice
+
+	case $choice in
+	  1)
+		echo ""
+		read -e -p " 镜像名（如 nginx:latest）: " _img < /dev/tty
+		[ -z "$_img" ] && { red "不能为空"; break_end; continue; }
+		docker pull "$_img" && green "✓ 拉取成功" || red "拉取失败"
+		break_end
+		;;
+	  2)
+		echo ""
+		read -e -p " 关键词: " _kw < /dev/tty
+		[ -z "$_kw" ] && { red "不能为空"; break_end; continue; }
+		read -e -p " 显示条数（默认10，最大25）: " _limit < /dev/tty
+		_limit="${_limit:-10}"
+		[ "$_limit" -gt 25 ] 2>/dev/null && _limit=25
+		docker search --limit "$_limit" "$_kw" --format "table {{.Name}}\t{{.StarCount}}\t{{.IsOfficial}}" 2>/dev/null \
+			|| red "搜索失败，请检查网络"
+		break_end
+		;;
+	  3)
+		echo ""
+		if _dk_pick_image; then
+			read -e -p " 确认删除 $_DK_PICK？(y/N): " _confirm < /dev/tty
+			if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+				docker rmi -f "$_DK_PICK" && green "✓ 已删除" || red "删除失败"
+				break_end
+			else
+				yellow "已取消"
+			fi
+		fi
+		;;
+	  4)
+		echo ""
+		local _cnt
+		_cnt=$(docker images -f "dangling=true" -q 2>/dev/null | wc -l | tr -d ' ')
+		[ "$_cnt" -eq 0 ] && { yellow "没有悬空镜像"; break_end; continue; }
+		read -e -p " 清理 $_cnt 个悬空镜像？(y/N): " _confirm < /dev/tty
+		[[ "$_confirm" =~ ^[Yy]$ ]] && docker image prune -f && green "✓ 已清理" || yellow "已取消"
+		break_cancel
+		;;
+	  5)
+		echo ""
+		local _cnt
+		_cnt=$(docker images -q 2>/dev/null | wc -l | tr -d ' ')
+		read -e -p " 清理所有未被使用的镜像（$_cnt 个）？(y/N): " _confirm < /dev/tty
+		[[ "$_confirm" =~ ^[Yy]$ ]] && docker image prune -a -f && green "✓ 已清理" || yellow "已取消"
+		break_cancel
+		;;
+	  6)
+		echo ""
+		if _dk_pick_image; then
+			local _safe _out
+			_safe=$(echo "$_DK_PICK" | tr '/:' '_')
+			_out="${_safe}_$(date +%Y%m%d_%H%M%S).tar"
+			docker save -o "$_out" "$_DK_PICK" \
+				&& green "✓ 已导出: $(pwd)/$_out  $(du -h "$_out" | cut -f1)" \
+				|| red "导出失败"
+		fi
+		break_end
+		;;
+	  7)
+		echo ""
+		ls -lh *.tar 2>/dev/null || echo -e " ${rw_huang}当前目录无 tar 文件${rw_lv}"
+		read -e -p " tar 文件路径: " _tar < /dev/tty
+		[ -z "$_tar" ] && { red "不能为空"; break_end; continue; }
+		[ ! -f "$_tar" ] && { red "文件不存在"; break_end; continue; }
+		docker load -i "$_tar" && green "✓ 导入成功" || red "导入失败"
+		break_end
+		;;
+	  8)
+		echo ""
+		if _dk_pick_image; then
+			echo ""
+			docker history "$_DK_PICK" --format "table {{.CreatedSince}}\t{{.Size}}\t{{.Comment}}" 2>/dev/null
+		fi
+		break_end
+		;;
+	  0) return ;;
+	  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
+	esac
+done
+}
+
+# ================================================================
+# Compose 项目管理
+# ================================================================
+docker_compose_manage() {
+	local COMPOSE_CMD
+	COMPOSE_CMD=$(_dk_compose_cmd)
+
 	while true; do
 		clear
-		# 状态探测（3 秒 TTL 缓存，返回时零开销）
-		_dkm_status_refresh
-
-		echo -e "${rw_cheng}━━━━━━━━━━━━  Docker 综合管理 v${_DKM_VERSION}  ━━━━━━━━━━━━${rw_lv}"
-		echo -e " Docker: ${_DKM_S_STAT}   容器: ${rw_lv}${_DKM_S_RUN}${rw_lv}运行/${rw_huang}$((_DKM_S_ALL - _DKM_S_RUN))${rw_lv}停止   镜像: ${rw_lv}${_DKM_S_IMGS}${rw_lv}"
-		echo -e " Compose: ${_DKM_S_COMPOSE}   Colima: ${_DKM_S_COLIMA}"
-		echo -e " ${rw_qing}卡住了? 随时按 Ctrl+C 或选 E 进入应急断联${rw_bai}"
+		echo -e "${rw_cheng}━━━━━━━━━━━━  Compose 管理  ━━━━━━━━━━━━${rw_lv}"
 		echo ""
-		echo -e " ${rw_cheng}──── 资源管理 ────${rw_lv}"
-		echo -e " ${rw_huang}1.   ${rw_lv}容器管理${rw_lv}"
-		echo -e " ${rw_huang}2.   ${rw_lv}镜像管理${rw_lv}"
-		echo -e " ${rw_huang}3.   ${rw_lv}Compose 项目管理${rw_lv}"
-		echo -e " ${rw_cheng}──── 系统维护 ────${rw_lv}"
-		echo -e " ${rw_huang}4.   ${rw_lv}系统维护与诊断${rw_lv}"
-		echo -e " ${rw_huang}5.   ${rw_lv}Colima 虚拟机管理${rw_lv}"
+		if [ -z "$COMPOSE_CMD" ]; then
+			echo -e " ${rw_hong}Docker Compose 未安装${rw_lv}"
+			echo -e " ${rw_huang}请先执行「安装/升级 Docker」（菜单 6）${rw_lv}"
+			break_end
+			return
+		fi
+		echo -e " 命令: ${rw_lv}${COMPOSE_CMD}${rw_lv}"
+		echo ""
+		# 列出 Compose 项目
+		echo -e " ${rw_cheng}── 运行中的 Compose 项目 ──${rw_lv}"
+		docker ps --filter "label=com.docker.compose.project" \
+			--format " {{.Label \"com.docker.compose.project\"}}\t{{.Names}}\t{{.Status}}" 2>/dev/null \
+			| column -t | head -15
+		[ $? -ne 0 ] && echo -e " ${rw_huang}暂无项目${rw_lv}"
+		echo ""
+		echo -e " ${rw_cheng}──── 操作 ────${rw_lv}"
+		echo -e " ${rw_huang}1.   ${rw_lv}粘贴 yml 创建并运行${rw_lv}"
+		echo -e " ${rw_huang}2.   ${rw_lv}管理现有项目（启动/停止/重启/状态）${rw_lv}"
+		echo -e " ${rw_huang}3.   ${rw_lv}查看项目日志${rw_lv}"
+		echo -e " ${rw_huang}4.   ${rw_lv}删除项目${rw_lv}"
+		echo -e " ${rw_huang}5.   ${rw_lv}重新拉取镜像并重建${rw_lv}"
 		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		echo -e " ${rw_hong}E.   ${rw_lv}应急断联（虚拟机卡死时用）${rw_lv}"
-		echo -e " ${rw_huang}0.   ${rw_lv}返回（默认）${rw_lv}"
+		echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
 		echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
-		_dkm_return_hint
-		local _ch=""
-		read -e -p " 请选择 [默认 0]: " _ch < /dev/tty || _ch=""
-		_ch="${_ch:-0}"
+		read -e -p " 请选择: " choice
 
-		case "$_ch" in
-		1) _dkm_container_menu ;;
-		2) _dkm_image_menu ;;
-		3) _dkm_compose_menu ;;
-		4) _dkm_system_menu ;;
-		5) _dkm_colima_menu ;;
-		E|e|99)
-			# 快捷键入口: 直接进入应急断联（含确认）
+		case $choice in
+		  1)
 			echo ""
-			_dkm_example "应急断联三步走:
-1. 先尝试正常停止虚拟机
-2. 失败就强制停止
-3. 残留进程列出来，你确认后才清理
-断联后想恢复: 进入 Colima 管理选 [应急恢复]"
-			if _dkm_confirm "执行应急断联?"; then
-				_dkm_colima_emergency_stop || _dkm_log_err "应急断联执行失败"
-				_dkm_cache_invalidate
+			read -e -p " 项目名称（如 myapp）: " _proj < /dev/tty
+			[ -z "$_proj" ] && { red "不能为空"; break_end; continue; }
+			local _proj_dir="${HOME}/compose/${_proj}"
+			mkdir -p "$_proj_dir"
+			local _yml_file="$_proj_dir/docker-compose.yml"
+			echo -e " ${rw_huang}请粘贴 docker-compose.yml 内容（结束时输入 EOF 换行）:${rw_lv}"
+			cat > "$_yml_file" <<'EOF'
+EOF
+			# 用 cat 读多行直到 EOF
+			cat > "$_yml_file" <<'PEOF'
+PEOF
+			# 重新用 read 方式
+			> "$_yml_file"
+			while IFS= read -r _line || [ -n "$_line" ]; do
+				[ "$_line" = "EOF" ] && break
+				echo "$_line" >> "$_yml_file"
+			done
+			if [ -s "$_yml_file" ]; then
+				cd "$_proj_dir"
+				$COMPOSE_CMD up -d && green "✓ 项目已启动: $_proj_dir" || red "启动失败"
+				cd - >/dev/null
 			else
-				_dkm_log_warn "已取消"
+				red "yml 内容为空"
 			fi
-			break_end || true
+			break_end
 			;;
-		0) return 0 ;;
-		*) _dkm_log_err "无效选项: $_ch"; sleep 1 ;;
+		  2)
+			echo ""
+			# 列出 compose 项目目录
+			local _proj_dir="${HOME}/compose"
+			if [ -d "$_proj_dir" ]; then
+				echo -e " ${rw_cheng}── 已有项目 ──${rw_lv}"
+				local _projs=()
+				local _i=1
+				for _d in "$_proj_dir"/*/; do
+					[ -d "$_d" ] || continue
+					local _pn=$(basename "$_d")
+					echo -e " ${rw_huang}${_i}.${rw_lv} $_pn  → $_d"
+					_projs+=("$_d")
+					((_i++))
+				done
+				if [ ${#_projs[@]} -eq 0 ]; then
+					yellow "  暂无项目"
+					break_end
+					continue
+				fi
+				echo -e " ${rw_huang}0.${rw_lv} 取消"
+				read -e -p " 选择: " _idx < /dev/tty
+				[ "$_idx" = "0" ] && continue
+				[ -z "$_idx" ] && continue
+				if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_projs[@]} ]; then
+					red "无效选择"
+					break_end
+					continue
+				fi
+				local _target="${_projs[$((_idx - 1))]}"
+				echo ""
+				echo -e " ${rw_huang}1.${rw_lv} 启动   ${rw_huang}2.${rw_lv} 停止   ${rw_huang}3.${rw_lv} 重启   ${rw_huang}4.${rw_lv} 状态"
+				read -e -p " 操作: " _act < /dev/tty
+				cd "$_target"
+				case $_act in
+					1) $COMPOSE_CMD up -d && green "✓ 已启动" ;;
+					2) $COMPOSE_CMD down && green "✓ 已停止" ;;
+					3) $COMPOSE_CMD restart && green "✓ 已重启" ;;
+					4) $COMPOSE_CMD ps ;;
+					*) yellow "无效" ;;
+				esac
+				cd - >/dev/null
+			else
+				yellow "  暂无项目目录 ($_proj_dir)"
+			fi
+			break_end
+			;;
+		  3)
+			echo ""
+			local _proj_dir="${HOME}/compose"
+			[ -d "$_proj_dir" ] || { yellow "无项目"; break_end; continue; }
+			local _projs=()
+			local _i=1
+			for _d in "$_proj_dir"/*/; do
+				[ -d "$_d" ] || continue
+				echo -e " ${rw_huang}${_i}.${rw_lv} $(basename "$_d")"
+				_projs+=("$_d")
+				((_i++))
+			done
+			[ ${#_projs[@]} -eq 0 ] && { yellow "无项目"; break_end; continue; }
+			echo -e " ${rw_huang}0.${rw_lv} 取消"
+			read -e -p " 选择: " _idx < /dev/tty
+			[ "$_idx" = "0" ] && continue
+			[ -z "$_idx" ] && continue
+			if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_projs[@]} ]; then
+				break_end
+				continue
+			fi
+			local _target="${_projs[$((_idx - 1))]}"
+			echo ""
+			echo -e " ${rw_huang}1.${rw_lv} 最近 N 行  ${rw_huang}2.${rw_lv} 实时跟踪"
+			read -e -p " 选择（默认1）: " _lm < /dev/tty
+			_lm="${_lm:-1}"
+			cd "$_target"
+			if [ "$_lm" = "2" ]; then
+				$COMPOSE_CMD logs -f
+			else
+				read -e -p " 行数（默认100）: " _lines < /dev/tty
+				$COMPOSE_CMD logs --tail "${_lines:-100}"
+			fi
+			cd - >/dev/null
+			break_end
+			;;
+		  4)
+			echo ""
+			local _proj_dir="${HOME}/compose"
+			[ -d "$_proj_dir" ] || { yellow "无项目"; break_end; continue; }
+			local _projs=()
+			local _i=1
+			for _d in "$_proj_dir"/*/; do
+				[ -d "$_d" ] || continue
+				echo -e " ${rw_huang}${_i}.${rw_lv} $(basename "$_d")"
+				_projs+=("$_d")
+				((_i++))
+			done
+			[ ${#_projs[@]} -eq 0 ] && { yellow "无项目"; break_end; continue; }
+			echo -e " ${rw_huang}0.${rw_lv} 取消"
+			read -e -p " 选择: " _idx < /dev/tty
+			[ "$_idx" = "0" ] && continue
+			[ -z "$_idx" ] && continue
+			if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_projs[@]} ]; then
+				break_end
+				continue
+			fi
+			local _target="${_projs[$((_idx - 1))]}"
+			read -e -p " 确认删除 $(basename "$_target")？将停止容器并删除目录 (yes确认): " _confirm < /dev/tty
+			if [ "$_confirm" = "yes" ]; then
+				cd "$_target"
+				$COMPOSE_CMD down -v 2>/dev/null
+				cd - >/dev/null
+				rm -rf "$_target"
+				green "✓ 已删除 $(basename "$_target")"
+			else
+				yellow "已取消"
+			fi
+			break_cancel
+			;;
+		  5)
+			echo ""
+			local _proj_dir="${HOME}/compose"
+			[ -d "$_proj_dir" ] || { yellow "无项目"; break_end; continue; }
+			local _projs=()
+			local _i=1
+			for _d in "$_proj_dir"/*/; do
+				[ -d "$_d" ] || continue
+				echo -e " ${rw_huang}${_i}.${rw_lv} $(basename "$_d")"
+				_projs+=("$_d")
+				((_i++))
+			done
+			[ ${#_projs[@]} -eq 0 ] && { yellow "无项目"; break_end; continue; }
+			echo -e " ${rw_huang}0.${rw_lv} 取消"
+			read -e -p " 选择: " _idx < /dev/tty
+			[ "$_idx" = "0" ] && continue
+			[ -z "$_idx" ] && continue
+			if ! [[ "$_idx" =~ ^[0-9]+$ ]] || [ "$_idx" -lt 1 ] || [ "$_idx" -gt ${#_projs[@]} ]; then
+				break_end
+				continue
+			fi
+			local _target="${_projs[$((_idx - 1))]}"
+			cd "$_target"
+			$COMPOSE_CMD pull && $COMPOSE_CMD up -d --build && green "✓ 已重建" || red "重建失败"
+			cd - >/dev/null
+			break_end
+			;;
+		  0) return ;;
+		  *) echo -e "${rw_hong}无效选项${rw_lv}"; sleep 1 ;;
 		esac
 	done
 }
 
 # ================================================================
-# 使用说明（脚本外部调用参考）
+# 安装 / 升级 Docker
 # ================================================================
-# 赋予执行权限:  chmod +x riwi.sh
-# 运行方式:
-#   交互菜单:    ./riwi.sh        （主菜单选 9 进入容器管理）
-#   快捷命令:    r docker          进入 Docker 综合管理
-#                 r docker manager  同上
-# 应急断联:      菜单内随时按 Ctrl+C，或主菜单选 E/99
-# 应急恢复:      Colima 虚拟机管理 → 选项 6（应急恢复）
-# 自建 Compose:  Compose 项目管理 → 选项 4（自定义文件名）
-# 项目列表:      Compose 项目管理 → 选项 5（键值对卡片展示所有项目）
+docker_install_upgrade() {
+	clear
+	echo -e "${rw_cheng}━━━━━━ 安装 / 升级 Docker ━━━━━━${rw_lv}"
+	echo ""
+	if command -v docker &>/dev/null; then
+		green "Docker 已安装，当前版本:"
+		docker version --format '{{.Server.Version}}' 2>/dev/null || docker --version
+		echo ""
+		echo -e " ${rw_huang}1.${rw_lv} 升级到最新版   ${rw_huang}2.${rw_lv} 卸载 Docker   ${rw_huang}0.${rw_lv} 返回"
+		read -e -p " 选择: " _act < /dev/tty
+		case $_act in
+			1)
+				echo ""
+				echo -e " ${rw_huang}正在升级...${rw_lv}"
+				if command -v apt-get &>/dev/null; then
+					apt-get update -y && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+				elif command -v yum &>/dev/null; then
+					yum update -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+				elif command -v dnf &>/dev/null; then
+					dnf update -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+				else
+					red "无法识别包管理器"
+				fi
+				green "✓ 升级完成" || red "升级失败"
+				;;
+			2)
+				echo ""
+				echo -e " ${rw_hong}⚠ 将卸载 Docker 及相关组件${rw_lv}"
+				read -e -p " 确认卸载？(yes确认): " _confirm < /dev/tty
+				if [ "$_confirm" = "yes" ]; then
+					systemctl stop docker 2>/dev/null
+					if command -v apt-get &>/dev/null; then
+						apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras 2>/dev/null
+						apt-get autoremove -y
+					elif command -v yum &>/dev/null; then
+						yum remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null
+					elif command -v dnf &>/dev/null; then
+						dnf remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null
+					fi
+					green "✓ 卸载完成"
+				else
+					yellow "已取消"
+				fi
+				;;
+			*) return ;;
+		esac
+	else
+		echo -e " ${rw_huang}Docker 未安装，即将使用官方脚本安装...${rw_lv}"
+		echo -e " ${rw_lv}官方脚本: https://get.docker.com${rw_lv}"
+		echo ""
+		read -e -p " 确认安装？(y/N): " _confirm < /dev/tty
+		if [[ "$_confirm" =~ ^[Yy]$ ]]; then
+			echo ""
+			echo -e " ${rw_huang}正在下载并执行官方安装脚本...${rw_lv}"
+			if command -v curl &>/dev/null; then
+				curl -fsSL https://get.docker.com | bash
+			elif command -v wget &>/dev/null; then
+				wget -qO- https://get.docker.com | bash
+			else
+				install curl
+				curl -fsSL https://get.docker.com | bash
+			fi
+			if [ $? -eq 0 ] && command -v docker &>/dev/null; then
+				systemctl enable docker 2>/dev/null
+				systemctl start docker 2>/dev/null
+				green "✓ Docker 安装成功并已启动"
+				echo -e " ${rw_huang}版本: ${rw_lv}$(docker --version)${rw_lv}"
+				break_end
+			else
+				red "安装失败，请检查网络或手动安装"
+				break_end
+			fi
+		else
+			yellow "已取消"
+		fi
+	fi
+}
+
 # ================================================================
+# 磁盘清理
+# ================================================================
+docker_system_clean() {
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━ Docker 磁盘清理 ━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_huang}当前 Docker 磁盘占用:${rw_lv}"
+	docker system df 2>/dev/null
+	echo ""
+	echo -e " ${rw_cheng}──── 清理选项 ────${rw_lv}"
+	echo -e " ${rw_huang}1.   ${rw_lv}清理悬空镜像（dangling）${rw_lv}"
+	echo -e " ${rw_huang}2.   ${rw_lv}清理所有未使用镜像${rw_lv}"
+	echo -e " ${rw_huang}3.   ${rw_lv}清理已停止容器${rw_lv}"
+	echo -e " ${rw_huang}4.   ${rw_lv}清理未使用网络${rw_lv}"
+	echo -e " ${rw_huang}5.   ${rw_lv}清理构建缓存${rw_lv}"
+	echo -e " ${rw_huang}6.   ${rw_lv}一键清理全部（谨慎）${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	echo -e " ${rw_huang}0.   ${rw_lv}返回${rw_lv}"
+	echo -e "${rw_cheng}────────────────────────────────────────${rw_lv}"
+	read -e -p " 请选择: " choice
+
+	case $choice in
+	  1) docker image prune -f && green "✓ 悬空镜像已清理" ;;
+	  2)
+		read -e -p " 确认清理所有未使用镜像？(y/N): " _c < /dev/tty
+		[[ "$_c" =~ ^[Yy]$ ]] && docker image prune -a -f && green "✓ 已清理" || yellow "已取消"
+		;;
+	  3) docker container prune -f && green "✓ 已停止容器已清理" ;;
+	  4) docker network prune -f && green "✓ 未使用网络已清理" ;;
+	  5) docker builder prune -f && green "✓ 构建缓存已清理" ;;
+	  6)
+		read -e -p " 确认一键清理全部？将删除所有未使用资源 (yes确认): " _c < /dev/tty
+		if [ "$_c" = "yes" ]; then
+			docker system prune -a -f --volumes && green "✓ 全部清理完成"
+		else
+			yellow "已取消"
+		fi
+		;;
+	  0) return ;;
+	  *) red "无效选项" ;;
+	esac
+	break_end
+}
+
+# ================================================================
+# 健康诊断
+# ================================================================
+docker_health_check() {
+	clear
+	_dk_check || { break_end; return; }
+	echo -e "${rw_cheng}━━━━━━ Docker 健康诊断 ━━━━━━${rw_lv}"
+	echo ""
+	echo -e " ${rw_cheng}── 1. 服务状态 ──${rw_lv}"
+	systemctl is-active docker 2>/dev/null && green "  docker 服务: 运行中" || red "  docker 服务: 未运行"
+	echo ""
+	echo -e " ${rw_cheng}── 2. 版本信息 ──${rw_lv}"
+	docker version --format '  Client: {{.Client.Version}}' 2>/dev/null
+	docker version --format '  Server: {{.Server.Version}}' 2>/dev/null
+	echo ""
+	echo -e " ${rw_cheng}── 3. 系统资源 ──${rw_lv}"
+	docker system df 2>/dev/null
+	echo ""
+	echo -e " ${rw_cheng}── 4. 容器健康 ──${rw_lv}"
+	local _unhealthy
+	_unhealthy=$(docker ps --filter "health=unhealthy" --format "{{.Names}}" 2>/dev/null)
+	if [ -n "$_unhealthy" ]; then
+		red "  不健康容器:"
+		echo "$_unhealthy" | while read -r _n; do echo "    - $_n"; done
+	else
+		green "  所有运行中容器状态正常"
+	fi
+	echo ""
+	echo -e " ${rw_cheng}── 5. 磁盘空间 ──${rw_lv}"
+	df -h / /var/lib/docker 2>/dev/null | head -5
+	echo ""
+	green "✓ 诊断完成"
+	break_end
+}
+
+# ================================================================
+# 版本信息
+# ================================================================
+docker_version_show() {
+	clear
+	echo -e "${rw_cheng}━━━━━━ Docker 版本信息 ━━━━━━${rw_lv}"
+	echo ""
+	if command -v docker &>/dev/null; then
+		echo -e " ${rw_huang}Docker:${rw_lv}"
+		docker --version 2>/dev/null
+		echo ""
+		echo -e " ${rw_huang}Docker Compose:${rw_lv}"
+		if [ -n "$(_dk_compose_cmd)" ]; then
+			$(_dk_compose_cmd) version 2>/dev/null
+		else
+			echo -e "  ${rw_hong}未安装${rw_lv}"
+		fi
+		echo ""
+		echo -e " ${rw_huang}详细信息:${rw_lv}"
+		docker version 2>/dev/null
+	else
+		red "Docker 未安装"
+	fi
+	break_end
+}
+
 k_info() {
 send_stats "r命令参考用例"
 echo -e "${rw_cheng}-------------------${rw_lv}"
